@@ -1,0 +1,835 @@
+@import 'tailwindcss';
+
+/* ── Fonts ──────────────────────────────────────────────────────────────────────────────────────
+   Inter (SIL OFL, see public/fonts/OFL.txt), self-hosted, variable weight 100-900.
+   Two files share ONE family name and are chosen glyph by glyph through unicode-range:
+     inter-latin-v1.woff2    42 KB, preloaded on every page (Latin + Latin-1 + punctuation: EN, DE, FR, IT)
+     inter-turkish-v1.woff2  3 KB,  preloaded on /tr only (G-breve, I-dot, S-cedilla)
+   (Google's full Latin-Extended file is 85 KB; the six letters we actually need are 3 KB.)
+   "Inter Fallback" is Arial scaled to Inter's metrics, so the swap from fallback to Inter moves nothing (CLS 0).
+   Regenerate the subsets and re-run `python scripts/check-fonts.py` when adding languages. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-latin-v1.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-turkish-v1.woff2') format('woff2');
+  unicode-range: U+011E-011F, U+0130, U+015E-015F, U+0178;
+}
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+  size-adjust: 107.12%;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────────────────────────
+   SyncFlow: "Quiet Luxury Noir"
+   One obsidian canvas, hairlines instead of boxes, a single cool-white glow as the only accent.
+   Contrast (WCAG): snow 17.5:1 · muted 7.7:1 · subtle 5.7:1 on obsidian. Nothing below 4.5:1 carries text.
+   ─────────────────────────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-obsidian: #0d0d0e;
+  --color-raised: #131315;
+  --color-snow: #f4f4f5;
+  --color-muted: #a1a1aa;
+  --color-subtle: #8a8a93;
+  --color-glow: #e2e8f0;
+
+  --font-sans: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --tracking-display: -0.035em;
+  --tracking-tight: -0.03em;
+}
+
+:root {
+  color-scheme: dark;
+  interpolate-size: allow-keywords;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+  scrollbar-color: #2a2a2e transparent;
+}
+
+html {
+  background: var(--color-obsidian);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-obsidian);
+  color: var(--color-snow);
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  font-feature-settings: 'cv11', 'ss03';
+  letter-spacing: -0.011em;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-glow);
+  color: var(--color-obsidian);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-glow);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Film grain: a fixed, non-interactive tile. Pure texture, no layout cost. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* While the checkout overlay is open the page behind must not scroll. */
+body.lemonsqueezy-open {
+  overflow: hidden;
+}
+
+@layer base {
+  /* Tailwind's bare `grid` creates an implicit "auto" column, which grows to its widest unbreakable content (a long
+     German compound word, the big price) and pushes the whole page wider than the screen on a 320 px phone.
+     minmax(0, 1fr) lets the column shrink instead. Explicit grid-cols-* and breakpoint column utilities still win. */
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@layer components {
+  .container-x {
+    width: min(100% - 3rem, 75rem);
+    margin-inline: auto;
+  }
+  @media (min-width: 48rem) {
+    .container-x {
+      width: min(100% - 5rem, 75rem);
+    }
+  }
+
+  .section {
+    position: relative;
+    padding-block: clamp(5rem, 11vw, 9.5rem);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .display {
+    font-weight: 600;
+    letter-spacing: var(--tracking-display);
+    line-height: 1.02;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  .display .dim,
+  .dim {
+    color: var(--color-muted);
+  }
+
+  .lead {
+    color: var(--color-muted);
+    font-size: clamp(1.0625rem, 1.2vw + 0.8rem, 1.3125rem);
+    line-height: 1.55;
+    letter-spacing: -0.015em;
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* ── Buttons ───────────────────────────────────────────────────────────────── */
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    height: 3.25rem;
+    padding-inline: 1.6rem;
+    border-radius: 9999px;
+    font-size: 0.96rem;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    white-space: nowrap;
+    cursor: pointer;
+    text-decoration: none;
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      box-shadow 0.5s var(--ease-out-expo),
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease,
+      transform 0.25s var(--ease-out-expo);
+  }
+  .btn:active {
+    transform: scale(0.975);
+  }
+  .btn svg {
+    flex: none;
+    transition: transform 0.4s var(--ease-out-expo);
+  }
+
+  .btn-primary {
+    color: var(--color-obsidian);
+    background: linear-gradient(180deg, #ffffff 0%, #e4e4e7 100%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.9),
+      0 0 0 1px rgb(255 255 255 / 0.2),
+      0 12px 40px -14px rgb(226 232 240 / 0.45);
+  }
+  /* One-pass light sweep across the button. Transform only, runs on hover. */
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.85) 50%, transparent 65%);
+    transform: translateX(-130%);
+    transition: transform 0.9s var(--ease-out-expo);
+  }
+  .btn-ghost {
+    color: var(--color-snow);
+    background: rgb(255 255 255 / 0.03);
+    border: 1px solid rgb(255 255 255 / 0.12);
+  }
+  .btn-sm {
+    height: 2.5rem;
+    padding-inline: 1.15rem;
+    font-size: 0.875rem;
+  }
+
+  @media (hover: hover) {
+    .btn-primary:hover {
+      box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 1),
+        0 0 0 1px rgb(255 255 255 / 0.35),
+        0 20px 70px -12px rgb(226 232 240 / 0.7);
+    }
+    .btn-primary:hover::after {
+      transform: translateX(130%);
+    }
+    .btn:hover svg {
+      transform: translateX(3px);
+    }
+    .btn-ghost:hover {
+      background: rgb(255 255 255 / 0.07);
+      border-color: rgb(255 255 255 / 0.24);
+    }
+  }
+
+  /* ── Surfaces ──────────────────────────────────────────────────────────────── */
+  .glass {
+    position: relative;
+    background: rgb(255 255 255 / 0.03);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 1.25rem;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  }
+  .glass-blur {
+    backdrop-filter: blur(18px) saturate(130%);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1rem 0.55rem 0.85rem;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.04);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    color: var(--color-snow);
+    letter-spacing: -0.005em;
+  }
+
+  /* Magnetic buttons: the invisible ::before widens the pull zone by 0.5rem around the button.
+     Inside @layer components on purpose: Tailwind utilities (hidden, w-full, sm:inline-flex ...) must be able to
+     override the display value, which they cannot do against un-layered CSS. */
+  [data-magnetic] {
+    position: relative;
+    display: inline-flex;
+  }
+  [data-magnetic]::before {
+    content: '';
+    position: absolute;
+    inset: -0.5rem;
+  }
+
+  /* Cursor-following light: a soft wash inside the card plus a lit 1px edge. Position set from JS (--mx / --my). */
+  [data-spotlight] {
+    position: relative;
+    isolation: isolate;
+  }
+  [data-spotlight]::before,
+  [data-spotlight]::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+  [data-spotlight]::before {
+    z-index: -1;
+    background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 0%), rgb(226 232 240 / 0.09), transparent 55%);
+  }
+  [data-spotlight]::after {
+    padding: 1px;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgb(226 232 240 / 0.7), transparent 65%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+  @media (hover: hover) {
+    [data-spotlight]:hover::before,
+    [data-spotlight]:hover::after {
+      opacity: 1;
+    }
+  }
+
+  /* Hairline that draws itself once on load. Decorative, so it never delays text. */
+  .draw-line {
+    height: 1px;
+    transform-origin: left center;
+    background: linear-gradient(90deg, rgb(226 232 240 / 0.7), rgb(226 232 240 / 0.12) 60%, transparent);
+    animation: draw-line 1.6s var(--ease-out-expo) 0.2s both;
+  }
+
+  .live-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 9999px;
+    background: var(--color-glow);
+    box-shadow: 0 0 0 0 rgb(226 232 240 / 0.55);
+    animation: live-pulse 2.4s ease-out infinite;
+  }
+
+  /* ── Header ────────────────────────────────────────────────────────────────── */
+  .site-header {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid transparent;
+    transition:
+      background-color 0.4s ease,
+      border-color 0.4s ease;
+  }
+  .site-header[data-scrolled='true'] {
+    background: rgb(13 13 14 / 0.72);
+    border-color: rgb(255 255 255 / 0.08);
+    backdrop-filter: blur(18px) saturate(130%);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
+  }
+
+  .nav-link {
+    position: relative;
+    padding-block: 0.4rem;
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    transition: color 0.25s ease;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--color-snow);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s var(--ease-out-expo);
+  }
+  @media (hover: hover) {
+    .nav-link:hover {
+      color: var(--color-snow);
+    }
+    .nav-link:hover::after {
+      transform: scaleX(1);
+    }
+  }
+
+  /* ── Language switcher ─────────────────────────────────────────────────────── */
+  .lang-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 2.5rem;
+    padding-inline: 0.85rem 0.7rem;
+    border-radius: 9999px;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    background: rgb(255 255 255 / 0.03);
+    color: var(--color-snow);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition:
+      background-color 0.25s ease,
+      border-color 0.25s ease;
+  }
+  .lang-trigger svg:last-child {
+    transition: transform 0.4s var(--ease-out-expo);
+  }
+  .lang-trigger[aria-expanded='true'] svg:last-child {
+    transform: rotate(180deg);
+  }
+  @media (hover: hover) {
+    .lang-trigger:hover {
+      background: rgb(255 255 255 / 0.07);
+      border-color: rgb(255 255 255 / 0.24);
+    }
+  }
+  .lang-menu {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    inset-inline-end: 0;
+    min-width: 12.5rem;
+    padding: 0.4rem;
+    border-radius: 1rem;
+    background: rgb(19 19 21 / 0.94);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    box-shadow:
+      0 24px 60px -16px rgb(0 0 0 / 0.8),
+      inset 0 1px 0 rgb(255 255 255 / 0.05);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    opacity: 0;
+    visibility: hidden;
+    translate: 0 -6px;
+    transition:
+      opacity 0.28s ease,
+      translate 0.4s var(--ease-out-expo),
+      visibility 0s linear 0.28s;
+  }
+  .lang-menu[data-open='true'] {
+    opacity: 1;
+    visibility: visible;
+    translate: 0 0;
+    transition:
+      opacity 0.28s ease,
+      translate 0.4s var(--ease-out-expo),
+      visibility 0s;
+  }
+  .lang-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.65rem;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    text-align: start;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .lang-item[aria-current='true'] {
+    color: var(--color-snow);
+  }
+  .lang-item .code {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--color-subtle);
+  }
+  @media (hover: hover) {
+    .lang-item:hover {
+      background: rgb(255 255 255 / 0.06);
+      color: var(--color-snow);
+    }
+  }
+  /* Content dims briefly while the new language loads. */
+  html[data-switching='true'] main,
+  html[data-switching='true'] footer {
+    opacity: 0.35;
+    transition: opacity 0.25s ease;
+  }
+  main,
+  footer {
+    transition: opacity 0.35s ease;
+  }
+
+  /* ── Sticky mobile CTA ─────────────────────────────────────────────────────── */
+  .sticky-cta {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 45;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: rgb(13 13 14 / 0.82);
+    border-top: 1px solid rgb(255 255 255 / 0.1);
+    backdrop-filter: blur(18px) saturate(130%);
+    -webkit-backdrop-filter: blur(18px) saturate(130%);
+    translate: 0 110%;
+    visibility: hidden;
+    transition:
+      translate 0.55s var(--ease-out-expo),
+      visibility 0s linear 0.55s;
+  }
+  .sticky-cta[data-visible='true'] {
+    translate: 0 0;
+    visibility: visible;
+    transition:
+      translate 0.55s var(--ease-out-expo),
+      visibility 0s;
+  }
+
+  /* ── FAQ ───────────────────────────────────────────────────────────────────── */
+  .faq details {
+    border-top: 1px solid rgb(255 255 255 / 0.1);
+  }
+  .faq details:last-child {
+    border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  }
+  .faq summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block: 1.45rem;
+    font-size: clamp(1.0625rem, 0.6vw + 0.95rem, 1.3125rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    cursor: pointer;
+    list-style: none;
+  }
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq summary svg {
+    flex: none;
+    color: var(--color-muted);
+    transition:
+      transform 0.5s var(--ease-out-expo),
+      color 0.3s ease;
+  }
+  .faq details[open] summary svg {
+    transform: rotate(45deg);
+    color: var(--color-snow);
+  }
+  .faq details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 0.5s var(--ease-out-expo),
+      content-visibility 0.5s allow-discrete;
+  }
+  .faq details[open]::details-content {
+    block-size: auto;
+  }
+  .faq .answer {
+    padding-bottom: 1.6rem;
+    max-width: 38rem;
+    color: var(--color-muted);
+    text-wrap: pretty;
+  }
+
+  /* ── Form ──────────────────────────────────────────────────────────────────── */
+  .field-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    letter-spacing: 0;
+  }
+  .field-input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 0.85rem;
+    background: rgb(255 255 255 / 0.03);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    color: var(--color-snow);
+    font: inherit;
+    font-size: 1rem;
+    transition:
+      border-color 0.25s ease,
+      background-color 0.25s ease,
+      box-shadow 0.35s ease;
+  }
+  .field-input:hover {
+    border-color: rgb(255 255 255 / 0.22);
+  }
+  .field-input:focus-visible {
+    outline: none;
+    border-color: rgb(226 232 240 / 0.7);
+    background: rgb(255 255 255 / 0.05);
+    box-shadow: 0 0 0 4px rgb(226 232 240 / 0.1);
+  }
+  .field-input[aria-invalid='true'] {
+    border-color: rgb(244 244 245 / 0.65);
+  }
+  /* Checkbox with a clearly visible 1px border (WCAG 1.4.11 non-text contrast) and a crisp check mark. */
+  .field-check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 0.4rem;
+    border: 1px solid rgb(244 244 245 / 0.55);
+    background: rgb(255 255 255 / 0.03);
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.3s ease;
+  }
+  .field-check:checked {
+    background-color: var(--color-glow);
+    border-color: var(--color-glow);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%230d0d0e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 8.5l3 3 6-6.5'/></svg>");
+    background-size: 100% 100%;
+  }
+  .field-check:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgb(226 232 240 / 0.18);
+  }
+  .field-check[aria-invalid='true'] {
+    border-color: var(--color-snow);
+    box-shadow: 0 0 0 3px rgb(244 244 245 / 0.18);
+  }
+
+  .field-error {
+    margin-top: 0.45rem;
+    font-size: 0.8125rem;
+    color: var(--color-snow);
+  }
+
+  /* ── Custom cursor (created by JS, fine pointers only) ─────────────────────── */
+  .cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: -1.125rem 0 0 -1.125rem;
+    border-radius: 9999px;
+    border: 1px solid rgb(244 244 245 / 0.55);
+    pointer-events: none;
+    opacity: 0;
+    transition:
+      opacity 0.3s ease,
+      width 0.4s var(--ease-out-expo),
+      height 0.4s var(--ease-out-expo),
+      margin 0.4s var(--ease-out-expo),
+      background-color 0.3s ease,
+      border-color 0.3s ease;
+  }
+  .cursor-ring[data-state='visible'] {
+    opacity: 1;
+  }
+  .cursor-ring[data-hover='true'] {
+    width: 3.75rem;
+    height: 3.75rem;
+    margin: -1.875rem 0 0 -1.875rem;
+    background: rgb(244 244 245 / 0.08);
+    border-color: rgb(244 244 245 / 0.8);
+  }
+  .cursor-ring[data-down='true'] {
+    background: rgb(244 244 245 / 0.18);
+  }
+  .cursor-dot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    width: 0.3rem;
+    height: 0.3rem;
+    margin: -0.15rem 0 0 -0.15rem;
+    border-radius: 9999px;
+    background: var(--color-snow);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .cursor-dot[data-state='visible'] {
+    opacity: 1;
+  }
+
+  /* Scroll progress "liquid line" (fixed, desktop only). Scaled by JS from scroll position. */
+  .scroll-line {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 40;
+    width: 2px;
+    pointer-events: none;
+  }
+  .scroll-line > i {
+    position: absolute;
+    inset: 0;
+    transform-origin: top center;
+    transform: scaleY(0);
+    background: linear-gradient(180deg, rgb(226 232 240 / 0) 0%, rgb(226 232 240 / 0.55) 55%, rgb(244 244 245 / 0.95) 100%);
+    box-shadow: 0 0 18px rgb(226 232 240 / 0.45);
+  }
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: -4.5rem;
+  z-index: 100;
+  padding: 0.75rem 1.15rem;
+  border-radius: 9999px;
+  background: var(--color-snow);
+  color: var(--color-obsidian);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: top 0.25s ease;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Hero atmosphere: a cool studio light from above and a faint engineering grid fading out. Static, so it never
+   competes with the headline for paint time. */
+.hero-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 55% at 50% -8%, rgb(226 232 240 / 0.14), transparent 70%),
+    radial-gradient(35% 40% at 88% 18%, rgb(226 232 240 / 0.05), transparent 70%);
+}
+.grid-lines {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(75% 65% at 50% 0%, #000 25%, transparent 78%);
+  mask-image: radial-gradient(75% 65% at 50% 0%, #000 25%, transparent 78%);
+}
+
+/* Film-frame corner marks around the composition player. */
+.tick {
+  position: absolute;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-color: rgb(244 244 245 / 0.55);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+.tick-tl {
+  top: 0.75rem;
+  left: 0.75rem;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.tick-tr {
+  top: 0.75rem;
+  right: 0.75rem;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.tick-bl {
+  bottom: 0.75rem;
+  left: 0.75rem;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.tick-br {
+  bottom: 0.75rem;
+  right: 0.75rem;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+/* The checkout overlay is a cross-origin iframe: pointer events never reach us there, so the ring would freeze. */
+body.lemonsqueezy-open .cursor-ring,
+body.lemonsqueezy-open .cursor-dot {
+  display: none;
+}
+
+@keyframes draw-line {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(226 232 240 / 0.55);
+  }
+  80%,
+  100% {
+    box-shadow: 0 0 0 0.55rem rgb(226 232 240 / 0);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .scroll-line,
+  .cursor-ring,
+  .cursor-dot {
+    display: none;
+  }
+}
