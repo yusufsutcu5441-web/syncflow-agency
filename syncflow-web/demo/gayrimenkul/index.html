@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Örnek Emlak (Demo) | SyncFlow</title>
+<meta name="description" content="SyncFlow gayrimenkul demosu: ilan bilgisini mesaja taşıyan tek dokunuşlu WhatsApp talep akışı. Kurgusal bir emlak ofisidir.">
+<meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#050d1c">
+<link rel="icon" href="../../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../../assets/fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../../assets/fonts/plus-jakarta-sans-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../assets/css/main.css">
+</head>
+<body data-wa="905XXXXXXXXX" data-endpoint="">
+<a class="skip" href="#icerik">İçeriğe geç</a>
+
+<svg width="0" height="0" class="absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-check" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5l3.6 3.6 7.4-8"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 20 20"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 10h11m-4.5-5L15.5 10l-5 5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" d="M5 4h4l1.5 4-2.2 1.4a11 11 0 0 0 5.3 5.3L15 12.5l4 1.5v4a2 2 0 0 1-2 2A14 14 0 0 1 3 6a2 2 0 0 1 2-2z"/></symbol>
+</svg>
+
+<div class="demo-bar">
+  <div class="wrap flex flex-wrap items-center justify-between gap-x-6 gap-y-1 py-2.5">
+    <p><strong class="text-white">Örnek senaryo:</strong> gerçek bir kurum ve ilan değildir. Butonlar SyncFlow WhatsApp hattına demo mesajı gönderir.</p>
+    <a href="../../"><svg class="h-4 w-4 rotate-180" aria-hidden="true"><use href="#i-arrow"/></svg>SyncFlow’a dön</a>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="wrap flex h-16 items-center justify-between">
+    <a href="./" class="flex items-center gap-2.5 text-lg font-extrabold tracking-tight text-white"><span class="brand-mark" aria-hidden="true">Ö</span>Örnek Emlak</a>
+    <a class="btn btn-primary btn-sm" href="#talep">Portföy İste <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+</header>
+
+<main id="icerik">
+
+<section class="hero on-dark" aria-labelledby="h1">
+  <div class="wrap grid items-center gap-12 py-14 md:py-24 lg:grid-cols-2">
+    <div>
+      <p class="eyebrow">Seçili portföy · Örnek Emlak</p>
+      <h1 id="h1" class="h1 mt-4">Aradığınız eve tek mesajla ulaşın.</h1>
+      <p class="lead mt-5 max-w-lg">Bölgenizi ve bütçenizi seçin; danışmanımıza WhatsApp’tan hazır bir talep olarak ulaşın.</p>
+    </div>
+    <div id="talep" class="composer on-dark" data-compose data-head="[DEMO · Örnek Emlak] Portföy önerisi talebi">
+      <p class="step"><span class="num">1</span>Bölge</p>
+      <div class="chips" role="group" aria-label="Bölge">
+        <button type="button" class="chip" data-group="Bölge" data-val="Boğaz hattı" aria-pressed="false">Boğaz hattı</button>
+        <button type="button" class="chip" data-group="Bölge" data-val="Avrupa Yakası" aria-pressed="false">Avrupa Yakası</button>
+        <button type="button" class="chip" data-group="Bölge" data-val="Anadolu Yakası" aria-pressed="false">Anadolu Yakası</button>
+      </div>
+      <p class="step"><span class="num">2</span>Bütçe</p>
+      <div class="chips" role="group" aria-label="Bütçe">
+        <button type="button" class="chip" data-group="Bütçe" data-val="₺10–25 Mn" aria-pressed="false">₺10–25 Mn</button>
+        <button type="button" class="chip" data-group="Bütçe" data-val="₺25–50 Mn" aria-pressed="false">₺25–50 Mn</button>
+        <button type="button" class="chip" data-group="Bütçe" data-val="₺50 Mn+" aria-pressed="false">₺50 Mn+</button>
+      </div>
+      <a class="btn btn-primary w-full" data-go href="https://wa.me/905XXXXXXXXX?text=%5BDEMO%5D%20Portf%C3%B6y%20%C3%B6nerisi%20talebi">Portföy Önerisi İste <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <p class="fine mt-4">Seçimleriniz mesaja eklenir. Kişisel verileriniz <a href="../../kvkk/">KVKK aydınlatma metnine</a> göre işlenir.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="h-portfoy">
+  <div class="wrap">
+    <p class="eyebrow">Portföy (örnek)</p>
+    <h2 id="h-portfoy" class="h2 mt-4 max-w-2xl">İlana özel tek dokunuş: “Bu ilan için yaz”.</h2>
+    <p class="lead mt-5 max-w-2xl">İlan numarası ve başlığı mesaja otomatik taşınır; danışmanınız hangi ilan için yazdığınızı ilk saniyede bilir.</p>
+
+    <div class="mt-12 grid gap-5 md:grid-cols-3" data-stagger>
+      <article class="listing">
+        <div class="listing-img" aria-hidden="true"><span class="badge">DEMO-101</span><svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMax slice"><path fill="#1d3257" d="M0 240V140h56V96h44v64h34V70h52v96h44V112h50v92h40V60h80v180z"/><path fill="#12244a" d="M0 240V196h74v-32h52v56h64v-44h74v34h62v-22h74v50z"/></svg></div>
+        <div class="flex flex-1 flex-col gap-3 p-6">
+          <h3 class="h3">Boğaz manzaralı 4+1 daire</h3>
+          <p class="spec"><span>Boğaz hattı</span><span>210 m²</span><span>4+1</span><span>7. kat</span></p>
+          <p class="price">₺ 62.500.000 <span class="fine">(örnek)</span></p>
+          <a class="btn btn-dark mt-2 self-start" data-wa data-where="demo-emlak-101" data-wa-text="[DEMO · Örnek Emlak] İlan hakkında bilgi: DEMO-101, Boğaz manzaralı 4+1 daire" href="https://wa.me/905XXXXXXXXX">Bu ilan için yaz <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </article>
+      <article class="listing">
+        <div class="listing-img" aria-hidden="true"><span class="badge">DEMO-102</span><svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMax slice"><path fill="#1d3257" d="M0 240V170h80l40-46 40 46h60l36-34 36 34h108v70z"/><path fill="#12244a" d="M0 240V204h110l30-26 30 26h100l34-24 34 24h62v36z"/></svg></div>
+        <div class="flex flex-1 flex-col gap-3 p-6">
+          <h3 class="h3">Bahçeli 5+2 müstakil villa</h3>
+          <p class="spec"><span>Anadolu Yakası</span><span>380 m²</span><span>5+2</span><span>Bahçeli</span></p>
+          <p class="price">₺ 48.000.000 <span class="fine">(örnek)</span></p>
+          <a class="btn btn-dark mt-2 self-start" data-wa data-where="demo-emlak-102" data-wa-text="[DEMO · Örnek Emlak] İlan hakkında bilgi: DEMO-102, Bahçeli 5+2 müstakil villa" href="https://wa.me/905XXXXXXXXX">Bu ilan için yaz <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </article>
+      <article class="listing">
+        <div class="listing-img" aria-hidden="true"><span class="badge">DEMO-103</span><svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMax slice"><path fill="#1d3257" d="M0 240V120h60V50h50v90h40V90h46v-52h50v132h46V80h44v160z"/><path fill="#12244a" d="M0 240V176h92v-36h50v50h70v-30h66v40h122v40z"/></svg></div>
+        <div class="flex flex-1 flex-col gap-3 p-6">
+          <h3 class="h3">Site içi 3+1 rezidans dairesi</h3>
+          <p class="spec"><span>Avrupa Yakası</span><span>165 m²</span><span>3+1</span><span>14. kat</span></p>
+          <p class="price">₺ 27.900.000 <span class="fine">(örnek)</span></p>
+          <a class="btn btn-dark mt-2 self-start" data-wa data-where="demo-emlak-103" data-wa-text="[DEMO · Örnek Emlak] İlan hakkında bilgi: DEMO-103, Site içi 3+1 rezidans dairesi" href="https://wa.me/905XXXXXXXXX">Bu ilan için yaz <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section bg-navy-50" aria-labelledby="h-akis">
+  <div class="wrap">
+    <p class="eyebrow">Nasıl çalışır</p>
+    <h2 id="h-akis" class="h2 mt-4 max-w-2xl">Üç adım, form yok.</h2>
+    <ol class="mt-10 grid gap-5 md:grid-cols-3" data-stagger>
+      <li class="card"><span class="num">1</span><h3 class="h3 mt-4">İlanı seçin</h3><p class="pain mt-2">Portföyde ilginizi çeken ilana ya da bölge ve bütçe seçimine dokunun.</p></li>
+      <li class="card"><span class="num">2</span><h3 class="h3 mt-4">WhatsApp’ta başlatın</h3><p class="pain mt-2">İlan numarası, bölge ve bütçe mesaja hazır gelir; yalnızca gönderin.</p></li>
+      <li class="card"><span class="num">3</span><h3 class="h3 mt-4">Danışmanınız yanıtlasın</h3><p class="pain mt-2">Canlı kurulumda talep anında danışmana bildirilir ve CRM’e kaydedilir.</p></li>
+    </ol>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer on-dark">
+  <div class="wrap">
+    <p class="fine">Bu sayfa SyncFlow demosudur. Örnek Emlak, ilanlar, fiyatlar ve görseller kurgusaldır; gerçek bir kurumu ya da mülkü temsil etmez.</p>
+  </div>
+</footer>
+
+<div class="sticky-cta" data-show="true" role="region" aria-label="Hızlı iletişim">
+  <a class="btn btn-ghost" href="tel:+905XXXXXXXXX" aria-label="Ara">Ara <svg aria-hidden="true"><use href="#i-phone"/></svg></a>
+  <a class="btn btn-primary grow" href="#talep">Portföy Önerisi İste <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+</div>
+
+<script src="../../assets/js/main.js" defer></script>
+</body>
+</html>

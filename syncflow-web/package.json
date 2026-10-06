@@ -1,0 +1,21 @@
+{
+  "name": "syncflow-web",
+  "version": "1.1.0",
+  "private": true,
+  "description": "SyncFlow kurumsal vitrin: statik HTML + Tailwind CSS v4 + Motion (mini), çalışma zamanı çerçevesi yok.",
+  "scripts": {
+    "build": "npm run build:css && npm run build:js",
+    "build:css": "tailwindcss -i ./src/styles/input.css -o ./assets/css/main.css --minify",
+    "build:js": "node scripts/build-js.mjs",
+    "dev": "tailwindcss -i ./src/styles/input.css -o ./assets/css/main.css --watch",
+    "dev:js": "node scripts/build-js.mjs --watch",
+    "serve": "python -m http.server 5173",
+    "check": "node scripts/check.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "esbuild": "^0.28.2",
+    "motion": "^14.0.0",
+    "tailwindcss": "^4.3.3"
+  }
+}
