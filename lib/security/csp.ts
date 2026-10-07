@@ -15,8 +15,16 @@
  */
 export const LEMON_STYLE_HASH = "'sha256-YcTsEGa6JdvnyeVqrxPP/jx+PG7IZ90haC5ZJIe3RT0='";
 
-/** Hash of the one stylesheet the Remotion Player injects. Computed from the installed Remotion in next.config.mjs. */
-const REMOTION_STYLE_HASH = process.env.REMOTION_STYLE_HASH ?? '';
+/** Where browsers POST violation reports (app/api/csp-report/route.ts). */
+export const CSP_REPORT_PATH = '/api/csp-report';
+
+/**
+ * How the policy is delivered. Report-only until Faz 7 (docs/adr/0001-csp-report-only.md): the browser evaluates the
+ * whole policy and reports every violation to CSP_REPORT_PATH, but blocks nothing. Set CSP_MODE=enforce in the
+ * environment to start blocking; no code change is needed. Anything else means report-only.
+ */
+export const CSP_MODE: 'report-only' | 'enforce' = process.env.CSP_MODE === 'enforce' ? 'enforce' : 'report-only';
+export const CSP_HEADER = CSP_MODE === 'enforce' ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only';
 
 export const LEMON_SCRIPT_ORIGIN = 'https://assets.lemonsqueezy.com';
 const LEMON_FRAME_ORIGINS = ['https://*.lemonsqueezy.com', 'https://lemonsqueezy.com'];
@@ -44,7 +52,7 @@ export function buildCsp({ nonce, isDev, isHttps }: CspOptions): string {
     // ignore host allow-lists; the origin below is the fallback for old browsers without CSP3.
     'script-src': ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'", LEMON_SCRIPT_ORIGIN, ...(isDev ? ["'unsafe-eval'"] : [])],
     // Dev injects <style> tags without a nonce (HMR), so dev needs 'unsafe-inline'. Production does not.
-    'style-src': ["'self'", ...(isDev ? ["'unsafe-inline'"] : [`'nonce-${nonce}'`, LEMON_STYLE_HASH, ...(REMOTION_STYLE_HASH ? [REMOTION_STYLE_HASH] : [])])],
+    'style-src': ["'self'", ...(isDev ? ["'unsafe-inline'"] : [`'nonce-${nonce}'`, LEMON_STYLE_HASH])],
     // React renders style="" attributes in server HTML (and lemon.js sets some). Inline style attributes cannot
     // execute script, so they are allowed separately from <style> elements.
     'style-src-attr': ["'unsafe-inline'"],
@@ -59,9 +67,12 @@ export function buildCsp({ nonce, isDev, isHttps }: CspOptions): string {
     'base-uri': ["'self'"],
     'form-action': ["'self'"],
     'frame-ancestors': ["'self'"],
+    'report-uri': [CSP_REPORT_PATH],
   };
 
-  if (isHttps && !isDev) directives['upgrade-insecure-requests'] = [];
+  // Browsers ignore this directive in a report-only policy (and log a warning), so it is only sent when enforcing.
+  // Until then the enforced Strict-Transport-Security header does the upgrading.
+  if (isHttps && !isDev && CSP_MODE === 'enforce') directives['upgrade-insecure-requests'] = [];
 
   return Object.entries(directives)
     .map(([name, values]) => (values.length ? `${name} ${values.join(' ')}` : name))

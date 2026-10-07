@@ -70,7 +70,12 @@ if (process.env.MOCK_WEBHOOK_PORT) {
 section('Home page, security headers, CSP nonce');
 const home = await get('/');
 const html = await home.text();
-const csp = home.headers.get('content-security-policy') ?? '';
+// Faz 2 (docs/adr/0001-csp-report-only.md): the policy is delivered as Content-Security-Policy-Report-Only until Faz 7.
+// Run with EXPECT_CSP_MODE=enforce (after setting CSP_MODE=enforce on the server) to expect the enforcing header instead.
+const expectEnforce = process.env.EXPECT_CSP_MODE === 'enforce';
+const cspHeader = expectEnforce ? 'content-security-policy' : 'content-security-policy-report-only';
+const otherCspHeader = expectEnforce ? 'content-security-policy-report-only' : 'content-security-policy';
+const csp = home.headers.get(cspHeader) ?? '';
 const nonce = /'nonce-([^']+)'/.exec(csp)?.[1];
 
 check('GET / returns 200 HTML', home.status === 200 && (home.headers.get('content-type') ?? '').includes('text/html'), `status ${home.status}`);
@@ -81,20 +86,23 @@ check('Referrer-Policy strict-origin-when-cross-origin', home.headers.get('refer
 const pp = home.headers.get('permissions-policy') ?? '';
 check('Permissions-Policy disables camera, microphone, geolocation', ['camera=()', 'microphone=()', 'geolocation=()'].every((p) => pp.includes(p)), pp);
 check('X-Powered-By is not sent', home.headers.get('x-powered-by') === null);
+check(`CSP is delivered as ${cspHeader}, and not as ${otherCspHeader}`, csp !== '' && home.headers.get(otherCspHeader) === null, `${cspHeader}: ${csp ? 'present' : 'missing'}, ${otherCspHeader}: ${home.headers.get(otherCspHeader) ? 'present' : 'absent'}`);
+check('CSP reports violations to /api/csp-report', csp.includes('report-uri /api/csp-report'));
+check('upgrade-insecure-requests is only sent when enforcing (browsers ignore it in report-only)', expectEnforce || !csp.includes('upgrade-insecure-requests'));
 check('CSP has a per-request nonce + strict-dynamic', Boolean(nonce) && csp.includes("'strict-dynamic'"));
 const scriptSrc = /script-src ([^;]+)/.exec(csp)?.[1] ?? '';
 check("CSP script-src has no 'unsafe-inline' / 'unsafe-eval'", !scriptSrc.includes('unsafe-inline') && !scriptSrc.includes('unsafe-eval'), scriptSrc);
 check('CSP object-src none, base-uri self, frame-ancestors self', csp.includes("object-src 'none'") && csp.includes("base-uri 'self'") && csp.includes("frame-ancestors 'self'"));
 const origins = [...csp.matchAll(/https:\/\/[^\s;']+/g)].map((m) => m[0]);
 check('CSP names no third party except lemonsqueezy.com', origins.length > 0 && origins.every((o) => o.includes('lemonsqueezy.com')), origins.join(' '));
-check('CSP allows exactly two inline <style> hashes (lemon.js loader + Remotion Player)', (csp.match(/'sha256-[^']+'/g) ?? []).length === 2, csp.match(/'sha256-[^']+'/g)?.join(' '));
+check('CSP allows exactly one inline <style> hash (the lemon.js loader; the Remotion Player is gone)', (csp.match(/'sha256-[^']+'/g) ?? []).length === 1, csp.match(/'sha256-[^']+'/g)?.join(' '));
 check('CSP allows the overlay: lemon.js script + checkout frame', scriptSrc.includes('https://assets.lemonsqueezy.com') && /frame-src [^;]*https:\/\/\*\.lemonsqueezy\.com/.test(csp));
 
 const scriptTags = [...html.matchAll(/<script\b([^>]*)>/gi)].map((m) => m[1]).filter((attrs) => !/type="application\/ld\+json"/i.test(attrs));
 const unnonced = scriptTags.filter((attrs) => !attrs.includes(`nonce="${nonce}"`));
 check(`every executable <script> carries the nonce (${scriptTags.length} scripts)`, scriptTags.length > 0 && unnonced.length === 0, unnonced.slice(0, 2).join(' | '));
 
-const second = await (await get('/')).headers.get('content-security-policy');
+const second = await (await get('/')).headers.get(cspHeader);
 check('nonce changes on every request', Boolean(second) && second !== csp);
 
 check('<html lang="en">', /<html[^>]*\blang="en"/.test(html));
@@ -236,6 +244,51 @@ if (mock) {
   await post(valid({ website: 'filled' }));
   check('honeypot submission is NOT delivered', received.length === 0);
 }
+
+section('Showcase film files (docs/adr/0003)');
+const mediaTypes = { mp4: 'video/mp4', webm: 'video/webm', webp: 'image/webp' };
+let mediaOk = true;
+let mediaDetail = '';
+for (const loc of ['en', 'tr']) {
+  for (const layout of ['wide', 'tall']) {
+    for (const [ext, type] of Object.entries(mediaTypes)) {
+      const res = await get(`/media/showcase/architecture-${loc}-${layout}.${ext}`, { headers: { range: 'bytes=0-0' } });
+      const good = [200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type);
+      if (!good) {
+        mediaOk = false;
+        mediaDetail += `${loc}-${layout}.${ext}: ${res.status} ${res.headers.get('content-type')}; `;
+      }
+      await res.arrayBuffer();
+    }
+  }
+}
+check('all 12 film files are served with the right content type (en/tr x wide/tall x mp4/webm/webp)', mediaOk, mediaDetail);
+const ranged = await get('/media/showcase/architecture-en-wide.mp4', { headers: { range: 'bytes=0-99' } });
+check('the mp4 answers byte-range requests (scene tabs seek, preload="none" needs it)', ranged.status === 206 && /^bytes 0-99\//.test(ranged.headers.get('content-range') ?? '') && ranged.headers.get('accept-ranges') === 'bytes', `${ranged.status} ${ranged.headers.get('content-range')} ${ranged.headers.get('accept-ranges')}`);
+await ranged.arrayBuffer();
+const cached = (await get('/media/showcase/architecture-en-wide.webp')).headers.get('cache-control') ?? '';
+check('film files are cacheable for a week with background revalidation', /max-age=604800/.test(cached) && /stale-while-revalidate/.test(cached), cached);
+const noMedia = await get('/media/showcase/architecture-de-wide.mp4');
+check('there are no files for languages that are not launched (404)', noMedia.status === 404, `status ${noMedia.status}`);
+
+section('CSP report endpoint');
+const violation = {
+  'csp-report': {
+    'document-uri': 'https://example.test/page?token=SECRET#frag',
+    'violated-directive': 'script-src-elem',
+    'effective-directive': 'script-src-elem',
+    'blocked-uri': 'https://evil.example/x.js?k=1',
+    disposition: 'report',
+  },
+};
+const sendReport = (body, { type = 'application/csp-report', raw = false } = {}) =>
+  fetch(`${BASE}/api/csp-report`, { method: 'POST', headers: { 'content-type': type, 'x-forwarded-for': uniqueIp() }, body: raw ? body : JSON.stringify(body) });
+const accepted = await sendReport(violation);
+check('a violation report is accepted: 204 and no body', accepted.status === 204 && (await accepted.text()) === '', `status ${accepted.status}`);
+check('a report with a foreign content type is rejected (415)', (await sendReport('x', { type: 'text/plain', raw: true })).status === 415);
+check('malformed report JSON is rejected (400)', (await sendReport('{"csp-report":', { raw: true })).status === 400);
+check('an oversized report is rejected (413)', (await sendReport({ pad: 'a'.repeat(9000) })).status === 413);
+check('GET /api/csp-report is rejected (405)', (await get('/api/csp-report')).status === 405);
 
 section('Rate limiting');
 const ip = uniqueIp();
