@@ -28,7 +28,7 @@ export async function Pricing() {
             title={t.rich('title', { dim: (chunks) => <span className="dim">{chunks}</span> })}
             subtitle={t('subtitle')}
           />
-          <p className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
+          <p className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted" data-reveal="block">
             <MessageCircle size={18} strokeWidth={1.5} aria-hidden="true" />
             <span>{t('ask')}</span>
             <a href={`#${SECTION_IDS.contact}`} className="text-platin underline decoration-platin/30 underline-offset-4 transition-colors hover:decoration-platin">

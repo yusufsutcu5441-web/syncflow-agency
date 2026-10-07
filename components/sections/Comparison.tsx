@@ -85,7 +85,9 @@ export async function Comparison() {
           })}
         </div>
 
-        <p className="mt-6 max-w-2xl text-sm text-muted">{t('disclaimer')}</p>
+        <p className="mt-6 max-w-2xl text-sm text-muted" data-reveal="block">
+          {t('disclaimer')}
+        </p>
       </div>
     </section>
   );

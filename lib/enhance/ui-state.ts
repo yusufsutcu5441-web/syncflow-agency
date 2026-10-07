@@ -1,6 +1,6 @@
 /**
- * Small state toggles that need no animation engine: header background after scrolling and the mobile sticky CTA.
- * All listeners are passive and rAF-throttled.
+ * Small state toggles that need no animation engine: header background after scrolling, the mobile sticky CTA and
+ * pausing continuous animations that are off screen. All listeners are passive and rAF-throttled.
  */
 
 export function initHeaderState(): () => void {
@@ -22,6 +22,26 @@ export function initHeaderState(): () => void {
   return () => {
     window.removeEventListener('scroll', onScroll);
     cancelAnimationFrame(frame);
+  };
+}
+
+/**
+ * Continuous CSS animations opt in with data-pause-offscreen and stand still while off screen (data-offscreen="true" ->
+ * animation-play-state: paused in globals.css), so nothing animates unseen and the frame budget goes to what is visible.
+ * The showcase film does the same for its video (components/showcase/ShowcaseFilm.tsx).
+ */
+export function initPauseOffscreen(): () => void {
+  const targets = Array.from(document.querySelectorAll<HTMLElement>('[data-pause-offscreen]'));
+  if (targets.length === 0) return () => {};
+
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) (entry.target as HTMLElement).dataset.offscreen = String(!entry.isIntersecting);
+  });
+  targets.forEach((el) => observer.observe(el));
+
+  return () => {
+    observer.disconnect();
+    targets.forEach((el) => delete el.dataset.offscreen);
   };
 }
 

@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUpRight, Lock, ShieldCheck } from 'lucide-react';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { CheckoutLink } from '@/components/ui/CheckoutLink';
+import { MaskText } from '@/components/ui/MaskText';
 import { USD_FORMAT } from '@/lib/format';
 import { PRICE_USD, SECTION_IDS } from '@/lib/site';
 
@@ -28,12 +29,13 @@ export async function Hero() {
       <div className="container-x grid gap-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.55fr)] lg:items-end lg:gap-12">
         <div>
           <p className="eyebrow flex items-center gap-3">
-            <span className="live-dot" aria-hidden="true" />
+            <span className="live-dot" aria-hidden="true" data-pause-offscreen="" />
             {t('eyebrow')}
           </p>
 
-          <h1 id="hero-title" className="display text-display mt-6">
-            {t.rich('title', { dim: (chunks) => <span className="dim">{chunks}</span> })}
+          {/* data-mask="load": the words rise through their masks from the first paint, in CSS alone (globals.css). */}
+          <h1 id="hero-title" className="display text-display mt-6" data-mask="load">
+            <MaskText>{t.rich('title', { dim: (chunks) => <span className="dim">{chunks}</span> })}</MaskText>
           </h1>
 
           <p className="lead measure mt-10">{t('subtitle', { price })}</p>

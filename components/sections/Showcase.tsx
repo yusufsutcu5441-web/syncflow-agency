@@ -31,7 +31,9 @@ export async function Showcase() {
           />
         </div>
 
-        <p className="mt-5 max-w-2xl text-sm text-muted">{t('note')}</p>
+        <p className="mt-5 max-w-2xl text-sm text-muted" data-reveal="block">
+          {t('note')}
+        </p>
       </div>
     </section>
   );
