@@ -15,12 +15,12 @@ export async function LegalPage({ kind }: { kind: 'privacy' | 'imprint' }) {
   return (
     <main id="main" className="pb-24 pt-32 md:pb-32 md:pt-44">
       <div className="container-x max-w-3xl">
-        <Link href={withLocale('/', locale)} prefetch={false} className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-snow">
+        <Link href={withLocale('/', locale)} prefetch={false} className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-platin">
           <ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" />
           {t('back')}
         </Link>
 
-        <h1 className="display mt-10 text-[clamp(2.4rem,6vw,4rem)]">{privacy ? t('privacyTitle') : t('imprintTitle')}</h1>
+        <h1 className="display mt-10 text-headline">{privacy ? t('privacyTitle') : t('imprintTitle')}</h1>
         <p className="lead mt-6">{privacy ? t('privacyIntro') : t('imprintIntro')}</p>
         <p className="chip mt-8">{t('draft')}</p>
 
@@ -28,13 +28,13 @@ export async function LegalPage({ kind }: { kind: 'privacy' | 'imprint' }) {
           {privacy
             ? PRIVACY.map((key) => (
                 <section key={key}>
-                  <h2 className="text-xl font-semibold tracking-tight">{t(`${key}h`)}</h2>
+                  <h2 className="text-title">{t(`${key}h`)}</h2>
                   <p className="mt-3 text-muted">{t(key)}</p>
                 </section>
               ))
             : IMPRINT.map((key) => (
                 <section key={key}>
-                  <h2 className="text-xl font-semibold tracking-tight">{t(`${key}h`)}</h2>
+                  <h2 className="text-title">{t(`${key}h`)}</h2>
                   <p className="mt-3 text-muted">{t(key)}</p>
                 </section>
               ))}

@@ -34,7 +34,7 @@ export async function Comparison() {
           subtitle={t('subtitle')}
         />
 
-        <div role="table" aria-label={t('tableCaption')} className="mt-14 md:mt-20">
+        <div role="table" aria-label={t('tableCaption')} className="mt-block">
           <div role="row" className={`hidden ${GRID} md:items-end`}>
             {/* The empty first column needs a real grid cell. An sr-only element is absolutely positioned and would
                 be skipped by the grid, shifting both headers one column to the left. */}
@@ -46,7 +46,7 @@ export async function Comparison() {
             </span>
             <span
               role="columnheader"
-              className="rounded-t-3xl border border-b-0 border-white/15 bg-white/[0.045] px-8 pb-6 pt-7 text-lg font-semibold tracking-tight"
+              className="rounded-t-sharp-lg border border-b-0 border-hairline-strong bg-layer-1 px-8 pb-6 pt-7 text-lg font-medium tracking-title"
             >
               {t('colSyncflow')}
             </span>
@@ -55,29 +55,29 @@ export async function Comparison() {
           {ROWS.map(([labelKey, oldKey, newKey], index) => {
             const last = index === ROWS.length - 1;
             return (
-              <div key={labelKey} role="row" className={`grid gap-4 border-t border-white/10 py-7 ${GRID} md:gap-0 md:py-0`} data-reveal="">
+              <div key={labelKey} role="row" className={`grid gap-4 border-t border-hairline py-7 ${GRID} md:gap-0 md:py-0`} data-reveal="">
                 <div role="rowheader" className="eyebrow md:py-9">
                   {t(labelKey)}
                 </div>
 
                 <div role="cell" className="flex items-start gap-3.5 text-muted md:px-8 md:py-9">
-                  <X size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-subtle" aria-hidden="true" />
+                  <X size={20} strokeWidth={1.5} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
                   <div>
                     <span className="eyebrow mb-2 block md:hidden">{t('colTraditional')}</span>
-                    <span className="text-lg tracking-tight">{t(oldKey, { oldPrice })}</span>
+                    <span className="text-lg tracking-title">{t(oldKey, { oldPrice })}</span>
                   </div>
                 </div>
 
                 <div
                   role="cell"
-                  className={`flex items-start gap-3.5 text-snow md:border-x md:border-white/15 md:bg-white/[0.045] md:px-8 md:py-9 ${
-                    last ? 'md:rounded-b-3xl md:border-b' : ''
+                  className={`flex items-start gap-3.5 text-platin md:border-x md:border-hairline-strong md:bg-layer-1 md:px-8 md:py-9 ${
+                    last ? 'md:rounded-b-sharp-lg md:border-b' : ''
                   }`}
                 >
-                  <Check size={20} strokeWidth={2} className="mt-0.5 shrink-0 text-glow" aria-hidden="true" />
+                  <Check size={20} strokeWidth={2} className="mt-0.5 shrink-0 text-platin" aria-hidden="true" />
                   <div>
                     <span className="eyebrow mb-2 block md:hidden">{t('colSyncflow')}</span>
-                    <span className="text-lg font-medium tracking-tight">{t(newKey, { price })}</span>
+                    <span className="text-lg font-medium tracking-title">{t(newKey, { price })}</span>
                   </div>
                 </div>
               </div>
@@ -85,7 +85,7 @@ export async function Comparison() {
           })}
         </div>
 
-        <p className="mt-6 max-w-2xl text-sm text-subtle" data-reveal="">
+        <p className="mt-6 max-w-2xl text-sm text-muted" data-reveal="">
           {t('disclaimer')}
         </p>
       </div>

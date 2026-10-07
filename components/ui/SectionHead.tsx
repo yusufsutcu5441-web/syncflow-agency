@@ -24,7 +24,7 @@ export function SectionHead({
         <p className="eyebrow" data-reveal="">
           {eyebrow}
         </p>
-        <h2 id={id} className="display mt-5 text-[clamp(1.95rem,5vw,4.1rem)]" data-reveal="">
+        <h2 id={id} className="display mt-5 text-headline" data-reveal="">
           {title}
         </h2>
       </div>

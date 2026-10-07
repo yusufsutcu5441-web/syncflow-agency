@@ -49,7 +49,7 @@ app/
   [locale]/privacy|imprint yasal sayfa taslakları (noindex)
   api/contact/route.ts     iletişim formu API'si (Node runtime)
   og/route.tsx             paylaşım görseli (GET /og?locale=tr)
-  globals.css              tasarım belirteçleri, @font-face, bileşen sınıfları
+  globals.css              @font-face, taban katman, bileşen sınıfları, film greni (belirteçler tailwind.config.js'te)
   robots.ts · sitemap.ts · manifest.ts · icon.svg
 components/
   layout/  Header · Footer · StickyCta · LanguageSwitcher(client)
@@ -64,10 +64,25 @@ lib/
 messages/   en.json tr.json de.json fr.json it.json
 i18n/       routing.ts · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
+tailwind.config.js  tasarım sistemi: renk, tipografi, boşluk, çizgi, hareket belirteçlerinin TEK kaynağı (aşağıda)
 public/fonts/ Inter alt kümeleri (OFL)    assets/og-inter-600.ttf (paylaşım görseli yazı tipi)
 remotion/   Remotion CLI girişi (5 dil × 2 oran = 10 kompozisyon)
 scripts/    check-messages · check-fonts · smoke · audit-secrets · lemon-style-hash · build-og-font
 ```
+
+### Tasarım sistemi ("Quiet Luxury Noir")
+
+Tüm tasarım belirteçleri **tek dosyada**: [`tailwind.config.js`](tailwind.config.js). Tailwind v4 bu dosyayı kendiliğinden aramaz; `app/globals.css` onu `@config` ile yükler. Dosyadaki küçük eklenti aynı değerleri CSS değişkeni olarak da yayımlar (`--color-obsidian`, `--space-section`, `--tracking-display` ...), böylece `globals.css`'teki düz CSS ile yardımcı sınıflar hep aynı değeri kullanır. Bir değeri değiştirmek için yalnızca `tailwind.config.js`'e dokunun.
+
+| Katman | Belirteçler | Örnek |
+|---|---|---|
+| Renk | `obsidian` #0D0D0E (zemin, saf siyah değil) · `raised` · `snow` · `muted` · `subtle` · `glow` | `bg-obsidian` `text-muted` |
+| Çizgi (hairline) | `line-faint` %5 · `line` %10 · `line-strong` %15 · `line-bright` %25 beyaz. Çıplak `border` da `line` rengini alır | `border-line` |
+| Tipografi | `text-display-xl` `-lg` `text-display` `-sm` · `text-numeral` · `text-lead` · `text-title`: boyut + satır yüksekliği + iz aralığı birlikte. `tracking-*` ölçeği: başlık −%3,5 → gövde −%1,1, küçük etiket +%16 | `text-display` |
+| Boşluk | `py-section` (bölümler arası) · `mt-block` (başlık → içerik) · `px-gutter` (sayfa kenarı) · `max-w-measure` (paragraf satırı) · `max-w-container` | `mt-block` |
+| Şekil, hareket | `rounded-card` · `rounded-control` · `ease-out-expo` | `rounded-card` |
+
+Notlar: (1) Gönderilen Inter alt kümesinde yalnızca ağırlık ekseni, kerning ve tabular rakamlar var; stilistik set (`cv11`, `ss03`) ve optik boyut ekseni yok, o yüzden neo-grotesk karakter iz aralığı, ağırlık ve satır yüksekliğinden gelir. (2) Film greni `globals.css`'teki `body::after`'dır; yalnızca gürültünün parlak yarısını çizer ve zemini ekranda #0D0D0E'den yaklaşık +0,7 seviye (0-255) kaydırır (önceki sürüm +3,6 kaydırıyordu). (3) `lib/utils.ts` içindeki `cn()` yeni `text-*` boyutlarını tanır; yapılandırmaya yeni bir font boyutu eklerseniz oradaki listeye de ekleyin, yoksa tailwind-merge onu "metin rengi" sanıp `text-snow` ile birlikte kullanıldığında siler.
 
 ---
 
@@ -161,6 +176,8 @@ Kimlikler: `Architecture-<en|tr|de|fr|it>-<wide|tall>`. Metinler sitenin kendi `
 | **Mobil** DE | **95** | 100 | 100 | 100 | 1,0 sn | 2,7 sn | 140 ms | **0** | 1,0 sn |
 
 İlk yükleme: HTML 15 KB + CSS 8 KB + font 42 KB + JS 185 KB (gzip). SEO 100 için yerel derleme `NEXT_PUBLIC_SITE_URL=http://localhost:3000` ile alındı (canonical başka bir alan adını gösterirse Lighthouse düşürür; gerçek alan adında bu sorun yoktur).
+
+> **Not (2026-10-07, tasarım sistemi):** Tablo, eski film greninin zemini #0D0D0E'den ≈ +3,6 seviye (≈ #111112) kaydırdığı sürümle alındı. O renk, tarayıcının CSS gelmeden önce boyadığı koyu kareyle (R≈17) rastlantıyla örtüştüğü için Lighthouse'un Hız İndeksi o boş kareyi "%46 tamamlanmış" sayıyordu. Yeni grain zemini gerçekten #0D0D0E'de bıraktığından bu kredi kalktı. Aynı makinede, aynı oturumda, aralıklı A/B ölçümde (masaüstü n=4, mobil n=5-6; `NEXT_PUBLIC_SITE_URL` tanımsız): FCP, LCP, CLS, TBT ve indirilen bayt değişmedi; masaüstü Performans medyanı 100 → 99 (yalnızca Hız İndeksi ≈ 0,8 → 1,1 sn), mobil fark ölçüm gürültüsü içinde (TBT 110-450 ms arasında savruluyor). Bu tablo yeniden ölçülene kadar yukarıdaki sayıları "eski grain" değerleri olarak okuyun.
 
 > **Yerel ölçümün sınırı:** `next start` HTTP/1.1 + gzip sunar. Vercel gibi bir ortamda HTTP/2 + Brotli olur; Lighthouse'ın simülasyonu bunu hesaba katar, yani canlıda aynı veya daha iyi çıkması beklenir. Bunu canlı adreste PageSpeed Insights ile doğrulayın (footer'daki "Test this page on PageSpeed" bağlantısı bunun içindir).
 

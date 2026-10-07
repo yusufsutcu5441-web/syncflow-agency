@@ -122,10 +122,10 @@ export function ContactForm({ privacyHref }: { privacyHref: string }) {
   if (status === 'success') {
     return (
       <div className="glass flex min-h-[26rem] flex-col items-start justify-center gap-5 p-8 md:p-10" role="status" aria-live="polite">
-        <span className="grid size-12 place-items-center rounded-full border border-white/15 bg-white/5">
+        <span className="grid size-12 place-items-center rounded-sharp border border-hairline-strong bg-layer-2">
           <Check size={22} strokeWidth={1.75} aria-hidden="true" />
         </span>
-        <p className="text-2xl font-semibold tracking-tight md:text-3xl">{t.success}</p>
+        <p className="text-headline">{t.success}</p>
       </div>
     );
   }
@@ -221,7 +221,7 @@ export function ContactForm({ privacyHref }: { privacyHref: string }) {
           />
           <span>
             {t.consent}{' '}
-            <Link href={privacyHref} prefetch={false} className="text-snow underline decoration-white/30 underline-offset-4 transition-colors hover:decoration-white">
+            <Link href={privacyHref} prefetch={false} className="text-platin underline decoration-platin/30 underline-offset-4 transition-colors hover:decoration-platin">
               {t.consentLink}
             </Link>
           </span>
@@ -247,7 +247,7 @@ export function ContactForm({ privacyHref }: { privacyHref: string }) {
             </>
           )}
         </button>
-        <p role="status" aria-live="polite" className="min-h-6 text-sm text-snow">
+        <p role="status" aria-live="polite" className="min-h-6 text-sm text-platin">
           {formError ? t[FORM_ERROR_MESSAGE[formError]] : null}
         </p>
       </div>

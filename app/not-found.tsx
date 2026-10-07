@@ -9,7 +9,7 @@ export default function GlobalNotFound() {
         <main className="grid min-h-dvh place-items-center px-6">
           <div>
             <p className="eyebrow">404</p>
-            <h1 className="display mt-6 text-[clamp(2.4rem,6vw,4.5rem)]">This page doesn’t exist.</h1>
+            <h1 className="display mt-6 text-headline">This page doesn’t exist.</h1>
             <Link href="/" className="btn btn-primary mt-10">
               Back to home
             </Link>

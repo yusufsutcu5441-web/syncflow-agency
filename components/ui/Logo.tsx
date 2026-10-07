@@ -14,7 +14,7 @@ export function Logo({ className }: { className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
       <LogoMark />
-      <span className="text-[1.0625rem] font-semibold tracking-[-0.045em]">SyncFlow</span>
+      <span className="text-[1.0625rem] font-medium tracking-display">SyncFlow</span>
     </span>
   );
 }

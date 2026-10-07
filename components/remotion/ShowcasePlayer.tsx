@@ -146,11 +146,11 @@ export function ShowcasePlayer({ labels, copy }: { labels: SceneLabels; copy: Co
         {copy.playerDescription}
       </p>
 
-      <div className="relative border-t border-white/10">
+      <div className="relative border-t border-hairline">
         <span
           ref={progressRef}
           aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-px origin-left bg-snow"
+          className="absolute inset-x-0 top-0 h-px origin-left bg-platin"
           style={{ transform: 'scaleX(0)' }}
         />
         <div className="flex items-center justify-between gap-3 p-3 md:p-4">
@@ -164,8 +164,8 @@ export function ShowcasePlayer({ labels, copy }: { labels: SceneLabels; copy: Co
                 disabled={!player}
                 onClick={() => goTo(index)}
                 className={clsx(
-                  'min-h-10 cursor-pointer rounded-full border px-1 py-1.5 text-center text-[0.8125rem] font-medium leading-tight tracking-tight transition-colors duration-300 disabled:cursor-default sm:h-9 sm:min-h-0 sm:px-4 sm:py-0 sm:text-sm',
-                  scene === index ? 'border-white/25 bg-white/10 text-snow' : 'border-transparent text-muted hover:text-snow',
+                  'min-h-10 cursor-pointer rounded-sharp border px-1 py-1.5 text-center text-[0.8125rem] font-medium leading-tight tracking-title transition-colors duration-300 disabled:cursor-default sm:h-9 sm:min-h-0 sm:px-4 sm:py-0 sm:text-sm',
+                  scene === index ? 'border-hairline-strong bg-layer-2 text-platin' : 'border-transparent text-muted hover:text-platin',
                 )}
               >
                 {label}

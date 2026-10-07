@@ -23,7 +23,7 @@ export async function Header() {
     <header className="site-header" data-site-header="" data-scrolled="false">
       <div className="container-x flex h-[4.25rem] items-center justify-between gap-4 md:h-20">
         {/* prefetch={false}: these point at the page the visitor is already on; prefetching would only cost bytes and CPU. */}
-        <Link href={withLocale('/', locale)} prefetch={false} aria-label={a11y('home')} className="text-snow">
+        <Link href={withLocale('/', locale)} prefetch={false} aria-label={a11y('home')} className="text-platin">
           <Logo />
         </Link>
 

@@ -45,6 +45,9 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Since Next 16.3 `next dev` writes AGENTS.md / CLAUDE.md for AI coding agents, and when a CLAUDE.md already exists it
+  // inserts its own rules block INTO it. CLAUDE.md is the project contract (written by hand), so keep it untouched.
+  agentRules: false,
   // The OG image route reads this font with fs; tell the file tracer so serverless deployments ship it.
   outputFileTracingIncludes: { '/og': ['./assets/og-inter-600.ttf'] },
   env: { REMOTION_STYLE_HASH: remotionStyleHash() },

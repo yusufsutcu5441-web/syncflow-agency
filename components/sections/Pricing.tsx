@@ -32,29 +32,29 @@ export async function Pricing() {
           <p className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted" data-reveal="">
             <MessageCircle size={18} strokeWidth={1.5} aria-hidden="true" />
             <span>{t('ask')}</span>
-            <a href={`#${SECTION_IDS.contact}`} className="text-snow underline decoration-white/30 underline-offset-4 transition-colors hover:decoration-white">
+            <a href={`#${SECTION_IDS.contact}`} className="text-platin underline decoration-platin/30 underline-offset-4 transition-colors hover:decoration-platin">
               {t('askLink')}
             </a>
           </p>
         </div>
 
-        <div data-reveal="" data-spotlight="" data-sticky-guard="" className="glass p-7 sm:p-10 md:p-12">
+        <div data-reveal="" data-sticky-guard="" className="glass p-7 sm:p-10 md:p-12">
           <p className="eyebrow">{t('planName')}</p>
 
           <div className="mt-7 flex flex-wrap items-end gap-x-6 gap-y-3">
-            <span className="text-[clamp(3.5rem,11vw,7.25rem)] font-semibold leading-[0.9] tracking-[-0.06em] tabular-nums">{price}</span>
+            <span className="text-display tabular-nums">{price}</span>
             <div className="pb-2 text-sm leading-relaxed text-muted">
               <p>{t('planNote')}</p>
               <p>{t('anchor', { oldPrice })}</p>
             </div>
           </div>
 
-          <div className="mt-10 border-t border-white/10 pt-8">
+          <div className="mt-10 border-t border-hairline pt-8">
             <p className="eyebrow">{t('includesTitle')}</p>
             <ul className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
               {INCLUDES.map((key) => (
-                <li key={key} className="flex items-start gap-3 text-[0.97rem] leading-snug text-snow">
-                  <Check size={18} strokeWidth={2} className="mt-px shrink-0 text-glow" aria-hidden="true" />
+                <li key={key} className="flex items-start gap-3 text-[0.97rem] leading-snug text-platin">
+                  <Check size={18} strokeWidth={2} className="mt-px shrink-0 text-platin" aria-hidden="true" />
                   <span>{t(key)}</span>
                 </li>
               ))}
@@ -68,11 +68,11 @@ export async function Pricing() {
             </CheckoutLink>
           </Magnetic>
 
-          <p className="mt-6 flex items-start gap-2.5 text-sm text-snow">
-            <ShieldCheck size={17} strokeWidth={1.6} className="mt-px shrink-0 text-glow" aria-hidden="true" />
+          <p className="mt-6 flex items-start gap-2.5 text-sm text-platin">
+            <ShieldCheck size={17} strokeWidth={1.6} className="mt-px shrink-0 text-platin" aria-hidden="true" />
             <span>{t('risk')}</span>
           </p>
-          <p className="mt-2.5 flex items-start gap-2.5 text-sm text-subtle">
+          <p className="mt-2.5 flex items-start gap-2.5 text-sm text-muted">
             <Lock size={15} strokeWidth={1.75} className="mt-px shrink-0" aria-hidden="true" />
             <span>{t('secure')}</span>
           </p>

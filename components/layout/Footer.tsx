@@ -19,13 +19,13 @@ export async function Footer() {
 
   const pagePath = locale === routing.defaultLocale ? '' : `/${locale}`;
   const pagespeed = `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(`${SITE_URL}${pagePath}`)}`;
-  const linkClass = 'text-muted transition-colors duration-300 hover:text-snow';
+  const linkClass = 'text-muted transition-colors duration-300 hover:text-platin';
 
   return (
-    <footer className="relative border-t border-white/10 pb-28 pt-16 md:pb-14 md:pt-20">
+    <footer className="relative border-t border-hairline pb-28 pt-16 md:pb-14 md:pt-20">
       <div className="container-x grid gap-12 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
         <div>
-          <Link href={withLocale('/', locale)} prefetch={false} aria-label={a11y('home')} className="text-snow">
+          <Link href={withLocale('/', locale)} prefetch={false} aria-label={a11y('home')} className="text-platin">
             <Logo />
           </Link>
           <p className="mt-5 max-w-xs text-muted">{t('tagline')}</p>
@@ -87,7 +87,7 @@ export async function Footer() {
         </div>
       </div>
 
-      <div className="container-x mt-16 border-t border-white/10 pt-8 text-sm text-subtle">
+      <div className="container-x mt-16 border-t border-hairline pt-8 text-sm text-muted">
         <p>{t('rights', { year: now.getFullYear() })}</p>
       </div>
     </footer>
