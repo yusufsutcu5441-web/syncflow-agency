@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * SyncFlow Faz 2 denetimi: bağımlılıklar, tasarım tokenları, next-intl TR/EN iskeleti.
+ * SyncFlow denetimi. Faz 2: bağımlılıklar, tasarım tokenları, next-intl TR/EN iskeleti, CSP, Showcase filmi.
+ * Faz 3: hareket ve kaydırma (Lenis ve Motion ilk yüke girmez, azaltılmış hareket, JS'siz görünürlük).
  * Kullanım (proje kökünden):   node faz2-denetim.mjs [--root yol] [--build] [--json]
  *   --build  `npm run build` çalıştırır (production build)    --json  faz2-denetim.json yazar
  * Hiçbir dosyayı değiştirmez; yalnızca okur ve raporlar. Çıkış kodu: FAIL varsa 1.
@@ -8,6 +9,7 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions -- kompakt raporlama biçimi: sonuçlar üçlü ifade deyimleriyle eklenir */
 import fs from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 import { spawnSync } from "node:child_process";
 
 const args = process.argv.slice(2);
@@ -195,12 +197,84 @@ filmMissing.length
   : add(G5, "PASS", `${filmLocales.length} dil × 2 oran × (mp4, webm, webp) = ${filmLocales.length * 6} film dosyası var`);
 exists("components/showcase/ShowcaseFilm.tsx") && !exists("components/remotion") ? add(G5, "PASS", "oynatıcı <video> tabanlı; components/remotion yok") : add(G5, "FAIL", "components/showcase/ShowcaseFilm.tsx yok ya da components/remotion hâlâ var");
 
-/* ───────── 6) Build (isteğe bağlı) ───────── */
+/* ───────── 6) Hareket ve kaydırma (Faz 3, docs/adr/0004) ───────── */
+const G6 = "6. Hareket ve kaydırma (Faz 3)";
+// Lenis ve Motion ilk yüke girmemeli: kaynakta yalnızca import() ile kullanılabilirler (import type serbest).
+const staticImport = /^\s*import\s+(?!type\b)[^;]*?\bfrom\s+['"](lenis|motion|framer-motion)(?:\/[^'"]*)?['"]/m;
+const sideEffectImport = /^\s*import\s+['"](lenis|motion|framer-motion)(?:\/[^'"]*)?['"]/m;
+const staticHits = [];
+for (const dir of ["app", "components", "lib"]) for (const f of walk(abs(dir), [".ts", ".tsx"])) {
+  const text = fs.readFileSync(f, "utf8");
+  if (staticImport.test(text) || sideEffectImport.test(text)) staticHits.push(rel(f));
+}
+staticHits.length
+  ? add(G6, "FAIL", `lenis/motion statik import edilmiş (ilk yüke girer): ${staticHits.join(", ")}`, "yalnızca import('lenis') / import('motion/mini') kullanın")
+  : add(G6, "PASS", "lenis ve motion yalnızca dinamik import() ile kullanılıyor (ilk yüke giremez)");
+for (const [file, re, what] of [
+  ["lib/enhance/smooth-scroll.ts", /\(hover: hover\) and \(pointer: fine\)/, "yalnızca (hover: hover) and (pointer: fine)"],
+  ["lib/enhance/smooth-scroll.ts", /prefers-reduced-motion/, "azaltılmış hareket"],
+  ["lib/enhance/reveal.ts", /prefers-reduced-motion/, "azaltılmış hareket"],
+]) exists(file) && re.test(read(file)) ? add(G6, "PASS", `${file}: ${what} kontrolü var`) : add(G6, "FAIL", `${file}: ${what} kontrolü yok`);
+const css6 = exists("app/globals.css") ? stripComments(read("app/globals.css")) : "";
+/@media\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{\s*\[data-mask=['"]load['"]\][^{]*\{[^}]*animation:\s*mask-rise/.test(css6)
+  ? add(G6, "PASS", "hero girişi yalnızca prefers-reduced-motion: no-preference altında çalışıyor")
+  : add(G6, "FAIL", "hero giriş animasyonu prefers-reduced-motion: no-preference ile sınırlı değil");
+// Sürekli (infinite) CSS animasyonları ekran dışında durmalı: öğe data-pause-offscreen taşır, betik bunu IntersectionObserver ile işler.
+{
+  const infinite = [...css6.matchAll(/\.([\w-]+)\s*\{[^}]*animation:[^;}]*\binfinite\b/g)].map((m) => m[1]);
+  const pauseRule = /\[data-pause-offscreen\]\[data-offscreen=['"]true['"]\]\s*\{[^}]*animation-play-state:\s*paused/.test(css6);
+  const uiState = exists("lib/enhance/ui-state.ts") ? read("lib/enhance/ui-state.ts") : "";
+  const pauseScript = /data-pause-offscreen/.test(uiState) && /IntersectionObserver/.test(uiState);
+  const unmarked = [];
+  for (const dir of ["app", "components"]) for (const f of walk(abs(dir), [".tsx"])) {
+    const text = fs.readFileSync(f, "utf8");
+    for (const cls of infinite) for (const m of text.matchAll(new RegExp(`<[^>]*className="[^"]*\\b${cls}\\b[^"]*"[^>]*>`, "g"))) {
+      if (!/data-pause-offscreen/.test(m[0])) unmarked.push(`${rel(f)} (.${cls})`);
+    }
+  }
+  !pauseRule || !pauseScript
+    ? add(G6, "FAIL", "ekran dışı animasyon duraklatma eksik (globals.css kuralı ya da lib/enhance/ui-state.ts IntersectionObserver)")
+    : unmarked.length
+      ? add(G6, "FAIL", `sürekli animasyonlu öğe data-pause-offscreen taşımıyor: ${unmarked.join(", ")}`)
+      : add(G6, "PASS", `sürekli animasyonlar (${infinite.length ? infinite.map((c) => "." + c).join(", ") : "yok"}) ekran dışında IntersectionObserver ile duruyor`);
+}
+/(^|\})\s*\.mi\s*\{[^}]*(transform|opacity|visibility)/.test(css6)
+  ? add(G6, "FAIL", ".mi kuralı kelimeyi başlangıçta gizliyor: JS yokken metin görünmez kalırdı (gizleme yalnızca .is-armed ile, betikle)")
+  : add(G6, "PASS", "kelimeler başlangıçta gizlenmiyor (gizleme yalnızca betiğin eklediği .is-armed ile)");
+// Ölçülen parça listesi (yalnızca --build sonrası): ilk yükte lenis ve motion yok mu, lazy parçaları kaç KB?
+function bundleGate() {
+  const manifest = ".next/server/app/[locale]/page_client-reference-manifest.js";
+  if (!exists(manifest)) return add(G6, "WARN", "ilk yük parça listesi okunamadı (manifest yok)");
+  const entry = read(manifest).match(/"entryJSFiles":\s*(\{[\s\S]*?\})\s*[,}]/);
+  const initial = new Set();
+  try { for (const list of Object.values(JSON.parse(entry[1]))) for (const f of list) initial.add(f); }
+  catch { return add(G6, "WARN", "entryJSFiles ayrıştırılamadı"); }
+  const dir = abs(".next/static/chunks");
+  const chunks = fs.readdirSync(dir).filter((f) => f.endsWith(".js")).map((f) => {
+    const buf = fs.readFileSync(path.join(dir, f));
+    return { file: `static/chunks/${f}`, text: buf.toString("utf8"), gz: zlib.gzipSync(buf, { level: 9 }).length };
+  });
+  const isLenis = (t) => /lenis-smooth|lenis-stopped|lenisVersion/.test(t);
+  const isMotion = (t) => /commitStyles/.test(t) && /\.animate\(/.test(t);
+  const leaked = chunks.filter((c) => initial.has(c.file) && (isLenis(c.text) || isMotion(c.text)));
+  const lazyLenis = chunks.filter((c) => isLenis(c.text) && !initial.has(c.file));
+  const lazyMotion = chunks.filter((c) => isMotion(c.text) && !initial.has(c.file));
+  const kb = (list) => (list.reduce((sum, c) => sum + c.gz, 0) / 1024).toFixed(1);
+  leaked.length
+    ? add(G6, "FAIL", `mobil ilk yükte lenis/motion var: ${leaked.map((c) => c.file).join(", ")}`)
+    : add(G6, "PASS", `ilk yük parçalarında (${initial.size} dosya) lenis ve motion yok`);
+  lazyLenis.length && lazyMotion.length
+    ? add(G6, "INFO", `lazy parçalar: lenis ${kb(lazyLenis)} KB, motion ${kb(lazyMotion)} KB (gzip). Lenis yalnızca masaüstünde, motion ilk etkileşimde iner`)
+    : add(G6, "WARN", "lenis/motion lazy parçaları işaretçiyle bulunamadı (paket sürümü değişmiş olabilir): ilk yük denetimi geçersiz sayılmalı");
+}
+
+/* ───────── 7) Build (isteğe bağlı) ───────── */
 if (DO_BUILD) {
   const r = spawnSync("npm", ["run", "build"], { cwd: ROOT, shell: true, encoding: "utf8", maxBuffer: 1 << 26 });
   const tail = ((r.stdout || "") + (r.stderr || "")).trim().split("\n").slice(-12).join("\n");
-  add("6. Build", r.status === 0 ? "PASS" : "FAIL", r.status === 0 ? "npm run build başarılı" : "npm run build başarısız", tail);
-} else add("6. Build", "INFO", "build çalıştırılmadı (--build ile)");
+  add("7. Build", r.status === 0 ? "PASS" : "FAIL", r.status === 0 ? "npm run build başarılı" : "npm run build başarısız", tail);
+  if (r.status === 0) bundleGate();
+} else add("7. Build", "INFO", "build çalıştırılmadı (--build ile)");
 
 /* ───────── Rapor ───────── */
 results.sort((a, b) => a.group.localeCompare(b.group));
@@ -208,7 +282,7 @@ const color = process.stdout.isTTY && !process.env.NO_COLOR;
 const C = { PASS: "\x1b[32m", WARN: "\x1b[33m", FAIL: "\x1b[31m", INFO: "\x1b[90m", R: "\x1b[0m" };
 const sym = { PASS: "✔", WARN: "!", FAIL: "✖", INFO: "i" };
 let g = ""; const cnt = { PASS: 0, WARN: 0, FAIL: 0, INFO: 0 };
-console.log(`\nSyncFlow Faz 2 denetimi\nKök: ${ROOT}`);
+console.log(`\nSyncFlow denetimi (Faz 2 kapısı + Faz 3 hareket kapısı)\nKök: ${ROOT}`);
 for (const r of results) {
   if (r.group !== g) { g = r.group; console.log(`\n${g}`); }
   cnt[r.level]++;
