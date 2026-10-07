@@ -107,7 +107,7 @@ check(`checkout CTAs point to the overlay URL (found ${checkoutLinks})`, checkou
 
 const alternates = [...html.matchAll(/<link[^>]+rel="alternate"[^>]*>/g)].map((m) => m[0]);
 const hreflangs = alternates.map((a) => /hrefLang="([^"]+)"/i.exec(a)?.[1]).filter(Boolean);
-check('hreflang alternates: en tr de fr it + x-default', ['en', 'tr', 'de', 'fr', 'it', 'x-default'].every((l) => hreflangs.includes(l)), hreflangs.join(','));
+check('hreflang alternates: en tr + x-default, and no language that is not launched', ['en', 'tr', 'x-default'].every((l) => hreflangs.includes(l)) && !['de', 'fr', 'it'].some((l) => hreflangs.includes(l)), hreflangs.join(','));
 check('canonical link present', /<link[^>]+rel="canonical"/.test(html));
 check('Open Graph + Twitter card tags', /property="og:title"/.test(html) && /property="og:locale"/.test(html) && /name="twitter:card"/.test(html));
 
@@ -126,10 +126,6 @@ check('JSON-LD has no invented ratings/reviews/address', !/aggregateRating|revie
 section('Locales');
 const expectations = {
   tr: { lang: 'tr', words: ['Projeyi Başlat', '$2.500'] },
-  de: { lang: 'de', words: ['Projekt starten', '2.500'] },
-  fr: { lang: 'fr', words: ['Démarrer le projet', '2'] },
-  // Italian (CLDR) does not group four-digit numbers: "2500 $", but "20.000 $".
-  it: { lang: 'it', words: ['Avvia il progetto', '2500 $'] },
 };
 for (const [code, { lang, words }] of Object.entries(expectations)) {
   const res = await get(`/${code}`);
@@ -137,28 +133,33 @@ for (const [code, { lang, words }] of Object.entries(expectations)) {
   const body = (await res.text()).split(String.fromCharCode(160)).join(' ').split(String.fromCharCode(0x202f)).join(' ');
   check(`/${code} renders in ${code} (lang attr + translated CTA + local price)`, res.status === 200 && new RegExp(`<html[^>]*\\blang="${lang}"`).test(body) && words.every((w) => body.includes(w)), `status ${res.status}`);
 }
-const de = await get('/', { headers: { 'accept-language': 'de-DE,de;q=0.9,en;q=0.5' } });
-check('first visit with German browser redirects to /de', [307, 308].includes(de.status) && (de.headers.get('location') ?? '').endsWith('/de'), `${de.status} ${de.headers.get('location')}`);
-const cookieWins = await get('/', { headers: { 'accept-language': 'de-DE,de;q=0.9', cookie: 'NEXT_LOCALE=en' } });
-check('NEXT_LOCALE cookie (persisted choice) overrides Accept-Language', cookieWins.status === 200, `status ${cookieWins.status}`);
+// The URL alone decides the language (docs/adr/0002): no redirect from Accept-Language, no cookie.
+for (const code of ['de', 'fr', 'it']) {
+  const res = await get(`/${code}`);
+  check(`/${code} is not launched: 404`, res.status === 404, `status ${res.status}`);
+}
+const trBrowser = await get('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9,en;q=0.5' } });
+check('a Turkish browser is NOT redirected: "/" stays English', trBrowser.status === 200 && /<html[^>]*\blang="en"/.test(await trBrowser.text()), `${trBrowser.status} ${trBrowser.headers.get('location')}`);
+const staleCookie = await get('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9', cookie: 'NEXT_LOCALE=tr' } });
+check('an old NEXT_LOCALE cookie is ignored', staleCookie.status === 200, `status ${staleCookie.status}`);
 const trVisit = await get('/tr');
-check('visiting /tr sets the NEXT_LOCALE cookie (persistent choice)', /NEXT_LOCALE=tr/.test(trVisit.headers.get('set-cookie') ?? ''), trVisit.headers.get('set-cookie'));
+check('visiting /tr (or /) sets no cookie at all', !trVisit.headers.get('set-cookie') && !home.headers.get('set-cookie'), `${trVisit.headers.get('set-cookie')} | ${home.headers.get('set-cookie')}`);
 
 section('Metadata routes and error pages');
 const sitemap = await (await get('/sitemap.xml')).text();
-check('sitemap lists 5 locale URLs with alternates', (sitemap.match(/<loc>/g) ?? []).length === 5 && /hreflang="x-default"/.test(sitemap));
+check('sitemap lists 2 locale URLs with alternates', (sitemap.match(/<loc>/g) ?? []).length === 2 && /hreflang="x-default"/.test(sitemap));
 const robots = await (await get('/robots.txt')).text();
 check('robots.txt disallows /api/ and links the sitemap', /Disallow: \/api\//.test(robots) && /Sitemap:/.test(robots));
 check('manifest + icon served', (await get('/manifest.webmanifest')).status === 200 && (await get('/icon.svg')).status === 200);
 const ogUrls = [...html.matchAll(/<meta[^>]+(?:property="og:image"|name="twitter:image")[^>]*content="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
 check('og:image and twitter:image use the explicit, redirect-free /og?locale= URL', ogUrls.length >= 2 && ogUrls.every((u) => /\/og\?locale=en&v=1$/.test(u)), ogUrls.join(' '));
 check('og:image:alt is localized and carries the price', /property="og:image:alt"[^>]*content="[^"]*\$2,500/.test(html));
-for (const loc of ['en', 'tr', 'de', 'fr', 'it']) {
+for (const loc of ['en', 'tr']) {
   const r = await get(`/og?locale=${loc}&v=1`);
   const bytes = Buffer.from(await r.arrayBuffer());
   check(`/og?locale=${loc}: 200 image/png, 1200x630, > 10 KB`, r.status === 200 && r.headers.get('content-type') === 'image/png' && bytes.length > 10_000 && bytes.readUInt32BE(16) === 1200 && bytes.readUInt32BE(20) === 630, `${r.status} ${r.headers.get('content-type')} ${bytes.length}`);
 }
-const ogHeaders = (await get('/og?locale=de')).headers;
+const ogHeaders = (await get('/og?locale=tr')).headers;
 check('/og is cacheable at the edge (s-maxage) and rate-limit headers present', /s-maxage=\d+/.test(ogHeaders.get('cache-control') ?? '') && ogHeaders.get('ratelimit-limit') === '30', `${ogHeaders.get('cache-control')} | ${ogHeaders.get('ratelimit-limit')}`);
 check('/og with an unknown locale falls back to English instead of failing', (await get('/og?locale=xx')).status === 200);
 check('the /og image is not wrapped in a CSP-nonce page response (plain image, no redirect)', (await get('/og?locale=tr')).status === 200);

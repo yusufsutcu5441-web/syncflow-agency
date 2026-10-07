@@ -5,13 +5,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState, useTransition, type KeyboardEvent } from 'react';
 import { useClientI18n } from '@/components/i18n/ClientI18n';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
-import { persistLocale, stripLocale, withLocale } from '@/lib/i18n-paths';
+import { stripLocale, withLocale } from '@/lib/i18n-paths';
 
 /**
  * Header language pill. Disclosure pattern: a button that reveals a list of language buttons.
  *  - Each language is written in its own language (and carries lang="…") so anyone can find theirs.
- *  - Choosing one navigates to the same page and hash in the new language and stores the choice in the NEXT_LOCALE
- *    cookie (the same cookie the proxy reads), so the next visit opens in that language.
+ *  - Choosing one navigates to the same page and hash in the new language. The URL is the only place the choice lives:
+ *    no cookie is written (CLAUDE.md, docs/adr/0002-launch-locales-and-market.md).
  *  - Fades in/out; arrow keys, Home/End, Escape and outside-click are supported; focus returns to the pill on close.
  *  - While the new language loads, <html data-switching> dims the page slightly (globals.css).
  */
@@ -69,7 +69,6 @@ export function LanguageSwitcher() {
     setOpen(false);
     triggerRef.current?.focus();
     if (next === locale) return;
-    persistLocale(next);
     const target = `${withLocale(stripLocale(pathname), next)}${window.location.hash}`;
     startTransition(() => {
       router.replace(target, { scroll: false });

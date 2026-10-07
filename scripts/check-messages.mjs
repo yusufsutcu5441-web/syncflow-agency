@@ -37,7 +37,7 @@ const SAME_OK = new Set([
   'Briefing',
   'Checkout',
   'Next.js + Remotion',
-  'EN · TR · DE · FR · IT',
+  'EN · TR',
   'Privacy',
   'Contact',
   'Architecture',

@@ -57,7 +57,7 @@
     "restart": "Animasyonu yeniden başlat",
     "loading": "Kompozisyon yükleniyor…",
     "playerLabel": "SyncFlow mimarisinin animasyonlu kompozisyonu",
-    "playerDescription": "Üç sahneli, döngüye alınmış bir animasyon. Birinci sahne: bir ziyaretçi isteği uç ağından ve Next.js sunucu bileşenlerinden geçerek Remotion hareket katmanına, ödemeye ve beş dil sürümüne ulaşır. İkinci sahne: yükleme hızı, düzen kararlılığı, engelleme süresi ve Lighthouse puanı için performans bütçeleri. Üçüncü sahne: brifingden yayına 14 günlük teslim planı.",
+    "playerDescription": "Üç sahneli, döngüye alınmış bir animasyon. Birinci sahne: bir ziyaretçi isteği uç ağından ve Next.js sunucu bileşenlerinden geçerek Remotion hareket katmanına, ödemeye ve iki dil sürümüne ulaşır. İkinci sahne: yükleme hızı, düzen kararlılığı, engelleme süresi ve Lighthouse puanı için performans bütçeleri. Üçüncü sahne: brifingden yayına 14 günlük teslim planı.",
     "note": "Görsel bir örnektir. Bütçeler sitenizin ölçümleri değil, kurarken hedeflediğimiz sınırlardır.",
     "scene": {
       "architecture": {
@@ -73,8 +73,8 @@
         "remotionSub": "Kodla hareket",
         "checkout": "Ödeme",
         "checkoutSub": "Lemon Squeezy",
-        "locales": "5 dil",
-        "localesSub": "EN · TR · DE · FR · IT"
+        "locales": "Çok dilli",
+        "localesSub": "EN · TR"
       },
       "speed": {
         "title": "Hız bütçesi",

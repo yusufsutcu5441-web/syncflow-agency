@@ -92,7 +92,8 @@ export default async function LocaleLayout({ children, params }: Props) {
   const [messages, a11y] = await Promise.all([getMessages(), getTranslations('A11y')]);
 
   return (
-    <html lang={locale}>
+    // dir is fixed for now: en and tr are both left-to-right. A right-to-left language (Arabic) makes it follow the locale.
+    <html lang={locale} dir="ltr">
       <body>
         <a href="#main" className="skip-link">
           {a11y('skip')}

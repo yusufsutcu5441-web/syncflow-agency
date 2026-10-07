@@ -1,17 +1,19 @@
 import { defineRouting } from 'next-intl/routing';
 
+/**
+ * Launch languages: English (default, at "/") and Turkish (at "/tr"). Nothing else is routed.
+ * Further languages (DE, FR, ES, AR, JA ...) are opened one at a time, each only after a native translation and a legal
+ * review: add the messages file and a LOCALE_LABELS entry here (docs/adr/0002-launch-locales-and-market.md).
+ */
 export const routing = defineRouting({
-  locales: ['en', 'tr', 'de', 'fr', 'it'],
+  locales: ['en', 'tr'],
   defaultLocale: 'en',
-  // English lives at "/", the others at "/tr", "/de", "/fr", "/it".
+  // English lives at "/", Turkish at "/tr".
   localePrefix: 'as-needed',
-  // The visitor's choice is remembered in a first-party functional cookie, so a returning visitor lands in their language.
-  localeCookie: {
-    name: 'NEXT_LOCALE',
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  },
+  // The language is chosen by the URL alone: no cookie, and no redirect based on the browser's Accept-Language header.
+  // (Without a cookie, detection would bounce a Turkish browser from "/" back to "/tr" even after the visitor picked English.)
+  localeCookie: false,
+  localeDetection: false,
 });
 
 export type AppLocale = (typeof routing.locales)[number];
@@ -20,7 +22,4 @@ export type AppLocale = (typeof routing.locales)[number];
 export const LOCALE_LABELS: Record<AppLocale, { native: string; code: string; hreflang: string; ogLocale: string }> = {
   en: { native: 'English', code: 'EN', hreflang: 'en', ogLocale: 'en_US' },
   tr: { native: 'Türkçe', code: 'TR', hreflang: 'tr', ogLocale: 'tr_TR' },
-  de: { native: 'Deutsch', code: 'DE', hreflang: 'de', ogLocale: 'de_DE' },
-  fr: { native: 'Français', code: 'FR', hreflang: 'fr', ogLocale: 'fr_FR' },
-  it: { native: 'Italiano', code: 'IT', hreflang: 'it', ogLocale: 'it_IT' },
 };
