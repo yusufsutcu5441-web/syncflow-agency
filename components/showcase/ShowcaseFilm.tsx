@@ -112,22 +112,14 @@ export function ShowcaseFilm({ copy }: { copy: Copy }) {
     if (resume) play();
   }, [layout, begin, play]);
 
-  // Progress line and active scene follow the video while it plays.
-  useEffect(() => {
-    if (!playing) return;
-    let frame = 0;
-    const tick = () => {
-      const video = videoRef.current;
-      if (video && video.duration > 0) {
-        if (progressRef.current) progressRef.current.style.transform = `scaleX(${Math.min(1, video.currentTime / video.duration)})`;
-        const next = Math.min(SCENE_COUNT - 1, Math.floor((video.currentTime * FPS) / SCENE_FRAMES));
-        setScene((current) => (current === next ? current : next));
-      }
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [playing]);
+  // The progress line and the active scene follow the video through timeupdate (a few events a second). The CSS
+  // transition on the line smooths the steps, so no script runs on every frame of a phone's (throttled) main thread.
+  const followVideo = (video: HTMLVideoElement) => {
+    if (!(video.duration > 0)) return;
+    if (progressRef.current) progressRef.current.style.transform = `scaleX(${Math.min(1, video.currentTime / video.duration)})`;
+    const next = Math.min(SCENE_COUNT - 1, Math.floor((video.currentTime * FPS) / SCENE_FRAMES));
+    setScene((current) => (current === next ? current : next));
+  };
 
   const toggle = () => {
     const video = videoRef.current;
@@ -186,6 +178,7 @@ export function ShowcaseFilm({ copy }: { copy: Copy }) {
             setPlaying(true);
           }}
           onPause={() => setPlaying(false)}
+          onTimeUpdate={(event) => followVideo(event.currentTarget)}
           onError={(event) => {
             // canPlayType said yes but the browser could not decode the MP4: fall back to the WebM once.
             const video = event.currentTarget;
@@ -213,12 +206,13 @@ export function ShowcaseFilm({ copy }: { copy: Copy }) {
         <span
           ref={progressRef}
           aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-px origin-left bg-platin"
+          className="absolute inset-x-0 top-0 h-px origin-left bg-platin transition-transform duration-300 ease-linear"
           style={{ transform: 'scaleX(0)' }}
         />
         <div className="flex items-center justify-between gap-3 p-3 md:p-4">
           {/* Phones: three equal tabs on one row (long labels wrap to two lines). From sm: inline pills. */}
-          <div role="group" aria-label={copy.tabsLabel} className="grid min-w-0 flex-1 grid-cols-3 gap-1 sm:flex sm:flex-none sm:flex-wrap sm:gap-1.5">
+          {/* Below 360 px three equal columns are too narrow for "Architecture": the tabs size to their text instead. */}
+          <div role="group" aria-label={copy.tabsLabel} className="grid min-w-0 flex-1 grid-cols-3 gap-1 max-[22.5rem]:flex sm:flex sm:flex-none sm:flex-wrap sm:gap-1.5">
             {copy.tabs.map((label, index) => (
               <button
                 key={label}
@@ -226,7 +220,7 @@ export function ShowcaseFilm({ copy }: { copy: Copy }) {
                 aria-pressed={scene === index}
                 onClick={() => goTo(index)}
                 className={clsx(
-                  'min-h-10 cursor-pointer rounded-sharp border px-1 py-1.5 text-center text-[0.8125rem] font-medium leading-tight tracking-title transition-colors duration-300 sm:h-9 sm:min-h-0 sm:px-4 sm:py-0 sm:text-sm',
+                  'min-h-10 cursor-pointer rounded-sharp border px-1 py-1.5 max-[22.5rem]:flex-auto text-center text-[0.8125rem] font-medium leading-tight tracking-title transition-colors duration-300 sm:h-9 sm:min-h-0 sm:px-4 sm:py-0 sm:text-sm',
                   scene === index ? 'border-hairline-strong bg-layer-2 text-platin' : 'border-transparent text-muted hover:text-platin',
                 )}
               >

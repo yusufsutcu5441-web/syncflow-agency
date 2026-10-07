@@ -173,7 +173,7 @@ check('/og with an unknown locale falls back to English instead of failing', (aw
 check('the /og image is not wrapped in a CSP-nonce page response (plain image, no redirect)', (await get('/og?locale=tr')).status === 200);
 const nf = await get('/definitely-not-here');
 const nfBody = await nf.text();
-check('unknown URL: 404 with the localized page and the same security headers', nf.status === 404 && nfBody.includes('doesn’t exist') && Boolean(nf.headers.get('content-security-policy')) && nf.headers.get('x-content-type-options') === 'nosniff', `status ${nf.status}`);
+check('unknown URL: 404 with the localized page and the same security headers', nf.status === 404 && nfBody.includes('doesn’t exist') && Boolean(nf.headers.get(cspHeader)) && nf.headers.get('x-content-type-options') === 'nosniff', `status ${nf.status}`);
 for (const p of ['/privacy', '/imprint']) {
   const res = await get(p);
   const body = await res.text();

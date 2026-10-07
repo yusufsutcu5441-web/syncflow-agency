@@ -17,6 +17,7 @@
     "check:csp-hash": "node scripts/lemon-style-hash.mjs",
     "check": "npm run check:messages && npm run typecheck && npm run lint",
     "smoke": "node scripts/smoke.mjs",
+    "perf": "node scripts/lighthouse.mjs",
     "audit:secrets": "node scripts/audit-secrets.mjs",
     "film:render": "node scripts/render-film.mjs",
     "remotion:studio": "node scripts/render-film.mjs --studio",
