@@ -2,14 +2,14 @@ import { clsx, type ClassValue } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
 /**
- * tailwind-merge only knows Tailwind's stock names. It reads an unknown `text-display-xl` as a text COLOUR and would
- * drop it when it meets `text-snow`, so the headline sizes from tailwind.config.js (fontSize) are declared here.
- * Keep this list in step with `fontSize` in that file.
+ * tailwind-merge only knows Tailwind's stock names. It reads an unknown `text-headline` as a text COLOUR and would
+ * drop it when it meets `text-platin`, so the type-scale utilities are declared here.
+ * Keep this list in step with the `@utility text-*` type scale in app/globals.css (the single source of the tokens).
  */
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
-      'font-size': [{ text: ['display-xl', 'display-lg', 'display', 'display-sm', 'numeral', 'lead', 'title'] }],
+      'font-size': [{ text: ['display', 'headline', 'title', 'lead', 'spec-value', 'spec-label', 'micro'] }],
     },
   },
 });
