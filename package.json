@@ -2,7 +2,7 @@
   "name": "syncflow-agency",
   "version": "2.0.0",
   "private": true,
-  "description": "SyncFlow Agency: high-ticket B2B website. Next.js App Router, next-intl (5 locales), Framer Motion, Remotion Player, nonce-based CSP.",
+  "description": "SyncFlow Agency: high-ticket B2B website. Next.js App Router, next-intl (en, tr), pre-rendered Remotion film (no player in the browser), nonce-based CSP in report-only mode.",
   "engines": {
     "node": ">=20.19.0"
   },
@@ -18,13 +18,11 @@
     "check": "npm run check:messages && npm run typecheck && npm run lint",
     "smoke": "node scripts/smoke.mjs",
     "audit:secrets": "node scripts/audit-secrets.mjs",
-    "remotion:studio": "npx --yes -p @remotion/cli@4.0.533 remotion studio remotion/index.ts",
-    "remotion:still": "npx --yes -p @remotion/cli@4.0.533 remotion still remotion/index.ts Architecture-en-wide remotion-out/architecture-en.png --frame=290",
-    "remotion:render": "npx --yes -p @remotion/cli@4.0.533 remotion render remotion/index.ts Architecture-en-wide remotion-out/architecture-en.mp4",
+    "film:render": "node scripts/render-film.mjs",
+    "remotion:studio": "node scripts/render-film.mjs --studio",
     "dev:inbox": "node scripts/dev-inbox.mjs"
   },
   "dependencies": {
-    "@remotion/player": "4.0.533",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.16",
     "jsdom": "^29.1.1",
@@ -33,7 +31,6 @@
     "next-intl": "^4.14.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "remotion": "4.0.533",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
@@ -46,6 +43,7 @@
     "@types/react-dom": "^19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.8",
+    "remotion": "4.0.533",
     "tailwindcss": "^4.3.3",
     "typescript": "~5.9.3"
   }

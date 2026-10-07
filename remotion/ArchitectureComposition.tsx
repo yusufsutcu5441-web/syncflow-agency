@@ -6,8 +6,12 @@ import { SCENE_FRAMES, SIZES, type CompositionProps, type Layout, type SceneLabe
  * The SyncFlow architecture film: three 5-second scenes (architecture, speed budget, 14-day plan).
  *
  * Everything is a pure function of the current frame (no timers, no Math.random, no Date), which is what makes it
- * identical in the browser Player and in `remotion render`. Text comes in through props, so every locale gets its
+ * identical in Remotion Studio and in `remotion render`. Text comes in through props, so every locale gets its
  * own words from the same composition. Only transform/opacity-style properties and SVG attributes animate.
+ *
+ * Render source only (see docs/adr/0003-showcase-film-static-render.md): the website plays the rendered files.
+ * The look is the earlier one (glow, gradients, 22 px panels, semi-bold, uppercase labels) and is redesigned together
+ * with the showcase in Faz 5; until then it is kept as is on purpose.
  */
 
 const C = {
@@ -20,8 +24,8 @@ const C = {
   hair: 'rgba(255,255,255,0.08)',
 } as const;
 
-// Same family the site loads (app/globals.css). Under the Remotion CLI the web font is not present unless you load it,
-// so a close system sans is used there (see README, "Rendering video").
+// Same family the site loads (app/globals.css). remotion/fonts.ts loads the site's Inter files into the Remotion browser;
+// the system fonts after it are only the fallback.
 const SANS = "'Inter', 'Inter Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 const MONO = "ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace";
 
@@ -280,6 +284,8 @@ function ArchitectureScene({ labels, layout }: { labels: SceneLabels['architectu
 
 /* ── Scene 2 · Speed budget ──────────────────────────────────────────────────────────────────── */
 
+// The metric names are English on every page, so where they are drawn in capitals they carry lang="en": Turkish casing rules
+// would turn "Lighthouse" into "LİGHTHOUSE".
 const GAUGES = [
   { key: 'lcp', name: 'LCP', prefix: '< ', value: 1.2, decimals: 1, suffix: ' s' },
   { key: 'cls', name: 'CLS', prefix: '< ', value: 0.01, decimals: 2, suffix: '' },
@@ -328,7 +334,7 @@ function SpeedScene({ labels, layout }: { labels: SceneLabels['speed']; layout: 
         return (
           <div key={gauge.key}>
             <Panel box={card.box} delay={delay} style={{ padding: 0 }}>
-              <span style={{ position: 'absolute', top: 26, left: 26, fontFamily: MONO, fontSize: m.mono, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>{gauge.name}</span>
+              <span lang="en" style={{ position: 'absolute', top: 26, left: 26, fontFamily: MONO, fontSize: m.mono, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.muted }}>{gauge.name}</span>
               <span style={{ position: 'absolute', bottom: 28, left: 0, right: 0, textAlign: 'center', fontSize: m.title - 2, fontWeight: 600, letterSpacing: '-0.025em', color: C.snow }}>
                 {labels[gauge.key]}
               </span>
@@ -489,9 +495,12 @@ function DeliveryScene({ labels, layout }: { labels: SceneLabels['delivery']; la
 
 /* ── Composition ─────────────────────────────────────────────────────────────────────────────── */
 
-export function ArchitectureComposition({ labels, layout }: CompositionProps) {
+export function ArchitectureComposition({ labels, layout, lang }: CompositionProps) {
   return (
-    <AbsoluteFill style={{ background: C.bg, color: C.snow, fontFamily: SANS, overflow: 'hidden' }}>
+    // fontSynthesis: the site sets `font-synthesis: none` on body and only declares weights 400-500, so a request for 600 draws
+    // at 500. The Remotion browser has no such rule and would fake a bold; this keeps the film identical to the page.
+    // lang: on the site the film sat inside <html lang>, so `text-transform: uppercase` followed the language's casing rules.
+    <AbsoluteFill lang={lang} style={{ background: C.bg, color: C.snow, fontFamily: SANS, fontSynthesis: 'none', overflow: 'hidden' }}>
       <Backdrop />
       <Sequence from={0} durationInFrames={SCENE_FRAMES} name="architecture">
         <SceneFrame>

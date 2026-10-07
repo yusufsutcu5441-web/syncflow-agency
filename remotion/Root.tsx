@@ -1,20 +1,24 @@
 import { Composition } from 'remotion';
-import { ArchitectureComposition } from '../components/remotion/ArchitectureComposition';
-import { FPS, SIZES, TOTAL_FRAMES, type Layout } from '../components/remotion/config';
 import en from '../messages/en.json';
 import tr from '../messages/tr.json';
+import { ArchitectureComposition } from './ArchitectureComposition';
+import { FPS, SIZES, TOTAL_FRAMES, type Layout } from './config';
+import { loadFonts } from './fonts';
 
 /**
- * The same composition that plays on the website, registered for the Remotion CLI so it can be rendered to video or
- * stills (LinkedIn clips, sales decks, ads) in every launch language: 2 languages x 2 aspect ratios = 4 compositions.
+ * The architecture film, registered for the Remotion CLI. It is NOT part of the website bundle: the site plays the
+ * pre-rendered files in public/media/showcase (see scripts/render-film.mjs and docs/adr/0003-showcase-film-static-render.md).
  *
- *   Architecture-<locale>-wide   1280x720   (16:9, desktop / YouTube)
- *   Architecture-<locale>-tall    800x1000  (4:5, LinkedIn / Instagram feed)
+ *   Architecture-<locale>-wide   1280x720   (16:9, desktop)
+ *   Architecture-<locale>-tall    800x1000  (4:5, phones)
  *
- * Text comes from messages/<locale>.json (the website's own translations), so website and video never drift apart.
+ * 2 launch languages x 2 aspect ratios = 4 compositions. Text comes from messages/<locale>.json (the website's own
+ * translations), so the video and the site never drift apart.
  */
 const MESSAGES = { en, tr } as const;
 const LAYOUTS: Layout[] = ['wide', 'tall'];
+
+loadFonts();
 
 export const RemotionRoot = () => (
   <>
@@ -28,7 +32,7 @@ export const RemotionRoot = () => (
           fps={FPS}
           width={SIZES[layout].width}
           height={SIZES[layout].height}
-          defaultProps={{ labels: messages.Showcase.scene, layout }}
+          defaultProps={{ labels: messages.Showcase.scene, layout, lang: locale }}
         />
       )),
     )}

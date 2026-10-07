@@ -1,11 +1,10 @@
-import { getMessages, getTranslations } from 'next-intl/server';
-import { ShowcasePlayer } from '@/components/remotion/ShowcasePlayer';
+import { getTranslations } from 'next-intl/server';
+import { ShowcaseFilm } from '@/components/showcase/ShowcaseFilm';
 import { SectionHead } from '@/components/ui/SectionHead';
 import { SECTION_IDS } from '@/lib/site';
 
 export async function Showcase() {
   const t = await getTranslations('Showcase');
-  const messages = await getMessages();
 
   return (
     <section id={SECTION_IDS.showcase} className="section" aria-labelledby="showcase-title">
@@ -18,16 +17,14 @@ export async function Showcase() {
         />
 
         <div className="mt-block">
-          <ShowcasePlayer
-            labels={messages.Showcase.scene}
+          <ShowcaseFilm
             copy={{
               tabsLabel: t('tabsLabel'),
               tabs: [t('tabArchitecture'), t('tabSpeed'), t('tabDelivery')],
-              live: t('live'),
+              badge: t('badge'),
               play: t('play'),
               pause: t('pause'),
               restart: t('restart'),
-              loading: t('loading'),
               playerLabel: t('playerLabel'),
               playerDescription: t('playerDescription'),
             }}
