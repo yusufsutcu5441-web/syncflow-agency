@@ -10,10 +10,13 @@ Yüksek bütçeli elit markalar için hızlı, mevzuata duyarlı, sessiz lüks w
 Yavaş, ucuz, şablon iş yapmayız. Bu 3 sektör dışında sayfa, demo veya metin ekleme.
 
 ## Kararlar ve açık konular (açık olanları Claude Code KENDİSİ DONDURMAZ, kullanıcıya sorar)
-- KARAR VERİLDİ (07.10.2026) Fiyat: yurt dışı başlangıç tabanı $10.000; Türkiye ₺100.000–₺500.000+. Avrupa için € karşılığı henüz tanımlanmadı (öneri: $10.000'ın güncel kur karşılığı, çeyrekte bir gözden geçirme); tanımlanana kadar Avrupa fiyatı yayınlanmaz. Tek kaynak: `src/config/pricing.ts`. Başvuru bütçe aralıkları da buradan gelir.
-- KARAR VERİLDİ (07.10.2026) Lansman dilleri: TR + EN. DE, FR, ES, AR, JA mimaride hazır bekler; her biri yerel çeviri ve hukuk incelemesinden sonra açılır.
+- KARAR VERİLDİ (07.10.2026) Fiyat: yurt dışı başlangıç tabanı $10.000; Türkiye ₺100.000–₺500.000+. Avrupa için € karşılığı henüz tanımlanmadı (öneri: $10.000'ın güncel kur karşılığı, çeyrekte bir gözden geçirme); tanımlanana kadar Avrupa fiyatı yayınlanmaz. Tek kaynak dosyası henüz yok (kodda hâlâ eski $2.500 teklifi var: `lib/site.ts`); Faz 5–6'da oluşturulur. Yol açık: repoda `src/` yok, öneri `lib/pricing.ts`. Başvuru bütçe aralıkları da buradan gelecek.
+- KARAR VERİLDİ (07.10.2026) Lansman dilleri: TR + EN. DE, FR, ES, AR, JA mimaride hazır bekler; her biri yerel çeviri ve hukuk incelemesinden sonra açılır. UYGULANDI (Faz 2): `routing.locales = ['en','tr']`; çerez ve tarayıcı dili yönlendirmesi kapalı, dili yalnızca URL belirler (docs/adr/0002).
 - Kapasite cümlesi: "ayda 3" mü "çeyrekte 3" mü? Yalnızca gerçekse yayınlanır.
 - "SyncFlow" ad/marka sorgusu sonucu (kullanıcı yürütüyor). Satoshi yalnızca arayüz yazı tipidir; Fontshare EULA'sının web yayınına izni doğrulanmalı.
+- KARAR VERİLDİ (07.10.2026) CSP: Faz 7'ye kadar `Content-Security-Policy-Report-Only`; `CSP_MODE=enforce` ile enforce edilir (docs/adr/0001).
+- KARAR VERİLDİ (07.10.2026) Showcase filmi: önceden render edilmiş MP4/WebM + poster (`public/media/showcase/`); tarayıcıda Remotion çalışmaz, `remotion` yalnızca geliştirme bağımlılığıdır (docs/adr/0003).
+- AÇIK: varsayılan dil. `/` şu an İngilizce, Türkçe `/tr`. Türkiye ilk pazarsa varsayılan TR olabilir; sahibi karar verir (docs/adr/0002).
 
 ## Tasarım tokenları (pazarlığa kapalı)
 - Zemin #0D0D0E; katmanlar #141416 ve #1A1A1E. Saf siyah, bembeyaz blok, neon, turkuaz, lacivert YASAK.
@@ -23,7 +26,7 @@ Yavaş, ucuz, şablon iş yapmayız. Bu 3 sektör dışında sayfa, demo veya me
 - Hero başlığı en fazla 2 satır; ürün/sistem ilk ekranda tek kahraman.
 
 ## Tipografi
-- Tek aile: Satoshi (yedek Instrument Sans). Satoshi'nin Arapça ve Japonca glifleri DOĞRULANMADI: AR ve JA için ayrı OFL font yığını seçilir (Faz 2).
+- Tek aile: Satoshi (yedek Instrument Sans). Satoshi'nin Arapça ve Japonca glifleri DOĞRULANMADI: AR ve JA için ayrı OFL font yığını, o diller açılırken seçilir (lansmanda yok).
 - Ağırlık yalnızca 400 ve 500. İtalik yok. Arayüzde büyük harf yok (`text-transform: uppercase` yasak); majüskül yalnızca çizilmiş SYNCFLOW wordmark'ta.
 - Tracking: display -0.02em, başlık -0.01em, gövde 0, mikro +0.01em. Başka değer yok.
 - Ölçek: display 88/44 px (akıcı) · bölüm başlığı 56/32 · başlık 28/22 (500) · lead 20/17 · gövde 16 · spec değeri 40/28 (500, tabular) · spec etiketi 14 · mikro 12 · buton 15 (500).
@@ -72,4 +75,4 @@ LCP ≤ 2,5 sn · CLS ≤ 0,1 · INP ≤ 200 ms. İlk rota JS tavanı öneri: ~1
 - `.env`, font dosyaları ve sırlar commit edilmez.
 
 ## Faz planı
-F0 Karar dondurma (kapasite cümlesi ve ad sorgusu açık) · F1 Logo ve tipografi (TAMAM: B1 + özel çizim v2) · F2 Next.js 16 / Tailwind v4 (AKTİF; denetim: `faz2/faz2-denetim.mjs`, tokenlar: `faz2/globals.tokens.css`; i18n iskeleti ve CSP ADR dahil) · F3 Motion ve scroll · F4 Hero · F5 Spec sheet ve vitrin · F6 Başvuru, n8n, Gmail · F7 Güvenlik sıkılaştırma doğrulaması, çeviri ve hukuk incelemesi · F8 Vercel ve lansman
+F0 Karar dondurma (kapasite cümlesi ve ad sorgusu açık) · F1 Logo ve tipografi (TAMAM: B1 + özel çizim v2) · F2 Next.js 16 / Tailwind v4 (KAPI GEÇİLDİ 07.10.2026, `faz_2` dalı, main'e birleştirme bekliyor; denetim: kökteki `faz2-denetim.mjs --build` 0 hata; tokenlar `app/globals.css` içinde `@theme`; kararlar `docs/adr/0001–0003`; performans başlangıcı `docs/perf/faz2-baseline.md`) · F3 Motion ve scroll · F4 Hero · F5 Spec sheet ve vitrin · F6 Başvuru, n8n, Gmail · F7 Güvenlik sıkılaştırma doğrulaması, çeviri ve hukuk incelemesi · F8 Vercel ve lansman

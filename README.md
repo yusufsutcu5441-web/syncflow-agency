@@ -1,14 +1,14 @@
 # SyncFlow Agency: syncflow.agency
 
 Yüksek bütçeli B2B markalar için "Quiet Luxury Noir" kurumsal vitrin.
-**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (5 dil) · Framer Motion · Remotion Player · Lemon Squeezy · nonce tabanlı sıkı CSP**
+**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (2 dil) · Remotion ile önceden render edilmiş film · Lemon Squeezy · nonce tabanlı CSP (şimdilik report-only)**
 
 | | |
 |---|---|
-| Diller | EN (varsayılan, `/`), TR `/tr`, DE `/de`, FR `/fr`, IT `/it` |
+| Diller | EN (varsayılan, `/`) ve TR `/tr`. Diğer diller çeviri ve hukuk incelemesinden sonra açılır ([ADR 0002](docs/adr/0002-launch-locales-and-market.md)) |
 | Satış akışı | Tek CTA "Start Project — $2,500" → Lemon Squeezy koyu overlay ödeme |
-| Bölümler | Hero · Showcase (canlı Remotion kompozisyonu) · Karşılaştırma (Contrast Grid) · Fiyat · SSS · İletişim · Footer |
-| Güvenlik | HSTS, CSP (nonce + strict-dynamic), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, sunucuya özel sırlar |
+| Bölümler | Hero · Showcase (önceden render edilmiş mimari filmi) · Karşılaştırma (Contrast Grid) · Fiyat · SSS · İletişim · Footer |
+| Güvenlik | HSTS, CSP (nonce + strict-dynamic, şimdilik **report-only**), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, sunucuya özel sırlar |
 
 > **Bu proje OneDrive / Masaüstü dışında durmalı.** `node_modules` ve `.next` on binlerce dosya içerir; OneDrive senkronu, Türkçe karakterli/boşluklu yollar ve Windows'un 260 karakter sınırı kurulumu ve Remotion'u bozar. Şu an `C:\Users\YAKUP\syncflow-agency` altında.
 
@@ -30,13 +30,15 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | Komut | Ne yapar |
 |---|---|
 | `npm run check` | Çeviri eşitliği + TypeScript + ESLint |
-| `npm run check:messages` | 5 dilde anahtar/yer tutucu/etiket eşitliği (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
+| `npm run check:messages` | Her dilde anahtar/yer tutucu/etiket eşitliği (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
 | `npm run check:fonts` | Mesajlardaki her karakter yazı tipi dosyalarında var mı (Python + `pip install fonttools brotli`) |
 | `npm run check:csp-hash` | Lemon.js'in eklediği `<style>` hash'i güncel mi |
-| `npm run smoke` | **Çalışan** sunucuya karşı 78 HTTP güvenlik/işlev kontrolü (aşağıda) |
+| `npm run smoke` | **Çalışan** sunucuya karşı HTTP güvenlik/işlev kontrolleri (aşağıda). Faz 7'de CSP enforce'a geçince `EXPECT_CSP_MODE=enforce` ile çalıştırın |
+| `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Her fazın kapısı için; yöntem ve sonuçlar [docs/perf/faz2-baseline.md](docs/perf/faz2-baseline.md) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): formdan gelen kayıtları ekrana yazar. Sunucuyu `CONTACT_WEBHOOK_URL=http://127.0.0.1:4011/lead` ile başlatın (PowerShell: `$env:CONTACT_WEBHOOK_URL='http://127.0.0.1:4011/lead'; npm start`) |
-| `npm run remotion:studio / :still / :render` | Aynı kompozisyonu Remotion ile videoya/görsele çevirir (bkz. §8) |
+| `npm run film:render` | Showcase filmini Remotion ile `public/media/showcase/` altına render eder: 2 dil × 2 oran × (MP4 + WebM + poster), bkz. §6 |
+| `npm run remotion:studio` | Kompozisyonu Remotion Studio'da açar |
 
 ---
 
@@ -44,45 +46,47 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 
 ```
 app/
-  [locale]/layout.tsx      <html lang>, CSP nonce okuma, Lemon.js (next/script), JSON-LD, metadata
+  [locale]/layout.tsx      <html lang dir>, CSP nonce okuma, Lemon.js (next/script), JSON-LD, metadata
   [locale]/page.tsx        ana sayfa (sunucu bileşeni, bölümler)
   [locale]/privacy|imprint yasal sayfa taslakları (noindex)
   api/contact/route.ts     iletişim formu API'si (Node runtime)
+  api/csp-report/route.ts  CSP ihlal raporları alıcısı (204; sunucu günlüğüne rapor başına tek satır JSON)
   og/route.tsx             paylaşım görseli (GET /og?locale=tr)
-  globals.css              @font-face, taban katman, bileşen sınıfları, film greni (belirteçler tailwind.config.js'te)
+  globals.css              @font-face, tasarım belirteçleri (@theme), taban katman, bileşen sınıfları
   robots.ts · sitemap.ts · manifest.ts · icon.svg
 components/
   layout/  Header · Footer · StickyCta · LanguageSwitcher(client)
   sections/ Hero · Showcase · Comparison · Pricing · Faq · Contact · ContactForm(client) · LegalPage
-  remotion/ ArchitectureComposition (kare tabanlı, saf) · ShowcasePlayer(client) · ArchitecturePlayer · config
+  showcase/ ShowcaseFilm(client): poster + önceden render edilmiş video, sahne sekmeleri
   checkout/ LemonSqueezy(client): lemon.js + overlay erişilebilirliği
-  i18n/     ClientI18n (tarayıcıya giden minik bağlam) · ui/ Logo, CheckoutLink, Magnetic, SectionHead
+  i18n/     ClientI18n (tarayıcıya giden minik bağlam) · ui/ Logo, CheckoutLink, SectionHead
 lib/
   security/ csp.ts · rate-limit.ts      server/ deliver.ts · sanitize.ts (server-only)
   schemas/  contact.ts (zod, sunucu) · contact-fields.ts (tarayıcı, zod'suz)
-  enhance/  reveal · magnetic · cursor · scroll-line · ui-state   (Framer Motion DOM motoru)
-messages/   en.json tr.json de.json fr.json it.json
+  enhance/  ui-state (üstbilginin kaydırınca arka plan alması, mobil yapışkan CTA; animasyon yok)
+  i18n-paths.ts   dil önekli yollar (next-intl'in istemci çalışma zamanı olmadan)
+messages/   en.json tr.json
 i18n/       routing.ts · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-tailwind.config.js  tasarım sistemi: renk, tipografi, boşluk, çizgi, hareket belirteçlerinin TEK kaynağı (aşağıda)
-public/fonts/ Inter alt kümeleri (OFL)    assets/og-inter-600.ttf (paylaşım görseli yazı tipi)
-remotion/   Remotion CLI girişi (5 dil × 2 oran = 10 kompozisyon)
-scripts/    check-messages · check-fonts · smoke · audit-secrets · lemon-style-hash · build-og-font
+docs/adr/   mimari kararlar: 0001 CSP report-only · 0002 lansman dilleri ve pazar · 0003 Showcase filmi
+public/fonts/ Inter alt kümeleri (OFL)   public/media/showcase/ render edilmiş film dosyaları   assets/og-inter-600.ttf
+remotion/   Render kaynağı, siteye girmez: kompozisyon, yazı tipi yükleyici, CLI girişi (2 dil × 2 oran = 4 kompozisyon)
+scripts/    check-messages · check-fonts · smoke · audit-secrets · lemon-style-hash · build-og-font · render-film
 ```
 
 ### Tasarım sistemi ("Quiet Luxury Noir")
 
-Tüm tasarım belirteçleri **tek dosyada**: [`tailwind.config.js`](tailwind.config.js). Tailwind v4 bu dosyayı kendiliğinden aramaz; `app/globals.css` onu `@config` ile yükler. Dosyadaki küçük eklenti aynı değerleri CSS değişkeni olarak da yayımlar (`--color-obsidian`, `--space-section`, `--tracking-display` ...), böylece `globals.css`'teki düz CSS ile yardımcı sınıflar hep aynı değeri kullanır. Bir değeri değiştirmek için yalnızca `tailwind.config.js`'e dokunun.
+Tüm tasarım belirteçleri **tek yerde**: [`app/globals.css`](app/globals.css) içindeki `@theme` bloğu ve `@utility text-*` tipografi ölçeği (Tailwind v4, CSS-first). Eski `tailwind.config.js` Faz 2'de kaldırıldı. Kural kaynağı CLAUDE.md'deki "Tasarım tokenları" ve "Tipografi" bölümleridir.
 
 | Katman | Belirteçler | Örnek |
 |---|---|---|
-| Renk | `obsidian` #0D0D0E (zemin, saf siyah değil) · `raised` · `snow` · `muted` · `subtle` · `glow` | `bg-obsidian` `text-muted` |
-| Çizgi (hairline) | `line-faint` %5 · `line` %10 · `line-strong` %15 · `line-bright` %25 beyaz. Çıplak `border` da `line` rengini alır | `border-line` |
-| Tipografi | `text-display-xl` `-lg` `text-display` `-sm` · `text-numeral` · `text-lead` · `text-title`: boyut + satır yüksekliği + iz aralığı birlikte. `tracking-*` ölçeği: başlık −%3,5 → gövde −%1,1, küçük etiket +%16 | `text-display` |
-| Boşluk | `py-section` (bölümler arası) · `mt-block` (başlık → içerik) · `px-gutter` (sayfa kenarı) · `max-w-measure` (paragraf satırı) · `max-w-container` | `mt-block` |
-| Şekil, hareket | `rounded-card` · `rounded-control` · `ease-out-expo` | `rounded-card` |
+| Renk | `obsidian` #0D0D0E (zemin, saf siyah değil) · `layer-1` #141416 · `layer-2` #1A1A1E · `platin` #E2E2E6 (metin) · `muted` #9A9A9F · `champagne` #D4C5A9 (yalnızca birincil CTA ve tekil vurgular) | `bg-obsidian` `text-muted` |
+| Çizgi (hairline) | `hairline` beyaz %6 · `hairline-strong` beyaz %16. Çıplak `border` da `hairline` rengini alır | `border-hairline` |
+| Tipografi | `text-display` · `text-headline` · `text-title` · `text-lead` · `text-spec-value` · `text-spec-label` · `text-micro`: boyut + ağırlık (yalnızca 400/500) + satır yüksekliği + iz aralığı birlikte. İz aralığı yalnızca dört değer: display −0,02em · başlık −0,01em · gövde 0 · mikro +0,01em | `text-headline` |
+| Boşluk | `--space-section` · `mt-block` (başlık → içerik) · `--space-gutter` · `measure` (paragraf satırı) · `--max-container` | `mt-block` |
+| Şekil, hareket | `rounded-sharp` 2 px · `rounded-sharp-lg` 4 px · `--ease-lux` | `rounded-sharp` |
 
-Notlar: (1) Gönderilen Inter alt kümesinde yalnızca ağırlık ekseni, kerning ve tabular rakamlar var; stilistik set (`cv11`, `ss03`) ve optik boyut ekseni yok, o yüzden neo-grotesk karakter iz aralığı, ağırlık ve satır yüksekliğinden gelir. (2) Film greni `globals.css`'teki `body::after`'dır; yalnızca gürültünün parlak yarısını çizer ve zemini ekranda #0D0D0E'den yaklaşık +0,7 seviye (0-255) kaydırır (önceki sürüm +3,6 kaydırıyordu). (3) `lib/utils.ts` içindeki `cn()` yeni `text-*` boyutlarını tanır; yapılandırmaya yeni bir font boyutu eklerseniz oradaki listeye de ekleyin, yoksa tailwind-merge onu "metin rengi" sanıp `text-snow` ile birlikte kullanıldığında siler.
+Notlar: (1) Yazı tipi şimdilik Inter (SIL OFL); marka yazı tipi Satoshi'nin web lisansı ve Türkçe glifleri doğrulanana kadar geçicidir (CLAUDE.md "Tipografi"). `font-synthesis: none` sayesinde sahte kalın/italik üretilmez. (2) Glow, gradyan, dekoratif gölge, hap buton ve film greni yoktur. (3) `lib/utils.ts` içindeki `cn()` `text-*` boyutlarını tanır; `globals.css`'e yeni bir `@utility text-*` eklerseniz oradaki listeye de ekleyin, yoksa tailwind-merge onu "metin rengi" sanıp `text-platin` ile birlikte kullanıldığında siler.
 
 ---
 
@@ -90,12 +94,14 @@ Notlar: (1) Gönderilen Inter alt kümesinde yalnızca ağırlık ekseni, kernin
 
 **Başlıklar** (`next.config.mjs`, her yanıtta): `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `Cross-Origin-Opener-Policy: same-origin-allow-popups` (3-D Secure/PayPal pencereleri için). `X-Powered-By` kapalı.
 
-**Content-Security-Policy** (`lib/security/csp.ts`, `proxy.ts` her sayfa isteğinde üretir):
+**Content-Security-Policy** (`lib/security/csp.ts`, `proxy.ts` her sayfa isteğinde üretir). **Şimdilik `Content-Security-Policy-Report-Only` olarak gönderilir:** tarayıcı politikayı tam uygular ve her ihlali `/api/csp-report`'a bildirir ama hiçbir şeyi engellemez. Enforce'a geçiş Faz 7'de, `CSP_MODE=enforce` ortam değişkeniyle (kod değişikliği gerekmez); gerekçe ve ölçütler [ADR 0001](docs/adr/0001-csp-report-only.md).
 - `script-src 'self' 'nonce-…' 'strict-dynamic'`: satır içi betikler **yalnızca** o isteğin nonce'unu taşıyorsa çalışır. `unsafe-inline`/`unsafe-eval` yok.
 - Üçüncü taraf olarak yalnızca `lemonsqueezy.com`: betik (`assets.lemonsqueezy.com`) ve ödeme iframe'i (`*.lemonsqueezy.com`).
-- `style-src` nonce + **iki tam hash**: Lemon.js'in yükleyici `<style>`'ı ve Remotion Player'ın eklediği `<style>`. Remotion hash'i her derlemede kurulu sürümden **otomatik hesaplanır** (`next.config.mjs`), Lemon hash'i `npm run check:csp-hash` ile doğrulanır.
-- `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'self'`, üretimde HTTPS ise `upgrade-insecure-requests`.
-- **Bedeli:** nonce her istekte değiştiği için sayfalar istek başına render edilir (CDN'de HTML önbelleğe alınamaz). Marka sitesi için ölçülen sunucu yanıtı ≈ 90–170 ms. Önbellekli statik HTML isterseniz CSP `'unsafe-inline'` ile gevşetilmelidir; bunu yapmanızı önermiyorum.
+- `style-src` nonce + **bir tam hash**: Lemon.js'in yükleyici `<style>`'ı (`npm run check:csp-hash` ile doğrulanır). Remotion Player kalktığı için ikinci hash yok.
+- `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'self'`, `report-uri /api/csp-report`. `upgrade-insecure-requests` yalnızca enforce kipinde ve üretimde HTTPS ise gönderilir (report-only'de tarayıcılar bu yönergeyi yok sayar).
+- **Rapor alıcısı** (`app/api/csp-report/route.ts`): `204` döner, gövde ≤ 8 KB, en fazla 10 rapor işler ve sunucu günlüğüne rapor başına tek satır JSON yazar. Yalnızca yönerge, engellenen/belge/kaynak adresi (sorgu dizesi ve parça atılır) ve satır/sütun tutulur; politika metni, betik örneği, IP ve User-Agent tutulmaz.
+- **Report-only iken:** CSP enjekte edilmiş bir betiği engellemez. XSS savunması React'in kaçışına, DOMPurify'a ve kullanıcı HTML'i render etmemeye dayanır. Tıklama hırsızlığına karşı zorunlu `X-Frame-Options` çalışır.
+- **Bedeli:** nonce her istekte değiştiği için sayfalar istek başına render edilir (CDN'de HTML önbelleğe alınamaz). Marka sitesi için ölçülen sunucu yanıtı ≈ 90–170 ms (Faz 2 ölçümü, yerel `next start`: TTFB ≈ 65–70 ms, [docs/perf/faz2-baseline.md](docs/perf/faz2-baseline.md)). Önbellekli statik HTML isterseniz CSP `'unsafe-inline'` ile gevşetilmelidir; bunu yapmanızı önermiyorum.
 
 **Hız sınırı** (`lib/security/rate-limit.ts`): `/api/*` + `/og` için 30 istek/dk/IP, sayfalar için 240/dk/IP (`proxy.ts`), iletişim formu için ayrıca **5 gönderim/10 dk/IP**. Aşılınca `429` + `Retry-After`. Depolama: `UPSTASH_REDIS_REST_URL/TOKEN` tanımlıysa Redis (IP **SHA-256'lanır**), yoksa süreç belleği. **Dürüst sınır:** Vercel gibi sunucusuz ortamda bellek tabanlı sayaç örnek başınadır, yani en iyi çaba. Gerçek koruma için Upstash ekleyin. Dağıtık (L7 DDoS) saldırıya karşı asıl savunma platformdur: Vercel Firewall / Cloudflare WAF. Uygulama katmanı bunun yerine geçmez.
 
@@ -113,44 +119,42 @@ Notlar: (1) Gönderilen Inter alt kümesinde yalnızca ağırlık ekseni, kernin
 
 ## 4. Yerelleştirme (i18n)
 
-- Yönlendirme `i18n/routing.ts` (`localePrefix: 'as-needed'`). İlk ziyarette tarayıcı diline göre yönlendirme yapılır; seçim **`NEXT_LOCALE` çerezinde 1 yıl** saklanır (işlevsel çerez, izleme yok).
-- Çeviriler **sunucuda** yapılır (fiyat biçimi dahil: `$2,500`, `$2.500`, `2.500 $`, `2 500 $`, `2500 $`: her dilin CLDR kuralı). Tarayıcıya yalnızca birkaç düz metin gider (`components/i18n/ClientI18n.tsx`), next-intl'in ICU motoru tarayıcıya **gitmez** (~13 KB gzip kazanç).
+- Yönlendirme `i18n/routing.ts` (`localePrefix: 'as-needed'`): EN `/`, TR `/tr`. Dili **yalnızca URL** belirler: çerez yok, tarayıcı diline (`Accept-Language`) göre yönlendirme yok. İkisi birlikte kapalıdır, çünkü çerez olmadan algılama, Türkçe bir tarayıcıda "EN"i seçen ziyaretçiyi `/`'tan tekrar `/tr`'ye atardı. Bilinmeyen dil kodu (`/de`) 404 döner. Gerekçe: [ADR 0002](docs/adr/0002-launch-locales-and-market.md).
+- Çeviriler **sunucuda** yapılır (fiyat biçimi dahil: `$2,500`, `$2.500`: her dilin CLDR kuralı). Tarayıcıya yalnızca birkaç düz metin gider (`components/i18n/ClientI18n.tsx`), next-intl'in ICU motoru tarayıcıya **gitmez** (~13 KB gzip kazanç). Dil önekli yollar `lib/i18n-paths.ts` ile üretilir (next-intl'in `createNavigation`'ı, yani istemci çalışma zamanı, bilerek kullanılmaz).
 - `hreflang` (HTML + `Link` başlığı + sitemap), `x-default`, dil başına canonical, `og:locale`.
-- Dil seçici: giriş-çıkışta yumuşak geçiş, ok tuşları/Home/End/Esc, `lang=""` ile anadilde adlar, seçimi çereze yazar, `#anchor`'ı korur.
+- Dil seçici: giriş-çıkışta yumuşak geçiş, ok tuşları/Home/End/Esc, `lang=""` ile anadilde adlar, `#anchor`'ı korur. Seçimi çereze **yazmaz**.
 
-**Yeni dil eklemek:** `messages/xx.json` (en.json ile aynı anahtarlar) → `i18n/routing.ts` `locales` + `LOCALE_LABELS` → `npm run check` → yazı tipi kapsamı için `python scripts/check-fonts.py` (eksik harf varsa alt kümeyi yeniden üretin, bkz. dosya başlığı) → `remotion/Root.tsx`'e `MESSAGES` ekleyin.
-
----
-
-## 5. Animasyon sistemi
-
-Hepsi **Framer Motion**'ın motorudur (`framer-motion/dom`: yay fiziği, `springValue`, `styleEffect`, `scroll`), ama React bileşeni olarak değil, ilk boyamadan **sonra** ve tarayıcı boştayken ayrı bir parçada yüklenen DOM iyileştirmeleri olarak (`lib/enhance/`). Neden: hidrasyon maliyeti sıfır, LCP/TBT'ye dokunmaz, JS kapalıyken içerik görünür.
-
-- **Scroll reveal:** yalnızca ekran *altındaki* öğeler gizlenir (hero asla), yay fiziğiyle girer, sonunda satır içi stiller temizlenir. Düzen okuması yok (zorunlu reflow yok), yalnızca opacity/transform → CLS 0.
-- **Manyetik buton:** `springValue` ile imleci takip eder, bırakınca yaylanarak döner. Yalnızca fare/kalem.
-- **Özel imleç:** nokta + yaylı halka, tıklanabilirlerin üzerinde büyür. Yerel imleç **gizlenmez**.
-- **Sıvı çizgi:** sol kenarda sayfa ilerlemesini yaylı izleyen ince çizgi (masaüstü).
-- **Spotlight:** kartlarda imleci izleyen monokrom parıltı (saf CSS + 2 değişken).
-- `prefers-reduced-motion`: reveal, imleç, çizgi, otomatik oynatma kapanır; içerik anında görünür.
+**Yeni dil eklemek** (yerel çeviri ve hukuk incelemesi bittikten sonra): `messages/xx.json` (en.json ile aynı anahtarlar) → `i18n/routing.ts` `locales` + `LOCALE_LABELS` → `npm run check` → yazı tipi kapsamı için `python scripts/check-fonts.py` (eksik harf varsa alt kümeyi yeniden üretin, bkz. dosya başlığı) → `remotion/Root.tsx` `MESSAGES` ve `scripts/render-film.mjs` `LOCALES` listelerine ekleyip `npm run film:render` → Arapça gibi sağdan sola bir dil için `app/[locale]/layout.tsx` içindeki `dir`'i dile bağlayın.
 
 ---
 
-## 6. Remotion
+## 5. Hareket
 
-`components/remotion/ArchitectureComposition.tsx` her şeyi **kareden** hesaplar (zamanlayıcı, `Math.random`, `Date` yok), bu yüzden tarayıcıdaki Player ile `remotion render` aynı kareyi üretir. Üç sahne × 5 sn = 15 sn döngü: mimari (düğümler, bağlantı çizgileri, ışık paketleri, yazılan kod) · hız bütçesi (halkalar, sayaçlar) · 14 günlük plan. İki tuval: 16:9 (1280×720) ve telefon için 4:5 (800×1000).
+Faz 2'de eski animasyon katmanı (scroll reveal, manyetik buton, özel imleç, sıvı çizgi, spotlight; hepsi `framer-motion/dom` üzerindeydi) ve `framer-motion` bağımlılığı kaldırıldı. İçerik hiçbir betikle gizlenmez. Kalan JS yalnızca arayüz durumudur (`lib/enhance/ui-state.ts`, ilk boyamadan ve tarayıcı boşa çıktıktan sonra ayrı bir parçada): üstbilginin kaydırınca arka plan alması ve mobil yapışkan CTA'nın görünürlüğü. Geri kalan hareket CSS geçişleridir (yalnızca `transform`/`opacity`).
 
-- Player, bölüm ekrana yaklaşınca **tembel** yüklenir (ayrı ~94 KB gzip parça), yalnızca görünürken oynar, sekmeler `seekTo` ile sahne seçer, oynat/duraklat/yeniden başlat gerçek ve etiketli düğmelerdir, ekran okuyucu için metin açıklaması vardır.
-- **Hız bütçesi sahnesindeki değerler (LCP < 1,2 sn, CLS < 0,01, TBT < 100 ms, Lighthouse 95+) hedeftir, ölçüm değildir**; sayfada da böyle yazar.
-- **Lisans:** Remotion yalnızca ≤ 3 kişilik kâr amaçlı şirketlerde/bireylerde ücretsizdir; **4+ kişilik şirketler için ücretli Company License gerekir** (remotion.pro). `acknowledgeRemotionLicense` bilinçli olarak sizin yerinize işaretlenmedi.
+Hareket Faz 3'te geri gelir: `motion/react` ile LazyMotion + `m.*`, maskeli başlık girişi (tek seferlik) ve `Lenis` (yalnızca `(hover: hover) and (pointer: fine)` ve azaltılmış hareket yokken, dinamik import ile). Bkz. CLAUDE.md "Motion". `prefers-reduced-motion` her yerde desteklenir.
 
-### Videoya çevirme
+---
+
+## 6. Remotion ve Showcase filmi
+
+Sitede **Remotion çalışma zamanı yok**: Showcase'in mimari filmi önceden render edilmiş dosyalardır ([ADR 0003](docs/adr/0003-showcase-film-static-render.md)). `remotion` yalnızca geliştirme bağımlılığıdır; `remotion/` altındaki kompozisyonu `scripts/render-film.mjs` ile render etmek içindir.
+
+- **Kaynak:** `remotion/ArchitectureComposition.tsx` her şeyi **kareden** hesaplar (zamanlayıcı, `Math.random`, `Date` yok). Üç sahne × 5 sn = 15 sn döngü: mimari · hız bütçesi · 14 günlük plan. İki tuval: 16:9 (1280×720) ve telefon için 4:5 (800×1000). Metinler sitenin kendi `messages/<dil>.json` dosyalarından gelir. `remotion/fonts.ts` sitenin Inter dosyalarını Remotion tarayıcısına yükler (yoksa film sistem yazı tipine düşerdi).
+- **Çıktı:** `public/media/showcase/architecture-<en|tr>-<wide|tall>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (H.264'süz tarayıcılar için yedek) ve WebP poster (mimari sahnenin tam çizilmiş hali, kare 118). Dosya boyutları: ADR 0003.
+- **Oynatma** (`components/showcase/ShowcaseFilm.tsx`): HTML'de yalnızca poster gelir. Fare cihazlarında film ekranın %30'u göründüğünde başlar, kaydırılınca durur. Dokunmatik cihazlarda, `prefers-reduced-motion` ve Save-Data'da **hiçbir şey indirilmez ve otomatik oynamaz**; ziyaretçi Oynat'a (ya da bir sahne sekmesine) basınca video yüklenir. Sekmeler sahnenin başına sarar. Çerçevenin oranı sabittir (CLS 0).
+- **Hız bütçesi sahnesindeki değerler (LCP < 1,2 sn, CLS < 0,01, TBT < 100 ms, Lighthouse 95+) hedeftir, ölçüm değildir**; sayfada da böyle yazar (`Showcase.note`).
+- **Geçicidir:** film önceki görünümü ve eski teklifin içeriğini (14 günlük plan, ödeme düğümü) taşır; Faz 5'te vitrinle birlikte yeniden tasarlanır.
+- **Lisans:** Remotion yalnızca ≤ 3 kişilik kâr amaçlı şirketlerde/bireylerde ücretsizdir; **4+ kişilik şirketler için ücretli Company License gerekir** (remotion.pro). Render almak da lisans kapsamındadır. `acknowledgeRemotionLicense` bilinçli olarak sizin yerinize işaretlenmedi.
+
+### Filmi yeniden üretmek
 ```bash
-npm run remotion:studio     # tarayıcıda önizleme/ayar
-npm run remotion:still      # remotion-out/architecture-en.png (kare 290)
-npm run remotion:render     # remotion-out/architecture-en.mp4 (15 sn, 30 fps)
-# başka dil/oran: ... render remotion/index.ts Architecture-tr-tall out.mp4
+npm run film:render                       # her şey (~10 dk): 4 kompozisyon × (MP4 + WebM + poster)
+npm run film:render -- --posters          # yalnızca posterler (hızlı)
+npm run film:render -- --only=tr-tall     # tek kompozisyon
+npm run remotion:studio                   # kompozisyonu tarayıcıda düzenle
 ```
-Kimlikler: `Architecture-<en|tr|de|fr|it>-<wide|tall>`. Metinler sitenin kendi `messages/*.json` dosyalarından gelir. Not: CLI altında site CSS'i yoktur; Inter yoksa sistem sans kullanılır. Birebir yazı tipi için `@remotion/fonts` ile `public/fonts/inter-latin-v1.woff2` yükleyin.
+Metin (`messages/*.json` içindeki `Showcase.scene`) ya da kompozisyon değişince komutu çalıştırıp çıkan dosyaları commit'leyin. Remotion CLI her seferinde `npx` ile, kurulu `remotion` sürümüyle getirilir (projeye eklenmez). "zod sürüm uyuşmazlığı" uyarısı zararsızdır: kompozisyonda zod şeması yoktur.
 
 ---
 
@@ -166,22 +170,21 @@ Kimlikler: `Architecture-<en|tr|de|fr|it>-<wide|tall>`. Metinler sitenin kendi `
 
 ## 8. Performans
 
-Ölçüm yöntemi: `next start` üretim sunucusu, Lighthouse 13.5 **mobil** profil (simüle yavaş 4G, 4× CPU yavaşlatma), İngilizce sayfa.
+Ayrıntı, yöntem ve ham koşular: [docs/perf/faz2-baseline.md](docs/perf/faz2-baseline.md) (Faz 2 sonu başlangıcı, 07.10.2026). Özet: medyan, üretim derlemesi (`next start`), Lighthouse 13.5, mobil profil (simüle yavaş 4G, 4× CPU yavaşlatma).
 
-| Sayfa | Performans | Erişilebilirlik | En İyi Uygulamalar | SEO | FCP | LCP | TBT | CLS | Hız İndeksi |
-|---|---|---|---|---|---|---|---|---|---|
-| **Masaüstü** EN | **100** | 100 | 100 | 100 | 0,3 sn | 0,6 sn | 20 ms | **0** | 0,5 sn |
-| **Mobil** EN | **95** | 100 | 100 | 100 | 1,0 sn | 2,7 sn | 140 ms | **0** | 1,0 sn |
-| **Mobil** TR | **96** | 100 | 100 | 100 | 1,0 sn | 2,7 sn | 90 ms | **0** | 1,0 sn |
-| **Mobil** DE | **95** | 100 | 100 | 100 | 1,0 sn | 2,7 sn | 140 ms | **0** | 1,0 sn |
+| Sayfa | Performans (aralık) | FCP | LCP | TBT (aralık) | CLS | İlk yükleme JS (gzip) |
+|---|---|---|---|---|---|---|
+| Mobil EN `/` | **95** (87–96) | 1,0 sn | 2,8 sn | 147 ms (58–373) | 0 | 155 KB |
+| Mobil TR `/tr` | **90** (84–95) | 0,9 sn | 2,8 sn | 274 ms (82–482) | 0 | 155 KB |
+| Masaüstü EN `/` | **100** (99–100) | 0,3 sn | 0,6 sn | 22 ms (5–89) | 0 | 155 KB |
 
-İlk yükleme: HTML 15 KB + CSS 8 KB + font 42 KB + JS 185 KB (gzip). SEO 100 için yerel derleme `NEXT_PUBLIC_SITE_URL=http://localhost:3000` ile alındı (canonical başka bir alan adını gösterirse Lighthouse düşürür; gerçek alan adında bu sorun yoktur).
+Erişilebilirlik, en iyi uygulamalar ve SEO her koşuda 100. **Mobil LCP hedefin (≤ 2,5 sn) üstünde**; bu Faz 4 kapısının işidir. Mobil puan ve TBT koşular arasında savruluyor, bu yüzden tek koşuya değil medyana ve aralığa bakın.
 
-> **Not (2026-10-07, tasarım sistemi):** Tablo, eski film greninin zemini #0D0D0E'den ≈ +3,6 seviye (≈ #111112) kaydırdığı sürümle alındı. O renk, tarayıcının CSS gelmeden önce boyadığı koyu kareyle (R≈17) rastlantıyla örtüştüğü için Lighthouse'un Hız İndeksi o boş kareyi "%46 tamamlanmış" sayıyordu. Yeni grain zemini gerçekten #0D0D0E'de bıraktığından bu kredi kalktı. Aynı makinede, aynı oturumda, aralıklı A/B ölçümde (masaüstü n=4, mobil n=5-6; `NEXT_PUBLIC_SITE_URL` tanımsız): FCP, LCP, CLS, TBT ve indirilen bayt değişmedi; masaüstü Performans medyanı 100 → 99 (yalnızca Hız İndeksi ≈ 0,8 → 1,1 sn), mobil fark ölçüm gürültüsü içinde (TBT 110-450 ms arasında savruluyor). Bu tablo yeniden ölçülene kadar yukarıdaki sayıları "eski grain" değerleri olarak okuyun.
+Faz 2 öncesi sürümle (aynı makinede, aynı oturumda, aralıklı koşularla) karşılaştırma: ilk yükleme JS'i mobilde 180 → 155 KB, masaüstünde 275 → 155 KB; mobil puan farkı ölçüm gürültüsünün içinde. Telefonda filme kaydırınca eski Player +95 KB JS indirir ve yedi saniyede ≈ 3,2 sn betik çalıştırırdı (4× CPU yavaşlatma); yeni sayfa poster halinde ≈ 0,03 sn betik ve 0 KB JS, Oynat'a basılınca ≈ 0,19 sn betik ve 645 KB video.
 
 > **Yerel ölçümün sınırı:** `next start` HTTP/1.1 + gzip sunar. Vercel gibi bir ortamda HTTP/2 + Brotli olur; Lighthouse'ın simülasyonu bunu hesaba katar, yani canlıda aynı veya daha iyi çıkması beklenir. Bunu canlı adreste PageSpeed Insights ile doğrulayın (footer'daki "Test this page on PageSpeed" bağlantısı bunun içindir).
 
-Neden mobil 100 değil: Next.js 16 + React 19 çalışma zamanı tek başına ≈ 164 KB gzip JS'tir; JS tamamen engellendiğinde aynı sayfa Lighthouse'ta **100** (LCP 1,8 sn, TBT 10 ms) alır. Yani kalan puan framework'ün maliyetidir, sayfanın değil. Bunu azaltmak için yaptıklarım: zod ve next-intl ICU motoru ve tailwind-merge tarayıcıdan çıkarıldı (başlangıç JS'i **299 → 185 KB**), Remotion/Framer parçaları tembel, yazı tipleri 2 dosya (Latin 42 KB ön yüklenir, Türkçe harfler için 3 KB yalnızca `/tr`'de), Next'in aynı sayfaya `Link` önceden yüklemeleri kapalı.
+İlk yükleme JS'i 155 KB gzip; CLAUDE.md ~150 KB tavan önerir. Faz 3'te `motion` ve `Lenis` yalnızca masaüstünde ve dinamik import ile eklenmeli; mobil ilk yükte olmadıkları paket analizcisiyle doğrulanmalı. Faz 2 öncesi sürümün tablosu `git show e498e98:README.md` içinde.
 
 ---
 
@@ -207,19 +210,24 @@ Neden mobil 100 değil: Next.js 16 + React 19 çalışma zamanı tek başına �
 
 ---
 
-## 11. Doğrulama sonuçları (bu sürüm)
+## 11. Doğrulama sonuçları (Faz 2, 07.10.2026)
+
+Hepsi `faz_2` dalındaki son kodla (`d981af8`), üretim derlemesi üzerinde alındı: Windows 11, Node 24.12, Chrome 154.
 
 | Denetim | Sonuç |
 |---|---|
-| `next build` (Turbopack) | Hatasız, uyarısız. TypeScript strict, `noUncheckedIndexedAccess` |
-| `npm run check` | Çeviri eşitliği (5 dil × 200 anahtar) · `tsc` 0 hata · ESLint (React Compiler kuralları dahil) 0 hata |
-| `npm run smoke` | **78/78**: güvenlik başlıkları, nonce'un her betikte ve her istekte farklı olması, hreflang, JSON-LD, 5 dilde fiyat biçimi, 5 işaretleme saldırısının reddi, zararsız metnin korunması, HMAC imzası, hız sınırı (429), 5 dilde `/og` görseli |
-| Tarayıcı testi (Chrome, Puppeteer) | **56/56**: masaüstü + mobil + hareket azaltma + JS kapalı; dil değiştirme ve çerez kalıcılığı; manyetik buton/imleç; Remotion otomatik oynatma/sekmeler/duraklat; gerçek Lemon Squeezy overlay açma-kapama (`inert`, odak dönüşü); iletişim formu uçtan uca; 12 genişlik × 5 dilde yatay taşma yok; CSP ihlali 0, konsol hatası 0, hidrasyon hatası 0, CLS < 0,01 |
-| `npm run audit:secrets` | Kanarya değerlerle derlendi: 29 tarayıcı dosyasında 4 sır adı + 4 sır değeri **yok**; bilerek sızıntı koyunca denetim başarısız oldu (çıkış 1) |
-| Remotion CLI | `remotion still` ile kare üretimi doğrulandı (bkz. §6) |
+| `node faz2-denetim.mjs --build` | **0 hata**: 42 geçti, 1 uyarı, 4 bilgi. Uyarı `generateStaticParams` yok: nonce'lu CSP sayfaları zaten istek başına render ettiği için bilinçli ([ADR 0001](docs/adr/0001-csp-report-only.md)). `npm run build` başarılı |
+| `npm run check` | Çeviri eşitliği (2 dil × 199 anahtar) · `tsc` 0 hata · ESLint 0 hata, 0 uyarı |
+| `npm run smoke` | **87/87** (yerel sahte webhook alıcısıyla): güvenlik başlıkları, report-only CSP + nonce, hreflang, JSON-LD, TR/EN, `/de` `/fr` `/it` 404, çerez yok ve yönlendirme yok, 5 işaretleme saldırısının reddi, HMAC imzası, 12 film dosyası (içerik türü, byte-range, önbellek), CSP rapor alıcısı (204/415/400/413/405), hız sınırı (429), `/og` görseli |
+| Tarayıcı testi (Chrome 154, `puppeteer-core`; betik depoda yok) | **32/32**: telefon (dokunmatik) ve masaüstü (fare); telefonda film yüklenmez, Oynat'a basınca MP4 oynar, sekmeler sahneye sarar; masaüstünde görününce oynar, kaydırınca durur; azaltılmış harekette oynamaz; JS kapalıyken poster görünür; dil seçici çerez yazmaz; CSP ihlali 0, konsol hatası 0; 390 ve 320 px'de yatay taşma yok; tarayıcıya inen hiçbir betikte "remotion" geçmez |
+| `npm run audit:secrets` | Test değerleriyle denendi: 27 tarayıcı dosyasında 4 sır adı + 2 sır değeri **yok**; bilerek bir sızıntı yerleştirince denetim başarısız oldu (çıkış 1) |
+| Lighthouse | [docs/perf/faz2-baseline.md](docs/perf/faz2-baseline.md) |
+| `npm run film:render` | 12 dosya, 5.005 KB (§6, [ADR 0003](docs/adr/0003-showcase-film-static-render.md)) |
 
-**Doğrulanmayanlar (dürüstçe):** gerçek bir ödeme (mağaza test modunda, para çekmedim) · canlı alan adında PageSpeed/CrUX · Vercel dağıtımı · Upstash ile paylaşımlı hız sınırı (kod yolu mock'sız, yazılı ama canlı bir Redis'e karşı denenmedi) · gerçek webhook alıcısı (yerel taklit alıcıyla denendi) · Safari/Firefox (yalnızca Chrome).
+**Önceki sürümde yapılıp bu sürümde tekrarlanmayanlar:** gerçek Lemon Squeezy overlay'ini açıp kapatma, iletişim formunu tarayıcıda uçtan uca deneme, 12 farklı genişlikte yatay taşma taraması (yalnızca 390 ve 320 px bakıldı).
+
+**Doğrulanmayanlar (dürüstçe):** gerçek bir ödeme (mağaza test modunda, para çekmedim) · canlı alan adında PageSpeed/CrUX · Vercel dağıtımı · Upstash ile paylaşımlı hız sınırı · gerçek webhook alıcısı (yerel taklit alıcıyla denendi) · Safari/Firefox (yalnızca Chrome) · gerçek telefon (iPhone ve orta segment Android; Faz 7 kapısı).
 
 ## 12. Üçüncü taraf lisanslar
 
-Inter (SIL OFL 1.1, `public/fonts/OFL.txt`) · Next.js, React, next-intl, Framer Motion, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS (MIT/Apache/MPL, bkz. paketler) · Remotion (özel lisans, §6) · Lemon.js (Lemon Squeezy, yalnızca ödeme için yüklenir).
+Inter (SIL OFL 1.1, `public/fonts/OFL.txt`) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca film render'ı için, özel lisans, §6) · Lemon.js (Lemon Squeezy, yalnızca ödeme için yüklenir).
