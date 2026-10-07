@@ -216,7 +216,7 @@
     "p3h": "Security and logs",
     "p3": "Our hosting provider processes technical request data, including your IP address, to deliver and protect the site. We use your IP address only for short-lived rate limiting that blocks abusive traffic.",
     "p4h": "Cookies",
-    "p4": "We set one functional cookie, NEXT_LOCALE, to remember your language for up to one year. We use no analytics, advertising or tracking cookies.",
+    "p4": "We do not set cookies of our own. Your language is chosen by the address of the page (“/” for English, “/tr” for Turkish) and is not stored. We use no analytics, advertising or tracking cookies.",
     "p5h": "Checkout",
     "p5": "Payments are handled by Lemon Squeezy, which acts as merchant of record. When the page has finished loading, your browser fetches a script from Lemon Squeezy, and when you open checkout it connects to their servers. Their privacy policy applies to that data.",
     "p6h": "Retention",

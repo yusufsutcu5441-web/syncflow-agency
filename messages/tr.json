@@ -216,7 +216,7 @@
     "p3h": "Güvenlik ve kayıtlar",
     "p3": "Barındırma sağlayıcımız, siteyi sunmak ve korumak için IP adresiniz dahil teknik istek verilerini işler. IP adresinizi yalnızca kötüye kullanımı engelleyen kısa süreli hız sınırlaması için kullanırız.",
     "p4h": "Çerezler",
-    "p4": "Dil tercihinizi en fazla bir yıl hatırlamak için tek bir işlevsel çerez (NEXT_LOCALE) kullanırız. Analitik, reklam veya izleme çerezi kullanmayız.",
+    "p4": "Bu sitede kendi çerezlerimizi kullanmayız. Dil, sayfanın adresiyle belirlenir (İngilizce için “/”, Türkçe için “/tr”) ve saklanmaz. Analitik, reklam veya izleme çerezi kullanmayız.",
     "p5h": "Ödeme",
     "p5": "Ödemeleri satıcı kaydı (merchant of record) olarak Lemon Squeezy yürütür. Sayfa yüklenmesini tamamladığında tarayıcınız Lemon Squeezy’den bir betik indirir; ödemeyi açtığınızda ise onların sunucularına bağlanır. Bu veriler için onların gizlilik politikası geçerlidir.",
     "p6h": "Saklama süresi",
