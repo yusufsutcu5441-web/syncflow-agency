@@ -1,6 +1,6 @@
 # syncflow.agency
 High-ticket dijital mühendislik stüdyosu sitesi. Sessiz lüks: Porsche sakinliği + Ferrari sinematik ışığı.
-Son güncelleme: 07.10.2026. Bu dosya kısa tutulur; ayrıntılar docs/ altına taşınır ve @docs/... ile içe aktarılır.
+Son güncelleme: 08.10.2026. Bu dosya kısa tutulur; ayrıntılar docs/ altına taşınır ve @docs/... ile içe aktarılır.
 
 ## Niş (değişmez)
 Yüksek bütçeli elit markalar için hızlı, mevzuata duyarlı, sessiz lüks web sistemleri. Yalnızca 3 sektör:
@@ -17,6 +17,9 @@ Yavaş, ucuz, şablon iş yapmayız. Bu 3 sektör dışında sayfa, demo veya me
 - KARAR VERİLDİ (07.10.2026) CSP: Faz 7'ye kadar `Content-Security-Policy-Report-Only`; `CSP_MODE=enforce` ile enforce edilir (docs/adr/0001).
 - KARAR VERİLDİ (07.10.2026) Showcase filmi: önceden render edilmiş MP4/WebM + poster (`public/media/showcase/`); tarayıcıda Remotion çalışmaz, `remotion` yalnızca geliştirme bağımlılığıdır (docs/adr/0003).
 - AÇIK: varsayılan dil. `/` şu an İngilizce, Türkçe `/tr`. Türkiye ilk pazarsa varsayılan TR olabilir; sahibi karar verir (docs/adr/0002).
+- AÇIK (Faz 3 isteği, bu dosyanın kurallarıyla çelişiyor, sahibi karar verir): cam kenarlık `#ffffff1a` (belirteç %6 ve %16; denetim `#ffffff1a`'yı FAIL sayar), kart hover'da "Border Beam" ve imleci izleyen ışık/spotlight (glow, gradyan ve CSS ışık efekti yok; özel imleç ve spotlight Faz 2'de kaldırıldı). Seçenekler docs/adr/0004'te. Sahibi değiştirirse önce bu dosya ve denetim betiği güncellenir, sonra uygulanır.
+- AÇIK (08.10.2026, Blueprint isteği, sahibi karar verir): `syncflow-blueprint.docx` ana sayfanın tamamını yeniden kurar, bu dosyayla 17 noktada çelişir (saf siyah, `#ffffff1a`, glow/gradyan, hap düğme, büyük harf etiket, SaaS kartı, önce-sonra, ölçülmemiş iddialar, $5k basamağı, rıza ve Turnstile eksikliği ...) ve yedi dilli sözlük içermez (yedi dilde yalnızca bir cümle). Faz 4 (briefing) ve Faz 5 (7 dil) kodu karar gelene kadar yazılmadı. Çelişki tablosu, önerilen tasarım ve sorular docs/adr/0005'te; onaydan sonra bu dosya ve denetim betiği önce güncellenir.
+- KARAR VERİLDİ (07.10.2026) Hareket: Lenis yalnızca masaüstünde ve dinamik import ile; maskeli girişler sunucuda bölünmüş kelimelerle, Hero'da CSS, ekran altında Motion (`motion/mini`); `m.*`/LazyMotion kullanılmaz (içerik sunucuda görünür kalmalı); `lenis` ve `motion` statik import edilemez (docs/adr/0004).
 
 ## Tasarım tokenları (pazarlığa kapalı)
 - Zemin #0D0D0E; katmanlar #141416 ve #1A1A1E. Saf siyah, bembeyaz blok, neon, turkuaz, lacivert YASAK.
@@ -40,8 +43,9 @@ Platin tek renkli amblem (6×6 ızgara, yalnızca 90° ve 45°, tek sürekli yol
 ## Motion
 - Yalnızca transform ve opacity. Layout özelliği animasyonlanmaz.
 - Lenis yalnızca `(hover: hover) and (pointer: fine)` ve azaltılmış hareket yokken, dinamik import ile; duration 1.2, easing cubic-bezier(.16, 1, .3, 1). Dokunmatikte native scroll, parallax kapalı. Başvuru akışında smooth scroll yok.
-- `motion/react` ile LazyMotion + `m.*`. Maskeli satır girişi tek seferlik. `prefers-reduced-motion` her yerde desteklenir.
+- `motion/react` ile LazyMotion + `m.*`. Maskeli satır girişi tek seferlik. `prefers-reduced-motion` her yerde desteklenir. Sunucuda render edilen metin için `m.*` uygun değildir (`initial` stili HTML'e yazılır, JS yokken metin gizli kalır; React ilk yüke girer): orada `motion/mini` ile bir DOM katmanı kullanılır (docs/adr/0004). `m.*` yalnızca kendileri dinamik yüklenen etkileşimli bileşenler içindir.
 - İlk gizli durum JS yokken içeriği gizlememeli. Ağır sahneler `next/dynamic`. İlk sürümde WebGL yok.
+- Sürekli (`infinite`) CSS animasyonu taşıyan öğe `data-pause-offscreen` alır; ekran dışındayken durur (`lib/enhance/ui-state.ts`, denetim kontrol eder). Video ekran dışında durur (`ShowcaseFilm`).
 
 ## Performans (mobil orta segment, 4G throttle, production build)
 LCP ≤ 2,5 sn · CLS ≤ 0,1 · INP ≤ 200 ms. İlk rota JS tavanı öneri: ~150 KB gzip (build'de ölçülür). Spec sheet değerleri yalnızca ölçülmüş olabilir (RUM veya Lighthouse + tarih + kaynak); ölçülene kadar "ölçülecek" yazılır. Yeni bağımlılık eklemeden önce paket boyutu etkisi raporlanır.
@@ -75,4 +79,4 @@ LCP ≤ 2,5 sn · CLS ≤ 0,1 · INP ≤ 200 ms. İlk rota JS tavanı öneri: ~1
 - `.env`, font dosyaları ve sırlar commit edilmez.
 
 ## Faz planı
-F0 Karar dondurma (kapasite cümlesi ve ad sorgusu açık) · F1 Logo ve tipografi (TAMAM: B1 + özel çizim v2) · F2 Next.js 16 / Tailwind v4 (KAPI GEÇİLDİ 07.10.2026, `faz_2` dalı, main'e birleştirme bekliyor; denetim: kökteki `faz2-denetim.mjs --build` 0 hata; tokenlar `app/globals.css` içinde `@theme`; kararlar `docs/adr/0001–0003`; performans başlangıcı `docs/perf/faz2-baseline.md`) · F3 Motion ve scroll · F4 Hero · F5 Spec sheet ve vitrin · F6 Başvuru, n8n, Gmail · F7 Güvenlik sıkılaştırma doğrulaması, çeviri ve hukuk incelemesi · F8 Vercel ve lansman
+F0 Karar dondurma (kapasite cümlesi ve ad sorgusu açık) · F1 Logo ve tipografi (TAMAM: B1 + özel çizim v2) · F2 Next.js 16 / Tailwind v4 (KAPI GEÇİLDİ 07.10.2026, `faz_2` dalı, main'e birleştirme bekliyor; denetim: kökteki `faz2-denetim.mjs --build` 0 hata; tokenlar `app/globals.css` içinde `@theme`; kararlar `docs/adr/0001–0003`; performans başlangıcı `docs/perf/faz2-baseline.md`) · F3 Motion ve scroll (KAPI GEÇİLDİ 08.10.2026, `faz_3` dalı, main'e birleştirme bekliyor: Lenis, maskeli girişler, azaltılmış hareket, ekran dışı duraklatma tamam ve denetimde, ölçümler docs/perf/faz3.md; cam kenarlık, Border Beam ve imleç ışığı yapılmadı, karar bekliyor, bkz. docs/adr/0004) · F4 Hero · F5 Spec sheet ve vitrin · F6 Başvuru, n8n, Gmail · F7 Güvenlik sıkılaştırma doğrulaması, çeviri ve hukuk incelemesi · F8 Vercel ve lansman

@@ -59,16 +59,17 @@ components/
   sections/ Hero · Showcase · Comparison · Pricing · Faq · Contact · ContactForm(client) · LegalPage
   showcase/ ShowcaseFilm(client): poster + önceden render edilmiş video, sahne sekmeleri
   checkout/ LemonSqueezy(client): lemon.js + overlay erişilebilirliği
-  i18n/     ClientI18n (tarayıcıya giden minik bağlam) · ui/ Logo, CheckoutLink, SectionHead
+  i18n/     ClientI18n (tarayıcıya giden minik bağlam) · ui/ Logo, CheckoutLink, SectionHead, MaskText
 lib/
   security/ csp.ts · rate-limit.ts      server/ deliver.ts · sanitize.ts (server-only)
   schemas/  contact.ts (zod, sunucu) · contact-fields.ts (tarayıcı, zod'suz)
-  enhance/  ui-state (üstbilginin kaydırınca arka plan alması, mobil yapışkan CTA; animasyon yok)
+  enhance/  ui-state (üstbilgi arka planı, mobil yapışkan CTA) · reveal (ekran altı giriş animasyonu, Motion) · smooth-scroll (Lenis, yalnızca masaüstü)
+  motion/   tokens (süre, eğri, kelime gecikmesi) · ease (cubic-bezier fonksiyonu)
   i18n-paths.ts   dil önekli yollar (next-intl'in istemci çalışma zamanı olmadan)
 messages/   en.json tr.json
 i18n/       routing.ts · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/adr/   mimari kararlar: 0001 CSP report-only · 0002 lansman dilleri ve pazar · 0003 Showcase filmi
+docs/adr/   mimari kararlar: 0001 CSP report-only · 0002 lansman dilleri ve pazar · 0003 Showcase filmi · 0004 hareket ve kaydırma · 0005 Blueprint, Faz 4 (briefing) ve Faz 5 (7 dil) planı (karar bekliyor)
 public/fonts/ Inter alt kümeleri (OFL)   public/media/showcase/ render edilmiş film dosyaları   assets/og-inter-600.ttf
 remotion/   Render kaynağı, siteye girmez: kompozisyon, yazı tipi yükleyici, CLI girişi (2 dil × 2 oran = 4 kompozisyon)
 scripts/    check-messages · check-fonts · smoke · audit-secrets · lemon-style-hash · build-og-font · render-film
@@ -130,9 +131,16 @@ Notlar: (1) Yazı tipi şimdilik Inter (SIL OFL); marka yazı tipi Satoshi'nin w
 
 ## 5. Hareket
 
-Faz 2'de eski animasyon katmanı (scroll reveal, manyetik buton, özel imleç, sıvı çizgi, spotlight; hepsi `framer-motion/dom` üzerindeydi) ve `framer-motion` bağımlılığı kaldırıldı. İçerik hiçbir betikle gizlenmez. Kalan JS yalnızca arayüz durumudur (`lib/enhance/ui-state.ts`, ilk boyamadan ve tarayıcı boşa çıktıktan sonra ayrı bir parçada): üstbilginin kaydırınca arka plan alması ve mobil yapışkan CTA'nın görünürlüğü. Geri kalan hareket CSS geçişleridir (yalnızca `transform`/`opacity`).
+Faz 2'de eski animasyon katmanı ve `framer-motion` kaldırıldı; Faz 3 hareketi yeniden, bu kez ölçülü kurallarla getirdi ([ADR 0004](docs/adr/0004-motion-and-smooth-scroll.md)). Üç ilke: içerik sunucuda render edilir ve JS yokken tamamen görünür; hareket onun üstüne eklenen bir katmandır; yalnızca `transform` hareket eder (maske statik bir `clip-path`'tir).
 
-Hareket Faz 3'te geri gelir: `motion/react` ile LazyMotion + `m.*`, maskeli başlık girişi (tek seferlik) ve `Lenis` (yalnızca `(hover: hover) and (pointer: fine)` ve azaltılmış hareket yokken, dinamik import ile). Bkz. CLAUDE.md "Motion". `prefers-reduced-motion` her yerde desteklenir.
+- **Hero başlığı:** kelime kelime maskenin altından yükselir. Kelimeler sunucuda bölünür (`components/ui/MaskText.tsx`), animasyonu CSS oynatır (`mask-rise`): ilk boyamadan itibaren, JS'siz, hidrasyonu ya da bir parçayı beklemeden.
+- **Ekranın altındaki başlık ve paragraflar:** ekran dışındayken betik gizler (`.is-armed`), girişte bir kez yükselir (`lib/enhance/reveal.ts`, `motion/mini`). İlk ekrandaki hiçbir şeye dokunulmaz. Motion, ziyaretçinin ilk kaydırma, tıklama, dokunma ya da tuşunda indirilir (4,7 KB gzip); yavaşsa ya da inmezse metin hemen gösterilir.
+- **Yumuşak kaydırma (Lenis):** yalnızca fare benzeri işaretçide (`(hover: hover) and (pointer: fine)`) ve azaltılmış hareket yokken; `import('lenis')` ayrı bir parça (5,3 KB gzip), dokunmatik cihazlar hiç istemez. Süre 1,2 sn, eğri `cubic-bezier(.16, 1, .3, 1)`. Aynı sayfa bağlantıları (`/#pricing`, `#showcase`) aynı eğriyle kayar, sabit üstbilgi payı CSS'teki `scroll-padding-top`'tan gelir, adres ve odak yerel sıçramadaki gibi güncellenir. Ödeme overlay'i açıkken durur. Başvuru akışında (Faz 6) kapalı olmalıdır (CLAUDE.md).
+- **Azaltılmış hareket:** Lenis ve giriş animasyonları başlamaz, hero CSS'i devre dışıdır; ayar sayfa açıkken açılırsa Lenis kapanır ve her şey hemen görünür.
+- **Ekran dışında durma:** sürekli (`infinite`) CSS animasyonu taşıyan öğe `data-pause-offscreen` alır; görünür alanın dışındayken `IntersectionObserver` onu durdurur (`lib/enhance/ui-state.ts`). Showcase filmi de aynı şekilde görünür ≥ %30 iken oynar, uzaklaşınca durur.
+- **Harf harf bölme yapılmaz** (kerning bozulur, DOM şişer, ekran okuyucu zorlanır); bölme kelime düzeyindedir.
+
+`lenis` ve `motion` yalnızca `import()` ile kullanılabilir. `faz2-denetim.mjs` statik import'u hata sayar ve `--build` sonrası rotanın ilk yük parçalarında ikisinin de olmadığını doğrular. Henüz yapılmayanlar (karar bekliyor): cam kenarlık `#ffffff1a`, kart "Border Beam", imleci izleyen ışık; ADR 0004'te.
 
 ---
 
@@ -170,7 +178,7 @@ Metin (`messages/*.json` içindeki `Showcase.scene`) ya da kompozisyon değişin
 
 ## 8. Performans
 
-Ayrıntı, yöntem ve ham koşular: [docs/perf/faz2-baseline.md](docs/perf/faz2-baseline.md) (Faz 2 sonu başlangıcı, 07.10.2026). Özet: medyan, üretim derlemesi (`next start`), Lighthouse 13.5, mobil profil (simüle yavaş 4G, 4× CPU yavaşlatma).
+Ayrıntı, yöntem ve ham koşular: [docs/perf/faz2-baseline.md](docs/perf/faz2-baseline.md) (Faz 2 sonu başlangıcı, 07.10.2026) ve [docs/perf/faz3.md](docs/perf/faz3.md) (Faz 3: paket kapısı, Lighthouse A/B, kare ritmi, telefon probu, 08.10.2026). Faz 3'te mobil ilk yükleme JS'i 155 → 157 KB, Lighthouse medyanı tabanın altına inmedi (fark ölçülebilir değil), mobil LCP ≈ 2,7–2,8 sn aynı kaldı. Aşağıdaki tablo Faz 2 başlangıcıdır. Özet: medyan, üretim derlemesi (`next start`), Lighthouse 13.5, mobil profil (simüle yavaş 4G, 4× CPU yavaşlatma).
 
 | Sayfa | Performans (aralık) | FCP | LCP | TBT (aralık) | CLS | İlk yükleme JS (gzip) |
 |---|---|---|---|---|---|---|
@@ -184,7 +192,7 @@ Faz 2 öncesi sürümle (aynı makinede, aynı oturumda, aralıklı koşularla) 
 
 > **Yerel ölçümün sınırı:** `next start` HTTP/1.1 + gzip sunar. Vercel gibi bir ortamda HTTP/2 + Brotli olur; Lighthouse'ın simülasyonu bunu hesaba katar, yani canlıda aynı veya daha iyi çıkması beklenir. Bunu canlı adreste PageSpeed Insights ile doğrulayın (footer'daki "Test this page on PageSpeed" bağlantısı bunun içindir).
 
-İlk yükleme JS'i 155 KB gzip; CLAUDE.md ~150 KB tavan önerir. Faz 3'te `motion` ve `Lenis` yalnızca masaüstünde ve dinamik import ile eklenmeli; mobil ilk yükte olmadıkları paket analizcisiyle doğrulanmalı. Faz 2 öncesi sürümün tablosu `git show e498e98:README.md` içinde.
+İlk yükleme JS'i 155 KB gzip (Faz 3'te 157 KB); CLAUDE.md ~150 KB tavan önerir. `motion` ve `Lenis` yalnızca masaüstünde ve dinamik import ile eklendi; mobil ilk yükte olmadıkları paket analizcisiyle her `--build`'de doğrulanır. Faz 2 öncesi sürümün tablosu `git show e498e98:README.md` içinde.
 
 ---
 
@@ -223,6 +231,18 @@ Hepsi `faz_2` dalındaki son kodla (`d981af8`), üretim derlemesi üzerinde alı
 | `npm run audit:secrets` | Test değerleriyle denendi: 27 tarayıcı dosyasında 4 sır adı + 2 sır değeri **yok**; bilerek bir sızıntı yerleştirince denetim başarısız oldu (çıkış 1) |
 | Lighthouse | [docs/perf/faz2-baseline.md](docs/perf/faz2-baseline.md) |
 | `npm run film:render` | 12 dosya, 5.005 KB (§6, [ADR 0003](docs/adr/0003-showcase-film-static-render.md)) |
+
+### Faz 3 (08.10.2026, `faz_3` dalı)
+
+| Denetim | Sonuç |
+|---|---|
+| `node faz2-denetim.mjs --build` | **0 hata**: 52 geçti, 1 uyarı, 3 bilgi (Faz 2'ye göre +10 hareket denetimi). Uyarı aynı: `generateStaticParams` yok, bilinçli. `npm run build` başarılı; ilk yük parçalarında `lenis` ve `motion` yok |
+| `npm run smoke` | **87/87** (sahte webhook alıcısıyla) |
+| Tarayıcı testi (Chrome 154, `puppeteer-core`; betik depoda yok) | **41/41**: Lenis yalnızca fare benzeri işaretçide, telefonda parça hiç istenmez; maskeli girişler (hero CSS, ekranın altı Motion); azaltılmış hareket; JS kapalıyken tüm metin görünür; Faz 2 ile birebir aynı sayfa yüksekliği ve başlık kutuları; ekran dışında animasyon ve film durur |
+| Paket kapısı | rotanın 5 ilk yük dosyasında `lenis` ve `motion` yok; lazy parçalar 5,3 ve 4,7 KB gzip |
+| Lighthouse, kare ritmi, telefon probu | [docs/perf/faz3.md](docs/perf/faz3.md) |
+
+**Faz 3'te doğrulanmayanlar:** 120 Hz ekran · kısıtlı CPU'da kilitli 60 FPS (ölçüm tersini gösteriyor, bkz. faz3.md) · gerçek telefon · Safari/Firefox · sakin makinede kesin Lighthouse farkı (gürültü, bkz. faz3.md §5).
 
 **Önceki sürümde yapılıp bu sürümde tekrarlanmayanlar:** gerçek Lemon Squeezy overlay'ini açıp kapatma, iletişim formunu tarayıcıda uçtan uca deneme, 12 farklı genişlikte yatay taşma taraması (yalnızca 390 ve 320 px bakıldı).
 
