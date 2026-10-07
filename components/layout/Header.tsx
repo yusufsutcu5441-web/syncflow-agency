@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { CheckoutLink } from '@/components/ui/CheckoutLink';
 import { Logo } from '@/components/ui/Logo';
-import { Magnetic } from '@/components/ui/Magnetic';
 import type { AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
 import { SECTION_IDS } from '@/lib/site';
@@ -38,12 +37,10 @@ export async function Header() {
         <div className="flex items-center gap-2.5">
           <LanguageSwitcher />
           {/* Hidden on phones: the hero and the sticky bottom bar already carry the call to action there. */}
-          <Magnetic className="hidden sm:inline-flex">
-            <CheckoutLink className="btn btn-primary btn-sm">
-              <span>{t('cta')}</span>
-              <ArrowUpRight size={16} strokeWidth={2} aria-hidden="true" />
-            </CheckoutLink>
-          </Magnetic>
+          <CheckoutLink className="btn btn-primary btn-sm hidden sm:inline-flex">
+            <span>{t('cta')}</span>
+            <ArrowUpRight size={16} strokeWidth={2} aria-hidden="true" />
+          </CheckoutLink>
         </div>
       </div>
     </header>

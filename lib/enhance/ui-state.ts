@@ -1,6 +1,5 @@
 /**
- * Small state toggles that need no animation engine: header background after scrolling,
- * the mobile sticky CTA, and the cursor-following spotlight on cards.
+ * Small state toggles that need no animation engine: header background after scrolling and the mobile sticky CTA.
  * All listeners are passive and rAF-throttled.
  */
 
@@ -64,33 +63,6 @@ export function initStickyCta(): () => void {
   return () => {
     observer.disconnect();
     window.removeEventListener('scroll', onScroll);
-    cancelAnimationFrame(frame);
-  };
-}
-
-/** Writes the pointer position into --mx/--my on the card under the cursor; the glow itself is pure CSS. */
-export function initSpotlight(): () => void {
-  let frame = 0;
-  let last: PointerEvent | null = null;
-
-  const apply = () => {
-    frame = 0;
-    if (!last) return;
-    const card = (last.target as Element | null)?.closest<HTMLElement>('[data-spotlight]');
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    card.style.setProperty('--mx', `${last.clientX - rect.left}px`);
-    card.style.setProperty('--my', `${last.clientY - rect.top}px`);
-  };
-  const onMove = (event: PointerEvent) => {
-    if (event.pointerType !== 'mouse') return;
-    last = event;
-    if (!frame) frame = requestAnimationFrame(apply);
-  };
-
-  document.addEventListener('pointermove', onMove, { passive: true });
-  return () => {
-    document.removeEventListener('pointermove', onMove);
     cancelAnimationFrame(frame);
   };
 }

@@ -21,18 +21,12 @@ export function SectionHead({
   return (
     <div className={cn(!stacked && 'grid gap-7 md:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] md:items-end md:gap-16', className)}>
       <div>
-        <p className="eyebrow" data-reveal="">
-          {eyebrow}
-        </p>
-        <h2 id={id} className="display mt-5 text-headline" data-reveal="">
+        <p className="eyebrow">{eyebrow}</p>
+        <h2 id={id} className="display mt-5 text-headline">
           {title}
         </h2>
       </div>
-      {subtitle ? (
-        <p className={cn('lead', stacked && 'mt-7 max-w-xl')} data-reveal="">
-          {subtitle}
-        </p>
-      ) : null}
+      {subtitle ? <p className={cn('lead', stacked && 'mt-7 max-w-xl')}>{subtitle}</p> : null}
     </div>
   );
 }

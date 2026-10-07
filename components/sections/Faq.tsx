@@ -17,7 +17,7 @@ export async function Faq() {
       <div className="container-x grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
         <SectionHead id="faq-title" stacked eyebrow={t('eyebrow')} title={t('title')} />
 
-        <div className="faq" data-reveal="">
+        <div className="faq">
           {ITEMS.map((n) => (
             <details key={n}>
               <summary>

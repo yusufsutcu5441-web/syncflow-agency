@@ -1,7 +1,6 @@
 import { ArrowUpRight, Check, Lock, MessageCircle, ShieldCheck } from 'lucide-react';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { CheckoutLink } from '@/components/ui/CheckoutLink';
-import { Magnetic } from '@/components/ui/Magnetic';
 import { SectionHead } from '@/components/ui/SectionHead';
 import { USD_FORMAT } from '@/lib/format';
 import { PRICE_USD, SECTION_IDS, TYPICAL_AGENCY_USD } from '@/lib/site';
@@ -29,7 +28,7 @@ export async function Pricing() {
             title={t.rich('title', { dim: (chunks) => <span className="dim">{chunks}</span> })}
             subtitle={t('subtitle')}
           />
-          <p className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted" data-reveal="">
+          <p className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
             <MessageCircle size={18} strokeWidth={1.5} aria-hidden="true" />
             <span>{t('ask')}</span>
             <a href={`#${SECTION_IDS.contact}`} className="text-platin underline decoration-platin/30 underline-offset-4 transition-colors hover:decoration-platin">
@@ -38,7 +37,7 @@ export async function Pricing() {
           </p>
         </div>
 
-        <div data-reveal="" data-sticky-guard="" className="glass p-7 sm:p-10 md:p-12">
+        <div data-sticky-guard="" className="glass p-7 sm:p-10 md:p-12">
           <p className="eyebrow">{t('planName')}</p>
 
           <div className="mt-7 flex flex-wrap items-end gap-x-6 gap-y-3">
@@ -61,12 +60,10 @@ export async function Pricing() {
             </ul>
           </div>
 
-          <Magnetic className="mt-10 w-full">
-            <CheckoutLink className="btn btn-primary w-full !h-14 text-base">
-              <span>{t('cta', { price })}</span>
-              <ArrowUpRight size={19} strokeWidth={2} aria-hidden="true" />
-            </CheckoutLink>
-          </Magnetic>
+          <CheckoutLink className="btn btn-primary mt-10 w-full !h-14 text-base">
+            <span>{t('cta', { price })}</span>
+            <ArrowUpRight size={19} strokeWidth={2} aria-hidden="true" />
+          </CheckoutLink>
 
           <p className="mt-6 flex items-start gap-2.5 text-sm text-platin">
             <ShieldCheck size={17} strokeWidth={1.6} className="mt-px shrink-0 text-platin" aria-hidden="true" />

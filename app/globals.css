@@ -331,19 +331,6 @@ body.lemonsqueezy-open {
     color: var(--color-platin);
   }
 
-  /* Magnetic buttons: the invisible ::before widens the pull zone by 0.5rem around the button.
-     Inside @layer components on purpose: Tailwind utilities (hidden, w-full, sm:inline-flex ...) must be able to
-     override the display value, which they cannot do against un-layered CSS. */
-  [data-magnetic] {
-    position: relative;
-    display: inline-flex;
-  }
-  [data-magnetic]::before {
-    content: '';
-    position: absolute;
-    inset: -0.5rem;
-  }
-
   /* Live indicator: a plain dot whose opacity breathes (opacity only; no ring, no glow). */
   .live-dot {
     width: 0.4rem;
@@ -628,58 +615,6 @@ body.lemonsqueezy-open {
     font-size: 0.875rem;
     color: var(--color-platin);
   }
-
-  /* ── Custom cursor (created by JS, fine pointers only; Faz 3 revisits it) ──── */
-  .cursor-ring {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9999;
-    width: 2.25rem;
-    height: 2.25rem;
-    margin: -1.125rem 0 0 -1.125rem;
-    border-radius: 50%;
-    border: 1px solid color-mix(in oklab, var(--color-platin) 55%, transparent);
-    pointer-events: none;
-    opacity: 0;
-    transition:
-      opacity 0.3s ease,
-      width 0.4s var(--ease-lux),
-      height 0.4s var(--ease-lux),
-      margin 0.4s var(--ease-lux),
-      background-color 0.3s ease,
-      border-color 0.3s ease;
-  }
-  .cursor-ring[data-state='visible'] {
-    opacity: 1;
-  }
-  .cursor-ring[data-hover='true'] {
-    width: 3.75rem;
-    height: 3.75rem;
-    margin: -1.875rem 0 0 -1.875rem;
-    background: color-mix(in oklab, var(--color-platin) 8%, transparent);
-    border-color: color-mix(in oklab, var(--color-platin) 80%, transparent);
-  }
-  .cursor-ring[data-down='true'] {
-    background: color-mix(in oklab, var(--color-platin) 18%, transparent);
-  }
-  .cursor-dot {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9999;
-    width: 0.3rem;
-    height: 0.3rem;
-    margin: -0.15rem 0 0 -0.15rem;
-    border-radius: 50%;
-    background: var(--color-platin);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .cursor-dot[data-state='visible'] {
-    opacity: 1;
-  }
 }
 
 /* The skip link slides in with a transform (not by animating `top`). */
@@ -736,12 +671,6 @@ body.lemonsqueezy-open {
   border-right-width: 1px;
 }
 
-/* The checkout overlay is a cross-origin iframe: pointer events never reach us there, so the ring would freeze. */
-body.lemonsqueezy-open .cursor-ring,
-body.lemonsqueezy-open .cursor-dot {
-  display: none;
-}
-
 @keyframes live-pulse {
   0%,
   100% {
@@ -772,9 +701,5 @@ body.lemonsqueezy-open .cursor-dot {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-  .cursor-ring,
-  .cursor-dot {
-    display: none;
   }
 }

@@ -13,7 +13,7 @@ export async function Contact() {
     <section id={SECTION_IDS.contact} className="section" aria-labelledby="contact-title">
       <div className="container-x grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
         <SectionHead id="contact-title" stacked eyebrow={t('eyebrow')} title={t('title')} subtitle={t('subtitle')} />
-        <div data-reveal="" data-sticky-guard="">
+        <div data-sticky-guard="">
           <ContactForm privacyHref={privacyHref} />
         </div>
       </div>

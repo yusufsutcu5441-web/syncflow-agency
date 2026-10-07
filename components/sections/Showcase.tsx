@@ -17,7 +17,7 @@ export async function Showcase() {
           subtitle={t('subtitle')}
         />
 
-        <div className="mt-block" data-reveal="">
+        <div className="mt-block">
           <ShowcasePlayer
             labels={messages.Showcase.scene}
             copy={{
@@ -34,9 +34,7 @@ export async function Showcase() {
           />
         </div>
 
-        <p className="mt-5 max-w-2xl text-sm text-muted" data-reveal="">
-          {t('note')}
-        </p>
+        <p className="mt-5 max-w-2xl text-sm text-muted">{t('note')}</p>
       </div>
     </section>
   );

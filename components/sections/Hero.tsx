@@ -1,7 +1,6 @@
 import { ArrowDown, ArrowUpRight, Lock, ShieldCheck } from 'lucide-react';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { CheckoutLink } from '@/components/ui/CheckoutLink';
-import { Magnetic } from '@/components/ui/Magnetic';
 import { USD_FORMAT } from '@/lib/format';
 import { PRICE_USD, SECTION_IDS } from '@/lib/site';
 
@@ -40,12 +39,10 @@ export async function Hero() {
           <p className="lead measure mt-10">{t('subtitle', { price })}</p>
 
           <div id="hero-cta" data-sticky-guard="" className="mt-9 flex flex-col gap-3.5 sm:flex-row sm:items-center">
-            <Magnetic className="w-full sm:w-auto">
-              <CheckoutLink className="btn btn-primary w-full sm:w-auto">
-                <span>{t('cta', { price })}</span>
-                <ArrowUpRight size={18} strokeWidth={2} aria-hidden="true" />
-              </CheckoutLink>
-            </Magnetic>
+            <CheckoutLink className="btn btn-primary w-full sm:w-auto">
+              <span>{t('cta', { price })}</span>
+              <ArrowUpRight size={18} strokeWidth={2} aria-hidden="true" />
+            </CheckoutLink>
             <a href={`#${SECTION_IDS.showcase}`} className="btn btn-ghost w-full sm:w-auto">
               <span>{t('ctaSecondary')}</span>
               <ArrowDown size={17} strokeWidth={1.75} aria-hidden="true" />

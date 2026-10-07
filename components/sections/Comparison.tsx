@@ -55,7 +55,7 @@ export async function Comparison() {
           {ROWS.map(([labelKey, oldKey, newKey], index) => {
             const last = index === ROWS.length - 1;
             return (
-              <div key={labelKey} role="row" className={`grid gap-4 border-t border-hairline py-7 ${GRID} md:gap-0 md:py-0`} data-reveal="">
+              <div key={labelKey} role="row" className={`grid gap-4 border-t border-hairline py-7 ${GRID} md:gap-0 md:py-0`}>
                 <div role="rowheader" className="eyebrow md:py-9">
                   {t(labelKey)}
                 </div>
@@ -85,9 +85,7 @@ export async function Comparison() {
           })}
         </div>
 
-        <p className="mt-6 max-w-2xl text-sm text-muted" data-reveal="">
-          {t('disclaimer')}
-        </p>
+        <p className="mt-6 max-w-2xl text-sm text-muted">{t('disclaimer')}</p>
       </div>
     </section>
   );
