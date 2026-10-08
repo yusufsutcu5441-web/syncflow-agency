@@ -29,7 +29,7 @@ export function CopyEmail({ email }: { email: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-4">
-      <a href={`mailto:${email}`} dir="ltr" className="text-title underline decoration-white/25 underline-offset-[6px] transition-colors hover:decoration-white md:text-[clamp(1.5rem,2.4vw,2.25rem)]">
+      <a href={`mailto:${email}`} dir="ltr" className="text-title underline decoration-ink/25 underline-offset-[6px] transition-colors hover:decoration-ink md:text-[clamp(1.5rem,2.4vw,2.25rem)]">
         {email}
       </a>
       <button type="button" className="btn btn-ghost btn-sm" onClick={copy} aria-label={t.copyLabel}>

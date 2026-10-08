@@ -8,7 +8,7 @@ import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
 
 /**
- * Hero (Blueprint section 1): full viewport, pure black, a cursor-following light, a two-line headline that rises
+ * Hero (Blueprint section 1): full viewport, obsidian, a cursor-following light, a two-line headline that rises
  * line by line through its masks (CSS only, from the first paint), one primary action and a quiet second one, and a strip
  * of three metrics. Everything above the fold is plain server-rendered text, so the largest contentful paint is the
  * headline or the lead as early as the browser can draw it. The numbers come from lib/metrics.ts (measured, dated).

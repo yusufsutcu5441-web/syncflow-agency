@@ -1,6 +1,6 @@
 # syncflow.agency
 
-Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)).
+Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)) üzerinde B1/v2 marka sistemi ([ADR 0007](docs/adr/0007-tokens-and-brand.md)): obsidian zemin, platin metin, Instrument Sans, çizili logo.
 **Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (7 dil) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · Remotion ile önceden render edilmiş sahne videoları · nonce tabanlı CSP (şimdilik report-only)**
 
 | | |
@@ -31,7 +31,8 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 |---|---|
 | `npm run check` | Çeviri eşitliği + TypeScript + ESLint |
 | `npm run check:messages` | Her dilde anahtar/yer tutucu/etiket eşitliği; taslak dillerde `Legal.*` aranmaz (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
-| `npm run check:fonts` | Mesajlardaki her karakter yazı tipi dosyalarında var mı (Python + `pip install fonttools brotli`; Latin ve Türkçe alt kümeler) |
+| `npm run brand:build` / `brand:check` | `brand/*.svg` marka paketinden `lib/brand-paths.ts`, `app/icon.svg`, `app/apple-icon.png`, `public/brand/logo-512.png` üretir; `brand:check` eskimiş dosya varsa hata verir (denetim de çalıştırır) |
+| `npm run check:fonts` | Latin yazılı dillerdeki (en tr de fr es) her karakter Instrument Sans dosyalarında var mı (Python + `pip install fonttools brotli`; AR ve JA kasıtlı sistem yazı tipidir, `⌘ ✓` simgeleri açık istisnadır). Dosyaları yeniden üretmek: `python scripts/build-fonts.py "InstrumentSans[wdth,wght].ttf"` |
 | `node faz2-denetim.mjs --build` | **Aşama kapısı**: bağımlılıklar, tasarım belirteçleri, i18n, güvenlik, sahne videoları, hareket, doğrulanmamış iddia yasağı, ardından `npm run build` ve ilk yük paket denetimi |
 | `npm run smoke` | **Çalışan** sunucuya karşı HTTP güvenlik/işlev kontrolleri (aşağıda). Ortam değişkenleri `scripts/smoke.mjs` başlığında: `EXPECT_LOCALES`, `TURNSTILE_MODE`, `MOCK_WEBHOOK_PORT`, `WEBHOOK_SECRET`, `EXPECT_CSP_MODE` |
 | `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
@@ -58,7 +59,7 @@ components/
   layout/    Header · Footer · StickyCta · LanguageSwitcher(client)
   sections/  Hero · Architecture · Showcase + ShowcaseStrip(client) · Reach + ReachInteractive(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
   media/     SceneVideo(client): poster + önceden render edilmiş video, ekran dışında durur
-  i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (wordmark), MaskText/MaskLines, SectionHead
+  i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead
 lib/
   briefing.ts      seçenekler, sınırlar, zod'suz tarayıcı doğrulayıcı, sınıflandırma (tarayıcı + sunucu)
   metrics.ts       sitede yayınlanan TÜM performans sayıları (değer, tarih, profil, kaynak)
@@ -70,21 +71,24 @@ messages/   en tr de fr es ar ja (.json)
 i18n/       routing.ts (7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
 docs/       adr/ (mimari kararlar 0001–0006) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
-public/     fonts/ Inter alt kümeleri (OFL)   media/clips/ render edilmiş sahneler   assets/og-inter-600.ttf
+public/     fonts/ Instrument Sans alt kümeleri (OFL)   media/clips/ render edilmiş sahneler   brand/logo-512.png
+brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
+assets/     og-instrument-sans-600.ttf (paylaşım kartı yazı tipi)
 remotion/   Render kaynağı, siteye girmez: config.ts, fonts.ts, Root.tsx, scenes/ (Monolith, Estate, Clinic, Saas)
-scripts/    check-messages · check-fonts · smoke · audit-secrets · build-og-font · render-film · lighthouse · dev-inbox
+scripts/    check-messages · check-fonts · build-fonts · build-brand · smoke · audit-secrets · render-film · lighthouse · dev-inbox
 ```
 
 ### Tasarım sistemi ("Dark Monolith & Fluid Precision")
 
-Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@theme` bloğu ve `@utility text-*` tipografi ölçeği (Tailwind v4, CSS-first). Kural kaynağı CLAUDE.md "Tasarım tokenları" ve "Tipografi"; Blueprint'ten ayrılınan yerler [ADR 0006](docs/adr/0006-blueprint-adopted.md)'da.
+Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@theme` bloğu ve `@utility text-*` tipografi ölçeği (Tailwind v4, CSS-first). Kural kaynağı CLAUDE.md "Tasarım tokenları" ve "Tipografi"; Blueprint'ten ayrılınan yerler [ADR 0006](docs/adr/0006-blueprint-adopted.md)'da, palet ve marka kararı [ADR 0007](docs/adr/0007-tokens-and-brand.md)'de.
 
 | Katman | Belirteçler |
 |---|---|
-| Renk | `obsidian` #000000 (zemin) · `layer-1` #0a0a0a (kart) · `layer-2` #111113 · `ink` #ffffff · `muted` beyaz %62 (7,8:1) · `faint` beyaz %50 (5,3:1; Blueprint'in %40'ı 3,65:1'dir ve WCAG AA'yı geçemez) |
+| Renk | `obsidian` #0D0D0E (zemin) · `layer-1` #141416 (kart) · `layer-2` #1A1A1E (menü) · `ink` platin #E2E2E6 (15,0:1) · `muted` platin %70 (≥ 6,5:1) · `faint` platin %60 (≥ 5,2:1) · `champagne` #D4C5A9 (yalnızca birincil düğme ve tekil vurgu; obsidian metinle 11,4:1). **Saf siyah ve saf beyaz yok** (denetim FAIL sayar) |
 | Çizgi | `hairline` #ffffff1a (cam kenarlık) · `hairline-strong` #ffffff40 (hover) |
-| Tipografi | Inter 300/400/500 (OFL, Latin + Türkçe alt kümeleri) · etiketler sistem mono yığını, 11 px, geniş harf aralığı, büyük harf · `text-hero` `text-headline` `text-title` `text-lead` · AR ve JA sistem yazı tipi yığınları, Arapçada harf aralığı sıfır |
-| Şekil | kartlar 20 px, panel 28 px, düğmeler hap (999 px) · gölge yok (ışık içeridedir) |
+| Tipografi | Instrument Sans 400/500 (OFL, Latin 30 KB + Türkçe 2 KB; ailede 300 yok) · etiketler tek tarifle sistem mono yığını, 11 px, geniş harf aralığı, büyük harf · `text-hero` `text-headline` `text-title` `text-lead` · AR ve JA sistem yazı tipi yığınları, Arapçada harf aralığı sıfır |
+| Şekil | kartlar 20 px, panel 28 px, **tüm düğmeler hap (999 px)**: `.btn` 52 px, `.btn-sm` 40 px, birincil şampanya, ikincil cam · gölge yok (ışık içeridedir) |
+| Logo | `components/ui/Logo.tsx`: `lockupHorizontal` header'da 28 px (asgari 24), `wordmark` footer'da %6, tek renk platin (`currentColor`), oran bozulmaz, koruma alanı 2u (`brand/README.md`) |
 | Hareket | `--ease-lux` cubic-bezier(.16, 1, .3, 1) · maske süresi 1,1 sn, satır gecikmesi 80 ms |
 
 (1) `font-synthesis: none`: sahte kalın/italik üretilmez. (2) Yönlü sınıflar yasaktır (`ml-`, `pr-`, `left-`, `text-right` ...): mantıksal özellikler (`ms-`, `pe-`, `start-`, `text-end`) kullanılır, aksi hâlde Arapça bozulur; denetim bunu hata sayar. (3) `lib/utils.ts` içindeki `cn()` `text-*` boyutlarını tanır; `globals.css`'e yeni bir `@utility text-*` eklerseniz oradaki listeye de ekleyin.
@@ -122,7 +126,7 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 - **Hangi diller yayında:** tek kaynak `i18n/launch.ts`. Üretimde `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`) dışındaki dil 404 verir; geliştirmede ve `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile yedisi açıktır. `hreflang`, `x-default`, `og:locale` + `alternateLocale`, sitemap, JSON-LD (`inLanguage`), dil seçici, footer ve "Küresel erişim" bağlantıları **yalnızca bu listeden** türer (denetim ve duman testi kapalı dilin sızmadığını doğrular). Bir dili yayına almak: kodunu listeye eklemek ve yeniden derlemek, ama önce yerel çeviri ve hukuk incelemesi.
 - **Taslak diller** (`de fr es ar ja`): `messages/xx.json` yalnızca çevrilebilir metni taşır; eksik anahtar (hukuk sayfaları) İngilizceden tamamlanır (`lib/merge-messages.ts`) ve sayfada bunu söyleyen bir satır çıkar. Çeviriler bu oturumda yazılmış **taslaktır**; yerel konuşur ve avukat onayı olmadan yayına alınmamalıdır (sağlık ve hukuk ifadeleri ülkeye göre değişir, örn. Almanya'da HWG).
 - **Arapça (RTL):** `<html lang="ar" dir="rtl">`; tüm yerleşim mantıksal özelliklerle aynalanır (üstbilgi, düğme okları, şerit sırası, ilerleme çizgisi, odak ve menü yönü); yönlü oklar `.icon-dir` ile aynalanır; harf aralığı sıfırlanır (bitişik harfler kopmasın); maske payı Arapça ve Japonca için büyütülür; Latin adlar (`syncflow.agency`, e-posta) `dir="ltr"` taşır; çerçevesiz honeypot `start-[-9999px]` ile konur (RTL'de `left:-9999px` 9999 px'lik yatay kaydırma doğururdu).
-- **Yazı tipleri:** Latin ve Türkçe Inter (OFL). Almanca, Fransızca, İspanyolca Latin-1 kapsamında. **Arapça ve Japonca sistem yazı tipi yığınlarıyla** (Segoe UI/Tahoma/Geeza Pro; Yu Gothic/Hiragino/Noto): sıfır bayt maliyeti, ama marka tutarlılığı sistemin yazı tipine bağlıdır. Bu diller yayına alınırken özel bir OFL yığını seçilmelidir (CLAUDE.md). `/og` paylaşım kartı AR ve JA'da İngilizce metinle çizilir (yazı tipinde glif yok); `og:title` ve `og:description` kendi dillerindedir.
+- **Yazı tipleri:** Latin ve Türkçe Instrument Sans (OFL, `scripts/build-fonts.py`). Almanca, Fransızca, İspanyolca Latin-1 kapsamında. **Arapça ve Japonca sistem yazı tipi yığınlarıyla** (Segoe UI/Tahoma/Geeza Pro; Yu Gothic/Hiragino/Noto): sıfır bayt maliyeti, ama marka tutarlılığı sistemin yazı tipine bağlıdır. Bu diller yayına alınırken özel bir OFL yığını seçilmelidir (CLAUDE.md). `/og` paylaşım kartı AR ve JA'da İngilizce metinle çizilir (yazı tipinde glif yok); `og:title` ve `og:description` kendi dillerindedir.
 - **Para birimi/tarih:** fiyat yayınlanmaz; tarihler `Intl.DateTimeFormat`, sayılar `Intl.NumberFormat` ile sunucuda dilin kuralına göre biçimlenir.
 - Çeviriler **sunucuda** yapılır; tarayıcıya yalnızca birkaç düz metin gider (`components/i18n/ClientI18n.tsx`), next-intl'in ICU motoru tarayıcıya gitmez.
 
@@ -211,7 +215,7 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 - [ ] **Yasal sayfalar:** `messages/en.json` ve `tr.json` → `Legal.*` içindeki `[KÖŞELİ PARANTEZ]` alanlarını (şirket unvanı, adres, teslim hizmeti, aktarım güvenceleri, saklama süresi) doldurun, avukata inceletin; `npm run check:messages -- --strict` hata vermeyene kadar. "Taslak" uyarısı (`Legal.draft`) yayından önce kaldırılmalı.
 - [ ] **"24 saat içinde kişisel dönüş" sözünün gerçek olduğunu** teyit edin (kapasite cümlesi kuralı).
 - [ ] **Taslak dillerden hangisi yayına girecek?** Yerel konuşur çeviri incelemesi + hukuk incelemesi (sağlık reklamı kuralları, KVKK/GDPR muadilleri) sonra `NEXT_PUBLIC_LAUNCHED_LOCALES`'e ekleyin; AR ve JA için özel OFL yazı tipi yığınını seçin ve `check:fonts` kapsamını genişletin.
-- [ ] **LinkedIn / Instagram / WhatsApp adresleri** verilirse ilgili `NEXT_PUBLIC_*` değişkenlerini tanımlayın (verilmedi, footer'da yok). Markalı çizilmiş logo gelince `components/ui/Logo.tsx` metin wordmark'ının yerini alır.
+- [ ] **LinkedIn / Instagram / WhatsApp adresleri** verilirse ilgili `NEXT_PUBLIC_*` değişkenlerini tanımlayın (verilmedi, footer'da yok). Logo çizili B1/v2 paketidir ama **ad/marka sorgusu (Türkpatent ve uluslararası) bitmeden nihai değildir** (`brand/README.md`).
 - [ ] **Sahne videolarının "konsept render" olduğu** kartlarda yazıyor; gerçek vaka çalışmaları gelirse kartlar ve etiket güncellenir.
 - [ ] `NEXT_PUBLIC_SITE_URL` üretim alan adı. Search Console'a `sitemap.xml`. PageSpeed Insights ile canlı doğrulama, `lib/metrics.ts` güncelleme.
 - [ ] Remotion lisansı (4+ kişiyseniz).
@@ -237,6 +241,20 @@ Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alınd
 
 **Doğrulanmayanlar (dürüstçe):** gerçek bir e-posta teslimi (n8n ve Gmail verilmedi; sahte alıcıyla denendi) · gerçek Turnstile widget'ı (Cloudflare'in her zaman geçen test gizli anahtarıyla sunucu doğrulaması denendi, widget için site anahtarı yok) · yerel konuşur çeviri kalitesi ve hukuk incelemesi (beş dil taslak) · AR/JA'da özel yazı tipi · canlı alan adında PageSpeed/CrUX · Vercel dağıtımı · Upstash ile paylaşımlı hız sınırı · Safari/Firefox (yalnızca Chrome) · gerçek telefon ve 120 Hz ekran · ekran okuyucu ile elle deneme.
 
+### 2B-1 Tokenlar ve Marka (08.10.2026, `faz_2b1` dalı)
+
+Ayrıntı: [docs/perf/faz2b1.md](docs/perf/faz2b1.md), karar: [ADR 0007](docs/adr/0007-tokens-and-brand.md).
+
+| Denetim | Sonuç |
+|---|---|
+| Tarayıcı testi (yeni, `puppeteer-core`; betik depoda yok) | **32/32** üretimde ve geliştirmede: hesaplanmış renklerde saf siyah/beyaz yok, Instrument Sans gerçekten çiziliyor, hap ve etiket tarifleri, logo, ikonlar, OG kartı, klip köşeleri |
+| Tarayıcı testi (Faz 4, gerileme) | **60/60** |
+| `npm run smoke` | **107/107** üretimde |
+| Lighthouse masaüstü (n = 3, önceki sürümle aralıklı) | **100 / 100 / 100 / 100**, LCP medyanı 682 ms (önceki sürüm 735 ms), TBT 0, CLS 0, JS 162 KB |
+| `npm run build` | çıkış 0 (tip denetimi dahil) |
+
+**Doğrulanmayanlar:** **mobil Lighthouse bu sürüm için ölçülmedi** (yarım kalan üç koşu 69–73 verdi ama makine meşguldü ve mobil A/B denemesi benim bir araç hatam yüzünden sonuç vermedi; gerileme mi gürültü mü ayırt edilemiyor). Yayındaki "mobil performans" sayısı bu yüzden "ölçülecek"e çekildi; boş bir makinede `npm run perf` ile yeniden ölçülmeli. Kare ritmi Faz 4 sürümünden. Marka sorgusu (Türkpatent) bitmedi.
+
 ## 12. Üçüncü taraf lisanslar
 
-Inter (SIL OFL 1.1, `public/fonts/OFL.txt`) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS, Lenis, Motion (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca render için, özel lisans, §6) · Cloudflare Turnstile (yalnızca briefing'in son adımında yüklenir).
+Instrument Sans (SIL OFL 1.1, `public/fonts/OFL.txt`) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS, Lenis, Motion (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca render için, özel lisans, §6) · Cloudflare Turnstile (yalnızca briefing'in son adımında yüklenir).

@@ -1,6 +1,6 @@
 # ADR 0006: Blueprint esas alındı (görsel dil, teklif, vitrin, briefing, 7 dil)
 
-- **Durum:** Kabul edildi, 08.10.2026 (Faz 4–5). [ADR 0005](0005-blueprint-faz-4-5.md)'in on sorusuna sahibinin yanıtı.
+- **Durum:** Kabul edildi, 08.10.2026 (Faz 4–5). [ADR 0005](0005-blueprint-faz-4-5.md)'in on sorusuna sahibinin yanıtı. **Görsel token'ları (saf siyah `#000000`, `#0a0a0a`, beyaz metin), metin wordmark'ı ve Inter [ADR 0007](0007-tokens-and-brand.md) ile değişti** (obsidian `#0D0D0E`, platin, şampanya, Instrument Sans, B1/v2 logo); aşağıdaki 1. satırın sayıları tarihsel kayıttır.
 - **Karar:** proje sahibi: "Tüm önerileri onaylıyorum, Blueprint esas alınarak uygulamaya geçilsin", on madde (aşağıda). CLAUDE.md "sahibi değiştirirse önce bu dosya ve denetim betiği güncellenir" kuralı gereği önce CLAUDE.md ve `faz2-denetim.mjs` güncellendi, sonra kod yazıldı.
 
 ## Sahibin kararı ve uygulaması

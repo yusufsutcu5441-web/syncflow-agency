@@ -6,58 +6,63 @@
 @source not '../README.md';
 
 /* ── Fonts ──────────────────────────────────────────────────────────────────────────────────────
-   Inter (SIL OFL, see public/fonts/OFL.txt), self-hosted. The files carry weights 100-900 as a variable axis; the design
-   uses 300 (wordmark, large headings), 400 and 500. Together with `font-synthesis: none` nothing renders as fake bold or
-   fake italic. Two files share ONE family name and are chosen glyph by glyph through unicode-range:
-     inter-latin-v1.woff2    42 KB, preloaded on every page (Latin + Latin-1 + punctuation: German, French, Spanish)
-     inter-turkish-v1.woff2  3 KB,  preloaded on /tr only (G-breve, I-dot, S-cedilla)
+   Instrument Sans (SIL OFL, see public/fonts/OFL.txt), self-hosted. The files carry the weight axis 400-600 (the width axis is
+   pinned at 100); the design uses 400 for text and 500 for buttons and small headings. Light 300 does not exist in this family,
+   so the large display type is set at 400. Together with `font-synthesis: none` nothing renders as fake bold or fake italic.
+   Two files share ONE family name and are chosen glyph by glyph through unicode-range (scripts/build-fonts.py builds both):
+     instrument-sans-latin-v1.woff2    30 KB, preloaded on every page (Latin + Latin-1 + punctuation: English, German, French, Spanish)
+     instrument-sans-turkish-v1.woff2  2 KB,  preloaded on /tr only (G-breve, I-dot, S-cedilla)
    Arabic and Japanese use system font stacks (see :lang rules below); a dedicated OFL face is chosen when those
-   languages are launched (CLAUDE.md "Tipografi"). "Inter Fallback" is Arial scaled to Inter's metrics (CLS 0). */
+   languages are launched (CLAUDE.md "Tipografi"). "Instrument Sans Fallback" is Arial scaled to Instrument Sans's metrics (CLS 0). */
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Instrument Sans';
   font-style: normal;
-  font-weight: 300 500;
+  font-weight: 400 600;
   font-display: swap;
-  src: url('/fonts/inter-latin-v1.woff2') format('woff2');
+  src: url('/fonts/instrument-sans-latin-v1.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Instrument Sans';
   font-style: normal;
-  font-weight: 300 500;
+  font-weight: 400 600;
   font-display: swap;
-  src: url('/fonts/inter-turkish-v1.woff2') format('woff2');
+  src: url('/fonts/instrument-sans-turkish-v1.woff2') format('woff2');
   unicode-range: U+011E-011F, U+0130, U+015E-015F, U+0178;
 }
 @font-face {
-  font-family: 'Inter Fallback';
+  font-family: 'Instrument Sans Fallback';
   src: local('Arial');
-  ascent-override: 90.44%;
-  descent-override: 22.52%;
+  ascent-override: 93.96%;
+  descent-override: 24.22%;
   line-gap-override: 0%;
-  size-adjust: 107.12%;
+  size-adjust: 103.24%;
 }
 
 /* ───────────────────────────────────────────────────────────────────────────────────────────────
-   SyncFlow design tokens: "Dark Monolith & Fluid Precision" (syncflow-blueprint.docx, docs/adr/0006).
-   Pure black canvas, #0a0a0a cards, glass borders at 10 % white (#ffffff1a), 25 % on hover (#ffffff40), white type.
-   Contrast on the canvas (WCAG), measured by Lighthouse's axe audit: white 21:1 · muted (62 %) 7.8:1 · faint (50 %) 5.3:1.
-   Nothing below 4.5:1 carries text. (The Blueprint's 40 % for the faint tone and for ".agency" is 3.65:1 and fails WCAG AA;
-   50 % is the lightest step that keeps Lighthouse accessibility at 100, docs/adr/0006.)
+   SyncFlow design tokens (docs/adr/0007). Blueprint structure ("Dark Monolith & Fluid Precision", docs/adr/0006) on the
+   B1/v2 brand colour system (brand/README.md): obsidian canvas, platin type, champagne only for the primary call to action.
+   There is no pure black and no pure white anywhere: every dark is obsidian #0D0D0E, every light is platin #E2E2E6.
+   Glass edges stay the owner-approved #ffffff1a (10 %) and #ffffff40 (25 % on hover): translucent lines, not blocks.
+   Contrast on the worst surface (glass over layer 2), WCAG: platin 11.7:1 (15.0:1 on the canvas) · muted (platin 70 %) 6.5:1 ·
+   faint (platin 60 %) 5.2:1 · obsidian on champagne 11.4:1. Nothing below 4.5:1 carries text.
    ─────────────────────────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-obsidian: #000000;
-  --color-layer-1: #0a0a0a;
-  --color-layer-2: #111113;
+  --color-obsidian: #0d0d0e;
+  --color-layer-1: #141416;
+  --color-layer-2: #1a1a1e;
 
-  --color-ink: #ffffff;
-  --color-muted: rgb(255 255 255 / 0.62);
-  --color-faint: rgb(255 255 255 / 0.5);
+  --color-ink: #e2e2e6;
+  --color-muted: rgb(226 226 230 / 0.7);
+  --color-faint: rgb(226 226 230 / 0.6);
+
+  /* The accent: the primary call to action and one-off highlights, never the logo (brand/README.md). */
+  --color-champagne: #d4c5a9;
 
   --color-hairline: #ffffff1a;
   --color-hairline-strong: #ffffff40;
 
-  --font-sans: 'Inter', 'Inter Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'Instrument Sans', 'Instrument Sans Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
   /* Tracking */
@@ -187,13 +192,13 @@ html[lang='ar'] ::after {
 /* ── Type scale ──────────────────────────────────────────────────────────────────────────────────────────────── */
 @utility text-hero {
   font-size: clamp(2.25rem, 7.2vw + 0.4rem, 7rem);
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.02;
   letter-spacing: var(--tracking-display);
 }
 @utility text-headline {
   font-size: clamp(2rem, 4.2vw + 0.5rem, 4.25rem);
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.06;
   letter-spacing: var(--tracking-display);
   text-wrap: balance;
@@ -227,13 +232,22 @@ html[lang='ar'] ::after {
     padding-block: var(--space-section);
   }
 
-  /* Mono micro label: 11 px, wide tracking, capitals (the one place capitals are used). */
-  .label {
+  /* ── Mono label: the ONE recipe for every small caption, chip, badge and code ──────────────────────────────────
+     11 px mono, capitals, wide tracking. Each part below only adds its own colour, box and position, never its own type.
+     Arabic and Japanese drop the capitals and the tracking through the :lang rules at the top of this file. */
+  .label,
+  .chip,
+  .badge,
+  .lang-trigger,
+  .lang-item .code {
     font-family: var(--font-mono);
     font-size: 0.6875rem;
+    font-weight: 400;
     line-height: 1.4;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
+  }
+  .label {
     color: var(--color-faint);
   }
 
@@ -264,7 +278,9 @@ html[lang='ar'] ::after {
     transform: scaleX(-1);
   }
 
-  /* ── Buttons: pills ────────────────────────────────────────────────────────── */
+  /* ── Buttons: ONE pill recipe ─────────────────────────────────────────────────
+     Every call to action is a pill: .btn (52 px) or .btn-sm (40 px), primary (champagne) or ghost (glass). Round icon buttons
+     and filter pills below follow the same radius, edge and focus rules. */
   .btn {
     position: relative;
     isolation: isolate;
@@ -277,6 +293,8 @@ html[lang='ar'] ::after {
     border-radius: var(--radius-pill);
     font-size: 0.9375rem;
     font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0;
     white-space: nowrap;
     cursor: pointer;
     text-decoration: none;
@@ -293,10 +311,10 @@ html[lang='ar'] ::after {
   .btn svg {
     flex: none;
   }
-  /* Solid white, black text. */
+  /* Champagne, obsidian text (11.4:1): the one accent of the page. */
   .btn-primary {
     color: var(--color-obsidian);
-    background: var(--color-ink);
+    background: var(--color-champagne);
   }
   /* Glass: transparent, 1px #ffffff1a; on hover the border grows to #ffffff40 and a dim glow rises inside. */
   .btn-ghost {
@@ -309,7 +327,7 @@ html[lang='ar'] ::after {
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: radial-gradient(120% 160% at 50% 0%, rgb(255 255 255 / 0.12), transparent 62%);
+    background: radial-gradient(120% 160% at 50% 0%, rgb(226 226 230 / 0.12), transparent 62%);
     opacity: 0;
     transition: opacity 0.4s ease;
   }
@@ -321,7 +339,7 @@ html[lang='ar'] ::after {
   }
   @media (hover: hover) {
     .btn-primary:hover {
-      background: rgb(255 255 255 / 0.86);
+      background: color-mix(in srgb, var(--color-champagne) 80%, var(--color-ink));
     }
     .btn:hover .icon-dir {
       translate: calc(3px * var(--dir-sign)) 0;
@@ -351,7 +369,7 @@ html[lang='ar'] ::after {
   /* ── Glass surfaces ────────────────────────────────────────────────────────── */
   .glass {
     position: relative;
-    background: rgb(255 255 255 / 0.03);
+    background: rgb(226 226 230 / 0.03);
     border: 1px solid var(--color-hairline);
     border-radius: var(--radius-card);
   }
@@ -363,7 +381,7 @@ html[lang='ar'] ::after {
   }
   .panel {
     position: relative;
-    background: rgb(255 255 255 / 0.03);
+    background: rgb(226 226 230 / 0.03);
     border: 1px solid var(--color-hairline);
     border-radius: var(--radius-panel);
   }
@@ -374,10 +392,6 @@ html[lang='ar'] ::after {
     padding: 0.35rem 0.8rem;
     border-radius: var(--radius-pill);
     border: 1px solid var(--color-hairline);
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
     color: var(--color-muted);
   }
 
@@ -397,11 +411,11 @@ html[lang='ar'] ::after {
     z-index: 50;
     height: var(--header-h);
     border-bottom: 1px solid var(--color-hairline);
-    background: rgb(0 0 0 / 0);
+    background: rgb(13 13 14 / 0);
     transition: background-color 0.4s ease;
   }
   .site-header[data-scrolled='true'] {
-    background: rgb(0 0 0 / 0.8);
+    background: rgb(13 13 14 / 0.8);
   }
   /* The blur is for desktops only: a fixed backdrop-filter repaints on every scroll frame on phones. */
   @media (min-width: 48rem) and (hover: hover) {
@@ -411,14 +425,11 @@ html[lang='ar'] ::after {
     }
   }
 
-  .wordmark {
-    font-size: 1.1875rem;
-    font-weight: 300;
-    letter-spacing: var(--tracking-display);
+  /* The logo is drawn in the current text colour (platin) and never restyled: no tint, shadow, glow or gradient. */
+  .logo {
+    display: block;
+    flex: none;
     color: var(--color-ink);
-  }
-  .wordmark-tld {
-    opacity: 0.5;
   }
 
   .nav-link {
@@ -462,9 +473,6 @@ html[lang='ar'] ::after {
     border: 1px solid var(--color-hairline);
     background: transparent;
     color: var(--color-ink);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: var(--tracking-label);
     cursor: pointer;
     transition:
       background-color 0.25s ease,
@@ -527,9 +535,6 @@ html[lang='ar'] ::after {
     color: var(--color-ink);
   }
   .lang-item .code {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: var(--tracking-label);
     color: var(--color-faint);
   }
   @media (hover: hover) {
@@ -555,7 +560,7 @@ html[lang='ar'] ::after {
     bottom: 0;
     z-index: 45;
     padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
-    background: rgb(0 0 0 / 0.9);
+    background: rgb(13 13 14 / 0.9);
     border-top: 1px solid var(--color-hairline);
     translate: 0 110%;
     visibility: hidden;
@@ -591,7 +596,7 @@ html[lang='ar'] ::after {
     height: var(--spot-size, 600px);
     margin: calc(var(--spot-size, 600px) / -2) 0 0 calc(var(--spot-size, 600px) / -2);
     border-radius: 50%;
-    background: radial-gradient(closest-side, rgb(255 255 255 / var(--spot-alpha, 0.06)), transparent);
+    background: radial-gradient(closest-side, rgb(226 226 230 / var(--spot-alpha, 0.06)), transparent);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.5s ease;
@@ -687,7 +692,7 @@ html[lang='ar'] ::after {
     width: 240%;
     aspect-ratio: 1;
     translate: -50% -50%;
-    background: conic-gradient(from 0deg, transparent 0deg 292deg, rgb(255 255 255 / 0.1) 292deg, rgb(255 255 255 / 0.95) 352deg, transparent 360deg);
+    background: conic-gradient(from 0deg, transparent 0deg 292deg, rgb(226 226 230 / 0.1) 292deg, rgb(226 226 230 / 0.95) 352deg, transparent 360deg);
     animation: beam-spin 8s linear infinite;
   }
   .beam-card .beam-body {
@@ -720,26 +725,32 @@ html[lang='ar'] ::after {
     height: 100%;
     object-fit: cover;
   }
-  .frame-control {
-    position: absolute;
-    inset-inline-end: 0.75rem;
-    bottom: 0.75rem;
-    z-index: 2;
+  /* Round icon buttons (video play/pause, strip arrows): one recipe, two sizes. */
+  .frame-control,
+  .strip-btn {
     display: grid;
     place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
     border-radius: 50%;
-    border: 1px solid var(--color-hairline-strong);
-    background: rgb(0 0 0 / 0.55);
+    border: 1px solid var(--color-hairline);
     color: var(--color-ink);
     cursor: pointer;
     transition: border-color 0.25s ease;
   }
   @media (hover: hover) {
-    .frame-control:hover {
-      border-color: var(--color-ink);
+    .frame-control:hover,
+    .strip-btn:not(:disabled):hover {
+      border-color: var(--color-hairline-strong);
     }
+  }
+  .frame-control {
+    position: absolute;
+    inset-inline-end: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 2;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-color: var(--color-hairline-strong);
+    background: rgb(13 13 14 / 0.55);
   }
   .badge {
     position: absolute;
@@ -749,11 +760,7 @@ html[lang='ar'] ::after {
     padding: 0.25rem 0.6rem;
     border-radius: var(--radius-pill);
     border: 1px solid var(--color-hairline);
-    background: rgb(0 0 0 / 0.55);
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+    background: rgb(13 13 14 / 0.55);
     color: var(--color-muted);
   }
 
@@ -819,34 +826,31 @@ html[lang='ar'] ::after {
     border-bottom: 1px solid var(--color-hairline);
   }
   .strip-btn {
-    display: grid;
-    place-items: center;
     width: 2.75rem;
     height: 2.75rem;
-    border-radius: 50%;
-    border: 1px solid var(--color-hairline);
     background: transparent;
-    color: var(--color-ink);
-    cursor: pointer;
-    transition: border-color 0.25s ease;
   }
   .strip-btn:disabled {
     opacity: 0.35;
     cursor: default;
   }
-  @media (hover: hover) {
-    .strip-btn:not(:disabled):hover {
-      border-color: var(--color-hairline-strong);
-    }
+  /* Choice and caption pills (language chips, role chips, video captions): one box, 13 px sans. */
+  .overlay-chip,
+  .reach-chip,
+  .role-chip span {
+    display: inline-block;
+    padding: 0.45rem 1rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-hairline);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    white-space: nowrap;
   }
   .overlay-chip {
     position: absolute;
     z-index: 2;
-    padding: 0.4rem 0.85rem;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--color-hairline-strong);
-    background: rgb(0 0 0 / 0.5);
-    font-size: 0.8125rem;
+    border-color: var(--color-hairline-strong);
+    background: rgb(13 13 14 / 0.5);
     color: var(--color-ink);
   }
 
@@ -881,13 +885,8 @@ html[lang='ar'] ::after {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(var(--r) * -1)) rotate(calc(var(--a) * -1));
-    padding: 0.4rem 0.9rem;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--color-hairline);
     background: var(--color-obsidian);
     color: var(--color-muted);
-    font-size: 0.8125rem;
-    white-space: nowrap;
     cursor: pointer;
     transition:
       border-color 0.25s ease,
@@ -990,7 +989,7 @@ html[lang='ar'] ::after {
     padding: 1.1rem 1.25rem;
     border-radius: 16px;
     border: 1px solid var(--color-hairline);
-    background: rgb(255 255 255 / 0.02);
+    background: rgb(226 226 230 / 0.02);
     transition:
       border-color 0.3s ease,
       box-shadow 0.4s ease,
@@ -1010,11 +1009,11 @@ html[lang='ar'] ::after {
       border-color: var(--color-hairline-strong);
     }
   }
-  /* Selected: white border and a dim glow from inside. */
+  /* Selected: platin border and a dim glow from inside. */
   .opt input:checked + .opt-body {
     border-color: var(--color-ink);
-    background: rgb(255 255 255 / 0.04);
-    box-shadow: inset 0 0 48px rgb(255 255 255 / 0.08);
+    background: rgb(226 226 230 / 0.04);
+    box-shadow: inset 0 0 48px rgb(226 226 230 / 0.08);
   }
   .opt input:focus-visible + .opt-body {
     outline: 2px solid var(--color-ink);
@@ -1045,7 +1044,7 @@ html[lang='ar'] ::after {
     color: var(--color-faint);
   }
   .field-line:hover {
-    border-bottom-color: rgb(255 255 255 / 0.6);
+    border-bottom-color: rgb(226 226 230 / 0.6);
   }
   .field-line:focus-visible {
     outline: none;
@@ -1068,7 +1067,7 @@ html[lang='ar'] ::after {
     height: 1.35rem;
     margin-top: 0.15rem;
     border-radius: 6px;
-    border: 1px solid rgb(255 255 255 / 0.55);
+    border: 1px solid rgb(226 226 230 / 0.55);
     background: transparent;
     cursor: pointer;
     transition:
@@ -1078,7 +1077,7 @@ html[lang='ar'] ::after {
   .field-check:checked {
     background-color: var(--color-ink);
     border-color: var(--color-ink);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 8.5l3 3 6-6.5'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%230d0d0e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 8.5l3 3 6-6.5'/></svg>");
     background-size: 100% 100%;
   }
   .field-check:focus-visible {
@@ -1108,11 +1107,6 @@ html[lang='ar'] ::after {
     cursor: pointer;
   }
   .role-chip span {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--color-hairline);
-    font-size: 0.875rem;
     color: var(--color-muted);
     transition:
       border-color 0.25s ease,
@@ -1122,7 +1116,7 @@ html[lang='ar'] ::after {
   .role-chip input:checked + span {
     border-color: var(--color-ink);
     color: var(--color-ink);
-    background: rgb(255 255 255 / 0.05);
+    background: rgb(226 226 230 / 0.05);
   }
   .role-chip input:focus-visible + span {
     outline: 2px solid var(--color-ink);
@@ -1141,19 +1135,10 @@ html[lang='ar'] ::after {
   }
 
   /* ── Footer ────────────────────────────────────────────────────────────────── */
-  .giant-wordmark::before {
-    content: attr(data-text);
-  }
   .giant-wordmark {
-    display: block;
-    overflow: hidden;
-    white-space: nowrap;
-    text-align: center;
-    font-size: clamp(2.5rem, 12.9vw, 16rem);
-    font-weight: 300;
-    line-height: 0.82;
-    letter-spacing: var(--tracking-display);
-    color: rgb(255 255 255 / 0.06);
+    width: 100%;
+    height: auto;
+    color: rgb(226 226 230 / 0.06);
     user-select: none;
     pointer-events: none;
   }
@@ -1281,10 +1266,10 @@ html.lenis body {
 }
 @keyframes panel-dim {
   from {
-    background-color: rgb(255 255 255 / 0.03);
+    background-color: rgb(226 226 230 / 0.03);
   }
   to {
-    background-color: rgb(0 0 0 / 0.6);
+    background-color: rgb(13 13 14 / 0.6);
   }
 }
 /* The word starts below its mask and ends where the text sets (no `to`: the natural transform). */

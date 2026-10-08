@@ -31,7 +31,8 @@ export function buildJsonLd({ locale, siteName, description }: Input) {
         '@id': orgId,
         name: siteName,
         url: SITE_URL,
-        logo: `${SITE_URL}/icon.svg`,
+        // A raster logo: search engines do not read SVG here (scripts/build-brand.mjs writes it from the B1 monogram).
+        logo: `${SITE_URL}/brand/logo-512.png`,
         description,
         email: CONTACT_EMAIL,
       },
@@ -49,7 +50,7 @@ export function buildJsonLd({ locale, siteName, description }: Input) {
         name: siteName,
         url: pageUrl,
         description,
-        image: `${SITE_URL}/icon.svg`,
+        image: `${SITE_URL}/brand/logo-512.png`,
         areaServed: 'Worldwide',
         availableLanguage: languages,
         inLanguage: LOCALE_LABELS[locale].hreflang,

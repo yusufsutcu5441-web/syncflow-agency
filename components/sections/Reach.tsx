@@ -34,12 +34,12 @@ export async function Reach() {
           <p className="label mb-8 text-center">{t('sentenceLabel')}</p>
           <ReachInteractive languages={languages} initial={locale} chipsLabel={t('chipsLabel')} draftLabel={t('draft')} openLabel={t('open')}>
             <svg viewBox={`0 0 ${globe.size} ${globe.size}`} role="img" aria-label={t('globeLabel')} fill="none">
-              <circle cx={globe.center} cy={globe.center} r={globe.radius} stroke="rgb(255 255 255 / 0.22)" strokeWidth="1" />
-              <path d={globe.d} stroke="rgb(255 255 255 / 0.1)" strokeWidth="0.75" />
+              <circle cx={globe.center} cy={globe.center} r={globe.radius} stroke="rgb(226 226 230 / 0.22)" strokeWidth="1" />
+              <path d={globe.d} stroke="rgb(226 226 230 / 0.1)" strokeWidth="0.75" />
               {globe.cities.map((city) => (
                 <g key={city.id}>
                   <circle cx={city.x} cy={city.y} r="3" className="city-dot" data-pause-offscreen="" style={{ '--n': city.index } as CSSProperties} />
-                  <text x={city.x + city.label.dx} y={city.y + city.label.dy} textAnchor={city.label.anchor} fontSize="9" fill="rgb(255 255 255 / 0.6)" fontFamily="ui-monospace, Menlo, Consolas, monospace" letterSpacing="0.5">
+                  <text x={city.x + city.label.dx} y={city.y + city.label.dy} textAnchor={city.label.anchor} fontSize="9" fill="rgb(226 226 230 / 0.6)" fontFamily="ui-monospace, Menlo, Consolas, monospace" letterSpacing="0.5">
                     {t(`cities.${city.id}`)}
                   </text>
                 </g>

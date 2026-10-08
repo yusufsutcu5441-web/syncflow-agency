@@ -48,8 +48,8 @@ export function Clinic() {
             <stop offset="1" stopColor="#e9ebee" />
           </linearGradient>
           <radialGradient id="end" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#fff" stopOpacity="1" />
-            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+            <stop offset="0" stopColor="#E2E2E6" stopOpacity="1" />
+            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
           </radialGradient>
         </defs>
 
@@ -71,17 +71,17 @@ export function Clinic() {
           return (
             <g key={w} opacity={fade}>
               {/* ceiling light bar */}
-              <rect x={VP.x - 120 * light.s} y={light.t + 6 * light.s} width={240 * light.s} height={12 * light.s} rx={6 * light.s} fill="#fff" opacity="0.95" />
+              <rect x={VP.x - 120 * light.s} y={light.t + 6 * light.s} width={240 * light.s} height={12 * light.s} rx={6 * light.s} fill="#E2E2E6" opacity="0.95" />
               {/* door frames on both side walls */}
               <rect x={door.l + 18 * door.s} y={door.t + 120 * door.s} width={doorWidth} height={(door.b - door.t) - 160 * door.s} fill="rgba(120,128,140,0.28)" />
               <rect x={door.r - 18 * door.s - doorWidth} y={door.t + 120 * door.s} width={doorWidth} height={(door.b - door.t) - 160 * door.s} fill="rgba(120,128,140,0.28)" />
               {/* floor reflection of the light bar */}
-              <rect x={VP.x - 90 * light.s} y={light.b - 22 * light.s} width={180 * light.s} height={8 * light.s} rx={4 * light.s} fill="#fff" opacity="0.35" />
+              <rect x={VP.x - 90 * light.s} y={light.b - 22 * light.s} width={180 * light.s} height={8 * light.s} rx={4 * light.s} fill="#E2E2E6" opacity="0.35" />
             </g>
           );
         })}
 
-        <rect width="1280" height="720" fill="rgba(255,255,255,0.04)" />
+        <rect width="1280" height="720" fill="rgba(226,226,230,0.04)" />
       </svg>
     </AbsoluteFill>
   );

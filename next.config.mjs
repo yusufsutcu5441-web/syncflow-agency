@@ -29,7 +29,7 @@ const nextConfig = {
   // inserts its own rules block INTO it. CLAUDE.md is the project contract (written by hand), so keep it untouched.
   agentRules: false,
   // The OG image route reads this font with fs; tell the file tracer so serverless deployments ship it.
-  outputFileTracingIncludes: { '/og': ['./assets/og-inter-600.ttf'] },
+  outputFileTracingIncludes: { '/og': ['./assets/og-instrument-sans-600.ttf'] },
   // `ANALYZE=1 npm run build` emits source maps so bundle contents can be inspected (npm run analyze).
   productionBrowserSourceMaps: process.env.ANALYZE === '1',
   // jsdom (used server-side by DOMPurify) must be loaded by Node, not bundled.

@@ -36,7 +36,7 @@ export function Estate() {
   ];
 
   return (
-    <AbsoluteFill style={{ background: '#000', overflow: 'hidden' }}>
+    <AbsoluteFill style={{ background: '#0D0D0E', overflow: 'hidden' }}>
       <svg width="1280" height="720" viewBox="0 0 1280 720">
         <defs>
           <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
@@ -49,17 +49,17 @@ export function Estate() {
             <stop offset="1" stopColor="#030304" />
           </linearGradient>
           <linearGradient id="reflect" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff" stopOpacity="0.5" />
-            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.5" />
+            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
           </linearGradient>
           <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
             <stop offset="0" stopColor="rgb(255,170,90)" stopOpacity={0.75 * p} />
             <stop offset="1" stopColor="rgb(255,170,90)" stopOpacity="0" />
           </radialGradient>
           <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0.2">
-            <stop offset={`${streak - 14}%`} stopColor="#fff" stopOpacity="0" />
-            <stop offset={`${streak}%`} stopColor="#fff" stopOpacity="0.2" />
-            <stop offset={`${streak + 14}%`} stopColor="#fff" stopOpacity="0" />
+            <stop offset={`${streak - 14}%`} stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset={`${streak}%`} stopColor="#E2E2E6" stopOpacity="0.2" />
+            <stop offset={`${streak + 14}%`} stopColor="#E2E2E6" stopOpacity="0" />
           </linearGradient>
         </defs>
 
