@@ -8,14 +8,14 @@
  *
  * Values are taken from the current environment and from .env / .env.local / .env.production(.local) when present,
  * so the check is meaningful with real secrets. To prove the audit itself works, build once with canary values:
- *   CONTACT_WEBHOOK_URL=https://example.invalid/CANARY-9f3b  CONTACT_WEBHOOK_SECRET=CANARYSECRET123  npm run build
+ *   CONTACT_WEBHOOK_URL=https://example.invalid/CANARY-9f3b  CONTACT_WEBHOOK_SECRET=CANARYSECRET123  TURNSTILE_SECRET_KEY=CANARYTURNSTILE123  npm run build
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SERVER_ONLY = ['CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
+const SERVER_ONLY = ['CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'TURNSTILE_SECRET_KEY', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'];
 
 function readEnvFile(name) {
   const path = join(root, name);

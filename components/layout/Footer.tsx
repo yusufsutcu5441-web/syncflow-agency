@@ -1,95 +1,130 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import Link from 'next/link';
 import { getLocale, getNow, getTranslations } from 'next-intl/server';
-import { Logo } from '@/components/ui/Logo';
-import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
+import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
+import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
-import { SECTION_IDS, SITE_URL } from '@/lib/site';
+import { SECTION_IDS } from '@/lib/site';
 
-const NAV = ['showcase', 'compare', 'pricing', 'faq', 'contact'] as const;
-
+/**
+ * Blueprint footer: four information columns (Studio, Showcase, Reach, Legal), a thin glass line with the legal row,
+ * and the studio's name set enormous at 6 % opacity across the page end. Reach lists only the languages that are
+ * public (i18n/launch.ts), as plain crawlable links.
+ */
 export async function Footer() {
-  const [t, nav, a11y, locale, now] = await Promise.all([
+  const [t, a11y, locale, now] = await Promise.all([
     getTranslations('Footer'),
-    getTranslations('Nav'),
     getTranslations('A11y'),
     getLocale() as Promise<AppLocale>,
     getNow(),
   ]);
 
-  const pagePath = locale === routing.defaultLocale ? '' : `/${locale}`;
-  const pagespeed = `https://pagespeed.web.dev/analysis?url=${encodeURIComponent(`${SITE_URL}${pagePath}`)}`;
-  const linkClass = 'text-muted transition-colors duration-300 hover:text-snow';
+  const linkClass = 'footer-link';
+  const here = (id: string) => withLocale(`/#${id}`, locale);
 
   return (
-    <footer className="relative border-t border-white/10 pb-28 pt-16 md:pb-14 md:pt-20">
-      <div className="container-x grid gap-12 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
-        <div>
-          <Link href={withLocale('/', locale)} prefetch={false} aria-label={a11y('home')} className="text-snow">
-            <Logo />
-          </Link>
-          <p className="mt-5 max-w-xs text-muted">{t('tagline')}</p>
-        </div>
-
-        <nav aria-label={a11y('footerNav')}>
-          <p className="eyebrow">{t('navigate')}</p>
-          <ul className="mt-5 grid gap-3">
-            {NAV.map((id) => (
-              <li key={id}>
-                <Link href={withLocale(`/#${SECTION_IDS[id]}`, locale)} prefetch={false} className={linkClass}>
-                  {nav(id)}
+    <footer className="relative overflow-hidden pt-20 max-md:pb-20 md:pt-28">
+      <div className="container-x">
+        <nav aria-label={a11y('footerNav')} className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="label">{t('studio')}</p>
+            <ul className="mt-5 grid gap-3">
+              <li>
+                <Link href={here(SECTION_IDS.architecture)} prefetch={false} className={linkClass}>
+                  {t('architecture')}
                 </Link>
               </li>
-            ))}
-          </ul>
+              <li>
+                <Link href={here(SECTION_IDS.architecture)} prefetch={false} className={linkClass}>
+                  {t('performance')}
+                </Link>
+              </li>
+              <li>
+                <Link href={here(SECTION_IDS.briefing)} prefetch={false} className={linkClass}>
+                  {t('briefing')}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="label">{t('showcase')}</p>
+            <ul className="mt-5 grid gap-3">
+              <li>
+                <Link href={here('show-estate')} prefetch={false} className={linkClass}>
+                  {t('realEstate')}
+                </Link>
+              </li>
+              <li>
+                <Link href={here('show-clinic')} prefetch={false} className={linkClass}>
+                  {t('clinics')}
+                </Link>
+              </li>
+              <li>
+                <Link href={here('show-saas')} prefetch={false} className={linkClass}>
+                  {t('saas')}
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="label">{t('reach')}</p>
+            <ul className="mt-5 grid gap-3">
+              {OPEN_LOCALES.map((code) => (
+                <li key={code}>
+                  {/* Plain crawlable links to every public translation: good for visitors and for hreflang discovery. */}
+                  <a
+                    href={withLocale('/', code)}
+                    lang={LOCALE_LABELS[code].hreflang}
+                    dir={LOCALE_LABELS[code].dir}
+                    hrefLang={LOCALE_LABELS[code].hreflang}
+                    className={linkClass}
+                    aria-current={code === locale ? 'true' : undefined}
+                  >
+                    {LOCALE_LABELS[code].native}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p className="label">{t('legal')}</p>
+            <ul className="mt-5 grid gap-3">
+              <li>
+                <Link href={withLocale('/privacy', locale)} prefetch={false} className={linkClass}>
+                  {t('privacy')}
+                </Link>
+              </li>
+              <li>
+                <Link href={withLocale('/imprint', locale)} prefetch={false} className={linkClass}>
+                  {t('imprint')}
+                </Link>
+              </li>
+            </ul>
+          </div>
         </nav>
 
-        <div>
-          <p className="eyebrow">{t('legal')}</p>
-          <ul className="mt-5 grid gap-3">
-            <li>
-              <Link href={withLocale('/privacy', locale)} prefetch={false} className={linkClass}>
-                {t('privacy')}
-              </Link>
-            </li>
-            <li>
-              <Link href={withLocale('/imprint', locale)} prefetch={false} className={linkClass}>
-                {t('imprint')}
-              </Link>
-            </li>
-            <li>
-              <a href={pagespeed} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-1.5`}>
-                {t('pagespeed')}
-                <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden="true" />
-              </a>
-            </li>
-          </ul>
-        </div>
+        {isDraftLocale(locale) ? <p className="chip mt-12 normal-case">{t('draft')}</p> : null}
 
-        <div>
-          <p className="eyebrow">{t('languages')}</p>
-          <ul className="mt-5 grid gap-3">
-            {routing.locales.map((code) => (
-              <li key={code}>
-                {/* Plain crawlable links to every translation: good for visitors and for hreflang discovery. */}
-                <a
-                  href={withLocale('/', code)}
-                  lang={LOCALE_LABELS[code].hreflang}
-                  hrefLang={LOCALE_LABELS[code].hreflang}
-                  className={linkClass}
-                  aria-current={code === locale ? 'true' : undefined}
-                >
-                  {LOCALE_LABELS[code].native}
-                </a>
-              </li>
-            ))}
-          </ul>
+        <div className="mt-16 flex flex-col gap-3 border-t border-hairline pt-6 pb-8 text-sm text-faint md:flex-row md:items-center md:justify-between">
+          <p>
+            {t('rights', { year: now.getFullYear() })}
+            <span aria-hidden="true"> · </span>
+            {t('measured')}
+          </p>
+          <a href="#top" className={`${linkClass} inline-flex items-center gap-2`}>
+            <ArrowUp size={14} strokeWidth={1.75} aria-hidden="true" />
+            {t('top')}
+          </a>
         </div>
       </div>
 
-      <div className="container-x mt-16 border-t border-white/10 pt-8 text-sm text-subtle">
-        <p>{t('rights', { year: now.getFullYear() })}</p>
-      </div>
+      {/* Decorative: the text is drawn by a pseudo-element (content: attr(data-text)), not a text node, because at the
+          Blueprint's 6 % opacity it can never meet a text contrast ratio and an accessibility audit would flag it as text.
+          dir=ltr keeps the Latin name in order on right-to-left pages. */}
+      <span aria-hidden="true" dir="ltr" data-text="syncflow.agency" className="giant-wordmark pb-2 pt-6" />
     </footer>
   );
 }

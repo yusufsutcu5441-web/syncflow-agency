@@ -1,38 +1,31 @@
 import { notFound } from 'next/navigation';
-import { hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Comparison } from '@/components/sections/Comparison';
-import { Contact } from '@/components/sections/Contact';
-import { Faq } from '@/components/sections/Faq';
+import { Architecture } from '@/components/sections/Architecture';
+import { BriefingSection } from '@/components/sections/BriefingSection';
+import { Closing } from '@/components/sections/Closing';
 import { Hero } from '@/components/sections/Hero';
-import { Pricing } from '@/components/sections/Pricing';
+import { Reach } from '@/components/sections/Reach';
 import { Showcase } from '@/components/sections/Showcase';
-import { routing } from '@/i18n/routing';
+import { isOpenLocale } from '@/i18n/launch';
 import { buildJsonLd, jsonLdString } from '@/lib/jsonld';
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  if (!hasLocale(routing.locales, locale)) notFound();
+  if (!isOpenLocale(locale)) notFound();
   setRequestLocale(locale);
 
-  const [meta, pricing] = await Promise.all([getTranslations({ locale, namespace: 'Meta' }), getTranslations({ locale, namespace: 'Pricing' })]);
-
-  const jsonLd = buildJsonLd({
-    locale,
-    siteName: meta('siteName'),
-    description: meta('organizationDescription'),
-    offerName: pricing('planName'),
-  });
+  const meta = await getTranslations({ locale, namespace: 'Meta' });
+  const jsonLd = buildJsonLd({ locale, siteName: meta('siteName'), description: meta('organizationDescription') });
 
   return (
     <>
       <main id="main">
         <Hero />
+        <Architecture />
         <Showcase />
-        <Comparison />
-        <Pricing />
-        <Faq />
-        <Contact />
+        <Reach />
+        <BriefingSection />
+        <Closing />
       </main>
 
       {/* Structured data (Organization, WebSite, ProfessionalService). "<" is escaped inside the JSON. */}

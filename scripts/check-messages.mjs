@@ -22,34 +22,54 @@ const strict = process.argv.includes('--strict');
 const SOURCE = 'en';
 const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
 const locales = files.map((f) => f.replace(/\.json$/, ''));
+/**
+ * Draft languages (docs/adr/0006): a native translation and a legal review are still pending. They may leave the legal
+ * pages out (those fall back to the English text, lib/merge-messages.ts), but nothing else, and they may not add keys.
+ */
+const DRAFT = new Set(['de', 'fr', 'es', 'ar', 'ja']);
 
 /** Same in every language on purpose. Compared after trimming. */
 const SAME_OK = new Set([
-  'SyncFlow',
-  'Next.js',
-  'Remotion',
-  'Lemon Squeezy',
-  'Stack',
-  'Retainer',
-  'FAQ',
-  'Design',
-  'Brief',
+  'syncflow.agency',
+  'SaaS',
+  'SEO',
   'Briefing',
-  'Checkout',
-  'Next.js + Remotion',
-  'EN · TR · DE · FR · IT',
-  'Privacy',
-  'Contact',
+  'Studio',
+  'Performance',
+  'Concept',
+  'Lenis',
+  'LinkedIn',
+  'Instagram',
+  'WhatsApp',
+  'Dubai',
+  'Berlin',
+  'Paris',
+  'Madrid',
+  'London',
+  'Tokyo',
+  'I',
+  'II',
+  'III',
+  '7',
+  '⌘K',
+  'hreflang · RTL-native · CJK typography · Locale-aware formatting',
+  'H.264 · VP9 · Loads on demand · Space reserved, no layout shift',
+  'CLS · LCP · TBT · measured, dated and sourced',
+  'Lenis smooth scroll · requestAnimationFrame · GPU-composited transforms',
+  '$5k – $10k',
+  '$10k – $20k',
+  '$20k +',
+  '{tool}, {profile}, {date}.',
+  // Cognates and brand terms that are the same in more than one language.
+  'Showcase',
+  '02 — Showcase',
+  'Strategic Briefing',
   'Architecture',
-  'Architektur',
-  // Correct in more than one language (loan words, international terms, section numbering).
-  'SyncFlow Standard', // product name, identical to the Lemon Squeezy checkout
-  'Launch',
+  '01 — Architecture',
+  'Istanbul',
   'Name',
-  'Cookies',
-  'Server Components',
-  '04 — FAQ',
-  '05 — Contact',
+  'Flexible',
+  'Legal',
 ]);
 
 const verbose = process.argv.includes('--verbose');
@@ -94,6 +114,7 @@ for (const locale of locales) {
   const flat = flatten(data);
 
   for (const key of Object.keys(enFlat)) {
+    if (DRAFT.has(locale) && key.startsWith('Legal.')) continue;
     if (!(key in flat)) errors.push(`${locale}: missing key ${key}`);
   }
   for (const key of Object.keys(flat)) {
@@ -129,7 +150,7 @@ for (const locale of locales) {
 }
 
 const total = Object.keys(enFlat).length;
-console.log(`messages: ${locales.length} locales (${locales.join(', ')}), ${total} keys each`);
+console.log(`messages: ${locales.length} locales (${locales.join(', ')}), ${total} keys each (draft languages: all but Legal.*)`);
 for (const w of warnings) console.log(`  warn  ${w}`);
 if (verbose) for (const m of placeholderKeys.keys()) console.log(`  todo  ${m}`);
 for (const e of errors) console.log(`  ERROR ${e}`);

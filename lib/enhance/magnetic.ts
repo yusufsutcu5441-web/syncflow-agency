@@ -1,57 +1,86 @@
-import { motionValue, springValue, styleEffect } from 'framer-motion/dom';
+const FINE_POINTER = '(hover: hover) and (pointer: fine)';
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+
+/** How far (in button sizes) from a button the pull starts, how much of the distance it follows, and the limit in px. */
+const REACH = 0.9;
+const STRENGTH = 0.28;
+const LIMIT = 12;
 
 /**
- * Magnetic buttons. A button marked data-magnetic leans toward the pointer and settles back on a spring.
- * The "pull zone" is a little larger than the button (see [data-magnetic]::before in globals.css).
- * Mouse and pen only; touch never triggers it.
+ * Magnetic primary button (Blueprint): the button leans a few pixels towards the pointer while the pointer is near it
+ * and settles back when it leaves. Only the `translate` of the element moves (CSS variables --mx/--my, globals.css), so
+ * nothing is laid out. One passive, rAF-throttled listener serves every [data-magnetic] element. Fine pointers only and
+ * never with reduced motion.
  */
-
-const PULL = 0.34;
-const MAX_OFFSET = 14;
-const SPRING = { stiffness: 210, damping: 15, mass: 0.55 } as const;
-
-const clamp = (value: number) => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, value));
-
 export function initMagnetic(): () => void {
-  const cleanups: Array<() => void> = [];
+  const targets = Array.from(document.querySelectorAll<HTMLElement>('[data-magnetic]'));
+  if (targets.length === 0) return () => {};
 
-  document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
-    const targetX = motionValue(0);
-    const targetY = motionValue(0);
-    const stopEffect = styleEffect(el, { x: springValue(targetX, SPRING), y: springValue(targetY, SPRING) });
+  const fine = window.matchMedia(FINE_POINTER);
+  const reduced = window.matchMedia(REDUCED_MOTION);
+  let frame = 0;
+  let last: PointerEvent | null = null;
+  let listening = false;
 
-    // Measured once when the pointer arrives (the button is at rest then), so the centre does not drift as it moves.
-    let centerX = 0;
-    let centerY = 0;
+  const reset = (element: HTMLElement) => {
+    element.style.removeProperty('--mx');
+    element.style.removeProperty('--my');
+    delete element.dataset.magnetActive;
+  };
 
-    const onEnter = (event: PointerEvent) => {
-      if (event.pointerType === 'touch') return;
-      const rect = el.getBoundingClientRect();
-      centerX = rect.left + rect.width / 2;
-      centerY = rect.top + rect.height / 2;
-    };
-    const onMove = (event: PointerEvent) => {
-      if (event.pointerType === 'touch') return;
-      targetX.set(clamp((event.clientX - centerX) * PULL));
-      targetY.set(clamp((event.clientY - centerY) * PULL));
-    };
-    const onLeave = () => {
-      targetX.set(0);
-      targetY.set(0);
-    };
+  const update = () => {
+    frame = 0;
+    const event = last;
+    if (!event) return;
+    for (const element of targets) {
+      const box = element.getBoundingClientRect();
+      const dx = event.clientX - (box.left + box.width / 2);
+      const dy = event.clientY - (box.top + box.height / 2);
+      const near = Math.hypot(dx, dy) < Math.max(box.width, box.height) * REACH;
+      if (!near) {
+        if (element.dataset.magnetActive) reset(element);
+        continue;
+      }
+      const clamp = (value: number) => Math.max(-LIMIT, Math.min(LIMIT, value * STRENGTH));
+      element.dataset.magnetActive = 'true';
+      element.style.setProperty('--mx', `${clamp(dx).toFixed(1)}px`);
+      element.style.setProperty('--my', `${clamp(dy).toFixed(1)}px`);
+    }
+  };
 
-    el.addEventListener('pointerenter', onEnter);
-    el.addEventListener('pointermove', onMove);
-    el.addEventListener('pointerleave', onLeave);
+  const onMove = (event: PointerEvent) => {
+    last = event;
+    if (!frame) frame = requestAnimationFrame(update);
+  };
+  const onLeave = () => {
+    last = null;
+    for (const element of targets) reset(element);
+  };
 
-    cleanups.push(() => {
-      el.removeEventListener('pointerenter', onEnter);
-      el.removeEventListener('pointermove', onMove);
-      el.removeEventListener('pointerleave', onLeave);
-      stopEffect();
-      el.style.transform = '';
-    });
-  });
+  const sync = () => {
+    const wanted = fine.matches && !reduced.matches;
+    if (wanted && !listening) {
+      window.addEventListener('pointermove', onMove, { passive: true });
+      document.documentElement.addEventListener('pointerleave', onLeave);
+      listening = true;
+    } else if (!wanted && listening) {
+      window.removeEventListener('pointermove', onMove);
+      document.documentElement.removeEventListener('pointerleave', onLeave);
+      listening = false;
+      onLeave();
+    }
+  };
 
-  return () => cleanups.forEach((fn) => fn());
+  sync();
+  fine.addEventListener('change', sync);
+  reduced.addEventListener('change', sync);
+
+  return () => {
+    window.removeEventListener('pointermove', onMove);
+    document.documentElement.removeEventListener('pointerleave', onLeave);
+    fine.removeEventListener('change', sync);
+    reduced.removeEventListener('change', sync);
+    cancelAnimationFrame(frame);
+    onLeave();
+  };
 }

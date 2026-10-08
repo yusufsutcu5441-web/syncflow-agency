@@ -17,7 +17,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   return (
     <main id="main" className="grid min-h-[80dvh] place-items-center pb-24 pt-32">
       <div className="container-x">
-        <h1 className="display text-[clamp(2.4rem,6vw,4.5rem)]">{t.title}</h1>
+        <h1 className="display text-headline">{t.title}</h1>
         <p className="lead mt-6 max-w-lg">{t.body}</p>
         <div className="mt-10 flex flex-wrap gap-3">
           <button type="button" className="btn btn-primary" onClick={reset}>

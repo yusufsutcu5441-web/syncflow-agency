@@ -10,11 +10,22 @@
 next-env.d.ts
 *.log
 .dev-inbox.jsonl
+# raw Lighthouse reports written by `npm run perf`; the recorded results live in docs/perf
+/perf-out/
 
 # secrets: never commit real values (see .env.example)
 .env
 .env.*
 !.env.example
+
+# fonts under a licence that forbids public redistribution (CLAUDE.md: font files never go into the public repo).
+# The Inter subsets in public/fonts are SIL OFL and stay tracked.
+/public/fonts/satoshi*
+/public/fonts/Satoshi*
+/brand/**/*.otf
+/brand/**/*.woff
+/brand/**/*.woff2
+/brand/**/*.ttf
 
 # misc
 .DS_Store

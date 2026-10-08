@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * A local "inbox" for the contact form, so the whole flow can be tried without n8n/Make/a CRM.
+ * A local "inbox" for the Strategic Briefing, so the whole flow can be tried without n8n/Make/a CRM.
  *
  *   terminal 1:  npm run dev:inbox                     (listens on http://127.0.0.1:4011/lead)
- *   terminal 2:  CONTACT_WEBHOOK_URL=http://127.0.0.1:4011/lead npm start
- *                (PowerShell: $env:CONTACT_WEBHOOK_URL='http://127.0.0.1:4011/lead'; npm start)
+ *   terminal 2:  CONTACT_WEBHOOK_URL=http://127.0.0.1:4011/lead npm run dev
+ *                (PowerShell: $env:CONTACT_WEBHOOK_URL='http://127.0.0.1:4011/lead'; npm run dev)
  *
- * Every lead the site delivers is printed and appended to .dev-inbox.jsonl (git-ignored). If CONTACT_WEBHOOK_SECRET is
- * set in this terminal too, the x-syncflow-signature header is verified, exactly as your real receiver should do.
+ * Every briefing the site delivers is printed and appended to .dev-inbox.jsonl (git-ignored). If CONTACT_WEBHOOK_SECRET is
+ * set in this terminal too, the x-syncflow-signature header is verified, exactly as your real receiver (n8n) should do.
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { appendFileSync } from 'node:fs';

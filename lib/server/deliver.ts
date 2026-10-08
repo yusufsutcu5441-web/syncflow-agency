@@ -1,7 +1,10 @@
 import 'server-only';
+import type { Budget, ProjectType, Role, Tier, Timeline } from '@/lib/briefing';
 
 /**
- * Delivery of a validated, sanitised lead to the operator's own system (n8n, Make, Zapier, a Slack workflow, a CRM).
+ * Delivery of a validated, sanitised briefing to the operator's own system (n8n, Make, Zapier, a Slack workflow, a CRM).
+ * The documented path is: signed webhook -> n8n -> Gmail -> contact@syncflow.agency (docs/n8n-briefing.md). Gmail
+ * credentials never live in this app.
  *
  * - CONTACT_WEBHOOK_URL and CONTACT_WEBHOOK_SECRET are server-only: no NEXT_PUBLIC_ prefix, never imported by a
  *   client component (this file imports 'server-only', so the build fails if anyone tries).
@@ -10,10 +13,16 @@ import 'server-only';
  * - An optional HMAC-SHA256 signature lets the receiver prove a request really came from this site.
  */
 
-export type LeadPayload = {
+export type BriefingPayload = {
+  projectType: ProjectType;
+  budget: Budget;
+  timeline: Timeline;
+  role: Role;
+  /** Priority class computed on the server (lib/briefing.ts classify). */
+  tier: Tier;
   name: string;
-  email: string;
   company: string;
+  email: string;
   message: string;
   locale: string;
 };
@@ -38,23 +47,25 @@ async function hmacHex(secret: string, body: string): Promise<string> {
   return Array.from(new Uint8Array(signature), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export async function deliverLead(lead: LeadPayload): Promise<DeliveryResult> {
+export async function deliverBriefing(lead: BriefingPayload): Promise<DeliveryResult> {
   const url = process.env.CONTACT_WEBHOOK_URL?.trim();
 
   if (!url) {
     if (process.env.NODE_ENV !== 'production') {
       // Development convenience only. Never log message bodies or addresses: they are personal data.
-      console.info('[contact] CONTACT_WEBHOOK_URL is not set; accepted a lead locally without delivering it.');
+      console.info('[briefing] CONTACT_WEBHOOK_URL is not set; accepted a briefing locally without delivering it.');
       return { ok: true, via: 'dev-log' };
     }
     return { ok: false, reason: 'not_configured' };
   }
   if (!isAllowedWebhookUrl(url)) {
-    console.error('[contact] CONTACT_WEBHOOK_URL must be an https:// URL.');
+    console.error('[briefing] CONTACT_WEBHOOK_URL must be an https:// URL.');
     return { ok: false, reason: 'not_configured' };
   }
 
-  const body = JSON.stringify({ type: 'syncflow.contact', receivedAt: new Date().toISOString(), ...lead });
+  // Ready-made subject for the mail node: "[Briefing][high] Company, Name". Both parts are already single-line plain text.
+  const subject = `[Briefing][${lead.tier}] ${lead.company}, ${lead.name}`;
+  const body = JSON.stringify({ type: 'syncflow.briefing', receivedAt: new Date().toISOString(), subject, ...lead });
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   const secret = process.env.CONTACT_WEBHOOK_SECRET?.trim();
   if (secret) headers['x-syncflow-signature'] = `sha256=${await hmacHex(secret, body)}`;

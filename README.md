@@ -1,14 +1,14 @@
-# SyncFlow Agency: syncflow.agency
+# syncflow.agency
 
-Yüksek bütçeli B2B markalar için "Quiet Luxury Noir" kurumsal vitrin.
-**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (5 dil) · Framer Motion · Remotion Player · Lemon Squeezy · nonce tabanlı sıkı CSP**
+Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)).
+**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (7 dil) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · Remotion ile önceden render edilmiş sahne videoları · nonce tabanlı CSP (şimdilik report-only)**
 
 | | |
 |---|---|
-| Diller | EN (varsayılan, `/`), TR `/tr`, DE `/de`, FR `/fr`, IT `/it` |
-| Satış akışı | Tek CTA "Start Project — $2,500" → Lemon Squeezy koyu overlay ödeme |
-| Bölümler | Hero · Showcase (canlı Remotion kompozisyonu) · Karşılaştırma (Contrast Grid) · Fiyat · SSS · İletişim · Footer |
-| Güvenlik | HSTS, CSP (nonce + strict-dynamic), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, sunucuya özel sırlar |
+| Diller | `en` (varsayılan, `/`), `tr`, `de`, `fr`, `es`, `ar` (sağdan sola), `ja`. **Üretimde yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` yayınlanır (varsayılan `en,tr`)**; `de fr es ar ja` taslak çeviridir, geliştirmede açık, canlıda kapalıdır ([ADR 0002](docs/adr/0002-launch-locales-and-market.md), [0006](docs/adr/0006-blueprint-adopted.md)) |
+| Satış akışı | Başvuru bazlı: ana sayfadaki 4 adımlı **Strategic Briefing** → `/api/briefing` → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. Ödeme ve fiyat yok |
+| Bölümler | Hero · Mimari (3 Border Beam kartı) · Vitrin (3 konsept video, yatay `scroll-snap` şerit) · Küresel erişim (SVG küre, 7 dil) · Briefing · Kapanış ve footer |
+| Güvenlik | HSTS, CSP (nonce + strict-dynamic, **report-only**; üçüncü taraf yalnızca Cloudflare Turnstile), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, honeypot, sunucuya özel sırlar |
 
 > **Bu proje OneDrive / Masaüstü dışında durmalı.** `node_modules` ve `.next` on binlerce dosya içerir; OneDrive senkronu, Türkçe karakterli/boşluklu yollar ve Windows'un 260 karakter sınırı kurulumu ve Remotion'u bozar. Şu an `C:\Users\YAKUP\syncflow-agency` altında.
 
@@ -20,23 +20,25 @@ Gereksinim: **Node ≥ 20.19** (Node 24 ile test edildi), npm.
 
 ```bash
 npm install
-npm run dev                 # http://localhost:3000  (geliştirme, Turbopack)
+npm run dev                 # http://localhost:3000  (geliştirme, Turbopack; yedi dil de açık)
 
-npm run build && npm start  # üretim derlemesi + sunucu (önizleme için bunu kullanın)
+npm run build && npm start  # üretim derlemesi + sunucu (önizleme için bunu kullanın; yalnızca en,tr yayında)
 ```
 
-Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zorunlu değildir; `.env.local` oluşturup gerekenleri doldurun (git'e girmez).
+Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zorunlu değildir (Turnstile ve webhook olmadan form geliştirme kipinde "yerel kabul" yanıtı verir ve bunu söyler); `.env.local` oluşturup gerekenleri doldurun (git'e girmez).
 
 | Komut | Ne yapar |
 |---|---|
 | `npm run check` | Çeviri eşitliği + TypeScript + ESLint |
-| `npm run check:messages` | 5 dilde anahtar/yer tutucu/etiket eşitliği (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
-| `npm run check:fonts` | Mesajlardaki her karakter yazı tipi dosyalarında var mı (Python + `pip install fonttools brotli`) |
-| `npm run check:csp-hash` | Lemon.js'in eklediği `<style>` hash'i güncel mi |
-| `npm run smoke` | **Çalışan** sunucuya karşı 78 HTTP güvenlik/işlev kontrolü (aşağıda) |
+| `npm run check:messages` | Her dilde anahtar/yer tutucu/etiket eşitliği; taslak dillerde `Legal.*` aranmaz (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
+| `npm run check:fonts` | Mesajlardaki her karakter yazı tipi dosyalarında var mı (Python + `pip install fonttools brotli`; Latin ve Türkçe alt kümeler) |
+| `node faz2-denetim.mjs --build` | **Aşama kapısı**: bağımlılıklar, tasarım belirteçleri, i18n, güvenlik, sahne videoları, hareket, doğrulanmamış iddia yasağı, ardından `npm run build` ve ilk yük paket denetimi |
+| `npm run smoke` | **Çalışan** sunucuya karşı HTTP güvenlik/işlev kontrolleri (aşağıda). Ortam değişkenleri `scripts/smoke.mjs` başlığında: `EXPECT_LOCALES`, `TURNSTILE_MODE`, `MOCK_WEBHOOK_PORT`, `WEBHOOK_SECRET`, `EXPECT_CSP_MODE` |
+| `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
-| `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): formdan gelen kayıtları ekrana yazar. Sunucuyu `CONTACT_WEBHOOK_URL=http://127.0.0.1:4011/lead` ile başlatın (PowerShell: `$env:CONTACT_WEBHOOK_URL='http://127.0.0.1:4011/lead'; npm start`) |
-| `npm run remotion:studio / :still / :render` | Aynı kompozisyonu Remotion ile videoya/görsele çevirir (bkz. §8) |
+| `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
+| `npm run film:render` | Dört sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
+| `npm run remotion:studio` | Sahneleri Remotion Studio'da açar |
 
 ---
 
@@ -44,165 +46,197 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 
 ```
 app/
-  [locale]/layout.tsx      <html lang>, CSP nonce okuma, Lemon.js (next/script), JSON-LD, metadata
-  [locale]/page.tsx        ana sayfa (sunucu bileşeni, bölümler)
-  [locale]/privacy|imprint yasal sayfa taslakları (noindex)
-  api/contact/route.ts     iletişim formu API'si (Node runtime)
-  og/route.tsx             paylaşım görseli (GET /og?locale=tr)
-  globals.css              tasarım belirteçleri, @font-face, bileşen sınıfları
+  [locale]/layout.tsx      <html lang dir>, metadata (hreflang yalnızca yayındaki dillere), CSP nonce, dil kapısı (kapalı dil 404)
+  [locale]/page.tsx        ana sayfa: Hero · Architecture · Showcase · Reach · BriefingSection · Closing
+  [locale]/privacy|imprint yasal sayfa taslakları (noindex; EN/TR dışında İngilizce metin + uyarı)
+  api/briefing/route.ts    Strategic Briefing API'si (Node runtime)
+  api/csp-report/route.ts  CSP ihlal raporları alıcısı (204; sunucu günlüğüne rapor başına tek satır JSON)
+  og/route.tsx             paylaşım görseli (GET /og?locale=tr; AR ve JA kartları İngilizce metinle)
+  globals.css              @font-face, belirteçler (@theme), taban katman, bileşen sınıfları (Border Beam, cam yüzey, briefing ...)
   robots.ts · sitemap.ts · manifest.ts · icon.svg
 components/
-  layout/  Header · Footer · StickyCta · LanguageSwitcher(client)
-  sections/ Hero · Showcase · Comparison · Pricing · Faq · Contact · ContactForm(client) · LegalPage
-  remotion/ ArchitectureComposition (kare tabanlı, saf) · ShowcasePlayer(client) · ArchitecturePlayer · config
-  checkout/ LemonSqueezy(client): lemon.js + overlay erişilebilirliği
-  i18n/     ClientI18n (tarayıcıya giden minik bağlam) · ui/ Logo, CheckoutLink, Magnetic, SectionHead
+  layout/    Header · Footer · StickyCta · LanguageSwitcher(client)
+  sections/  Hero · Architecture · Showcase + ShowcaseStrip(client) · Reach + ReachInteractive(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
+  media/     SceneVideo(client): poster + önceden render edilmiş video, ekran dışında durur
+  i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (wordmark), MaskText/MaskLines, SectionHead
 lib/
-  security/ csp.ts · rate-limit.ts      server/ deliver.ts · sanitize.ts (server-only)
-  schemas/  contact.ts (zod, sunucu) · contact-fields.ts (tarayıcı, zod'suz)
-  enhance/  reveal · magnetic · cursor · scroll-line · ui-state   (Framer Motion DOM motoru)
-messages/   en.json tr.json de.json fr.json it.json
-i18n/       routing.ts · request.ts
+  briefing.ts      seçenekler, sınırlar, zod'suz tarayıcı doğrulayıcı, sınıflandırma (tarayıcı + sunucu)
+  metrics.ts       sitede yayınlanan TÜM performans sayıları (değer, tarih, profil, kaynak)
+  reach.ts         yedi dilli cümle ve SVG küre geometrisi
+  schemas/briefing.ts (zod, strict)    server/ deliver.ts · turnstile.ts · sanitize.ts (server-only)    security/ csp.ts · rate-limit.ts
+  enhance/  ui-state (üstbilgi, mobil yapışkan CTA, ekran dışında durdurma) · spotlight · magnetic · rings · reveal (Motion) · smooth-scroll (Lenis)
+  motion/   tokens · ease      merge-messages.ts (taslak dillerde eksik metin İngilizceden)    i18n-paths.ts
+messages/   en tr de fr es ar ja (.json)
+i18n/       routing.ts (7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-public/fonts/ Inter alt kümeleri (OFL)    assets/og-inter-600.ttf (paylaşım görseli yazı tipi)
-remotion/   Remotion CLI girişi (5 dil × 2 oran = 10 kompozisyon)
-scripts/    check-messages · check-fonts · smoke · audit-secrets · lemon-style-hash · build-og-font
+docs/       adr/ (mimari kararlar 0001–0006) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+public/     fonts/ Inter alt kümeleri (OFL)   media/clips/ render edilmiş sahneler   assets/og-inter-600.ttf
+remotion/   Render kaynağı, siteye girmez: config.ts, fonts.ts, Root.tsx, scenes/ (Monolith, Estate, Clinic, Saas)
+scripts/    check-messages · check-fonts · smoke · audit-secrets · build-og-font · render-film · lighthouse · dev-inbox
 ```
+
+### Tasarım sistemi ("Dark Monolith & Fluid Precision")
+
+Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@theme` bloğu ve `@utility text-*` tipografi ölçeği (Tailwind v4, CSS-first). Kural kaynağı CLAUDE.md "Tasarım tokenları" ve "Tipografi"; Blueprint'ten ayrılınan yerler [ADR 0006](docs/adr/0006-blueprint-adopted.md)'da.
+
+| Katman | Belirteçler |
+|---|---|
+| Renk | `obsidian` #000000 (zemin) · `layer-1` #0a0a0a (kart) · `layer-2` #111113 · `ink` #ffffff · `muted` beyaz %62 (7,8:1) · `faint` beyaz %50 (5,3:1; Blueprint'in %40'ı 3,65:1'dir ve WCAG AA'yı geçemez) |
+| Çizgi | `hairline` #ffffff1a (cam kenarlık) · `hairline-strong` #ffffff40 (hover) |
+| Tipografi | Inter 300/400/500 (OFL, Latin + Türkçe alt kümeleri) · etiketler sistem mono yığını, 11 px, geniş harf aralığı, büyük harf · `text-hero` `text-headline` `text-title` `text-lead` · AR ve JA sistem yazı tipi yığınları, Arapçada harf aralığı sıfır |
+| Şekil | kartlar 20 px, panel 28 px, düğmeler hap (999 px) · gölge yok (ışık içeridedir) |
+| Hareket | `--ease-lux` cubic-bezier(.16, 1, .3, 1) · maske süresi 1,1 sn, satır gecikmesi 80 ms |
+
+(1) `font-synthesis: none`: sahte kalın/italik üretilmez. (2) Yönlü sınıflar yasaktır (`ml-`, `pr-`, `left-`, `text-right` ...): mantıksal özellikler (`ms-`, `pe-`, `start-`, `text-end`) kullanılır, aksi hâlde Arapça bozulur; denetim bunu hata sayar. (3) `lib/utils.ts` içindeki `cn()` `text-*` boyutlarını tanır; `globals.css`'e yeni bir `@utility text-*` eklerseniz oradaki listeye de ekleyin.
 
 ---
 
 ## 3. Güvenlik modeli (OWASP odaklı)
 
-**Başlıklar** (`next.config.mjs`, her yanıtta): `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `Cross-Origin-Opener-Policy: same-origin-allow-popups` (3-D Secure/PayPal pencereleri için). `X-Powered-By` kapalı.
+**Başlıklar** (`next.config.mjs`, her yanıtta): `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `Cross-Origin-Opener-Policy: same-origin`. `X-Powered-By` kapalı.
 
-**Content-Security-Policy** (`lib/security/csp.ts`, `proxy.ts` her sayfa isteğinde üretir):
-- `script-src 'self' 'nonce-…' 'strict-dynamic'`: satır içi betikler **yalnızca** o isteğin nonce'unu taşıyorsa çalışır. `unsafe-inline`/`unsafe-eval` yok.
-- Üçüncü taraf olarak yalnızca `lemonsqueezy.com`: betik (`assets.lemonsqueezy.com`) ve ödeme iframe'i (`*.lemonsqueezy.com`).
-- `style-src` nonce + **iki tam hash**: Lemon.js'in yükleyici `<style>`'ı ve Remotion Player'ın eklediği `<style>`. Remotion hash'i her derlemede kurulu sürümden **otomatik hesaplanır** (`next.config.mjs`), Lemon hash'i `npm run check:csp-hash` ile doğrulanır.
-- `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'self'`, üretimde HTTPS ise `upgrade-insecure-requests`.
-- **Bedeli:** nonce her istekte değiştiği için sayfalar istek başına render edilir (CDN'de HTML önbelleğe alınamaz). Marka sitesi için ölçülen sunucu yanıtı ≈ 90–170 ms. Önbellekli statik HTML isterseniz CSP `'unsafe-inline'` ile gevşetilmelidir; bunu yapmanızı önermiyorum.
+**Content-Security-Policy** (`lib/security/csp.ts`, `proxy.ts` her sayfa isteğinde üretir). **Şimdilik `Content-Security-Policy-Report-Only`:** tarayıcı politikayı tam uygular ve her ihlali `/api/csp-report`'a bildirir ama hiçbir şeyi engellemez. Enforce'a geçiş Faz 7'de, `CSP_MODE=enforce` ile (kod değişikliği gerekmez); gerekçe [ADR 0001](docs/adr/0001-csp-report-only.md).
+- `script-src 'self' 'nonce-…' 'strict-dynamic' https://challenges.cloudflare.com`: satır içi betikler yalnızca o isteğin nonce'unu taşıyorsa çalışır. Turnstile betiğini briefing'in son adımı kendi nonce'lu kodundan yükler (`strict-dynamic` onu güvenilir sayar; kaynak adı eski tarayıcılar için yedektir). `unsafe-inline`/`unsafe-eval` yok (geliştirme sunucusu hariç).
+- **Tek üçüncü taraf Cloudflare Turnstile** (`script-src`, `frame-src`, `connect-src`). Lemon Squeezy ve onun `<style>` hash'i kalktı; `style-src` yalnızca nonce.
+- `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'self'`, `report-uri /api/csp-report`. `upgrade-insecure-requests` yalnızca enforce kipinde ve HTTPS'te.
+- **Rapor alıcısı:** `204` döner, gövde ≤ 8 KB, en fazla 10 rapor; yalnızca yönerge, engellenen/belge/kaynak adresi (sorgu dizesi ve parça atılır) ve satır/sütun tutulur; IP ve User-Agent tutulmaz.
+- **Bedeli:** nonce her istekte değiştiği için sayfalar istek başına render edilir (CDN'de HTML önbelleğe alınamaz); yerel TTFB ≈ 20 ms ([docs/perf/faz4.md](docs/perf/faz4.md)).
 
-**Hız sınırı** (`lib/security/rate-limit.ts`): `/api/*` + `/og` için 30 istek/dk/IP, sayfalar için 240/dk/IP (`proxy.ts`), iletişim formu için ayrıca **5 gönderim/10 dk/IP**. Aşılınca `429` + `Retry-After`. Depolama: `UPSTASH_REDIS_REST_URL/TOKEN` tanımlıysa Redis (IP **SHA-256'lanır**), yoksa süreç belleği. **Dürüst sınır:** Vercel gibi sunucusuz ortamda bellek tabanlı sayaç örnek başınadır, yani en iyi çaba. Gerçek koruma için Upstash ekleyin. Dağıtık (L7 DDoS) saldırıya karşı asıl savunma platformdur: Vercel Firewall / Cloudflare WAF. Uygulama katmanı bunun yerine geçmez.
+**Hız sınırı** (`lib/security/rate-limit.ts`): `/api/*` + `/og` için 30 istek/dk/IP, sayfalar için 240/dk/IP (`proxy.ts`), briefing için ayrıca **5 gönderim/10 dk/IP**. Aşılınca `429` + `Retry-After`. Depolama: `UPSTASH_REDIS_REST_URL/TOKEN` tanımlıysa Redis (IP SHA-256'lanır), yoksa süreç belleği. **Dürüst sınır:** sunucusuz ortamda bellek sayacı örnek başınadır (en iyi çaba); gerçek koruma için Upstash ekleyin, dağıtık saldırıya karşı asıl savunma platformdur (Vercel Firewall / Cloudflare WAF).
 
-**Girdi savunması** (`app/api/contact/route.ts`): yalnızca POST + JSON, `Origin` host'u ile eşleşmeli (yoksa 403), `Sec-Fetch-Site: cross-site` reddedilir, gövde ≤ 8 KB (hem başlık hem gerçek okuma), **zod `strictObject`** (bilinmeyen alan reddedilir), honeypot + "anında gönderim" tuzağı (bota başarı gibi yanıt), ardından **DOMPurify (jsdom)**:
-- HTML-benzeri işaretleme (`<script>`, `<img onerror>`, kapatılmamış `<svg>` …) **açıkça reddedilir** (422 `invalid` → kullanıcı "desteklenmeyen karakterleri kaldırın" görür). Sessizce silinmez: ayrıştırıcı kapatılmamış `<svg` sonrası metni yutar ve ziyaretçi mesajının yarısını kaybederdi.
-- `Ad <ad@firma.com>` ve `<https://…>` zararsız biçimleri düz metne çevrilir.
-- Kontrol karakterleri ve görünmez/çift yönlü ("Trojan Source") karakterler silinir, kalan `<` `>` atılır.
-- Teslimat: `CONTACT_WEBHOOK_URL` (yalnızca `https://`, loopback hariç), yönlendirme izlenmez (SSRF), isteğe bağlı **HMAC-SHA256** imzası `x-syncflow-signature`.
+**Briefing girdi savunması** (`app/api/briefing/route.ts`): yalnızca POST + JSON, `Origin` host'u ile eşleşmeli (yoksa 403), `Sec-Fetch-Site: cross-site` reddedilir, gövde ≤ 8 KB (hem başlık hem gerçek okuma), **zod `strictObject`** (bilinmeyen alan ve tarayıcıdan gelen `tier` reddedilir), honeypot + 2,5 sn altı "anında gönderim" tuzağı (bota başarı gibi yanıt), **Cloudflare Turnstile sunucuda doğrulanır** (belirteç yoksa ya da geçersizse 400 `verification`; üretimde gizli anahtar yoksa 503), ardından **DOMPurify (jsdom)**:
+- HTML-benzeri işaretleme (`<script>`, `<img onerror>`, kapatılmamış `<svg>` …) **açıkça reddedilir** (422 `invalid`); sessizce silinmez.
+- `Ad <ad@firma.com>` ve `<https://…>` zararsız biçimleri düz metne çevrilir; kontrol karakterleri ve görünmez/çift yönlü ("Trojan Source") karakterler silinir.
+- **Öncelik sınıfı (yüksek/orta/düşük) sunucuda hesaplanır** (`lib/briefing.ts`): $20k+ ve karar veren/karar ekibi = yüksek, $5k–$10k (taban $10.000'ın altı) = düşük, kalanı orta.
+- Teslimat: `CONTACT_WEBHOOK_URL` (yalnızca `https://`, loopback hariç), yönlendirme izlenmez (SSRF), isteğe bağlı **HMAC-SHA256** imzası `x-syncflow-signature`; yük `type: "syncflow.briefing"`, ayrıca hazır `subject` (`[Briefing][high] Şirket, Ad`).
 
-**Sırlar:** `CONTACT_WEBHOOK_*` ve `UPSTASH_*` `NEXT_PUBLIC_` önekli değildir; `lib/server/*` `server-only` ile işaretlidir (bir istemci bileşeni içe aktarırsa derleme kırılır). `npm run audit:secrets` derleme çıktısını tarar; sahte "kanarya" değerleriyle derleyip sızıntı olmadığını ve denetimin gerçek bir sızıntıyı yakaladığını kanıtladım.
+**Sırlar:** `CONTACT_WEBHOOK_*`, `TURNSTILE_SECRET_KEY`, `UPSTASH_*` `NEXT_PUBLIC_` önekli değildir; `lib/server/*` `server-only` ile işaretlidir. **Gmail kimlik bilgisi uygulamada hiçbir yerde yoktur**: e-postayı n8n'deki Gmail düğümü gönderir ([docs/n8n-briefing.md](docs/n8n-briefing.md)). `npm run audit:secrets` derleme çıktısını tarar.
 
-**Bilinçli kararlar / dikkat:** HSTS `preload` jetonu yalnızca *uygunluk* bildirir; `hstspreload.org`'a başvurursanız tüm alt alan adları kalıcı olarak HTTPS olmak zorundadır. Lemon.js üçüncü taraf bir betiktir (sayfa yüklendikten sonra boşta yüklenir); ödeme pencerelerinde LS'nin kendi güvenlik politikası geçerlidir.
-
----
-
-## 4. Yerelleştirme (i18n)
-
-- Yönlendirme `i18n/routing.ts` (`localePrefix: 'as-needed'`). İlk ziyarette tarayıcı diline göre yönlendirme yapılır; seçim **`NEXT_LOCALE` çerezinde 1 yıl** saklanır (işlevsel çerez, izleme yok).
-- Çeviriler **sunucuda** yapılır (fiyat biçimi dahil: `$2,500`, `$2.500`, `2.500 $`, `2 500 $`, `2500 $`: her dilin CLDR kuralı). Tarayıcıya yalnızca birkaç düz metin gider (`components/i18n/ClientI18n.tsx`), next-intl'in ICU motoru tarayıcıya **gitmez** (~13 KB gzip kazanç).
-- `hreflang` (HTML + `Link` başlığı + sitemap), `x-default`, dil başına canonical, `og:locale`.
-- Dil seçici: giriş-çıkışta yumuşak geçiş, ok tuşları/Home/End/Esc, `lang=""` ile anadilde adlar, seçimi çereze yazar, `#anchor`'ı korur.
-
-**Yeni dil eklemek:** `messages/xx.json` (en.json ile aynı anahtarlar) → `i18n/routing.ts` `locales` + `LOCALE_LABELS` → `npm run check` → yazı tipi kapsamı için `python scripts/check-fonts.py` (eksik harf varsa alt kümeyi yeniden üretin, bkz. dosya başlığı) → `remotion/Root.tsx`'e `MESSAGES` ekleyin.
+**Bilinçli kararlar / dikkat:** HSTS `preload` jetonu yalnızca *uygunluk* bildirir; `hstspreload.org`'a başvurursanız tüm alt alan adları kalıcı olarak HTTPS olmak zorundadır. Webhook ayarlı değilken üretimde form `503` verir ve ziyaretçiye yanıtlarıyla hazırlanmış bir `mailto:` taslağı sunar: yanıtlar kaybolmaz.
 
 ---
 
-## 5. Animasyon sistemi
+## 4. Yerelleştirme (i18n) ve küresel SEO
 
-Hepsi **Framer Motion**'ın motorudur (`framer-motion/dom`: yay fiziği, `springValue`, `styleEffect`, `scroll`), ama React bileşeni olarak değil, ilk boyamadan **sonra** ve tarayıcı boştayken ayrı bir parçada yüklenen DOM iyileştirmeleri olarak (`lib/enhance/`). Neden: hidrasyon maliyeti sıfır, LCP/TBT'ye dokunmaz, JS kapalıyken içerik görünür.
-
-- **Scroll reveal:** yalnızca ekran *altındaki* öğeler gizlenir (hero asla), yay fiziğiyle girer, sonunda satır içi stiller temizlenir. Düzen okuması yok (zorunlu reflow yok), yalnızca opacity/transform → CLS 0.
-- **Manyetik buton:** `springValue` ile imleci takip eder, bırakınca yaylanarak döner. Yalnızca fare/kalem.
-- **Özel imleç:** nokta + yaylı halka, tıklanabilirlerin üzerinde büyür. Yerel imleç **gizlenmez**.
-- **Sıvı çizgi:** sol kenarda sayfa ilerlemesini yaylı izleyen ince çizgi (masaüstü).
-- **Spotlight:** kartlarda imleci izleyen monokrom parıltı (saf CSS + 2 değişken).
-- `prefers-reduced-motion`: reveal, imleç, çizgi, otomatik oynatma kapanır; içerik anında görünür.
+- **Yedi dil:** `i18n/routing.ts` (`localePrefix: 'as-needed'`): EN `/`, diğerleri `/xx`. Dili **yalnızca URL** belirler: çerez yok, tarayıcı diline göre yönlendirme yok ([ADR 0002](docs/adr/0002-launch-locales-and-market.md)).
+- **Hangi diller yayında:** tek kaynak `i18n/launch.ts`. Üretimde `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`) dışındaki dil 404 verir; geliştirmede ve `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile yedisi açıktır. `hreflang`, `x-default`, `og:locale` + `alternateLocale`, sitemap, JSON-LD (`inLanguage`), dil seçici, footer ve "Küresel erişim" bağlantıları **yalnızca bu listeden** türer (denetim ve duman testi kapalı dilin sızmadığını doğrular). Bir dili yayına almak: kodunu listeye eklemek ve yeniden derlemek, ama önce yerel çeviri ve hukuk incelemesi.
+- **Taslak diller** (`de fr es ar ja`): `messages/xx.json` yalnızca çevrilebilir metni taşır; eksik anahtar (hukuk sayfaları) İngilizceden tamamlanır (`lib/merge-messages.ts`) ve sayfada bunu söyleyen bir satır çıkar. Çeviriler bu oturumda yazılmış **taslaktır**; yerel konuşur ve avukat onayı olmadan yayına alınmamalıdır (sağlık ve hukuk ifadeleri ülkeye göre değişir, örn. Almanya'da HWG).
+- **Arapça (RTL):** `<html lang="ar" dir="rtl">`; tüm yerleşim mantıksal özelliklerle aynalanır (üstbilgi, düğme okları, şerit sırası, ilerleme çizgisi, odak ve menü yönü); yönlü oklar `.icon-dir` ile aynalanır; harf aralığı sıfırlanır (bitişik harfler kopmasın); maske payı Arapça ve Japonca için büyütülür; Latin adlar (`syncflow.agency`, e-posta) `dir="ltr"` taşır; çerçevesiz honeypot `start-[-9999px]` ile konur (RTL'de `left:-9999px` 9999 px'lik yatay kaydırma doğururdu).
+- **Yazı tipleri:** Latin ve Türkçe Inter (OFL). Almanca, Fransızca, İspanyolca Latin-1 kapsamında. **Arapça ve Japonca sistem yazı tipi yığınlarıyla** (Segoe UI/Tahoma/Geeza Pro; Yu Gothic/Hiragino/Noto): sıfır bayt maliyeti, ama marka tutarlılığı sistemin yazı tipine bağlıdır. Bu diller yayına alınırken özel bir OFL yığını seçilmelidir (CLAUDE.md). `/og` paylaşım kartı AR ve JA'da İngilizce metinle çizilir (yazı tipinde glif yok); `og:title` ve `og:description` kendi dillerindedir.
+- **Para birimi/tarih:** fiyat yayınlanmaz; tarihler `Intl.DateTimeFormat`, sayılar `Intl.NumberFormat` ile sunucuda dilin kuralına göre biçimlenir.
+- Çeviriler **sunucuda** yapılır; tarayıcıya yalnızca birkaç düz metin gider (`components/i18n/ClientI18n.tsx`), next-intl'in ICU motoru tarayıcıya gitmez.
 
 ---
 
-## 6. Remotion
+## 5. Hareket
 
-`components/remotion/ArchitectureComposition.tsx` her şeyi **kareden** hesaplar (zamanlayıcı, `Math.random`, `Date` yok), bu yüzden tarayıcıdaki Player ile `remotion render` aynı kareyi üretir. Üç sahne × 5 sn = 15 sn döngü: mimari (düğümler, bağlantı çizgileri, ışık paketleri, yazılan kod) · hız bütçesi (halkalar, sayaçlar) · 14 günlük plan. İki tuval: 16:9 (1280×720) ve telefon için 4:5 (800×1000).
+Hareket bir **katmandır**: içerik sunucuda render edilir ve JS yokken tamamen görünür ([ADR 0004](docs/adr/0004-motion-and-smooth-scroll.md)). Her parça `prefers-reduced-motion`'a saygı duyar; spotlight, manyetik düğme ve Lenis yalnızca `(hover: hover) and (pointer: fine)` iken çalışır.
 
-- Player, bölüm ekrana yaklaşınca **tembel** yüklenir (ayrı ~94 KB gzip parça), yalnızca görünürken oynar, sekmeler `seekTo` ile sahne seçer, oynat/duraklat/yeniden başlat gerçek ve etiketli düğmelerdir, ekran okuyucu için metin açıklaması vardır.
-- **Hız bütçesi sahnesindeki değerler (LCP < 1,2 sn, CLS < 0,01, TBT < 100 ms, Lighthouse 95+) hedeftir, ölçüm değildir**; sayfada da böyle yazar.
-- **Lisans:** Remotion yalnızca ≤ 3 kişilik kâr amaçlı şirketlerde/bireylerde ücretsizdir; **4+ kişilik şirketler için ücretli Company License gerekir** (remotion.pro). `acknowledgeRemotionLicense` bilinçli olarak sizin yerinize işaretlenmedi.
+- **Hero:** iki satır, her biri kendi maskesinden 80 ms arayla yükselir; saf CSS, ilk boyamadan itibaren (`mask-rise`).
+- **Ekran altı başlık ve paragraflar:** ekran dışındayken betik gizler, girişte `motion/mini` ile bir kez yükselir (Motion ilk etkileşimde iner).
+- **Imleci izleyen ışık** (`lib/enhance/spotlight.ts`): hero'da 600 px, her vitrin kartının içinde 420 px; yalnızca `transform` taşınır (bileşik, yeniden boyama yok).
+- **Border Beam:** üç mimari kartın 2 px ışık halkası, 8 sn'de bir döner; yalnızca `rotate` animasyonlanır, ekran dışında durur, azaltılmış harekette gizlidir. En çok 3 (denetim sayar).
+- **Manyetik birincil düğme** (`magnetic.ts`), **Lighthouse halkaları** (`rings.ts`, görününce dolar, sayaç sayar; JS yokken doludur), **yumuşak kaydırma** (Lenis, yalnızca masaüstü, ayrı parça; briefing paneli `data-lenis-prevent` taşır: başvuru akışında smooth scroll yok).
+- **Ekran dışında durma:** sürekli (`infinite`) animasyon taşıyan öğe `data-pause-offscreen` alır; `IntersectionObserver` durdurur (kural **katman dışı** bir CSS kuralıdır, aksi hâlde bir bileşenin `animation` kısaltması onu ezerdi; tarayıcı testi tam bunu yakaladı). Videolar da ekran dışında durur.
+- **Vitrin şeridi** scroll-jacking yapmaz: yerel yatay `scroll-snap`, iki düğme ve klavye ile; tekerlek sayfayı kaydırmaya devam eder.
 
-### Videoya çevirme
+`lenis` ve `motion` yalnızca `import()` ile kullanılabilir; `faz2-denetim.mjs` statik import'u hata sayar ve `--build` sonrası rotanın ilk yük parçalarında ikisinin de olmadığını doğrular.
+
+---
+
+## 6. Remotion ve sahne videoları
+
+Sitede **Remotion çalışma zamanı yok**: videolar önceden render edilmiş dosyalardır ([ADR 0003](docs/adr/0003-showcase-film-static-render.md)). `remotion` yalnızca geliştirme bağımlılığıdır; `remotion/scenes/` altındaki sahneleri `scripts/render-film.mjs` ile render etmek içindir.
+
+- **Sahneler** (1280×720, 30 kare/sn, 8 sn kusursuz döngü, her biri tamamen kareden hesaplanır): `Monolith` (yavaşça dönen cam monolit; "mimari" kartı), `Estate` (gün batımında cam cepheli villa), `Clinic` (soluk klinik koridoru), `Saas` (karanlık panel, ⌘K paleti). **Konsept render'dır**, gerçek müşteri işi değildir; kartlarda öyle yazar. Sahnelerde okunabilir metin yoktur: altyazı HTML'dir, tek render her dile yeter.
+- **Çıktı:** `public/media/clips/<ad>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (yedek) ve WebP poster. Toplam 12 dosya, yaklaşık 1,9 MB.
+- **Oynatma** (`components/media/SceneVideo.tsx`): HTML'de yalnızca poster gelir, video `preload="none"`. Ince işaretçide, görünürken (mimari kartı) ya da kartın üstüne gelince/odaklanınca (vitrin) oynar; **dokunmatikte, azaltılmış hareket ve Save-Data'da otomatik oynamaz** ve hiçbir şey indirilmez; ziyaretçi düğmeye basınca yüklenir. Ekran dışına çıkınca ve sekme gizlenince durur. Her videoda görünür bir oynat/duraklat düğmesi vardır (WCAG 2.2.2). Çerçeve oranı sabittir (CLS 0).
+- **Lisans:** Remotion yalnızca ≤ 3 kişilik kâr amaçlı şirketlerde/bireylerde ücretsizdir; **4+ kişilik şirketler için ücretli Company License gerekir** (remotion.pro). Render almak da lisans kapsamındadır.
+
 ```bash
-npm run remotion:studio     # tarayıcıda önizleme/ayar
-npm run remotion:still      # remotion-out/architecture-en.png (kare 290)
-npm run remotion:render     # remotion-out/architecture-en.mp4 (15 sn, 30 fps)
-# başka dil/oran: ... render remotion/index.ts Architecture-tr-tall out.mp4
+npm run film:render                       # dört sahne × (MP4 + WebM + poster), ~10 dk
+npm run film:render -- --posters          # yalnızca posterler (hızlı)
+npm run film:render -- --only=estate      # tek sahne
+npm run remotion:studio                   # sahneleri tarayıcıda düzenle
 ```
-Kimlikler: `Architecture-<en|tr|de|fr|it>-<wide|tall>`. Metinler sitenin kendi `messages/*.json` dosyalarından gelir. Not: CLI altında site CSS'i yoktur; Inter yoksa sistem sans kullanılır. Birebir yazı tipi için `@remotion/fonts` ile `public/fonts/inter-latin-v1.woff2` yükleyin.
+Sahne değişince komutu çalıştırıp çıkan dosyaları commit'leyin. Remotion CLI her seferinde `npx` ile, kurulu `remotion` sürümüyle getirilir (projeye eklenmez); "zod sürüm uyuşmazlığı" uyarısı zararsızdır.
 
 ---
 
-## 7. Lemon Squeezy ödeme
+## 7. Strategic Briefing ve e-posta teslimatı
 
-- `components/checkout/LemonSqueezy.tsx`, `lemon.js`'i `next/script` (`lazyOnload`, **nonce'lu**) ile yükler. Her `a[data-checkout]` gerçek bir bağlantıdır; JS kapalıyken veya betik yüklenmeden tıklanırsa barındırılan ödeme sayfası açılır. Betik hazırsa **koyu overlay** açılır (`?embed=1&dark=1`).
-- Erişilebilirlik: overlay açıkken arka sayfa `inert`, odak overlay'e taşınır, kapanınca tetikleyen düğmeye döner, kaydırma kilitlenir.
-- Lemon.js'in kendi `.lemonsqueezy-button` bağlayıcısı kullanılmaz (React yeniden çizimlerinde çift bağlama riski); tek bir olay delegasyonu kullanılır.
-- **Mağaza şu an TEST MODUNDA** (ödeme sayfasında turuncu "Test mode is currently enabled" şeridi var). Yayına almadan önce Lemon Squeezy panelinde canlı moda geçin, ardından canlı ürünün buy-linkini `NEXT_PUBLIC_CHECKOUT_URL` ile verin.
-- Denemelerimde `dark=1` parametresi ödeme sayfasını koyu yapmadı: LS, `/checkout/buy/…` isteğini parametresiz `/checkout/cart/<id>` adresine 302 ile yönlendiriyor ve tema aynı açık kaldı. Bu LS tarafında bir davranış; panelden ödeme teması ayarına bakın.
+Ana sayfada, ziyaretçiyi 4 ekrandan geçiren cam bir panel (`#briefing`): (1) proje türü, (2) yatırım aralığı ($5k–$10k, $10k–$20k, $20k+, önce konuşalım), (3) zamanlama, (4) iletişim (ad soyad, şirket ve unvan, iş e-postası, tek cümle proje, karar yetkisi, **işaretsiz** rıza kutusu). Ekran başına tek soru, klavye ile tamamlanır (Boşluk seçer, Enter devam eder), her adımda odak yeni başlığa taşınır, ilerleme çizgisi 4 parçadır, geçiş `clip-path` açılmasıdır. Tarayıcıda hiçbir şey saklanmaz (çerez ve depolama yok).
+
+- **Başarı ekranı:** Blueprint metni ("24 saat içinde kurucu ekibimiz size kişisel olarak yazacak"). **Bu söz yalnızca gerçekse yayınlanmalıdır** (CLAUDE.md kapasite kuralı); sahibi korunmasını istedi.
+- **Teslimat:** form → `/api/briefing` (Turnstile + zod + DOMPurify + hız sınırı) → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. n8n akışının adımları, HMAC doğrulama kodu ve deneme komutları: [docs/n8n-briefing.md](docs/n8n-briefing.md).
+- **Doğrulanabilen / doğrulanamayan:** sahte alıcıyla yük, imza, sınıflandırma ve zararlı girdi reddi duman testinde doğrulandı. **Gerçek posta kutusuna teslim bu makinede doğrulanamadı:** n8n adresi, imza sırrı ve Turnstile anahtarları verilmedi. Hepsi tanımlanınca `docs/n8n-briefing.md` §5'teki ilk deneme listesi uygulanır.
+- **Yedek yol:** webhook yoksa ya da hata verirse form yanıtlarla doldurulmuş bir `mailto:` taslağı önerir. Geliştirme kipinde webhook yoksa form kabul eder ama başarı ekranı "e-posta gönderilmedi" notunu da gösterir.
+- **JavaScript yokken:** panel çalışamaz; `<noscript>` e-posta adresini önerir.
 
 ---
 
-## 8. Performans
+## 8. Performans ve yayınlanan sayılar
 
-Ölçüm yöntemi: `next start` üretim sunucusu, Lighthouse 13.5 **mobil** profil (simüle yavaş 4G, 4× CPU yavaşlatma), İngilizce sayfa.
+Sitede yayınlanan her performans sayısı **`lib/metrics.ts`** içinde durur (değer, tarih, profil, kaynak); ölçülmeyen "ölçülecek" yazar; `faz2-denetim.mjs` her kaydın tarih, profil ve kaynak taşıdığını ve metinlerde doğrulanmamış iddia bulunmadığını denetler (kilitli 60 FPS, 120 Hz, LCP/TBT/INP eşikleri, AV1, örnek yüzdeler, önce-sonra yok).
 
-| Sayfa | Performans | Erişilebilirlik | En İyi Uygulamalar | SEO | FCP | LCP | TBT | CLS | Hız İndeksi |
-|---|---|---|---|---|---|---|---|---|---|
-| **Masaüstü** EN | **100** | 100 | 100 | 100 | 0,3 sn | 0,6 sn | 20 ms | **0** | 0,5 sn |
-| **Mobil** EN | **95** | 100 | 100 | 100 | 1,0 sn | 2,7 sn | 140 ms | **0** | 1,0 sn |
-| **Mobil** TR | **96** | 100 | 100 | 100 | 1,0 sn | 2,7 sn | 90 ms | **0** | 1,0 sn |
-| **Mobil** DE | **95** | 100 | 100 | 100 | 1,0 sn | 2,7 sn | 140 ms | **0** | 1,0 sn |
+Ayrıntı, yöntem ve ham koşular: [docs/perf/faz4.md](docs/perf/faz4.md) (Blueprint ana sayfası, 08.10.2026), [docs/perf/faz3.md](docs/perf/faz3.md) (Lenis ve maskeli girişler) ve [docs/perf/faz2-baseline.md](docs/perf/faz2-baseline.md). Profil: medyan, üretim derlemesi (`next start`), Lighthouse 13.5, mobil (simüle yavaş 4G, 4× CPU yavaşlatma) ve masaüstü.
 
-İlk yükleme: HTML 15 KB + CSS 8 KB + font 42 KB + JS 185 KB (gzip). SEO 100 için yerel derleme `NEXT_PUBLIC_SITE_URL=http://localhost:3000` ile alındı (canonical başka bir alan adını gösterirse Lighthouse düşürür; gerçek alan adında bu sorun yoktur).
+| Sayfa | Performans (aralık) | FCP | LCP | TBT (aralık) | CLS | İlk yükleme JS (gzip) |
+|---|---|---|---|---|---|---|
+| Mobil EN `/` (n = 7) | **93** (90–95) | 1,0 sn | 2,9 sn | 152 ms (58–223) | 0 | 156 KB |
+| Mobil TR `/tr` (n = 7) | **90** (89–92) | 1,0 sn | 3,1 sn | 226 ms (177–259) | 0 | 156 KB |
+| Masaüstü EN `/` (n = 3) | **100** (100–100) | 0,3 sn | 0,65 sn | 0 ms | 0 | 162 KB |
 
-> **Yerel ölçümün sınırı:** `next start` HTTP/1.1 + gzip sunar. Vercel gibi bir ortamda HTTP/2 + Brotli olur; Lighthouse'ın simülasyonu bunu hesaba katar, yani canlıda aynı veya daha iyi çıkması beklenir. Bunu canlı adreste PageSpeed Insights ile doğrulayın (footer'daki "Test this page on PageSpeed" bağlantısı bunun içindir).
+Erişilebilirlik, en iyi uygulamalar ve SEO **her koşuda 100** (mobil ve masaüstü, EN ve TR). Bu, ilk ölçümde 97 çıkan erişilebilirliğin iki düzeltmeden sonraki hâlidir: %40 beyaz metin %50 yapıldı (3,65:1 → 5,3:1) ve %6 opaklıklı devasa footer wordmark'ı metin düğümü olmaktan çıkarıldı (bkz. faz4.md §1).
 
-Neden mobil 100 değil: Next.js 16 + React 19 çalışma zamanı tek başına ≈ 164 KB gzip JS'tir; JS tamamen engellendiğinde aynı sayfa Lighthouse'ta **100** (LCP 1,8 sn, TBT 10 ms) alır. Yani kalan puan framework'ün maliyetidir, sayfanın değil. Bunu azaltmak için yaptıklarım: zod ve next-intl ICU motoru ve tailwind-merge tarayıcıdan çıkarıldı (başlangıç JS'i **299 → 185 KB**), Remotion/Framer parçaları tembel, yazı tipleri 2 dosya (Latin 42 KB ön yüklenir, Türkçe harfler için 3 KB yalnızca `/tr`'de), Next'in aynı sayfaya `Link` önceden yüklemeleri kapalı.
+Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz): medyan 16,7 ms, p95 16,8 ms, p99 16,9 ms, en uzun 17,0 ms; 4× CPU yavaşlatmada p99 16,9 ms, en uzun 33,1 ms. Bu ana iş parçacığının kare ritmidir; 120 Hz ölçülmedi; "kilitli 60 FPS" ifadesi bu yüzden yayınlanmaz.
+
+> **Yerel ölçümün sınırı:** `next start` HTTP/1.1 + gzip sunar; Vercel gibi bir ortamda HTTP/2 + Brotli olur. Canlı adreste PageSpeed Insights ile doğrulayın. Mobil LCP CLAUDE.md hedefinin (≤ 2,5 sn) **üstündedir**; bu bir sonraki kapıdır.
 
 ---
 
 ## 9. Dağıtım
 
-- **Vercel:** Hobby planı yalnızca **ticari olmayan** kullanıma açıktır; ticari site için **Pro** gerekir. Çalışma zamanı Node 22/24. Ortam değişkenleri: `NEXT_PUBLIC_SITE_URL=https://syncflow.agency`, `CONTACT_WEBHOOK_URL`, `CONTACT_WEBHOOK_SECRET`, `UPSTASH_REDIS_REST_URL/TOKEN`.
-- Vercel *Preview* dağıtımlarında Vercel'in kendi araç çubuğu betiği CSP'ye takılır (konsolda hata görürsünüz); üretimi etkilemez, istenirse proje ayarlarından araç çubuğunu kapatın.
-- Cloudflare Pages/Workers'ta çalıştırmak için OpenNext adaptörü gerekir (bu projede denenmedi).
-- `NEXT_PUBLIC_SITE_URL` canonical/hreflang/OG/sitemap'i belirler. Yanlışsa SEO bozulur.
+- **Vercel:** Hobby planı yalnızca **ticari olmayan** kullanıma açıktır; ticari site için **Pro** gerekir. Çalışma zamanı Node 22/24. Ortam değişkenleri: `NEXT_PUBLIC_SITE_URL=https://syncflow.agency`, `NEXT_PUBLIC_LAUNCHED_LOCALES`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `CONTACT_WEBHOOK_URL`, `CONTACT_WEBHOOK_SECRET`, `UPSTASH_REDIS_REST_URL/TOKEN`, isteğe bağlı `NEXT_PUBLIC_LINKEDIN_URL`, `NEXT_PUBLIC_INSTAGRAM_URL`, `NEXT_PUBLIC_WHATSAPP_URL` (`.env.example`). `NEXT_PUBLIC_*` derleme anında içeri gömülür: değiştirince yeniden derleyin.
+- Vercel *Preview* dağıtımlarında Vercel'in kendi araç çubuğu betiği CSP'ye takılır (konsolda hata); üretimi etkilemez.
+- Cloudflare Pages/Workers için OpenNext adaptörü gerekir (denenmedi).
+- `NEXT_PUBLIC_SITE_URL` canonical/hreflang/OG/sitemap'i belirler. **Yanlışsa SEO bozulur**; yerel Lighthouse için `NEXT_PUBLIC_SITE_URL=http://localhost:3100` ile derleyin (yoksa canonical canlı alan adını gösterir ve SEO 92'ye düşer).
 
 ---
 
 ## 10. Yayın öncesi kontrol listesi
 
-- [ ] **Lemon Squeezy'yi canlı moda alın** ve checkout URL'sini doğrulayın (§7).
-- [ ] **Yasal sayfalar:** `messages/*.json` → `Legal.*` içindeki `[KÖŞELİ PARANTEZ]` alanlarını doldurun, bir avukata inceletin; `npm run check:messages -- --strict` hata vermeyene kadar. Sayfa üstündeki "Taslak" uyarısı (`Legal.draft`) yayından önce kaldırılmalı.
-- [ ] **`CONTACT_WEBHOOK_URL`** ayarlayın (n8n/Make/Zapier/CRM). Ayarlı değilse üretimde form `503` döner ve ziyaretçiye "geçici olarak kullanılamıyor" der.
-- [ ] **İçeriği onaylayın (taslaktır):** paket kapsamı (`Pricing.i1–i6`), SSS yanıtları (özellikle "kaynak kodu size ait", "kapsam dışı iş önceden fiyatlanır"), süreç adımları (Gün 1/5/10/14), "Guaranteed 14-Day Delivery" için **gecikme halinde ne olacağını (iade/kredi) tanımlayıp yayınlayın**; şartsız "garanti" AB/Birleşik Krallık/ABD tüketici/ticaret hukukunda yanıltıcı sayılabilir.
-- [ ] **Karşılaştırma tablosu:** "$20k+", "3 aylık gecikme", "yavaş WordPress" genellemelerdir. Sayfada "tipik piyasa rakamları" uyarısı var; AB'de karşılaştırmalı reklam kuralları (Yönerge 2006/114/EC) nesnel ve doğrulanabilir olmayı ister, gerekirse kaynak gösterin.
-- [ ] `NEXT_PUBLIC_SITE_URL` üretim alan adı. Search Console'a `sitemap.xml`.
+- [ ] **n8n akışını kurun ve ilk gerçek denemeyi yapın** ([docs/n8n-briefing.md](docs/n8n-briefing.md) §5): `contact@syncflow.agency`'e e-posta düşüyor mu, yanlış imza reddediliyor mu.
+- [ ] **Turnstile anahtarlarını** (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`) Cloudflare'de oluşturup tanımlayın; üretimde gizli anahtar olmadan form 503 verir.
+- [ ] **Yasal sayfalar:** `messages/en.json` ve `tr.json` → `Legal.*` içindeki `[KÖŞELİ PARANTEZ]` alanlarını (şirket unvanı, adres, teslim hizmeti, aktarım güvenceleri, saklama süresi) doldurun, avukata inceletin; `npm run check:messages -- --strict` hata vermeyene kadar. "Taslak" uyarısı (`Legal.draft`) yayından önce kaldırılmalı.
+- [ ] **"24 saat içinde kişisel dönüş" sözünün gerçek olduğunu** teyit edin (kapasite cümlesi kuralı).
+- [ ] **Taslak dillerden hangisi yayına girecek?** Yerel konuşur çeviri incelemesi + hukuk incelemesi (sağlık reklamı kuralları, KVKK/GDPR muadilleri) sonra `NEXT_PUBLIC_LAUNCHED_LOCALES`'e ekleyin; AR ve JA için özel OFL yazı tipi yığınını seçin ve `check:fonts` kapsamını genişletin.
+- [ ] **LinkedIn / Instagram / WhatsApp adresleri** verilirse ilgili `NEXT_PUBLIC_*` değişkenlerini tanımlayın (verilmedi, footer'da yok). Markalı çizilmiş logo gelince `components/ui/Logo.tsx` metin wordmark'ının yerini alır.
+- [ ] **Sahne videolarının "konsept render" olduğu** kartlarda yazıyor; gerçek vaka çalışmaları gelirse kartlar ve etiket güncellenir.
+- [ ] `NEXT_PUBLIC_SITE_URL` üretim alan adı. Search Console'a `sitemap.xml`. PageSpeed Insights ile canlı doğrulama, `lib/metrics.ts` güncelleme.
 - [ ] Remotion lisansı (4+ kişiyseniz).
-- [ ] `npm run check`, `npm run build`, `npm start`, `npm run smoke`, `npm run audit:secrets`.
+- [ ] `npm run check`, `node faz2-denetim.mjs --build`, `npm start`, `npm run smoke`, `npm run audit:secrets`.
 
 ---
 
-## 11. Doğrulama sonuçları (bu sürüm)
+## 11. Doğrulama sonuçları
+
+Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
+
+### Faz 4 ve 5 (08.10.2026, `faz_4` ve `faz_5` dalları)
 
 | Denetim | Sonuç |
 |---|---|
-| `next build` (Turbopack) | Hatasız, uyarısız. TypeScript strict, `noUncheckedIndexedAccess` |
-| `npm run check` | Çeviri eşitliği (5 dil × 200 anahtar) · `tsc` 0 hata · ESLint (React Compiler kuralları dahil) 0 hata |
-| `npm run smoke` | **78/78**: güvenlik başlıkları, nonce'un her betikte ve her istekte farklı olması, hreflang, JSON-LD, 5 dilde fiyat biçimi, 5 işaretleme saldırısının reddi, zararsız metnin korunması, HMAC imzası, hız sınırı (429), 5 dilde `/og` görseli |
-| Tarayıcı testi (Chrome, Puppeteer) | **56/56**: masaüstü + mobil + hareket azaltma + JS kapalı; dil değiştirme ve çerez kalıcılığı; manyetik buton/imleç; Remotion otomatik oynatma/sekmeler/duraklat; gerçek Lemon Squeezy overlay açma-kapama (`inert`, odak dönüşü); iletişim formu uçtan uca; 12 genişlik × 5 dilde yatay taşma yok; CSP ihlali 0, konsol hatası 0, hidrasyon hatası 0, CLS < 0,01 |
-| `npm run audit:secrets` | Kanarya değerlerle derlendi: 29 tarayıcı dosyasında 4 sır adı + 4 sır değeri **yok**; bilerek sızıntı koyunca denetim başarısız oldu (çıkış 1) |
-| Remotion CLI | `remotion still` ile kare üretimi doğrulandı (bkz. §6) |
+| `node faz2-denetim.mjs --build` | **0 hata**: 78 geçti, 1 uyarı, 3 bilgi. Uyarı `generateStaticParams` yok: nonce'lu CSP sayfaları zaten istek başına render ettiği için bilinçli ([ADR 0001](docs/adr/0001-csp-report-only.md)). `npm run build` başarılı. Yeni kapılar: Blueprint belirteçleri, yedi dil + yayın listesi, taslak dil anahtarları, Lemon Squeezy izi yok, briefing savunmaları, doğrulanmamış iddia yasağı, `lib/metrics.ts` kaynak kaydı, sahne videoları, Border Beam ve ışık kuralları |
+| `npm run check` | Çeviri eşitliği (7 dil: `en`/`tr` 253 anahtar, beş taslak dil `Legal.*` hariç 222) · `tsc` 0 hata · ESLint 0 hata, 0 uyarı |
+| `npm run smoke` | **107/107** üretim derlemesinde (`en,tr` yayında; sahte webhook alıcısı, Cloudflare'in her zaman geçen Turnstile test anahtarıyla gerçek `siteverify` çağrısı) ve **91/91** geliştirme sunucusunda (yedi dil, webhook yok): güvenlik başlıkları, report-only CSP + nonce, Turnstile tek üçüncü taraf, hreflang/sitemap/JSON-LD yalnızca yayındaki diller, kapalı dil 404, Arapça `dir="rtl"`, briefing API savunmaları, işaretleme saldırılarının reddi, tam yük ve HMAC imzası, altı öncelik sınıfı, 12 sahne dosyası, CSP rapor alıcısı, hız sınırı |
+| Tarayıcı testi (Chrome 154, `puppeteer-core`; betik depoda yok) | **60/60**: Blueprint bölümleri, imleç ışığı, manyetik düğme, Border Beam ve ekran dışında durma, halkalar, video politikası, yatay şerit (scroll-jacking yok), küre, klavye ile briefing, kopyalama, telefon, azaltılmış hareket, JS kapalı, Arapça RTL, yedi dilli dil seçici; CSP ihlali 0, konsol hatası 0 |
+| `npm run audit:secrets` | Kanarya değerli derlemede 29 tarayıcı dosyasında 5 sır adı + 3 sır değeri (**`TURNSTILE_SECRET_KEY` dahil**) **yok**; bilerek bir sızıntı yerleştirince denetim başarısız oldu (çıkış 1) |
+| Lighthouse, kare ritmi | [docs/perf/faz4.md](docs/perf/faz4.md) |
+| `npm run film:render` | 12 dosya, ≈ 1,9 MB (§6) |
 
-**Doğrulanmayanlar (dürüstçe):** gerçek bir ödeme (mağaza test modunda, para çekmedim) · canlı alan adında PageSpeed/CrUX · Vercel dağıtımı · Upstash ile paylaşımlı hız sınırı (kod yolu mock'sız, yazılı ama canlı bir Redis'e karşı denenmedi) · gerçek webhook alıcısı (yerel taklit alıcıyla denendi) · Safari/Firefox (yalnızca Chrome).
+**Doğrulanmayanlar (dürüstçe):** gerçek bir e-posta teslimi (n8n ve Gmail verilmedi; sahte alıcıyla denendi) · gerçek Turnstile widget'ı (Cloudflare'in her zaman geçen test gizli anahtarıyla sunucu doğrulaması denendi, widget için site anahtarı yok) · yerel konuşur çeviri kalitesi ve hukuk incelemesi (beş dil taslak) · AR/JA'da özel yazı tipi · canlı alan adında PageSpeed/CrUX · Vercel dağıtımı · Upstash ile paylaşımlı hız sınırı · Safari/Firefox (yalnızca Chrome) · gerçek telefon ve 120 Hz ekran · ekran okuyucu ile elle deneme.
 
 ## 12. Üçüncü taraf lisanslar
 
-Inter (SIL OFL 1.1, `public/fonts/OFL.txt`) · Next.js, React, next-intl, Framer Motion, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS (MIT/Apache/MPL, bkz. paketler) · Remotion (özel lisans, §6) · Lemon.js (Lemon Squeezy, yalnızca ödeme için yüklenir).
+Inter (SIL OFL 1.1, `public/fonts/OFL.txt`) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS, Lenis, Motion (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca render için, özel lisans, §6) · Cloudflare Turnstile (yalnızca briefing'in son adımında yüklenir).

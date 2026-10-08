@@ -3,9 +3,9 @@
 import { useEffect } from 'react';
 
 /**
- * Starts the progressive enhancements (scroll reveal, magnetic buttons, custom cursor, scroll line, spotlight)
- * AFTER the first paint and once the browser is idle. The code lives in its own chunk (lib/enhance), so it is
- * never part of the hydration work and cannot delay LCP, FCP or interactivity.
+ * Starts the interface-state scripts (header background after scrolling, mobile sticky CTA) AFTER the first paint and
+ * once the browser is idle. The code lives in its own chunk (lib/enhance), so it is never part of the hydration work
+ * and cannot delay LCP, FCP or interactivity.
  */
 export function Experience() {
   useEffect(() => {

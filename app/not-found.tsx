@@ -1,15 +1,15 @@
 import Link from 'next/link';
 import './globals.css';
 
-/** Fallback for requests that never reach a locale (for example a missing static file). Localized 404s live in app/[locale]/not-found.tsx. */
+/** Fallback for requests that never reach a locale (for example a missing static file, or a language that is not public). */
 export default function GlobalNotFound() {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr">
       <body>
         <main className="grid min-h-dvh place-items-center px-6">
           <div>
-            <p className="eyebrow">404</p>
-            <h1 className="display mt-6 text-[clamp(2.4rem,6vw,4.5rem)]">This page doesn’t exist.</h1>
+            <p className="label">404</p>
+            <h1 className="display mt-6 text-headline">This page doesn’t exist.</h1>
             <Link href="/" className="btn btn-primary mt-10">
               Back to home
             </Link>

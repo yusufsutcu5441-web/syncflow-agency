@@ -5,23 +5,23 @@
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://syncflow.agency').replace(/\/+$/, '');
 
-/** Lemon Squeezy hosted checkout, opened as a dark-mode overlay by lemon.js (embed=1 & dark=1). */
-export const CHECKOUT_URL =
-  process.env.NEXT_PUBLIC_CHECKOUT_URL ??
-  'https://syncflow.lemonsqueezy.com/checkout/buy/1c12f3f3-cf34-45bd-8ae6-2260b24d77c7?embed=1&dark=1';
+/** The mailbox that receives every briefing (through the signed webhook, n8n and Gmail) and the direct-contact line. */
+export const CONTACT_EMAIL = 'contact@syncflow.agency';
 
-export const LEMON_SCRIPT_SRC = 'https://assets.lemonsqueezy.com/lemon.js';
-
-export const PRICE_USD = 2500;
-/** The "typical agency" anchor used in the comparison grid. */
-export const TYPICAL_AGENCY_USD = 20000;
-export const DELIVERY_DAYS = 14;
+/**
+ * Social and chat addresses. None were supplied yet, so the footer shows none: set the NEXT_PUBLIC_* variables
+ * (.env.example) and the links appear, nothing is invented.
+ */
+export const SOCIAL = {
+  linkedin: process.env.NEXT_PUBLIC_LINKEDIN_URL?.trim() || undefined,
+  instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL?.trim() || undefined,
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_URL?.trim() || undefined,
+} as const;
 
 /** Section anchors used by the header, footer and sticky bar. */
 export const SECTION_IDS = {
+  architecture: 'architecture',
   showcase: 'showcase',
-  compare: 'compare',
-  pricing: 'pricing',
-  faq: 'faq',
-  contact: 'contact',
+  reach: 'reach',
+  briefing: 'briefing',
 } as const;

@@ -1,27 +1,27 @@
+import { OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
-import { DELIVERY_DAYS, PRICE_USD, SITE_URL } from '@/lib/site';
+import { CONTACT_EMAIL, SITE_URL } from '@/lib/site';
 import { escapeLineSeparators } from '@/lib/text-safety';
 
 type Input = {
   locale: AppLocale;
   siteName: string;
   description: string;
-  offerName: string;
 };
 
 const pathFor = (locale: AppLocale) => (locale === routing.defaultLocale ? '/' : `/${locale}`);
 
 /**
- * schema.org graph: Organization + WebSite + ProfessionalService with the flat-price Offer.
- * Deliberately absent: address, phone, ratings, reviews. We do not invent facts about the business;
- * add them here once they exist.
+ * schema.org graph: Organization + WebSite + ProfessionalService. Languages are the public ones only (i18n/launch.ts).
+ * Deliberately absent: address, phone, ratings, reviews, prices. We do not invent facts about the business; add them
+ * here once they exist.
  */
-export function buildJsonLd({ locale, siteName, description, offerName }: Input) {
+export function buildJsonLd({ locale, siteName, description }: Input) {
   const orgId = `${SITE_URL}/#organization`;
   const siteId = `${SITE_URL}/#website`;
   const serviceId = `${SITE_URL}/#service`;
   const pageUrl = `${SITE_URL}${pathFor(locale) === '/' ? '' : pathFor(locale)}`;
-  const languages = routing.locales.map((l) => LOCALE_LABELS[l].hreflang);
+  const languages = OPEN_LOCALES.map((l) => LOCALE_LABELS[l].hreflang);
 
   return {
     '@context': 'https://schema.org',
@@ -33,6 +33,7 @@ export function buildJsonLd({ locale, siteName, description, offerName }: Input)
         url: SITE_URL,
         logo: `${SITE_URL}/icon.svg`,
         description,
+        email: CONTACT_EMAIL,
       },
       {
         '@type': 'WebSite',
@@ -53,15 +54,6 @@ export function buildJsonLd({ locale, siteName, description, offerName }: Input)
         availableLanguage: languages,
         inLanguage: LOCALE_LABELS[locale].hreflang,
         provider: { '@id': orgId },
-        makesOffer: {
-          '@type': 'Offer',
-          name: offerName,
-          price: String(PRICE_USD),
-          priceCurrency: 'USD',
-          url: `${pageUrl}#pricing`,
-          availability: 'https://schema.org/InStock',
-          eligibleDuration: { '@type': 'QuantitativeValue', value: DELIVERY_DAYS, unitCode: 'DAY' },
-        },
       },
     ],
   };
