@@ -16,8 +16,7 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-  // Popups (3-D Secure, PayPal) opened by the checkout overlay must keep working.
-  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
   { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
 ];
@@ -48,7 +47,7 @@ const nextConfig = {
       { source: '/:path*', headers: securityHeaders },
       // Font files are versioned by name (-v1): cache them for a year, never revalidate.
       { source: '/fonts/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
-      // The film files keep their names when the film is re-rendered (npm run film:render), so not "immutable":
+      // The scene videos keep their names when they are re-rendered (npm run film:render), so not "immutable":
       // one week from the cache, then revalidated in the background.
       { source: '/media/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' }] },
     ];

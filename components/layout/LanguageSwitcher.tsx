@@ -4,7 +4,8 @@ import { Check, ChevronDown, Globe } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState, useTransition, type KeyboardEvent } from 'react';
 import { useClientI18n } from '@/components/i18n/ClientI18n';
-import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
+import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
+import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { stripLocale, withLocale } from '@/lib/i18n-paths';
 
 /**
@@ -110,6 +111,7 @@ export function LanguageSwitcher() {
         aria-controls={menuId}
         // WCAG 2.5.3 "Label in Name": the accessible name starts with the visible text (EN).
         aria-label={`${current.code}, ${t.label}: ${current.native}`}
+        title={current.native}
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onTriggerKeyDown}
       >
@@ -119,17 +121,18 @@ export function LanguageSwitcher() {
       </button>
 
       <div ref={menuRef} id={menuId} role="group" aria-label={t.label} className="lang-menu" data-open={open} inert={!open} onKeyDown={onMenuKeyDown}>
-        {routing.locales.map((code) => {
+        {OPEN_LOCALES.map((code) => {
           const label = LOCALE_LABELS[code];
           const selected = code === locale;
           return (
-            <button key={code} type="button" lang={label.hreflang} className="lang-item" aria-current={selected ? 'true' : undefined} onClick={() => choose(code)}>
+            <button key={code} type="button" lang={label.hreflang} dir={label.dir} className="lang-item" aria-current={selected ? 'true' : undefined} onClick={() => choose(code)}>
               <span className="flex items-center gap-2.5">
                 {label.native}
                 {selected ? <Check size={14} strokeWidth={2} aria-hidden="true" /> : null}
               </span>
-              <span className="code" aria-hidden="true">
+              <span className="code">
                 {label.code}
+                {isDraftLocale(code) ? ` · ${t.draft}` : ''}
               </span>
             </button>
           );

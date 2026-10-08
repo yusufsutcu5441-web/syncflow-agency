@@ -60,13 +60,15 @@ export function initReveal(): () => void {
     if (!animate) return disarm(element);
 
     const words = Array.from(element.querySelectorAll<HTMLElement>('.mi'));
+    // The distance a word waits below its mask is a CSS variable (Arabic and Japanese need more room than Latin).
+    const distance = getComputedStyle(document.documentElement).getPropertyValue('--mask-dist').trim() || `${MASK.distance}%`;
     let remaining = words.length;
     words.forEach((word, index) => {
       const order = Number.parseFloat(word.style.getPropertyValue('--i'));
       const controls = animate(
         word,
-        { transform: [`translateY(${MASK.distance}%)`, 'translateY(0%)'] },
-        { duration: MASK.duration, delay: MASK.delay + (Number.isFinite(order) ? order : index) * MASK.stagger, ease: [...EASE_LUX] },
+        { transform: [`translateY(${distance})`, 'translateY(0%)'] },
+        { duration: MASK.duration, delay: MASK.delay + (Number.isFinite(order) ? order : index) * MASK.wordStagger, ease: [...EASE_LUX] },
       );
       running.add(controls);
       void controls.then(() => {

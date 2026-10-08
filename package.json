@@ -14,7 +14,6 @@
     "typecheck": "tsc --noEmit",
     "check:messages": "node scripts/check-messages.mjs",
     "check:fonts": "python scripts/check-fonts.py",
-    "check:csp-hash": "node scripts/lemon-style-hash.mjs",
     "check": "npm run check:messages && npm run typecheck && npm run lint",
     "smoke": "node scripts/smoke.mjs",
     "perf": "node scripts/lighthouse.mjs",

@@ -12,10 +12,10 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
  * Lenis is loaded with import(), so it is a separate chunk that is requested only after the conditions hold. It is never
  * part of the initial load (docs/adr/0004-motion-and-smooth-scroll.md).
  *
- * Same-page links ("/#pricing", "#showcase") are scrolled to by Lenis on the same curve, leaving room for the fixed
+ * Same-page links ("/#briefing", "#showcase") are scrolled to by Lenis on the same curve, leaving room for the fixed
  * header (Lenis honours the page's own scroll-padding-top), and the address and focus end up where a native jump would
  * leave them.
- * The checkout overlay locks the page (body.lemonsqueezy-open): Lenis pauses while it is open.
+ * The briefing panel carries data-lenis-prevent, so the application flow scrolls natively (CLAUDE.md: no smooth scroll there).
  */
 export function initSmoothScroll(): () => void {
   const finePointer = window.matchMedia(FINE_POINTER);
@@ -49,16 +49,10 @@ export function initSmoothScroll(): () => void {
       if (window.location.hash !== url.hash) window.history.pushState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
     };
 
-    const followOverlay = () => (document.body.classList.contains('lemonsqueezy-open') ? lenis.stop() : lenis.start());
-    const overlay = new MutationObserver(followOverlay);
-    overlay.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-    followOverlay();
-
-    // Capture phase on the document: runs before React's and Lemon Squeezy's click handlers.
+    // Capture phase on the document: runs before React's click handlers (and Next's <Link>).
     document.addEventListener('click', onClick, true);
     return () => {
       document.removeEventListener('click', onClick, true);
-      overlay.disconnect();
     };
   };
 

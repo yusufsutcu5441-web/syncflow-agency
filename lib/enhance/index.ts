@@ -1,5 +1,8 @@
+import { initMagnetic } from './magnetic';
 import { initReveal } from './reveal';
+import { initRings } from './rings';
 import { initSmoothScroll } from './smooth-scroll';
+import { initSpotlight } from './spotlight';
 import { initHeaderState, initPauseOffscreen, initStickyCta } from './ui-state';
 
 /**
@@ -8,9 +11,12 @@ import { initHeaderState, initPauseOffscreen, initStickyCta } from './ui-state';
  * Each module is isolated: a failure in one never takes the others (or the page) down.
  *
  *  - ui-state: header background after scrolling, mobile sticky CTA, off-screen animation pause (no animation engine).
+ *  - spotlight, magnetic: the cursor-following light and the leaning primary button; fine pointers only.
+ *  - rings: the Lighthouse rings fill when they come into view.
  *  - reveal: masked entrance for text below the fold. Motion is fetched on the visitor's first interaction.
  *  - smooth-scroll: Lenis, desktop only; the library is a separate chunk that touch devices never request.
- * Nothing here is imported statically from `motion` or `lenis`: both are import()ed (scripts/faz2-denetim checks it).
+ * Nothing here is imported statically from `motion` or `lenis`: both are import()ed (faz2-denetim.mjs checks it).
+ * Every module honours prefers-reduced-motion.
  */
 export function initEnhancements(): () => void {
   const cleanups: Array<() => void> = [];
@@ -25,6 +31,9 @@ export function initEnhancements(): () => void {
   run(initHeaderState);
   run(initStickyCta);
   run(initPauseOffscreen);
+  run(initSpotlight);
+  run(initMagnetic);
+  run(initRings);
   run(initReveal);
   run(initSmoothScroll);
 

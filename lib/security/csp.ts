@@ -5,15 +5,11 @@
  * those run and nothing an attacker could inject. The cost is that pages render per request (no CDN-cached
  * HTML), see the README section "Security model".
  *
+ * The only third party is Cloudflare Turnstile (the bot check of the briefing): its script (loaded by our own nonce'd
+ * code, so 'strict-dynamic' trusts it; the origin is the fallback for old browsers) and its challenge frame.
+ *
  * Only Web APIs are used here (no Node built-ins) so this module also runs unchanged in the Edge runtime.
  */
-
-/**
- * lemon.js injects ONE <style> element when the checkout overlay opens: the loader's "pulse" keyframes.
- * Only that exact text is allowed through its hash. If Lemon Squeezy ever changes the text, the loader just
- * stops pulsing (the checkout itself is unaffected). Recompute with: scripts/lemon-style-hash.mjs
- */
-export const LEMON_STYLE_HASH = "'sha256-YcTsEGa6JdvnyeVqrxPP/jx+PG7IZ90haC5ZJIe3RT0='";
 
 /** Where browsers POST violation reports (app/api/csp-report/route.ts). */
 export const CSP_REPORT_PATH = '/api/csp-report';
@@ -26,8 +22,7 @@ export const CSP_REPORT_PATH = '/api/csp-report';
 export const CSP_MODE: 'report-only' | 'enforce' = process.env.CSP_MODE === 'enforce' ? 'enforce' : 'report-only';
 export const CSP_HEADER = CSP_MODE === 'enforce' ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only';
 
-export const LEMON_SCRIPT_ORIGIN = 'https://assets.lemonsqueezy.com';
-const LEMON_FRAME_ORIGINS = ['https://*.lemonsqueezy.com', 'https://lemonsqueezy.com'];
+export const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
 
 /** 128-bit random nonce, base64. */
 export function createNonce(): string {
@@ -48,18 +43,18 @@ type CspOptions = {
 export function buildCsp({ nonce, isDev, isHttps }: CspOptions): string {
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
-    // 'strict-dynamic' makes browsers trust scripts loaded by nonce'd scripts (Next chunks, lemon.js) and
+    // 'strict-dynamic' makes browsers trust scripts loaded by nonce'd scripts (Next chunks, the Turnstile loader) and
     // ignore host allow-lists; the origin below is the fallback for old browsers without CSP3.
-    'script-src': ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'", LEMON_SCRIPT_ORIGIN, ...(isDev ? ["'unsafe-eval'"] : [])],
+    'script-src': ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'", TURNSTILE_ORIGIN, ...(isDev ? ["'unsafe-eval'"] : [])],
     // Dev injects <style> tags without a nonce (HMR), so dev needs 'unsafe-inline'. Production does not.
-    'style-src': ["'self'", ...(isDev ? ["'unsafe-inline'"] : [`'nonce-${nonce}'`, LEMON_STYLE_HASH])],
-    // React renders style="" attributes in server HTML (and lemon.js sets some). Inline style attributes cannot
-    // execute script, so they are allowed separately from <style> elements.
+    'style-src': ["'self'", ...(isDev ? ["'unsafe-inline'"] : [`'nonce-${nonce}'`])],
+    // React renders style="" attributes in server HTML. Inline style attributes cannot execute script, so they are
+    // allowed separately from <style> elements.
     'style-src-attr': ["'unsafe-inline'"],
     'img-src': ["'self'", 'data:', 'blob:'],
     'font-src': ["'self'"],
-    'connect-src': ["'self'", ...(isDev ? ['ws://localhost:*', 'ws://127.0.0.1:*'] : [])],
-    'frame-src': LEMON_FRAME_ORIGINS,
+    'connect-src': ["'self'", TURNSTILE_ORIGIN, ...(isDev ? ['ws://localhost:*', 'ws://127.0.0.1:*'] : [])],
+    'frame-src': [TURNSTILE_ORIGIN],
     'media-src': ["'self'"],
     'worker-src': ["'self'", 'blob:'],
     'manifest-src': ["'self'"],

@@ -1,32 +1,18 @@
-import type en from '@/messages/en.json';
+// Keep this file free of `remotion` imports: scripts and tooling read it too, and the site must not pull Remotion into
+// the browser bundle (docs/adr/0003-showcase-film-static-render.md).
 
-// Keep this file free of `remotion` imports: the website imports it too (components/showcase/ShowcaseFilm.tsx), and the
-// site must not pull Remotion into the browser bundle (docs/adr/0003-showcase-film-static-render.md).
-
-/** Shared by the Remotion composition and by the on-page film controls (components/showcase), so the scene tabs seek to the right second. */
+/** Four scenes, each a seamless 8-second loop at 30 frames per second, 1280 x 720 (16:9). */
 export const FPS = 30;
-export const SCENE_FRAMES = 150; // 5 s per scene
-export const SCENE_COUNT = 3;
-export const TOTAL_FRAMES = SCENE_FRAMES * SCENE_COUNT; // 15 s loop
+export const CLIP_FRAMES = 240;
+export const SIZE = { width: 1280, height: 720 } as const;
 
-/**
- * Two canvases. A 1280 px wide canvas shrinks to ~0.27x on a phone and its text becomes unreadable, so phones get
- * a portrait 4:5 canvas with larger type (scale ~0.43x). The page picks one by viewport width.
- */
-export type Layout = 'wide' | 'tall';
-export const SIZES = {
-  wide: { width: 1280, height: 720 },
-  tall: { width: 800, height: 1000 },
-} as const satisfies Record<Layout, { width: number; height: number }>;
+export const CLIPS = ['monolith', 'estate', 'clinic', 'saas'] as const;
+export type ClipName = (typeof CLIPS)[number];
 
-export type SceneLabels = (typeof en)['Showcase']['scene'];
-
-export type CompositionProps = {
-  labels: SceneLabels;
-  layout: Layout;
-  /** Language of the labels. CSS `text-transform: uppercase` picks its casing rules from it (Turkish "mimari" is "MİMARİ", not "MIMARI"). */
-  lang?: string;
+/** The frame used as the poster (WebP still) of each clip: the scene fully composed. */
+export const POSTER_FRAME: Record<ClipName, number> = {
+  monolith: 36,
+  estate: 120,
+  clinic: 70,
+  saas: 150,
 };
-
-/** First frame of each scene (used by the scene tabs). */
-export const SCENE_STARTS = [0, SCENE_FRAMES, SCENE_FRAMES * 2] as const;

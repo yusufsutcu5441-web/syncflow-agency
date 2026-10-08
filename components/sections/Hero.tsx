@@ -1,78 +1,78 @@
-import { ArrowDown, ArrowUpRight, Lock, ShieldCheck } from 'lucide-react';
-import { getFormatter, getTranslations } from 'next-intl/server';
-import { CheckoutLink } from '@/components/ui/CheckoutLink';
-import { MaskText } from '@/components/ui/MaskText';
-import { USD_FORMAT } from '@/lib/format';
-import { PRICE_USD, SECTION_IDS } from '@/lib/site';
+import { ArrowRight, Play } from 'lucide-react';
+import Link from 'next/link';
+import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
+import { MaskLines } from '@/components/ui/MaskText';
+import type { AppLocale } from '@/i18n/routing';
+import { withLocale } from '@/lib/i18n-paths';
+import { formatMeasuredAt, METRICS } from '@/lib/metrics';
+import { SECTION_IDS } from '@/lib/site';
 
 /**
- * Hero. Everything above the fold is plain server-rendered text: no entrance animation on the headline, so the
- * largest contentful paint is the headline itself, as early as the browser can draw it.
- *
- * Persuasion structure: status + revenue headline (System 1) -> risk-reversal badge right next to the action ->
- * the offer reduced to four facts (System 2 can verify it at a glance).
+ * Hero (Blueprint section 1): full viewport, pure black, a cursor-following light, a two-line headline that rises
+ * line by line through its masks (CSS only, from the first paint), one primary action and a quiet second one, and a strip
+ * of three metrics. Everything above the fold is plain server-rendered text, so the largest contentful paint is the
+ * headline or the lead as early as the browser can draw it. The numbers come from lib/metrics.ts (measured, dated).
  */
 export async function Hero() {
-  const t = await getTranslations('Hero');
-  const format = await getFormatter();
-  const price = format.number(PRICE_USD, USD_FORMAT);
+  const [t, locale, format] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getFormatter()]);
 
-  const spec = [
-    [t('specPrice'), t('specPriceValue', { price })],
-    [t('specDelivery'), t('specDeliveryValue')],
-    [t('specStack'), t('specStackValue')],
-    [t('specRetainer'), t('specRetainerValue')],
+  const performance = METRICS.lighthousePerformance;
+  const cls = METRICS.cls;
+  const measuredAt = performance.measuredAt;
+  const value = (n: number | null, digits = 0) => (n === null ? t('pending') : format.number(n, { minimumFractionDigits: digits, maximumFractionDigits: digits }));
+
+  const strip = [
+    [value(performance.value), t('metricPerformance')],
+    [value(cls.value, 2), t('metricCls')],
+    [t('metricLanguagesValue'), t('metricLanguages')],
   ] as const;
 
   return (
-    <section className="relative pb-24 pt-32 md:pb-32 md:pt-40" aria-labelledby="hero-title">
-      <div className="container-x grid gap-16 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.55fr)] lg:items-end lg:gap-12">
-        <div>
-          <p className="eyebrow flex items-center gap-3">
-            <span className="live-dot" aria-hidden="true" data-pause-offscreen="" />
-            {t('eyebrow')}
-          </p>
+    <section id="top" className="hero" data-spotlight="" aria-labelledby="hero-title">
+      <div className="spot" aria-hidden="true" />
 
-          {/* data-mask="load": the words rise through their masks from the first paint, in CSS alone (globals.css). */}
-          <h1 id="hero-title" className="display text-display mt-6" data-mask="load">
-            <MaskText>{t.rich('title', { dim: (chunks) => <span className="dim">{chunks}</span> })}</MaskText>
-          </h1>
+      <div className="container-x relative">
+        <p className="label flex items-center gap-3">
+          <span className="live-dot" aria-hidden="true" data-pause-offscreen="" />
+          {t('eyebrow')}
+        </p>
 
-          <p className="lead measure mt-10">{t('subtitle', { price })}</p>
+        {/* data-mask="load": the lines rise through their masks from the first paint, in CSS alone (globals.css). */}
+        <h1 id="hero-title" className="display text-hero mt-7 max-w-5xl" data-mask="load">
+          <MaskLines lines={[t('title1'), <span key="2" className="dim">{t('title2')}</span>]} />
+        </h1>
 
-          <div id="hero-cta" data-sticky-guard="" className="mt-9 flex flex-col gap-3.5 sm:flex-row sm:items-center">
-            <CheckoutLink className="btn btn-primary w-full sm:w-auto">
-              <span>{t('cta', { price })}</span>
-              <ArrowUpRight size={18} strokeWidth={2} aria-hidden="true" />
-            </CheckoutLink>
-            <a href={`#${SECTION_IDS.showcase}`} className="btn btn-ghost w-full sm:w-auto">
-              <span>{t('ctaSecondary')}</span>
-              <ArrowDown size={17} strokeWidth={1.75} aria-hidden="true" />
-            </a>
-          </div>
+        <p className="lead mt-9 max-w-2xl">{t('subtitle')}</p>
 
-          <p className="mt-5 flex items-center gap-2 text-sm text-muted">
-            <Lock size={14} strokeWidth={1.75} aria-hidden="true" />
-            {t('secure')}
-          </p>
-
-          <p className="chip mt-7">
-            <ShieldCheck size={17} strokeWidth={1.6} className="shrink-0 text-platin" aria-hidden="true" />
-            <span>{t('badge')}</span>
-          </p>
+        <div id="hero-cta" data-sticky-guard="" className="mt-10 flex flex-col gap-3.5 sm:flex-row sm:items-center">
+          <Link href={withLocale(`/#${SECTION_IDS.briefing}`, locale)} prefetch={false} className="btn btn-primary w-full sm:w-auto" data-magnetic="">
+            <span>{t('ctaPrimary')}</span>
+            <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+          </Link>
+          <Link href={withLocale(`/#${SECTION_IDS.showcase}`, locale)} prefetch={false} className="btn btn-ghost w-full sm:w-auto">
+            <Play size={14} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+            <span>{t('ctaSecondary')}</span>
+          </Link>
         </div>
 
-        <aside className="glass p-7 md:p-9" aria-label={t('specTitle')}>
-          <p className="eyebrow">{t('specTitle')}</p>
-          <dl className="mt-7 divide-y divide-hairline">
-            {spec.map(([term, value]) => (
-              <div key={term} className="flex items-baseline justify-between gap-6 py-4 first:pt-0 last:pb-0">
-                <dt className="text-sm text-muted">{term}</dt>
-                <dd className="text-right text-lg font-medium tracking-title tabular-nums">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        </aside>
+        <dl className="hero-strip">
+          {strip.map(([metric, label]) => (
+            <div key={label}>
+              <dt className="metric-label">{label}</dt>
+              <dd className="metric-value mt-1">{metric}</dd>
+            </div>
+          ))}
+        </dl>
+        {measuredAt ? (
+          <p className="mt-4 text-xs text-faint">
+            {t('measured', { date: formatMeasuredAt(measuredAt, locale), tool: 'Lighthouse', profile: performance.profile })}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="scroll-cue" aria-hidden="true" data-pause-offscreen="">
+        <span className="rail" />
+        <span className="label">{t('scroll')}</span>
       </div>
     </section>
   );
