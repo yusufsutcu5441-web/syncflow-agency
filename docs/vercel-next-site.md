@@ -2,7 +2,7 @@
 
 - **Durum:** 08.10.2026. Bu kılavuzdaki Vercel adımlarını **panelde sahibi yapar**: kod tarafında Vercel hesabına, CLI'a ya da projeye erişim yoktur. Kod tarafında doğrulananlar §1'de, doğrulanamayanlar §7'de.
 - **Neden ayrı proje:** mevcut Vercel projesi `syncflow-web` eski statik siteyi (`syncflow.agency`) sunuyor, Root Directory'si `syncflow-web`. Aynı projede Root Directory'yi değiştirmek canlı siteyi kırar (08.10'da yaşandı, [ADR 0012](adr/0012-vercel-deployment.md)). Yeni Next.js uygulaması kendi projesinde, kendi `*.vercel.app` adresinde denenir; **`syncflow.agency` geçiş gününe kadar eski projede kalır.**
-- **Dallar:** yeni site `next-site` dalındadır (uzakta `4da47fe` ve üstü). **Yerel `main`'i uzak `main`'e itmeyin:** uzak `main` eski sitenin geçmişidir (ilgisiz geçmiş), reddedilir; zorlarsanız canlı siteyi yeniden bozarsınız. Eski sitenin yedeği `legacy-site` dalında.
+- **Dallar (08.10.2026 22:45Z'den beri):** `main` artık **hem eski siteyi (`syncflow-web/`) hem yeni Next.js uygulamasını (kökte)** içerir: ilgisiz geçmişler birleştirildi (`777a9f8`), yerel ve uzak `main` eşit, `git push` normal bir ileri sarmadır. `next-site` yeni sitenin saf geçmişi (eski site klasörü olmadan), `legacy-site` eski sitenin yedeği. **Eski proje (`syncflow-web`, Root Directory `syncflow-web`) `main`'i derlemeye devam eder ve eski siteyi sunar; `main`'de `syncflow-web/` klasörünü silmeyin ya da taşımayın, aksi hâlde 08.10 kesintisi tekrarlanır.** Yeni Next.js uygulaması yalnızca Root Directory'si `./` olan bir projede derlenir.
 
 ## 1. Kod tarafında doğrulananlar (08.10.2026)
 
@@ -27,8 +27,8 @@ Yani ortam değişkenleri girilmeden ilk deployment çalışır; yalnızca brief
 
 5. **Eski projede (`syncflow-web`) `next-site` derlemesini kapatın.** 08.10 21:43Z'de `next-site`'e yapılan bir push, eski projede bir **Preview** derlemesi tetikledi ve **başarısız** oldu (o projenin Root Directory'si `syncflow-web`, `next-site`'te öyle bir klasör yok). Canlı site etkilenmedi, ama GitHub'da `next-site` ucu kırmızı görünür ve her push bir başarısız derleme daha üretir. Eski projede **Settings → Git → Ignored Build Step → Custom** alanına şunu girin: `[ "$VERCEL_GIT_COMMIT_REF" != "main" ]` (dal `main` değilse çıkış 0 = derlemeyi atla; `main`'de çıkış 1 = derle). Bu komutun etkisi **panelde doğrulanmadı**; deneyip eski sitenin `main` push'unda hâlâ derlendiğini ve `next-site` push'unda atlandığını kontrol edin.
 
-## 3. Production Branch'i `next-site` yapın
-**Settings → Git → Production Branch → `next-site`**. `main` olarak kalırsa proje eski siteyi derlemeye çalışır. Bu ayarı yapmadan §6'daki adres kontrolleri anlamsız olur.
+## 3. Production Branch (`main` ya da `next-site`)
+`main` (varsayılan, ayar gerekmez; artık Next.js uygulamasını da içeriyor) **ya da** `next-site` olabilir. Hangisini seçerseniz seçin **Root Directory `./`** olmalı. Eski projenin Root Directory'si (`syncflow-web`) ve dalı değişmez.
 
 **Settings → General → Node.js Version:** 22.x ya da 24.x (`package.json` `engines`: `>=20.19.0`).
 
@@ -55,7 +55,7 @@ n8n akışı henüz yoksa `CONTACT_WEBHOOK_*` boş bırakılır: site çalışı
 
 ## 6. İlk deployment sonrası kontroller (adres: `https://syncflow-next.vercel.app`)
 
-- [ ] Deployments sekmesinde **Production** deployment `next-site` dalından, durum **Ready**; Build Logs'ta `next build` bitti.
+- [ ] Deployments sekmesinde **Production** deployment `main` (ya da seçtiğiniz dal) dalından, durum **Ready**; Build Logs'ta `next build` bitti.
 - [ ] `/` ve `/tr` **200**; `/de`, `/fr`, `/ar` **404**; `/.well-known/security.txt` 200; `/sitemap.xml` yalnızca iki dil ve **hazırlık adresini** gösteriyor.
 - [ ] Yanıt başlıklarında `Content-Security-Policy-Report-Only` (nonce'lu) ve `Strict-Transport-Security` var, `Content-Security-Policy` (enforce) **yok**.
 - [ ] **`/og?locale=en` bir PNG (1200×630) döndürüyor.** Bu rota yazı tipini `assets/og-instrument-sans-600.ttf` dosyasından okur ve Vercel'e dosya izleme (`outputFileTracingIncludes`) ile taşınır; **yerelde doğrulandı, Vercel'de henüz doğrulanmadı.**
@@ -75,3 +75,12 @@ Bunları bana adresle birlikte bildirirseniz salt okunur isteklerle (koruma kapa
 **Aşağıdakiler bitmeden yapmayın:** (1) n8n teslimi gerçek kutuda denendi, (2) Turnstile ve Upstash gerçek anahtarlarla bağlı, (3) hukuki sayfaların yer tutucuları gerçek bilgilerle dolu ve avukat onaylı, "Taslak" uyarısı kalktı ([ADR 0011](adr/0011-legal-pages-structure.md)), (4) mobil Lighthouse ölçüldü ve `lib/metrics.ts` güncellendi, (5) 24 saatlik kişisel dönüş sözü gerçek.
 
 Sonra: eski projede **Settings → Domains → `syncflow.agency` → Remove**, yeni projede **Add** (aynı takımda alan adı taşımak anlıktır; DNS değişmez), `NEXT_PUBLIC_SITE_URL=https://syncflow.agency` ve **Redeploy**, ardından §6 kontrolleri bu adreste. **Geri dönüş:** alan adını eski projeye geri ekleyin (eski deployment'lar durur). Search Console'a `sitemap.xml`. İki dalı birleştirme/yeniden adlandırma (`main` ⇄ `next-site`) ayrı, bilinçli bir adımdır, bu kılavuzun kapsamı dışında.
+
+## 9. Durum notu (08.10.2026 22:55Z): yeni proje push'lara tepki vermedi
+`syncflow-next` projesi var ve bu depoya bağlı görünüyor (22:02 ve 22:24Z'de `44bbf02` için yapı denemeleri kayıtlı; ikincisi, o commit eski site olduğu için **başarısız**). Ama `main` push'u (`777a9f8`, 22:45Z) ve `next-site` push'u (`84da115`, 22:53Z) için `Vercel – syncflow-next` durumu **hiç oluşmadı** (7 ve 2 dakika izlendi); yalnızca eski proje deploy etti. Nedeni dışarıdan görülemiyor; olası olanlar (tahmin):
+
+- [ ] `syncflow-next` → **Settings → Git:** depo bağlı mı, **Production Branch** ne, otomatik deploy açık mı?
+- [ ] **Settings → Git → Ignored Build Step** boş olmalı (eski projeye önerilen komut yanlışlıkla bu projeye girilmiş olabilir).
+- [ ] GitHub → **Settings → Applications → Vercel → Configure:** bu depoya erişim var mı?
+- [ ] **Deployments → Create Deployment** (varsa) ile `main` dalı (`777a9f8`) elle derlenebilir. **Redeploy işe yaramaz:** eski deployment'ın kaynağını (`44bbf02`) yeniden derler.
+- Panele ya da CLI'a bağlanamıyorsanız: bu ortamda CLI, ağınızdaki TLS araya girmesi yüzünden çöktü (Sentry adresi için `*.btk.gov.tr` sertifikası, ayrıca `self-signed certificate`). Panel/CLI'ı **farklı bir ağdan** (telefon paylaşımı, VPN) deneyin; TLS doğrulamasını kapatmayın.
