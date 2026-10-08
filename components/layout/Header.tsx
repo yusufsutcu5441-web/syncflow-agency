@@ -1,7 +1,7 @@
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Wordmark } from '@/components/ui/Logo';
+import { Logo } from '@/components/ui/Logo';
 import type { AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
 import { SECTION_IDS } from '@/lib/site';
@@ -9,7 +9,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 
 const NAV = ['architecture', 'showcase', 'reach', 'briefing'] as const;
 
-/** Blueprint navigation: wordmark left, four section links in the middle, language selector and the briefing pill on the right. */
+/** Blueprint navigation: the B1 logo lockup left, four section links in the middle, language selector and the briefing pill on the right. */
 export async function Header() {
   const [nav, a11y, t, locale] = await Promise.all([
     getTranslations('Nav'),
@@ -23,7 +23,7 @@ export async function Header() {
       <div className="container-x flex h-full items-center justify-between gap-4">
         {/* prefetch={false}: these point at the page the visitor is already on; prefetching would only cost bytes and CPU. */}
         <Link href={withLocale('/', locale)} prefetch={false} aria-label={a11y('home')}>
-          <Wordmark />
+          <Logo height={28} />
         </Link>
 
         <nav aria-label={a11y('mainNav')} className="hidden items-center gap-9 lg:flex">

@@ -4,11 +4,12 @@ import { getLocale, getNow, getTranslations } from 'next-intl/server';
 import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
+import { Logo } from '@/components/ui/Logo';
 import { SECTION_IDS } from '@/lib/site';
 
 /**
  * Blueprint footer: four information columns (Studio, Showcase, Reach, Legal), a thin glass line with the legal row,
- * and the studio's name set enormous at 6 % opacity across the page end. Reach lists only the languages that are
+ * and the studio's drawn wordmark (brand/, B1/v2) set enormous at 6 % opacity across the page end. Reach lists only the languages that are
  * public (i18n/launch.ts), as plain crawlable links.
  */
 export async function Footer() {
@@ -121,10 +122,11 @@ export async function Footer() {
         </div>
       </div>
 
-      {/* Decorative: the text is drawn by a pseudo-element (content: attr(data-text)), not a text node, because at the
-          Blueprint's 6 % opacity it can never meet a text contrast ratio and an accessibility audit would flag it as text.
-          dir=ltr keeps the Latin name in order on right-to-left pages. */}
-      <span aria-hidden="true" dir="ltr" data-text="syncflow.agency" className="giant-wordmark pb-2 pt-6" />
+      {/* Decorative: the official drawn wordmark (an SVG outline, so it is no text for a contrast audit to flag) at the
+          Blueprint's 6 % opacity. It sits in the page column so the wordmark spans exactly the width of the content. */}
+      <div aria-hidden="true" className="container-x pb-6 pt-8">
+        <Logo part="wordmark" className="giant-wordmark" />
+      </div>
     </footer>
   );
 }
