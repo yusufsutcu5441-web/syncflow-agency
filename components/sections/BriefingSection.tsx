@@ -27,7 +27,7 @@ export async function BriefingSection() {
             {afterEmail}
           </p>
         </noscript>
-        <Briefing privacyHref={withLocale('/privacy', locale)} turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || undefined} />
+        <Briefing privacyHref={`${withLocale('/privacy', locale)}#privacy-p2`} turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || undefined} />
       </div>
     </section>
   );
