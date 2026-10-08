@@ -4,7 +4,7 @@ import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
 const TAU = Math.PI * 2;
 
 /**
- * A glass monolith turning slowly on black. The slab is symmetric, so turning it by 180 degrees ends exactly where it began:
+ * A glass monolith turning slowly on obsidian. The slab is symmetric, so turning it by 180 degrees ends exactly where it began:
  * the 8-second loop has no seam. Light slides across each face like liquid (a moving sheen), and a faint reflection
  * lies on the floor. Pure CSS 3D, deterministic.
  */
@@ -25,10 +25,10 @@ function Slab({ angle, loop }: { angle: number; loop: number }) {
       height: H,
       transform,
       backfaceVisibility: 'hidden',
-      border: `1px solid rgba(255,255,255,${0.12 + 0.4 * b})`,
-      background: `linear-gradient(112deg, rgba(255,255,255,${0.2 * b}) 0%, rgba(255,255,255,${0.045 * b}) 38%, rgba(255,255,255,0.015) 58%, rgba(255,255,255,${0.15 * b}) 100%),
-        linear-gradient(100deg, transparent ${sheen - 14}%, rgba(255,255,255,${0.3 * b}) ${sheen}%, transparent ${sheen + 14}%)`,
-      boxShadow: `inset 0 0 ${40 * b}px rgba(255,255,255,${0.08 * b})`,
+      border: `1px solid rgba(226,226,230,${0.12 + 0.4 * b})`,
+      background: `linear-gradient(112deg, rgba(226,226,230,${0.2 * b}) 0%, rgba(226,226,230,${0.045 * b}) 38%, rgba(226,226,230,0.015) 58%, rgba(226,226,230,${0.15 * b}) 100%),
+        linear-gradient(100deg, transparent ${sheen - 14}%, rgba(226,226,230,${0.3 * b}) ${sheen}%, transparent ${sheen + 14}%)`,
+      boxShadow: `inset 0 0 ${40 * b}px rgba(226,226,230,${0.08 * b})`,
     };
   };
 
@@ -50,11 +50,11 @@ export function Monolith() {
   const floor = 360 + H / 2;
 
   return (
-    <AbsoluteFill style={{ background: '#000', overflow: 'hidden' }}>
-      <AbsoluteFill style={{ background: 'radial-gradient(60% 70% at 50% 45%, rgba(255,255,255,0.07), rgba(0,0,0,0) 72%)' }} />
+    <AbsoluteFill style={{ background: '#0D0D0E', overflow: 'hidden' }}>
+      <AbsoluteFill style={{ background: 'radial-gradient(60% 70% at 50% 45%, rgba(226,226,230,0.07), rgba(13,13,14,0) 72%)' }} />
 
       {/* floor glow under the slab */}
-      <div style={{ position: 'absolute', left: 640 - 320, top: floor - 26, width: 640, height: 70, background: 'radial-gradient(closest-side, rgba(255,255,255,0.16), rgba(0,0,0,0))' }} />
+      <div style={{ position: 'absolute', left: 640 - 320, top: floor - 26, width: 640, height: 70, background: 'radial-gradient(closest-side, rgba(226,226,230,0.16), rgba(13,13,14,0))' }} />
 
       {/* reflection: the same slab mirrored, faded out downwards */}
       <div
@@ -67,8 +67,8 @@ export function Monolith() {
           perspective: 1500,
           transform: 'scaleY(-1)',
           opacity: 0.22,
-          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0) 46%)',
-          maskImage: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0) 46%)',
+          WebkitMaskImage: 'linear-gradient(to top, rgba(13,13,14,0.9), rgba(13,13,14,0) 46%)',
+          maskImage: 'linear-gradient(to top, rgba(13,13,14,0.9), rgba(13,13,14,0) 46%)',
         }}
       >
         <div style={{ position: 'absolute', left: 0, top: -H / 2 }}>
