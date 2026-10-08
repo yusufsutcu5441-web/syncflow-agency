@@ -4,6 +4,7 @@
  * Faz 3: hareket ve kaydırma (Lenis ve Motion ilk yüke girmez, azaltılmış hareket, JS'siz görünürlük).
  * Faz 4: Blueprint ana sayfası, briefing (honeypot, Turnstile, origin, imzalı webhook), vitrin videoları, doğrulanmamış iddia yasağı.
  * Faz 5: 7 dil altyapısı (taslak diller uykuda, RTL, yayın listesi), hreflang/sitemap yalnızca yayındaki dillere.
+ * 2B-4 (docs/adr/0011): hukuki sayfaların yapısı (KVKK m.10 / GDPR m.13), tarih, rıza bağlantısı; içerik yer tutuculu taslak kalır.
  * 2B-3 (docs/adr/0010): teslimde id + tek yeniden deneme (bütçe < 10 sn), hız sınırı uyarısı, security.txt süresi.
  * 2B-2 (docs/adr/0009): TR/EN odak, yedi dil iddiası yok, vitrin kilitli üç sektör (emlak, klinik, kurumsal hukuk), SaaS ve "Reach" bölümü yok.
  * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo.
@@ -268,6 +269,28 @@ if (exists("app/api/briefing/route.ts")) {
 } else add(G4, "FAIL", "app/api/briefing/route.ts yok");
 exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /NEXT_PUBLIC_TURNSTILE_SITE_KEY/.test(read(".env.example")) && /CONTACT_WEBHOOK_URL/.test(read(".env.example"))
   ? add(G4, "PASS", ".env.example: webhook ve Turnstile anahtarları açıklanmış") : add(G4, "FAIL", ".env.example'da CONTACT_WEBHOOK_URL / TURNSTILE anahtarları yok");
+// 2B-4 (docs/adr/0011): hukuki sayfaların YAPISI (KVKK m.10 / GDPR m.13 başlıkları), tarih, rıza bağlantısı. İçeriğin hukuken yeterli olduğunu denetim iddia etmez: yer tutucular (K7) ve "taslak" uyarısı bilerek durur.
+{
+  const lp = exists("components/sections/LegalPage.tsx") ? read("components/sections/LegalPage.tsx") : "";
+  const order = lp.match(/const\s+PRIVACY\s*=\s*\[([^\]]*)\]/)?.[1].match(/'(\w+)'/g)?.map((x) => x.slice(1, -1)) ?? [];
+  const need = ["p1", "p2", "p8", "p9", "p3", "p4", "p5", "p6", "p7"];
+  const legalTexts = {};
+  for (const l of ["en", "tr"]) legalTexts[l] = flat(readJSON(`messages/${l}.json`)["Legal"] ?? {});
+  const missingKeys = [];
+  for (const l of ["en", "tr"]) for (const k of need) for (const key of [k, `${k}h`]) if (!legalTexts[l][key]) missingKeys.push(`${l}:Legal.${key}`);
+  order.join() === need.join() && !missingKeys.length
+    ? add(G4, "PASS", "gizlilik metni: sorumlu, amaç ve hukuki sebep, toplama yöntemi ve zorunluluk, otomatik karar, güvenlik/kayıt, çerez, aktarım, saklama, haklar sırasıyla ve EN/TR'de tam")
+    : add(G4, "FAIL", `gizlilik metni bölüm sırası/anahtarları eksik (sıra: ${order.join(",") || "okunamadı"}; eksik: ${missingKeys.slice(0, 4).join(", ")})`);
+  /id=\{`privacy-\$\{key\}`\}/.test(lp) && /LEGAL_UPDATED/.test(lp) && /t\('updated'/.test(lp) && legalTexts.en.updated && legalTexts.tr.updated
+    ? add(G4, "PASS", "yasal sayfalar: her bölümün id'si ve \"son düzenleme\" tarihi var") : add(G4, "FAIL", "LegalPage: bölüm id'leri (privacy-<anahtar>) ya da 'son düzenleme' tarihi yok");
+  const bs = exists("components/sections/BriefingSection.tsx") ? read("components/sections/BriefingSection.tsx") : "";
+  /#privacy-p2/.test(bs) && order.includes("p2") ? add(G4, "PASS", "rıza kutusundaki bağlantı, rızanın dayandığı bölüme (privacy-p2) gidiyor") : add(G4, "FAIL", "briefing rıza bağlantısı #privacy-p2 bölümüne gitmiyor");
+  const claim = /compliant|uyumludur|uyumlu\b|guaranteed|garanti/i, claims = [];
+  for (const l of ["en", "tr"]) for (const [k, v] of Object.entries(legalTexts[l])) if (typeof v === "string" && claim.test(v)) claims.push(`${l}:Legal.${k}`);
+  claims.length ? add(G4, "FAIL", `hukuki metin uyum/garanti iddiası içeriyor (avukat onayı olmadan yazılmaz): ${claims.slice(0, 4).join(", ")}`) : add(G4, "PASS", "hukuki metinde \"uyumludur\"/\"garanti\" gibi bir yeterlilik iddiası yok");
+  const brackets = Object.values(legalTexts.en).filter((v) => typeof v === "string" && /\[[^\]]+\]/.test(v)).length, draft = Boolean(legalTexts.en.draft && legalTexts.tr.draft);
+  draft ? add(G4, "INFO", `hukuki sayfalar yer tutuculu taslak: EN'de ${brackets} bölümde köşeli parantezli alan var (K7: avukat onayı ve gerçek bilgiler bekleniyor); "taslak" uyarısı sayfada duruyor. check:messages --strict bu yüzden kırmızıdır, bilinçli.`) : add(G4, "FAIL", "Legal.draft (taslak uyarısı) kalkmış: avukat onayı olmadan kaldırılmaz");
+}
 // 2B-3 (docs/adr/0010): teslim sözleşmesi, hız sınırı uyarısı, security.txt.
 {
   const del = exists("lib/server/deliver.ts") ? read("lib/server/deliver.ts") : "";
@@ -436,7 +459,7 @@ const color = process.stdout.isTTY && !process.env.NO_COLOR;
 const C = { PASS: "\x1b[32m", WARN: "\x1b[33m", FAIL: "\x1b[31m", INFO: "\x1b[90m", R: "\x1b[0m" };
 const sym = { PASS: "✔", WARN: "!", FAIL: "✖", INFO: "i" };
 let g = ""; const cnt = { PASS: 0, WARN: 0, FAIL: 0, INFO: 0 };
-console.log(`\nSyncFlow denetimi (Faz 2–5, 2B-1, 2B-2 ve 2B-3 kapısı: tokenlar, marka, i18n, TR/EN odak ve sektör kilidi, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
+console.log(`\nSyncFlow denetimi (Faz 2–5, 2B-1, 2B-2, 2B-3 ve 2B-4 kapısı: tokenlar, marka, i18n, TR/EN odak ve sektör kilidi, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
 for (const r of results) {
   if (r.group !== g) { g = r.group; console.log(`\n${g}`); }
   cnt[r.level]++;

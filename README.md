@@ -213,7 +213,7 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 
 - [ ] **n8n akışını kurun ve ilk gerçek denemeyi yapın** ([docs/n8n-briefing.md](docs/n8n-briefing.md) §5): `contact@syncflow.agency`'e e-posta düşüyor mu, yanlış imza reddediliyor mu.
 - [ ] **Turnstile anahtarlarını** (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`) Cloudflare'de oluşturup tanımlayın; üretimde gizli anahtar olmadan form 503 verir.
-- [ ] **Yasal sayfalar:** `messages/en.json` ve `tr.json` → `Legal.*` içindeki `[KÖŞELİ PARANTEZ]` alanlarını (şirket unvanı, adres, teslim hizmeti, aktarım güvenceleri, saklama süresi) doldurun, avukata inceletin; `npm run check:messages -- --strict` hata vermeyene kadar. "Taslak" uyarısı (`Legal.draft`) yayından önce kaldırılmalı.
+- [ ] **Yasal sayfalar** (yapı hazır, [ADR 0011](docs/adr/0011-legal-pages-structure.md); içerik yer tutuculu taslak): `messages/en.json` ve `tr.json` → `Legal.*` içindeki `[KÖŞELİ PARANTEZ]` alanlarını (şirket unvanı, adres, hukuki tür, telefon, sicil ve vergi no, sorumlu kişi, teslim hizmeti, aktarım güvenceleri, saklama süresi, **başvuru kanalları, denetim makamı**) doldurun, avukata inceletin; "p8/p9" bölümlerindeki işletme iddialarının ("her talebi bir kişi okur", "otomatik yanıt ya da ret yok") doğru olduğunu teyit edin; `npm run check:messages -- --strict` hata vermeyene kadar. "Taslak" uyarısı (`Legal.draft`) yayından önce kaldırılmalı.
 - [ ] **"24 saat içinde kişisel dönüş" sözünün gerçek olduğunu** teyit edin (kapasite cümlesi kuralı).
 - [ ] **Taslak dillerden hangisi yayına girecek?** Yerel konuşur çeviri incelemesi + hukuk incelemesi (sağlık reklamı kuralları, KVKK/GDPR muadilleri) sonra `NEXT_PUBLIC_LAUNCHED_LOCALES`'e ekleyin; AR ve JA için özel OFL yazı tipi yığınını seçin ve `check:fonts` kapsamını genişletin.
 - [ ] **LinkedIn / Instagram / WhatsApp adresleri** verilirse ilgili `NEXT_PUBLIC_*` değişkenlerini tanımlayın (verilmedi, footer'da yok). Logo çizili B1/v2 paketidir ama **ad/marka sorgusu (Türkpatent ve uluslararası) bitmeden nihai değildir** (`brand/README.md`).
@@ -283,6 +283,20 @@ Ayrıntı: [docs/perf/faz2b3.md](docs/perf/faz2b3.md), karar: [ADR 0010](docs/ad
 | Tarayıcı testleri, **enforce** | Faz 4 gerileme **42/42**, 2B-2 **31/31**, 2B-1 **32/32** |
 
 **Doğrulanmayanlar:** gerçek n8n/Gmail teslimi ve n8n'deki çift kayıt ayıklaması (bilgiler verilmedi); CSP enforce yalnızca yerel HTTP'de denendi (canlıda HTTPS ve ilk günlerin rapor izlemesi gerekir); performans ölçümü yapılmadı (mobil hâlâ "ölçülecek"); otomatik yanıt, WhatsApp/takvim bağlantıları yapılmadı.
+
+### 2B-4 Hukuki Sayfalar, yapı (08.10.2026, `faz_2b4` dalı)
+
+Ayrıntı: [docs/perf/faz2b4.md](docs/perf/faz2b4.md), karar: [ADR 0011](docs/adr/0011-legal-pages-structure.md). **Bu bir hukuki yeterlilik doğrulaması değildir;** içerik yer tutuculu taslak kalır (sahibinin kararı), avukat onayı bekler.
+
+| Denetim | Sonuç |
+|---|---|
+| Aydınlatma metni | 9 bölüm bildirim sırasıyla (yeni: toplama ve zorunluluk, öncelik sınıfı/otomatik karar yok; genişletilmiş haklar), bölüm `id`'leri, "son düzenleme" tarihi, rıza bağlantısı `/privacy#privacy-p2` |
+| `npm run smoke` | **121/121** |
+| Tarayıcı testi 2B-4 (yeni, `puppeteer-core`; betik depoda yok) | **19/19** (EN ve TR; bağlantı tıklayınca ilgili bölüme kaydırıyor; yer tutucular ve taslak uyarısı yerinde) |
+| Gerileme setleri | Faz 4 **42/42**, 2B-2 **31/31**, 2B-1 **32/32** |
+| `node faz2-denetim.mjs --build` | **0 hata**, 110 geçti, 1 bilinçli uyarı; beş ihlal bozulmuş kopyada yakalandı (taslak uyarısı kalkarsa ve "uyumludur" gibi bir iddia yazılırsa hata) |
+
+**Doğrulanmayanlar:** hukuki yeterlilik, gerçek şirket bilgileri, avukat onayı; p8/p9'daki işletme iddiaları; performans (ölçülmedi, mobil hâlâ "ölçülecek").
 
 ## 12. Üçüncü taraf lisanslar
 
