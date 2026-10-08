@@ -1,6 +1,6 @@
 # ADR 0012: Vercel'e çıkış: ayrı proje, dal düzeni ve 08.10.2026 kesintisinin dersleri
 
-- **Durum:** Kabul edildi, 08.10.2026. Uygulama adımları [docs/vercel-next-site.md](../vercel-next-site.md)'de.
+- **Durum:** Kabul edildi, 08.10.2026. **"Ayrı proje" kararı (Kararlar 1 ve 3) 09.10.2026'da [ADR 0013](0013-app-moved-into-syncflow-web.md) ile değişti:** uygulama `syncflow-web/` klasörüne taşındı, mevcut proje onu derliyor. Olay kaydı ve dersler geçerlidir. Güncel adımlar [docs/vercel-next-site.md](../vercel-next-site.md)'de.
 - **Bağlam:** GitHub deposu (`yusufsutcu5441-web/syncflow-agency`, **herkese açık**) Vercel'de `syncflow-web` projesine bağlıydı ve `syncflow.agency` oradan eski bir statik siteyi sunuyordu. Uzak `main` (`60d9f00`, "initial agency commit") bu eski siteyi (`syncflow-web/`) taşıyordu ve yerel Next.js geçmişiyle **ilgisizdi** (ortak commit yok).
 
 ## Ne oldu (UTC, 08.10.2026)

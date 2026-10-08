@@ -1,6 +1,8 @@
 {
-
-  "buildCommand": "npm run build:css && npm run build:js",
-  "outputDirectory": "."
- 
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": null,
+  "buildCommand": null,
+  "devCommand": null,
+  "outputDirectory": null
 }
