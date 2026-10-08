@@ -27,12 +27,18 @@
 Taşıma tek bir commit'tir. Geri alma: `git revert --no-edit <sha>` + `git push origin main` (ileri sarma; 1-3 dk), ya da panelde önceki Production deployment'ı *Promote to Production*. Taşımadan önceki `main` = `531f569` (yerel etiket `yedek-main-tasima-oncesi`; commit uzakta da var). Ayrıntı: docs/vercel-next-site.md §2.
 
 ## Doğrulama (itmeden önce, `syncflow-web/` içinde, taşıma sonrası düzende)
-Aşağıdaki sonuçlar taşınmış çalışma kopyasında alındı; temiz kopya derlemesi ve canlı ölçüm ayrıca kaydedilecek.
+Çalışma kopyasında (taşınmış düzen) ve taşıma commit'inin (`b7dafb0`) **temiz klonunda** (`core.autocrlf=false`, `.env` yok, `node_modules` yok) denendi:
 
 | Kontrol | Sonuç |
 |---|---|
-| `check:messages`, `check:fonts`, `brand:check`, `typecheck`, `lint` | hepsi çıkış 0 |
-| `node faz2-denetim.mjs --root . --build` | 110 geçti, 0 hata, 1 uyarı (`generateStaticParams`, eski), 4 bilgi |
+| `check:messages`, `check:fonts`, `brand:check`, `typecheck`, `lint` (çalışma kopyası) | hepsi çıkış 0 |
+| `node faz2-denetim.mjs --root . --build` (çalışma kopyası) | 110 geçti, 0 hata, 1 uyarı (`generateStaticParams`, eski), 4 bilgi |
+| Temiz klon, `syncflow-web/` içinde `npm ci` | geçti, 439 paket, 96 sn |
+| Temiz klon, `npm run build` | geçti (çıkış 0), 59 sn, 13 rota |
+| Temiz klon, `brand:check` (LF) ve `faz2-denetim.mjs --root .` | geçti; 108 geçti, 0 hata |
+| Duman testi, klonun üretim sunucusu, **hiçbir ortam değişkeni olmadan** (`TURNSTILE_MODE=unset`), `:3100` | **95/95** |
+| Elle: `/`, `/tr` 200; `/de`, `/fr` 404; `security.txt`, `robots.txt`, `sitemap.xml` 200; `/og?locale=en` `image/png`; `GET /api/briefing` 405; CSP yalnızca report-only; HSTS var; sitemap yalnızca `syncflow.agency` `en`+`tr` | doğru |
+| `/kvkk/` ve `/demo/` yeni sitede | 308 (sondaki eğik çizgi), ardından 404: eski adresler karşılıksız |
 
 ## Dersler
 - **Taşıma sırasında üç dizin (`app/`, `components/`, `lib/`; 62 dosya) diskten kayboldu** (`git mv -k` indeksi güncelledi, çalışma ağacında dizinler yoktu: durum `RD`). Neden anlaşılamadı. İndeks ve HEAD aynı blob'ları taşıdığından `git restore --worktree -- syncflow-web/app syncflow-web/components syncflow-web/lib` ile aynen geri geldi; taşımadan sonra `git status`'ta `RD` ve diskte eksik dizin kontrolü şarttır.
