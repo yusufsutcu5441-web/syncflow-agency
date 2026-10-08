@@ -18,7 +18,6 @@
   "Nav": {
     "architecture": "Architecture",
     "showcase": "Showcase",
-    "reach": "Reach",
     "briefing": "Briefing"
   },
   "Header": {
@@ -34,8 +33,7 @@
     "scroll": "Scroll",
     "metricPerformance": "Lighthouse performance, desktop",
     "metricCls": "Layout shift (CLS), desktop",
-    "metricLanguages": "languages, one standard",
-    "metricLanguagesValue": "7",
+    "metricLcp": "Largest contentful paint (LCP), desktop",
     "pending": "to be measured",
     "measured": "Measured {date} · {tool} · {profile}"
   },
@@ -84,7 +82,7 @@
     "estate": {
       "tag": "Real estate",
       "title": "Not a property. A stage for living.",
-      "text": "A penthouse with a view of the Bosphorus is not bought from a screen; it is felt. Cinematic entry sequences, interactive daylight simulation on floor plans, and qualified enquiries that land directly with your sales team.",
+      "text": "A penthouse with a view of the Bosphorus is not bought from a screen; it is felt. Cinematic entry sequences, interactive daylight simulation on floor plans, and an enquiry flow that lands directly with your sales team.",
       "overlay": "Price on request",
       "videoLabel": "A glass-fronted villa at dusk, the camera moving slowly in"
     },
@@ -95,32 +93,12 @@
       "overlay": "Book a private consultation",
       "videoLabel": "A pale clinic corridor in slow motion, soft light moving along the ceiling"
     },
-    "saas": {
-      "tag": "SaaS & product",
-      "title": "Your product should be explained before the site.",
-      "text": "We make a complex product understandable at a glance. Live interface simulations, scroll-linked product tours, and a pricing architecture designed to support demo requests.",
-      "overlay": "⌘K",
-      "videoLabel": "A dark dashboard: charts flowing, a command palette opening, data rows filling in"
-    }
-  },
-  "Reach": {
-    "label": "03 — Global reach",
-    "title": "Your brand, in every language it deserves.",
-    "subtitle": "We don’t translate; we localize. Typography, reading direction, tone and cultural rhythm are rebuilt for each language: an architecture that runs right to left in Arabic, a typography that is dense yet breathing in Japanese.",
-    "sentenceLabel": "One sentence, seven languages",
-    "tags": "hreflang · RTL-native · CJK typography · Locale-aware formatting",
-    "globeLabel": "Line drawing of a globe with seven city points: Istanbul, London, Berlin, Paris, Madrid, Dubai and Tokyo",
-    "chipsLabel": "Choose a language to read the sentence in it",
-    "draft": "Draft translation, not public yet",
-    "open": "Open the site in this language",
-    "cities": {
-      "istanbul": "Istanbul",
-      "london": "London",
-      "berlin": "Berlin",
-      "paris": "Paris",
-      "madrid": "Madrid",
-      "dubai": "Dubai",
-      "tokyo": "Tokyo"
+    "law": {
+      "tag": "Corporate law & advisory",
+      "title": "Discretion is the first thing a client reads.",
+      "text": "For law firms and advisory practices: a restrained, precise digital presence. Practice-area and partner pages, a confidential enquiry flow, and a structure in which every word is yours to approve, because applying the advertising rules for lawyers is your responsibility.",
+      "overlay": "Confidential enquiry",
+      "videoLabel": "A dark colonnade receding towards a lit doorway, the camera moving slowly forward"
     }
   },
   "Briefing": {
@@ -143,8 +121,8 @@
       "showcaseDesc": "A cinematic, single-story experience",
       "platform": "Real estate or clinic platform",
       "platformDesc": "Demand-driven, multi-page architecture",
-      "saas": "SaaS product site",
-      "saasDesc": "Built for demos and conversion",
+      "law": "Law firm or advisory site",
+      "lawDesc": "Discreet, precise, structure-first",
       "unsure": "Not sure yet",
       "unsureDesc": "Let’s define it together"
     },
@@ -239,8 +217,8 @@
     "showcase": "Showcase",
     "realEstate": "Real estate",
     "clinics": "Private clinics",
-    "saas": "SaaS",
-    "reach": "Reach",
+    "law": "Corporate law",
+    "languages": "Languages",
     "legal": "Legal",
     "privacy": "Privacy",
     "imprint": "Legal notice",

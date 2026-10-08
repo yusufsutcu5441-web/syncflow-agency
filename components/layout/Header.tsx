@@ -7,9 +7,9 @@ import { withLocale } from '@/lib/i18n-paths';
 import { SECTION_IDS } from '@/lib/site';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
-const NAV = ['architecture', 'showcase', 'reach', 'briefing'] as const;
+const NAV = ['architecture', 'showcase', 'briefing'] as const;
 
-/** Blueprint navigation: the B1 logo lockup left, four section links in the middle, language selector and the briefing pill on the right. */
+/** Blueprint navigation: the B1 logo lockup left, three section links in the middle, language selector and the briefing pill on the right. */
 export async function Header() {
   const [nav, a11y, t, locale] = await Promise.all([
     getTranslations('Nav'),

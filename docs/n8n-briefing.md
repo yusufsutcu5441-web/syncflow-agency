@@ -23,7 +23,7 @@ Gmail kimlik bilgisi Next uygulamasında hiçbir yerde tutulmaz (CLAUDE.md "Güv
   "type": "syncflow.briefing",
   "receivedAt": "2026-10-08T12:00:00.000Z",
   "subject": "[Briefing][high] Acme Holding, Jane Doe",
-  "projectType": "showcase | platform | saas | unsure",
+  "projectType": "showcase | platform | law | unsure",
   "budget": "b5 | b10 | b20 | talk",
   "timeline": "w4 | w6 | w10 | flex",
   "role": "decider | team | exploring",
