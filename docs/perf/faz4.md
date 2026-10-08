@@ -57,11 +57,13 @@ Kısıtsız beş koşunun biri tek bir 33 ms'lik kare içeriyordu (koşu 1: 2 ka
 - **Arapça** (`/ar`): `lang="ar" dir="rtl"`, wordmark sağda, düğme solda, başlık sağa yaslı, yatay taşma yok (honeypot başlangıç kenarında), harf aralığı sıfır, Arapça metin sistem yazı tipinde, vitrin şeridi sağdan başlar ve düğme doğru yöne kayar, ilerleme çizgisi sağdan dolar. Dil seçici yedi dili kendi yazısıyla listeler (beşi "taslak"), Deutsch'u seçmek `/de`'ye götürür ve footer'da taslak notu çıkar; `/fr /es /ja /tr` kendi dilinde ve kendi `<title>`ıyla açılır.
 - CSP ihlali yok, konsol hatası yok (tüm sayfalarda).
 
+**Turnstile widget'ı ve teslim hatası (12/12, Cloudflare TEST anahtarlarıyla, üretim derlemesi + sahte alıcı):** betik `challenges.cloudflare.com` komut dosyasının yalnızca son adımda yüklendiğini, katı CSP altında (strict-dynamic, nonce) hiçbir ihlal olmadan çalıştığını, POST'un token taşıdığını ve honeypot'un boş kaldığını, sunucunun token'ı Cloudflare'e doğrulatıp 200 döndüğünü, sahte webhook'un HMAC imzalı ve sunucu tarafında `high` sınıflı tek bir başvuru aldığını doğruladı. Alıcı kapatılınca form 502'yi bildirir, cevapları silmez ve cevapları içeren hazır bir `mailto:contact@syncflow.agency` önerir. Bu bir **entegrasyon** denemesidir; gerçek alan adı, gerçek anahtar ve gerçek posta kutusu doğrulaması değildir.
+
 HTTP duman testi: **107/107** (üretim, yalnızca `en,tr` yayında, sahte webhook, Cloudflare'in her zaman geçen test gizli anahtarıyla gerçek `siteverify` çağrısı) ve **91/91** (geliştirme sunucusu, yedi dil, webhook yok).
 
 ## 4. Sınırlar ve dürüst notlar
 
-- **Doğrulanmayanlar:** 120 Hz ekran; gerçek telefon (iPhone, orta segment Android); Safari/Firefox; canlı alan adında PageSpeed/CrUX; gerçek e-posta teslimi ve gerçek Turnstile widget'ı (anahtarlar verilmedi); ekran okuyucu ile elle deneme; Lighthouse dışı erişilebilirlik denetimi (axe-core Lighthouse içinde çalıştı, ayrı bir WCAG incelemesi yapılmadı).
+- **Doğrulanmayanlar:** 120 Hz ekran; gerçek telefon (iPhone, orta segment Android); Safari/Firefox; canlı alan adında PageSpeed/CrUX; gerçek e-posta teslimi ve **kendi** Turnstile anahtarlarınızla widget (anahtarlar verilmedi; widget yalnızca Cloudflare'in her zaman geçen TEST anahtarıyla denendi, bkz. §3); ekran okuyucu ile elle deneme; Lighthouse dışı erişilebilirlik denetimi (axe-core Lighthouse içinde çalıştı, ayrı bir WCAG incelemesi yapılmadı).
 - **Mobil LCP ve TBT hedeflerin gerisinde kaldı;** bunlar yayınlanan sayılar arasında "mobil performans 93" olarak dürüstçe yer alır, LCP mobil için yayınlanmaz.
 - Yerel `next start` HTTP/1.1 ve gzip sunar; canlıda (HTTP/2, Brotli) doğrulama PageSpeed Insights ile yapılmalıdır.
 - Ölçüm sayfa içeriği değişince bayatlar: görsel bir değişiklikten sonra `npm run perf` yinelenmeli ve `lib/metrics.ts` güncellenmelidir (denetim yalnızca tarih, profil ve kaynağın varlığını kontrol eder, değerlerin güncelliğini değil).
