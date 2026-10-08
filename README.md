@@ -1,13 +1,13 @@
 # syncflow.agency
 
 Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)) üzerinde B1/v2 marka sistemi ([ADR 0007](docs/adr/0007-tokens-and-brand.md)): obsidian zemin, platin metin, Instrument Sans, çizili logo.
-**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (7 dil) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · Remotion ile önceden render edilmiş sahne videoları · nonce tabanlı CSP (şimdilik report-only)**
+**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (TR + EN yayında, yedi dillik altyapı uykuda) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · Remotion ile önceden render edilmiş sahne videoları · nonce tabanlı CSP (şimdilik report-only)**
 
 | | |
 |---|---|
-| Diller | `en` (varsayılan, `/`), `tr`, `de`, `fr`, `es`, `ar` (sağdan sola), `ja`. **Üretimde yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` yayınlanır (varsayılan `en,tr`)**; `de fr es ar ja` taslak çeviridir, geliştirmede açık, canlıda kapalıdır ([ADR 0002](docs/adr/0002-launch-locales-and-market.md), [0006](docs/adr/0006-blueprint-adopted.md)) |
+| Diller | **Türkçe ve İngilizce** (`en` varsayılan `/`, `tr`). Her ortamda yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`) yayınlanır, geliştirme sunucusu dahil. `de fr es ar ja` (Arapça sağdan sola) **uykuda taslak** çeviridir: altyapı ve dosyalar durur, hiçbir yerde bağlantı verilmez, yalnızca `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile okunur. Sitede yedi dil iddiası yoktur ([ADR 0009](docs/adr/0009-niche-and-languages.md), [0002](docs/adr/0002-launch-locales-and-market.md)) |
 | Satış akışı | Başvuru bazlı: ana sayfadaki 4 adımlı **Strategic Briefing** → `/api/briefing` → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. Ödeme ve fiyat yok |
-| Bölümler | Hero · Mimari (3 Border Beam kartı) · Vitrin (3 konsept video, yatay `scroll-snap` şerit) · Küresel erişim (SVG küre, 7 dil) · Briefing · Kapanış ve footer |
+| Bölümler | Hero · Mimari (3 Border Beam kartı) · Vitrin (kilitli üç sektör: Lüks Gayrimenkul, Özel Klinik, Kurumsal Hukuk ve Danışmanlık; 3 konsept video, yatay `scroll-snap` şerit) · Briefing · Kapanış ve footer |
 | Güvenlik | HSTS, CSP (nonce + strict-dynamic, **report-only**; üçüncü taraf yalnızca Cloudflare Turnstile), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, honeypot, sunucuya özel sırlar |
 
 > **Bu proje OneDrive / Masaüstü dışında durmalı.** `node_modules` ve `.next` on binlerce dosya içerir; OneDrive senkronu, Türkçe karakterli/boşluklu yollar ve Windows'un 260 karakter sınırı kurulumu ve Remotion'u bozar. Şu an `C:\Users\YAKUP\syncflow-agency` altında.
@@ -20,7 +20,7 @@ Gereksinim: **Node ≥ 20.19** (Node 24 ile test edildi), npm.
 
 ```bash
 npm install
-npm run dev                 # http://localhost:3000  (geliştirme, Turbopack; yedi dil de açık)
+npm run dev                 # http://localhost:3000  (geliştirme, Turbopack; yalnızca TR ve EN)
 
 npm run build && npm start  # üretim derlemesi + sunucu (önizleme için bunu kullanın; yalnızca en,tr yayında)
 ```
@@ -30,7 +30,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | Komut | Ne yapar |
 |---|---|
 | `npm run check` | Çeviri eşitliği + TypeScript + ESLint |
-| `npm run check:messages` | Her dilde anahtar/yer tutucu/etiket eşitliği; taslak dillerde `Legal.*` aranmaz (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
+| `npm run check:messages` | `en` ve `tr` anahtar/yer tutucu/etiket eşitliği; uykudaki taslak diller geride kalabilir (sayılır), fazlalık anahtar ya da bozuk yer tutucu hata (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
 | `npm run brand:build` / `brand:check` | `brand/*.svg` marka paketinden `lib/brand-paths.ts`, `app/icon.svg`, `app/apple-icon.png`, `public/brand/logo-512.png` üretir; `brand:check` eskimiş dosya varsa hata verir (denetim de çalıştırır) |
 | `npm run check:fonts` | Latin yazılı dillerdeki (en tr de fr es) her karakter Instrument Sans dosyalarında var mı (Python + `pip install fonttools brotli`; AR ve JA kasıtlı sistem yazı tipidir, `⌘ ✓` simgeleri açık istisnadır). Dosyaları yeniden üretmek: `python scripts/build-fonts.py "InstrumentSans[wdth,wght].ttf"` |
 | `node faz2-denetim.mjs --build` | **Aşama kapısı**: bağımlılıklar, tasarım belirteçleri, i18n, güvenlik, sahne videoları, hareket, doğrulanmamış iddia yasağı, ardından `npm run build` ve ilk yük paket denetimi |
@@ -48,7 +48,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 ```
 app/
   [locale]/layout.tsx      <html lang dir>, metadata (hreflang yalnızca yayındaki dillere), CSP nonce, dil kapısı (kapalı dil 404)
-  [locale]/page.tsx        ana sayfa: Hero · Architecture · Showcase · Reach · BriefingSection · Closing
+  [locale]/page.tsx        ana sayfa: Hero · Architecture · Showcase · BriefingSection · Closing
   [locale]/privacy|imprint yasal sayfa taslakları (noindex; EN/TR dışında İngilizce metin + uyarı)
   api/briefing/route.ts    Strategic Briefing API'si (Node runtime)
   api/csp-report/route.ts  CSP ihlal raporları alıcısı (204; sunucu günlüğüne rapor başına tek satır JSON)
@@ -57,18 +57,17 @@ app/
   robots.ts · sitemap.ts · manifest.ts · icon.svg
 components/
   layout/    Header · Footer · StickyCta · LanguageSwitcher(client)
-  sections/  Hero · Architecture · Showcase + ShowcaseStrip(client) · Reach + ReachInteractive(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
+  sections/  Hero · Architecture · Showcase + ShowcaseStrip(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
   media/     SceneVideo(client): poster + önceden render edilmiş video, ekran dışında durur
   i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead
 lib/
   briefing.ts      seçenekler, sınırlar, zod'suz tarayıcı doğrulayıcı, sınıflandırma (tarayıcı + sunucu)
   metrics.ts       sitede yayınlanan TÜM performans sayıları (değer, tarih, profil, kaynak)
-  reach.ts         yedi dilli cümle ve SVG küre geometrisi
   schemas/briefing.ts (zod, strict)    server/ deliver.ts · turnstile.ts · sanitize.ts (server-only)    security/ csp.ts · rate-limit.ts
   enhance/  ui-state (üstbilgi, mobil yapışkan CTA, ekran dışında durdurma) · spotlight · magnetic · rings · reveal (Motion) · smooth-scroll (Lenis)
   motion/   tokens · ease      merge-messages.ts (taslak dillerde eksik metin İngilizceden)    i18n-paths.ts
 messages/   en tr de fr es ar ja (.json)
-i18n/       routing.ts (7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
+i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
 docs/       adr/ (mimari kararlar 0001–0006) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
 public/     fonts/ Instrument Sans alt kümeleri (OFL)   media/clips/ render edilmiş sahneler   brand/logo-512.png
@@ -123,8 +122,8 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 ## 4. Yerelleştirme (i18n) ve küresel SEO
 
 - **Yedi dil:** `i18n/routing.ts` (`localePrefix: 'as-needed'`): EN `/`, diğerleri `/xx`. Dili **yalnızca URL** belirler: çerez yok, tarayıcı diline göre yönlendirme yok ([ADR 0002](docs/adr/0002-launch-locales-and-market.md)).
-- **Hangi diller yayında:** tek kaynak `i18n/launch.ts`. Üretimde `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`) dışındaki dil 404 verir; geliştirmede ve `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile yedisi açıktır. `hreflang`, `x-default`, `og:locale` + `alternateLocale`, sitemap, JSON-LD (`inLanguage`), dil seçici, footer ve "Küresel erişim" bağlantıları **yalnızca bu listeden** türer (denetim ve duman testi kapalı dilin sızmadığını doğrular). Bir dili yayına almak: kodunu listeye eklemek ve yeniden derlemek, ama önce yerel çeviri ve hukuk incelemesi.
-- **Taslak diller** (`de fr es ar ja`): `messages/xx.json` yalnızca çevrilebilir metni taşır; eksik anahtar (hukuk sayfaları) İngilizceden tamamlanır (`lib/merge-messages.ts`) ve sayfada bunu söyleyen bir satır çıkar. Çeviriler bu oturumda yazılmış **taslaktır**; yerel konuşur ve avukat onayı olmadan yayına alınmamalıdır (sağlık ve hukuk ifadeleri ülkeye göre değişir, örn. Almanya'da HWG).
+- **Hangi diller yayında:** tek kaynak `i18n/launch.ts`. Her ortamda `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`) dışındaki dil 404 verir (geliştirme sunucusu dahil); yedisi yalnızca `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile açılır. `hreflang`, `x-default`, `og:locale` + `alternateLocale`, sitemap, JSON-LD (`inLanguage`), dil seçici ve footer'ın dil sütunu **yalnızca bu listeden** türer (denetim ve duman testi kapalı dilin sızmadığını doğrular). Bir dili yayına almak: kodunu listeye eklemek ve yeniden derlemek, ama önce yerel çeviri ve hukuk incelemesi.
+- **Uykudaki taslak diller** (`de fr es ar ja`): `messages/xx.json` İngilizce'den geride kalabilir; eksik anahtar (hukuk sayfaları ve sonradan değişen metinler) İngilizceden tamamlanır (`lib/merge-messages.ts`) ve sayfada bunu söyleyen bir satır çıkar. Çeviriler bu oturumda yazılmış **taslaktır**; yerel konuşur ve avukat onayı olmadan yayına alınmamalıdır (sağlık ve hukuk ifadeleri ülkeye göre değişir, örn. Almanya'da HWG).
 - **Arapça (RTL):** `<html lang="ar" dir="rtl">`; tüm yerleşim mantıksal özelliklerle aynalanır (üstbilgi, düğme okları, şerit sırası, ilerleme çizgisi, odak ve menü yönü); yönlü oklar `.icon-dir` ile aynalanır; harf aralığı sıfırlanır (bitişik harfler kopmasın); maske payı Arapça ve Japonca için büyütülür; Latin adlar (`syncflow.agency`, e-posta) `dir="ltr"` taşır; çerçevesiz honeypot `start-[-9999px]` ile konur (RTL'de `left:-9999px` 9999 px'lik yatay kaydırma doğururdu).
 - **Yazı tipleri:** Latin ve Türkçe Instrument Sans (OFL, `scripts/build-fonts.py`). Almanca, Fransızca, İspanyolca Latin-1 kapsamında. **Arapça ve Japonca sistem yazı tipi yığınlarıyla** (Segoe UI/Tahoma/Geeza Pro; Yu Gothic/Hiragino/Noto): sıfır bayt maliyeti, ama marka tutarlılığı sistemin yazı tipine bağlıdır. Bu diller yayına alınırken özel bir OFL yığını seçilmelidir (CLAUDE.md). `/og` paylaşım kartı AR ve JA'da İngilizce metinle çizilir (yazı tipinde glif yok); `og:title` ve `og:description` kendi dillerindedir.
 - **Para birimi/tarih:** fiyat yayınlanmaz; tarihler `Intl.DateTimeFormat`, sayılar `Intl.NumberFormat` ile sunucuda dilin kuralına göre biçimlenir.
@@ -254,6 +253,20 @@ Ayrıntı: [docs/perf/faz2b1.md](docs/perf/faz2b1.md), karar: [ADR 0007](docs/ad
 | `npm run build` | çıkış 0 (tip denetimi dahil) |
 
 **Doğrulanmayanlar:** **mobil Lighthouse bu sürüm için ölçülmedi** (yarım kalan üç koşu 69–73 verdi ama makine meşguldü ve mobil A/B denemesi benim bir araç hatam yüzünden sonuç vermedi; gerileme mi gürültü mü ayırt edilemiyor). Yayındaki "mobil performans" sayısı bu yüzden "ölçülecek"e çekildi; boş bir makinede `npm run perf` ile yeniden ölçülmeli. Kare ritmi Faz 4 sürümünden. Marka sorgusu (Türkpatent) bitmedi.
+
+### 2B-2 Niş ve Dil (08.10.2026, `faz_2b2` dalı)
+
+Ayrıntı: [docs/perf/faz2b2.md](docs/perf/faz2b2.md), karar: [ADR 0009](docs/adr/0009-niche-and-languages.md).
+
+| Denetim | Sonuç |
+|---|---|
+| Tarayıcı testi (2B-2, `puppeteer-core`; betik depoda yok) | **31/31**: üç bağlantılı menü, Reach bölümü yok, hero şeridi üç ölçülmüş değer, tam üç vitrin kartı, hukuk videosu üzerine gelince oynar ve çıkınca durur, footer yalnızca English ve Türkçe, dil menüsü iki dil, sayfada SaaS ve çok dilli iddia yok, JSON-LD'de `areaServed` yok, `/de /fr /es /ar /ja` her ortamda 404, briefing'de `projectType: "law"` uçtan uca |
+| Tarayıcı testi (2B-1, gerileme) | **32/32** (palet, yazı tipi, hap/etiket, logo, ikon, klip köşeleri; `law` klibi dahil) |
+| `npm run smoke` | **109/109** üretimde (üç sektör, Reach yok ve çok dilli iddia yok kontrolleri eklendi) |
+| `node faz2-denetim.mjs --build` | bkz. docs/perf/faz2b2.md; yeni kapılar: sektör kilidi, SaaS izi, yedi dil iddiası, `areaServed`, geliştirmede yedi dil, yeni klip listesi (beş ihlal bozulmuş kopyada ayrı ayrı yakalandı) |
+| `npm run build` | çıkış 0 (tip denetimi dahil) |
+
+**Doğrulanmayanlar:** hiçbir Lighthouse ya da performans ölçümü yapılmadı (sahibinin talimatı); **mobil performans hâlâ "ölçülecek"**, masaüstü sayıları 2B-1 sürümünündür. Hukuki sayfalar yer tutuculu taslaktır (K7). 2B-3 ve 2B-4 yapılmadı.
 
 ## 12. Üçüncü taraf lisanslar
 

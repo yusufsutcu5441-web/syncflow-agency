@@ -8,8 +8,8 @@ import { Logo } from '@/components/ui/Logo';
 import { SECTION_IDS } from '@/lib/site';
 
 /**
- * Blueprint footer: four information columns (Studio, Showcase, Reach, Legal), a thin glass line with the legal row,
- * and the studio's drawn wordmark (brand/, B1/v2) set enormous at 6 % opacity across the page end. Reach lists only the languages that are
+ * Blueprint footer: four information columns (Studio, Showcase, Languages, Legal), a thin glass line with the legal row,
+ * and the studio's drawn wordmark (brand/, B1/v2) set enormous at 6 % opacity across the page end. Languages lists only the languages that are
  * public (i18n/launch.ts), as plain crawlable links.
  */
 export async function Footer() {
@@ -62,15 +62,15 @@ export async function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href={here('show-saas')} prefetch={false} className={linkClass}>
-                  {t('saas')}
+                <Link href={here('show-law')} prefetch={false} className={linkClass}>
+                  {t('law')}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <p className="label">{t('reach')}</p>
+            <p className="label">{t('languages')}</p>
             <ul className="mt-5 grid gap-3">
               {OPEN_LOCALES.map((code) => (
                 <li key={code}>

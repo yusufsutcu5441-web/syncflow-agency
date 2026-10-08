@@ -18,7 +18,6 @@
   "Nav": {
     "architecture": "Architecture",
     "showcase": "Vitrine",
-    "reach": "Portée",
     "briefing": "Briefing"
   },
   "Header": {
@@ -34,8 +33,6 @@
     "scroll": "Défiler",
     "metricPerformance": "Performance Lighthouse, bureau",
     "metricCls": "Décalage de mise en page (CLS), bureau",
-    "metricLanguages": "langues, un seul standard",
-    "metricLanguagesValue": "7",
     "pending": "à mesurer",
     "measured": "Mesuré le {date} · {tool} · {profile}"
   },
@@ -84,7 +81,6 @@
     "estate": {
       "tag": "Immobilier",
       "title": "Pas un bien. Une scène de vie.",
-      "text": "Un penthouse avec vue sur le Bosphore ne s’achète pas sur un écran ; il se ressent. Des séquences d’entrée cinématographiques, une simulation interactive de la lumière du jour sur les plans, et des demandes qualifiées qui arrivent directement à votre équipe commerciale.",
       "overlay": "Prix sur demande",
       "videoLabel": "Une villa à façade vitrée au crépuscule, la caméra avance lentement"
     },
@@ -94,33 +90,6 @@
       "text": "Pour les cliniques de chirurgie esthétique, de dentisterie ou de longévité : un accueil numérique calme, stérile et haut de gamme. Des profils de praticiens et un parcours de rendez-vous guident votre patient sans l’effrayer.",
       "overlay": "Réserver une consultation privée",
       "videoLabel": "Un couloir de clinique pâle au ralenti, une lumière douce glisse le long du plafond"
-    },
-    "saas": {
-      "tag": "SaaS et produit",
-      "title": "Votre produit doit être expliqué avant le site.",
-      "text": "Nous rendons un produit complexe compréhensible d’un coup d’œil. Des simulations d’interface en direct, des visites de produit pilotées par le défilement et une architecture tarifaire conçue pour soutenir les demandes de démo.",
-      "overlay": "⌘K",
-      "videoLabel": "Un tableau de bord sombre : des graphiques défilent, une palette de commandes s’ouvre, des lignes de données se remplissent"
-    }
-  },
-  "Reach": {
-    "label": "03 — Portée mondiale",
-    "title": "Votre marque, dans chaque langue qu’elle mérite.",
-    "subtitle": "Nous ne traduisons pas, nous localisons. La typographie, le sens de lecture, le ton et le rythme culturel sont reconstruits pour chaque langue : une architecture qui se lit de droite à gauche en arabe, une typographie dense mais aérée en japonais.",
-    "sentenceLabel": "Une phrase, sept langues",
-    "tags": "hreflang · RTL natif · typographie CJK · formats adaptés à la langue",
-    "globeLabel": "Dessin au trait d’un globe avec sept villes : Istanbul, Londres, Berlin, Paris, Madrid, Dubaï et Tokyo",
-    "chipsLabel": "Choisissez une langue pour lire la phrase dans cette langue",
-    "draft": "Traduction provisoire, pas encore publique",
-    "open": "Ouvrir le site dans cette langue",
-    "cities": {
-      "istanbul": "Istanbul",
-      "london": "Londres",
-      "berlin": "Berlin",
-      "paris": "Paris",
-      "madrid": "Madrid",
-      "dubai": "Dubaï",
-      "tokyo": "Tokyo"
     }
   },
   "Briefing": {
@@ -143,8 +112,6 @@
       "showcaseDesc": "Une expérience cinématographique, une seule histoire",
       "platform": "Plateforme immobilière ou de clinique",
       "platformDesc": "Architecture multipage orientée demande",
-      "saas": "Site produit SaaS",
-      "saasDesc": "Pensé pour les démos et la conversion",
       "unsure": "Pas encore sûr",
       "unsureDesc": "Définissons-le ensemble"
     },
@@ -239,8 +206,6 @@
     "showcase": "Vitrine",
     "realEstate": "Immobilier",
     "clinics": "Cliniques privées",
-    "saas": "SaaS",
-    "reach": "Portée",
     "legal": "Informations légales",
     "privacy": "Confidentialité",
     "imprint": "Mentions légales",

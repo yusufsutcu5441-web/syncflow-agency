@@ -23,15 +23,15 @@ const SOURCE = 'en';
 const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
 const locales = files.map((f) => f.replace(/\.json$/, ''));
 /**
- * Draft languages (docs/adr/0006): a native translation and a legal review are still pending. They may leave the legal
- * pages out (those fall back to the English text, lib/merge-messages.ts), but nothing else, and they may not add keys.
+ * Draft languages (docs/adr/0006, 0009): dormant, not public (the site is Turkish and English). They may lag behind English: a
+ * key they lack falls back to the English text (lib/merge-messages.ts), and the lag is only counted here. They may not add keys,
+ * and a translation they do carry must keep its placeholders and tags.
  */
 const DRAFT = new Set(['de', 'fr', 'es', 'ar', 'ja']);
 
 /** Same in every language on purpose. Compared after trimming. */
 const SAME_OK = new Set([
   'syncflow.agency',
-  'SaaS',
   'SEO',
   'Briefing',
   'Studio',
@@ -75,6 +75,8 @@ const SAME_OK = new Set([
 const verbose = process.argv.includes('--verbose');
 const errors = [];
 const warnings = [];
+/** Keys a dormant draft language does not carry yet (they fall back to English), per language. */
+const lagging = new Map();
 /** Launch placeholders are expected until the legal pages are filled in: counted, not listed one by one. */
 const placeholderKeys = new Map();
 
@@ -115,7 +117,10 @@ for (const locale of locales) {
 
   for (const key of Object.keys(enFlat)) {
     if (DRAFT.has(locale) && key.startsWith('Legal.')) continue;
-    if (!(key in flat)) errors.push(`${locale}: missing key ${key}`);
+    if (!(key in flat)) {
+      if (DRAFT.has(locale)) lagging.set(locale, (lagging.get(locale) ?? 0) + 1);
+      else errors.push(`${locale}: missing key ${key}`);
+    }
   }
   for (const key of Object.keys(flat)) {
     if (!(key in enFlat)) errors.push(`${locale}: extra key ${key}`);
@@ -150,7 +155,8 @@ for (const locale of locales) {
 }
 
 const total = Object.keys(enFlat).length;
-console.log(`messages: ${locales.length} locales (${locales.join(', ')}), ${total} keys each (draft languages: all but Legal.*)`);
+console.log(`messages: ${locales.length} locales (${locales.join(', ')}), ${total} keys in English and Turkish`);
+if (lagging.size) console.log(`  draft languages lag behind English (fall back to it, not public): ${[...lagging].map(([l, n]) => `${l} ${n}`).join(', ')} keys`);
 for (const w of warnings) console.log(`  warn  ${w}`);
 if (verbose) for (const m of placeholderKeys.keys()) console.log(`  todo  ${m}`);
 for (const e of errors) console.log(`  ERROR ${e}`);
@@ -160,5 +166,5 @@ if (errors.length) {
   process.exit(1);
 }
 const todo = placeholderKeys.size;
-console.log(`\nOK: key trees, placeholders and tags match in every locale. ${warnings.length} warning(s).`);
+console.log(`\nOK: key trees of en and tr match, drafts add no keys, placeholders and tags match everywhere. ${warnings.length} warning(s).`);
 if (todo) console.log(`TODO before launch: ${todo} legal strings still contain [BRACKETED] placeholders (list them with --verbose; --strict fails on them).`);

@@ -4,7 +4,6 @@ import { Architecture } from '@/components/sections/Architecture';
 import { BriefingSection } from '@/components/sections/BriefingSection';
 import { Closing } from '@/components/sections/Closing';
 import { Hero } from '@/components/sections/Hero';
-import { Reach } from '@/components/sections/Reach';
 import { Showcase } from '@/components/sections/Showcase';
 import { isOpenLocale } from '@/i18n/launch';
 import { buildJsonLd, jsonLdString } from '@/lib/jsonld';
@@ -23,7 +22,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <Hero />
         <Architecture />
         <Showcase />
-        <Reach />
         <BriefingSection />
         <Closing />
       </main>

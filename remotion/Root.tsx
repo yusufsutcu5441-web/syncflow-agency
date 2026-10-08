@@ -3,8 +3,8 @@ import { CLIP_FRAMES, CLIPS, FPS, SIZE, type ClipName } from './config';
 import { loadFonts } from './fonts';
 import { Clinic } from './scenes/Clinic';
 import { Estate } from './scenes/Estate';
+import { Law } from './scenes/Law';
 import { Monolith } from './scenes/Monolith';
-import { Saas } from './scenes/Saas';
 
 /**
  * The scene videos, registered for the Remotion CLI. They are NOT part of the website bundle: the site plays the
@@ -15,7 +15,7 @@ const SCENES: Record<ClipName, () => React.JSX.Element> = {
   monolith: Monolith,
   estate: Estate,
   clinic: Clinic,
-  saas: Saas,
+  law: Law,
 };
 
 loadFonts();

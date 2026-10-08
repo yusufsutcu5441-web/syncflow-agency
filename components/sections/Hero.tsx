@@ -18,13 +18,14 @@ export async function Hero() {
 
   const performance = METRICS.lighthousePerformance;
   const cls = METRICS.cls;
+  const lcp = METRICS.lcpDesktop;
   const measuredAt = performance.measuredAt;
   const value = (n: number | null, digits = 0) => (n === null ? t('pending') : format.number(n, { minimumFractionDigits: digits, maximumFractionDigits: digits }));
 
   const strip = [
     [value(performance.value), t('metricPerformance')],
     [value(cls.value, 2), t('metricCls')],
-    [t('metricLanguagesValue'), t('metricLanguages')],
+    [lcp.value === null ? t('pending') : `${value(lcp.value / 1000, 1)} s`, t('metricLcp')],
   ] as const;
 
   return (

@@ -12,7 +12,7 @@ import { ShowcaseStrip } from './ShowcaseStrip';
 const CARDS = [
   { key: 'estate', id: 'show-estate', overlay: 'start-4 top-4' },
   { key: 'clinic', id: 'show-clinic', overlay: 'start-4 bottom-4' },
-  { key: 'saas', id: 'show-saas', overlay: 'start-4 bottom-4' },
+  { key: 'law', id: 'show-law', overlay: 'start-4 bottom-4' },
 ] as const;
 
 /**

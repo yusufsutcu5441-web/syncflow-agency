@@ -8,7 +8,7 @@
  * priority class is computed again on the server; what the browser sends about it is never trusted.
  */
 
-export const PROJECT_TYPES = ['showcase', 'platform', 'saas', 'unsure'] as const;
+export const PROJECT_TYPES = ['showcase', 'platform', 'law', 'unsure'] as const;
 /** b5 = $5k-$10k (below the $10,000 floor of CLAUDE.md, class "low"), b10 = $10k-$20k, b20 = $20k+, talk = "let's talk first". */
 export const BUDGETS = ['b5', 'b10', 'b20', 'talk'] as const;
 export const TIMELINES = ['w4', 'w6', 'w10', 'flex'] as const;

@@ -18,7 +18,6 @@
   "Nav": {
     "architecture": "Architektur",
     "showcase": "Showcase",
-    "reach": "Reichweite",
     "briefing": "Briefing"
   },
   "Header": {
@@ -34,8 +33,6 @@
     "scroll": "Scrollen",
     "metricPerformance": "Lighthouse-Performance, Desktop",
     "metricCls": "Layoutverschiebung (CLS), Desktop",
-    "metricLanguages": "Sprachen, ein Standard",
-    "metricLanguagesValue": "7",
     "pending": "wird gemessen",
     "measured": "Gemessen {date} · {tool} · {profile}"
   },
@@ -84,7 +81,6 @@
     "estate": {
       "tag": "Immobilien",
       "title": "Keine Immobilie. Eine Bühne zum Leben.",
-      "text": "Ein Penthouse mit Blick auf den Bosporus kauft man nicht am Bildschirm; man spürt es. Filmische Eingangssequenzen, interaktive Tageslichtsimulation in Grundrissen und qualifizierte Anfragen, die direkt bei Ihrem Vertrieb landen.",
       "overlay": "Preis auf Anfrage",
       "videoLabel": "Eine Villa mit Glasfassade in der Dämmerung, die Kamera fährt langsam heran"
     },
@@ -94,33 +90,6 @@
       "text": "Für Kliniken der ästhetischen Chirurgie, Zahnmedizin oder Longevity: ein ruhiger, steriler, hochwertiger digitaler Empfang. Arztprofile und ein Terminablauf führen Ihre Patientinnen und Patienten, ohne sie zu verunsichern.",
       "overlay": "Privaten Beratungstermin buchen",
       "videoLabel": "Ein heller Klinikflur in Zeitlupe, weiches Licht wandert an der Decke entlang"
-    },
-    "saas": {
-      "tag": "SaaS & Produkt",
-      "title": "Ihr Produkt sollte vor der Website erklärt werden.",
-      "text": "Wir machen ein komplexes Produkt auf einen Blick verständlich. Live-Oberflächensimulationen, scrollgesteuerte Produkttouren und eine Preisarchitektur, die Demo-Anfragen unterstützen soll.",
-      "overlay": "⌘K",
-      "videoLabel": "Ein dunkles Dashboard: Diagramme fließen, eine Befehlspalette öffnet sich, Datenzeilen füllen sich"
-    }
-  },
-  "Reach": {
-    "label": "03 — Globale Reichweite",
-    "title": "Ihre Marke, in jeder Sprache, die sie verdient.",
-    "subtitle": "Wir übersetzen nicht, wir lokalisieren. Typografie, Leserichtung, Ton und kultureller Rhythmus werden für jede Sprache neu aufgebaut: eine Architektur, die im Arabischen von rechts nach links läuft, eine Typografie, die im Japanischen dicht und doch atmend ist.",
-    "sentenceLabel": "Ein Satz, sieben Sprachen",
-    "tags": "hreflang · RTL-nativ · CJK-Typografie · Lokalisierte Formatierung",
-    "globeLabel": "Linienzeichnung eines Globus mit sieben Städtepunkten: Istanbul, London, Berlin, Paris, Madrid, Dubai und Tokio",
-    "chipsLabel": "Wählen Sie eine Sprache, um den Satz in ihr zu lesen",
-    "draft": "Entwurf einer Übersetzung, noch nicht öffentlich",
-    "open": "Website in dieser Sprache öffnen",
-    "cities": {
-      "istanbul": "Istanbul",
-      "london": "London",
-      "berlin": "Berlin",
-      "paris": "Paris",
-      "madrid": "Madrid",
-      "dubai": "Dubai",
-      "tokyo": "Tokio"
     }
   },
   "Briefing": {
@@ -143,8 +112,6 @@
       "showcaseDesc": "Ein filmisches Erlebnis mit einer Geschichte",
       "platform": "Immobilien- oder Klinikplattform",
       "platformDesc": "Nachfrageorientierte, mehrseitige Architektur",
-      "saas": "SaaS-Produktwebsite",
-      "saasDesc": "Für Demos und Conversion gebaut",
       "unsure": "Noch nicht sicher",
       "unsureDesc": "Lassen Sie es uns gemeinsam klären"
     },
@@ -239,8 +206,6 @@
     "showcase": "Showcase",
     "realEstate": "Immobilien",
     "clinics": "Private Kliniken",
-    "saas": "SaaS",
-    "reach": "Reichweite",
     "legal": "Rechtliches",
     "privacy": "Datenschutz",
     "imprint": "Impressum",

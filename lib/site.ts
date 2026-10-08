@@ -22,6 +22,5 @@ export const SOCIAL = {
 export const SECTION_IDS = {
   architecture: 'architecture',
   showcase: 'showcase',
-  reach: 'reach',
   briefing: 'briefing',
 } as const;

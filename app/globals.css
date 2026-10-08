@@ -834,9 +834,8 @@ html[lang='ar'] ::after {
     opacity: 0.35;
     cursor: default;
   }
-  /* Choice and caption pills (language chips, role chips, video captions): one box, 13 px sans. */
+  /* Choice and caption pills (role chips, video captions): one box, 13 px sans. */
   .overlay-chip,
-  .reach-chip,
   .role-chip span {
     display: inline-block;
     padding: 0.45rem 1rem;
@@ -852,84 +851,6 @@ html[lang='ar'] ::after {
     border-color: var(--color-hairline-strong);
     background: rgb(13 13 14 / 0.5);
     color: var(--color-ink);
-  }
-
-  /* ── Reach ─────────────────────────────────────────────────────────────────── */
-  /* The globe sits in the middle 70 % of a square; the seven chips ride a circle (46 % of the width) around it. */
-  .reach-orbit {
-    position: relative;
-    container-type: inline-size;
-    width: min(100%, 38rem);
-    aspect-ratio: 1;
-    margin-inline: auto;
-  }
-  .reach-orbit > svg {
-    position: absolute;
-    inset: 15%;
-    width: 70%;
-    height: 70%;
-  }
-  .reach-chips {
-    position: absolute;
-    inset: 0;
-    --r: 45cqw;
-  }
-  .city-dot {
-    fill: var(--color-ink);
-    animation: city-glow 7s ease-in-out infinite;
-    animation-delay: calc(var(--n) * 1s);
-    opacity: 0.25;
-  }
-  .reach-chip {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(var(--r) * -1)) rotate(calc(var(--a) * -1));
-    background: var(--color-obsidian);
-    color: var(--color-muted);
-    cursor: pointer;
-    transition:
-      border-color 0.25s ease,
-      color 0.25s ease;
-  }
-  .reach-chip[aria-pressed='true'],
-  .reach-chip[aria-current='true'] {
-    border-color: var(--color-ink);
-    color: var(--color-ink);
-  }
-  @media (hover: hover) {
-    .reach-chip:hover {
-      border-color: var(--color-hairline-strong);
-      color: var(--color-ink);
-    }
-  }
-  /* On a phone there is no room for an orbit: the globe on top, the chips wrap below it. */
-  @media (max-width: 40rem) {
-    .reach-orbit {
-      aspect-ratio: auto;
-      container-type: normal;
-    }
-    .reach-orbit > svg {
-      position: static;
-      width: 100%;
-      height: auto;
-      aspect-ratio: 1;
-    }
-    .reach-chips {
-      position: static;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-top: 1.25rem;
-    }
-    .reach-chip {
-      position: static;
-      transform: none;
-    }
-  }
-  .reach-sentence {
-    transition: opacity 0.3s ease;
   }
 
   /* ── Briefing ──────────────────────────────────────────────────────────────── */
@@ -1241,16 +1162,6 @@ html.lenis body {
     transform: translateY(260%);
   }
 }
-@keyframes city-glow {
-  0%,
-  10%,
-  100% {
-    opacity: 0.25;
-  }
-  4% {
-    opacity: 1;
-  }
-}
 @keyframes step-reveal {
   from {
     clip-path: inset(0 0 100% 0);
@@ -1292,10 +1203,6 @@ html.lenis body {
     scroll-behavior: auto !important;
   }
   .scroll-cue .rail::after {
-    animation: none;
-  }
-  .city-dot {
-    opacity: 1;
     animation: none;
   }
   .live-dot {

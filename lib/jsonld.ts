@@ -51,7 +51,6 @@ export function buildJsonLd({ locale, siteName, description }: Input) {
         url: pageUrl,
         description,
         image: `${SITE_URL}/brand/logo-512.png`,
-        areaServed: 'Worldwide',
         availableLanguage: languages,
         inLanguage: LOCALE_LABELS[locale].hreflang,
         provider: { '@id': orgId },

@@ -18,7 +18,6 @@
   "Nav": {
     "architecture": "Mimari",
     "showcase": "Vitrin",
-    "reach": "Erişim",
     "briefing": "Briefing"
   },
   "Header": {
@@ -34,8 +33,7 @@
     "scroll": "Kaydır",
     "metricPerformance": "Lighthouse performans, masaüstü",
     "metricCls": "Yerleşim kayması (CLS), masaüstü",
-    "metricLanguages": "dil, tek standart",
-    "metricLanguagesValue": "7",
+    "metricLcp": "En büyük içerik boyaması (LCP), masaüstü",
     "pending": "ölçülecek",
     "measured": "Ölçüm {date} · {tool} · {profile}"
   },
@@ -84,7 +82,7 @@
     "estate": {
       "tag": "Gayrimenkul",
       "title": "Bir mülk değil, bir yaşam sahnesi.",
-      "text": "Boğaz manzaralı bir penthouse ekrandan satın alınmaz; hissedilir. Sinematik giriş akışları, kat planlarında etkileşimli gün ışığı simülasyonu ve doğrudan satış ekibinize düşen nitelikli talepler.",
+      "text": "Boğaz manzaralı bir penthouse ekrandan satın alınmaz; hissedilir. Sinematik giriş akışları, kat planlarında etkileşimli gün ışığı simülasyonu ve doğrudan satış ekibinize ulaşan bir talep akışı.",
       "overlay": "Fiyat talep üzerine",
       "videoLabel": "Gün batımında cam cepheli bir villa, kamera yavaşça içeri giriyor"
     },
@@ -95,32 +93,12 @@
       "overlay": "Özel görüşme planlayın",
       "videoLabel": "Yavaş çekimde soluk bir klinik koridoru, tavanda gezinen yumuşak ışık"
     },
-    "saas": {
-      "tag": "SaaS ve ürün",
-      "title": "Ürününüz, siteden önce anlatılmalı.",
-      "text": "Karmaşık bir ürünü bir bakışta anlaşılır kılıyoruz. Canlı arayüz simülasyonları, kaydırmaya bağlı ürün turları ve demo taleplerini destekleyecek biçimde kurgulanmış fiyatlandırma mimarisi.",
-      "overlay": "⌘K",
-      "videoLabel": "Karanlık bir panel: grafikler akıyor, komut paleti açılıyor, veri satırları doluyor"
-    }
-  },
-  "Reach": {
-    "label": "03 — Küresel erişim",
-    "title": "Markanız, hak ettiği her dilde.",
-    "subtitle": "Çeviri yapmıyoruz; yerelleştiriyoruz. Her dil için tipografi, okuma yönü, ton ve kültürel ritim baştan kurgulanır: Arapçada sağdan sola akan bir mimari, Japoncada yoğun ama nefes alan bir tipografi.",
-    "sentenceLabel": "Tek cümle, yedi dil",
-    "tags": "hreflang · RTL-yerel · CJK tipografisi · Yerele duyarlı biçimlendirme",
-    "globeLabel": "İstanbul, Londra, Berlin, Paris, Madrid, Dubai ve Tokyo olmak üzere yedi şehir noktalı, çizgilerle çizilmiş bir dünya küresi",
-    "chipsLabel": "Cümleyi o dilde okumak için bir dil seçin",
-    "draft": "Taslak çeviri, henüz yayında değil",
-    "open": "Siteyi bu dilde aç",
-    "cities": {
-      "istanbul": "İstanbul",
-      "london": "Londra",
-      "berlin": "Berlin",
-      "paris": "Paris",
-      "madrid": "Madrid",
-      "dubai": "Dubai",
-      "tokyo": "Tokyo"
+    "law": {
+      "tag": "Kurumsal hukuk ve danışmanlık",
+      "title": "Müvekkilin ilk okuduğu şey, ölçülülüktür.",
+      "text": "Hukuk büroları ve danışmanlık yapıları için: ölçülü, kesin bir dijital varlık. Çalışma alanı ve ortak sayfaları, gizliliği gözeten bir başvuru akışı ve her kelimesini sizin onayladığınız bir yapı; çünkü avukatlara özgü reklam kurallarını uygulamak sizin sorumluluğunuzdadır.",
+      "overlay": "Gizli başvuru",
+      "videoLabel": "Aydınlık bir kapıya uzanan karanlık bir sütunlu koridor, kamera yavaşça ilerliyor"
     }
   },
   "Briefing": {
@@ -143,8 +121,8 @@
       "showcaseDesc": "Sinematik, tek hikâyeli deneyim",
       "platform": "Gayrimenkul veya klinik platformu",
       "platformDesc": "Talep odaklı, çok sayfalı mimari",
-      "saas": "SaaS ürün sitesi",
-      "saasDesc": "Demo ve dönüşüm odaklı",
+      "law": "Hukuk bürosu veya danışmanlık sitesi",
+      "lawDesc": "Ölçülü, kesin, yapı odaklı",
       "unsure": "Henüz emin değilim",
       "unsureDesc": "Birlikte netleştirelim"
     },
@@ -239,8 +217,8 @@
     "showcase": "Vitrin",
     "realEstate": "Gayrimenkul",
     "clinics": "Özel klinikler",
-    "saas": "SaaS",
-    "reach": "Erişim",
+    "law": "Kurumsal hukuk",
+    "languages": "Diller",
     "legal": "Hukuki",
     "privacy": "Gizlilik",
     "imprint": "Künye",
