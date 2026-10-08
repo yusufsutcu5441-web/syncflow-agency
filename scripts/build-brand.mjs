@@ -64,10 +64,19 @@ const outputs = [
   ['public/brand/logo-512.png', await sharp(Buffer.from(square), { density: 1536 }).resize(512, 512).png({ compressionLevel: 9 }).toBuffer()],
 ];
 
+// Text outputs are compared with CRLF folded to LF, and are always written with LF. On Windows git (core.autocrlf=true) checks the
+// files out with CRLF while this script writes LF, so a byte-exact comparison called every fresh checkout stale. A file that
+// differs only in its line endings counts as up to date and is left alone; any other difference is still stale. The PNGs are
+// binary and stay byte-exact.
+const TEXT = /\.(?:ts|svg)$/;
+const lf = (buffer) => Buffer.from(buffer.toString('utf8').replace(/\r\n/g, '\n'));
+
 let stale = 0;
-for (const [rel, data] of outputs) {
+for (const [rel, output] of outputs) {
   const target = join(root, rel);
-  const same = existsSync(target) && readFileSync(target).equals(data);
+  const data = TEXT.test(rel) ? lf(output) : output;
+  const have = existsSync(target) ? readFileSync(target) : null;
+  const same = have !== null && (TEXT.test(rel) ? lf(have) : have).equals(data);
   if (check) {
     if (!same) {
       stale += 1;
