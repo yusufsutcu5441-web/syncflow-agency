@@ -1,0 +1,6 @@
+{
+
+  "buildCommand": "npm run build:css && npm run build:js",
+  "outputDirectory": "."
+ 
+}

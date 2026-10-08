@@ -1,0 +1,25 @@
+{
+  "name": "syncflow-remotion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SyncFlow otomatik video demoları (Remotion). Siteden bağımsız paket; ../src/core ile aynı senaryo ve token verisini kullanır.",
+  "scripts": {
+    "fonts": "node scripts/copy-fonts.mjs",
+    "studio": "npm run fonts && remotion studio src/index.ts",
+    "still": "npm run fonts && remotion still src/index.ts WhatsAppDemo out/whatsapp-demo.png --frame=140",
+    "render": "npm run fonts && remotion render src/index.ts WhatsAppDemo out/whatsapp-demo.mp4",
+    "render:showcase": "npm run fonts && remotion render src/index.ts SectorShowcase out/sector-showcase.mp4",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.533",
+    "@remotion/fonts": "4.0.533",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.533"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "~5.9.3"
+  }
+}
