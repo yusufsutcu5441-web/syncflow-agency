@@ -105,13 +105,15 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 - **Rapor alıcısı:** `204` döner, gövde ≤ 8 KB, en fazla 10 rapor; yalnızca yönerge, engellenen/belge/kaynak adresi (sorgu dizesi ve parça atılır) ve satır/sütun tutulur; IP ve User-Agent tutulmaz.
 - **Bedeli:** nonce her istekte değiştiği için sayfalar istek başına render edilir (CDN'de HTML önbelleğe alınamaz); yerel TTFB ≈ 20 ms ([docs/perf/faz4.md](docs/perf/faz4.md)).
 
-**Hız sınırı** (`lib/security/rate-limit.ts`): `/api/*` + `/og` için 30 istek/dk/IP, sayfalar için 240/dk/IP (`proxy.ts`), briefing için ayrıca **5 gönderim/10 dk/IP**. Aşılınca `429` + `Retry-After`. Depolama: `UPSTASH_REDIS_REST_URL/TOKEN` tanımlıysa Redis (IP SHA-256'lanır), yoksa süreç belleği. **Dürüst sınır:** sunucusuz ortamda bellek sayacı örnek başınadır (en iyi çaba); gerçek koruma için Upstash ekleyin, dağıtık saldırıya karşı asıl savunma platformdur (Vercel Firewall / Cloudflare WAF).
+**Hız sınırı** (`lib/security/rate-limit.ts`): `/api/*` + `/og` için 30 istek/dk/IP, sayfalar için 240/dk/IP (`proxy.ts`), briefing için ayrıca **5 gönderim/10 dk/IP**. Aşılınca `429` + `Retry-After`. Depolama: `UPSTASH_REDIS_REST_URL/TOKEN` tanımlıysa Redis (IP SHA-256'lanır), yoksa süreç belleği (**üretimde Upstash yoksa ilk istekte bir kez uyarı** yazılır). **Dürüst sınır:** sunucusuz ortamda bellek sayacı örnek başınadır (en iyi çaba); gerçek koruma için Upstash ekleyin, dağıtık saldırıya karşı asıl savunma platformdur (Vercel Firewall / Cloudflare WAF).
 
 **Briefing girdi savunması** (`app/api/briefing/route.ts`): yalnızca POST + JSON, `Origin` host'u ile eşleşmeli (yoksa 403), `Sec-Fetch-Site: cross-site` reddedilir, gövde ≤ 8 KB (hem başlık hem gerçek okuma), **zod `strictObject`** (bilinmeyen alan ve tarayıcıdan gelen `tier` reddedilir), honeypot + 2,5 sn altı "anında gönderim" tuzağı (bota başarı gibi yanıt), **Cloudflare Turnstile sunucuda doğrulanır** (belirteç yoksa ya da geçersizse 400 `verification`; üretimde gizli anahtar yoksa 503), ardından **DOMPurify (jsdom)**:
 - HTML-benzeri işaretleme (`<script>`, `<img onerror>`, kapatılmamış `<svg>` …) **açıkça reddedilir** (422 `invalid`); sessizce silinmez.
 - `Ad <ad@firma.com>` ve `<https://…>` zararsız biçimleri düz metne çevrilir; kontrol karakterleri ve görünmez/çift yönlü ("Trojan Source") karakterler silinir.
 - **Öncelik sınıfı (yüksek/orta/düşük) sunucuda hesaplanır** (`lib/briefing.ts`): $20k+ ve karar veren/karar ekibi = yüksek, $5k–$10k (taban $10.000'ın altı) = düşük, kalanı orta.
-- Teslimat: `CONTACT_WEBHOOK_URL` (yalnızca `https://`, loopback hariç), yönlendirme izlenmez (SSRF), isteğe bağlı **HMAC-SHA256** imzası `x-syncflow-signature`; yük `type: "syncflow.briefing"`, ayrıca hazır `subject` (`[Briefing][high] Şirket, Ad`).
+- Teslimat: `CONTACT_WEBHOOK_URL` (yalnızca `https://`, loopback hariç), yönlendirme izlenmez (SSRF), isteğe bağlı **HMAC-SHA256** imzası `x-syncflow-signature`; yük `type: "syncflow.briefing"`, her başvuruya rastgele bir **`id`** (UUID v4, ayrıca `Idempotency-Key` başlığı) ve hazır `subject` (`[Briefing][high] Şirket, Ad`). **En çok iki deneme, toplam < 9,5 sn**, yalnızca zaman aşımı/ağ hatası/5xx/408/429'da; iki deneme de aynı `id`'yi taşır, **n8n tekrarı `id`'ye göre ayıklamalıdır** ([docs/n8n-briefing.md](docs/n8n-briefing.md) "Çift kayıt"); iki deneme de başarısızsa `502` ve hazır e-posta taslağı ([ADR 0010](docs/adr/0010-briefing-delivery-and-security.md)).
+
+**`security.txt`** (RFC 9116): `public/.well-known/security.txt`, `Expires` **2027-04-08**; süresi dolarsa denetim ve duman testi kırmızıya döner, yenileyin. **CSP enforce hazırlığı:** aynı derleme `CSP_MODE=enforce` ile gerçek bloklama altında denendi (duman 115/115, gerçek Turnstile widget'ı 12/12 ve üç tarayıcı seti geçti, [docs/perf/faz2b3.md](docs/perf/faz2b3.md)); varsayılan hâlâ report-only, geçiş F7'de ve yalnızca bir ortam değişkeni.
 
 **Sırlar:** `CONTACT_WEBHOOK_*`, `TURNSTILE_SECRET_KEY`, `UPSTASH_*` `NEXT_PUBLIC_` önekli değildir; `lib/server/*` `server-only` ile işaretlidir. **Gmail kimlik bilgisi uygulamada hiçbir yerde yoktur**: e-postayı n8n'deki Gmail düğümü gönderir ([docs/n8n-briefing.md](docs/n8n-briefing.md)). `npm run audit:secrets` derleme çıktısını tarar.
 
@@ -217,6 +219,7 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 - [ ] **LinkedIn / Instagram / WhatsApp adresleri** verilirse ilgili `NEXT_PUBLIC_*` değişkenlerini tanımlayın (verilmedi, footer'da yok). Logo çizili B1/v2 paketidir ama **ad/marka sorgusu (Türkpatent ve uluslararası) bitmeden nihai değildir** (`brand/README.md`).
 - [ ] **Sahne videolarının "konsept render" olduğu** kartlarda yazıyor; gerçek vaka çalışmaları gelirse kartlar ve etiket güncellenir.
 - [ ] `NEXT_PUBLIC_SITE_URL` üretim alan adı. Search Console'a `sitemap.xml`. PageSpeed Insights ile canlı doğrulama, `lib/metrics.ts` güncelleme.
+- [ ] `public/.well-known/security.txt` `Expires` tarihini (2027-04-08) dolmadan yenileyin.
 - [ ] Remotion lisansı (4+ kişiyseniz).
 - [ ] `npm run check`, `node faz2-denetim.mjs --build`, `npm start`, `npm run smoke`, `npm run audit:secrets`.
 
@@ -267,6 +270,19 @@ Ayrıntı: [docs/perf/faz2b2.md](docs/perf/faz2b2.md), karar: [ADR 0009](docs/ad
 | `npm run build` | çıkış 0 (tip denetimi dahil) |
 
 **Doğrulanmayanlar:** hiçbir Lighthouse ya da performans ölçümü yapılmadı (sahibinin talimatı); **mobil performans hâlâ "ölçülecek"**, masaüstü sayıları 2B-1 sürümünündür. Hukuki sayfalar yer tutuculu taslaktır (K7). 2B-3 ve 2B-4 yapılmadı.
+
+### 2B-3 Briefing ve Güvenlik (08.10.2026, `faz_2b3` dalı)
+
+Ayrıntı: [docs/perf/faz2b3.md](docs/perf/faz2b3.md), karar: [ADR 0010](docs/adr/0010-briefing-delivery-and-security.md).
+
+| Denetim | Sonuç |
+|---|---|
+| `node faz2-denetim.mjs --build` | **0 hata**, 106 geçti, 1 uyarı (bilinçli, ADR 0001); yeni kapılar bozulmuş kopyada 4/4 yakalandı |
+| `npm run smoke` | **115/115** report-only'de ve **115/115 CSP enforce kipinde**: teslimde `id` ve `Idempotency-Key`, geçici 503'te bir kez yeniden deneme (aynı `id`), sürekli çöken alıcıda iki deneme + `502` + 10 sn altı, `security.txt` |
+| Gerçek Turnstile widget'ı + teslim, **enforce** | **12/12**, CSP ihlali yok |
+| Tarayıcı testleri, **enforce** | Faz 4 gerileme **42/42**, 2B-2 **31/31**, 2B-1 **32/32** |
+
+**Doğrulanmayanlar:** gerçek n8n/Gmail teslimi ve n8n'deki çift kayıt ayıklaması (bilgiler verilmedi); CSP enforce yalnızca yerel HTTP'de denendi (canlıda HTTPS ve ilk günlerin rapor izlemesi gerekir); performans ölçümü yapılmadı (mobil hâlâ "ölçülecek"); otomatik yanıt, WhatsApp/takvim bağlantıları yapılmadı.
 
 ## 12. Üçüncü taraf lisanslar
 

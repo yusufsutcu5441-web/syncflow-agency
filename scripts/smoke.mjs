@@ -77,7 +77,18 @@ if (process.env.MOCK_WEBHOOK_PORT) {
     req.on('data', (c) => (data += c));
     req.on('end', () => {
       received.push({ headers: req.headers, body: data });
-      res.writeHead(200).end('ok');
+      // Test hooks for the retry rule (lib/server/deliver.ts): a company named FAILONCE answers 503 to the first try of a delivery
+      // and 200 to the second; ALWAYSFAIL answers 503 to everything.
+      let status = 200;
+      try {
+        const lead = JSON.parse(data);
+        const tries = received.filter((r) => r.headers['idempotency-key'] === req.headers['idempotency-key']).length;
+        if (/ALWAYSFAIL/.test(lead.company ?? '')) status = 503;
+        else if (/FAILONCE/.test(lead.company ?? '') && tries === 1) status = 503;
+      } catch {
+        // not JSON: answer 200 like before
+      }
+      res.writeHead(status).end(status === 200 ? 'ok' : 'unavailable');
     });
   });
   await new Promise((r) => mock.listen(Number(process.env.MOCK_WEBHOOK_PORT), '127.0.0.1', r));
@@ -185,6 +196,16 @@ if (OPEN.includes('de')) {
   check('draft languages show the legal text in English, marked as such', legal.status === 200 && /lang="en"/.test(body) && /Who is responsible/.test(body), `status ${legal.status}`);
 }
 
+section('security.txt (RFC 9116)');
+{
+  const res = await get('/.well-known/security.txt');
+  const text = await res.text();
+  const expires = /^Expires:\s*(\S+)/m.exec(text)?.[1];
+  const days = expires ? (new Date(expires).getTime() - Date.now()) / 86_400_000 : NaN;
+  check('/.well-known/security.txt is plain text with Contact, Expires and Canonical', res.status === 200 && (res.headers.get('content-type') ?? '').startsWith('text/plain') && /^Contact:\s*mailto:contact@syncflow\.agency$/m.test(text) && /^Canonical:\s*https:\/\/syncflow\.agency\/\.well-known\/security\.txt$/m.test(text), `status ${res.status}`);
+  check('security.txt expires in the future, within a year (RFC 9116: renew before it lapses)', days > 0 && days <= 366, `${expires} (${Math.round(days)} days)`);
+}
+
 section('Metadata routes and error pages');
 const sitemap = await (await get('/sitemap.xml')).text();
 check(`sitemap lists ${OPEN.length} locale URLs with alternates (and no closed language)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)));
@@ -281,8 +302,9 @@ if (mock && TURNSTILE_MODE !== 'unset') {
   check('no angle brackets survive sanitisation', hit && !/[<>]/.test(text), text);
   check('invisible / bidi-override characters stripped', hit && ![0x202e, 0x200b].some((c) => text.includes(String.fromCharCode(c))));
   check('plain-text content kept: name, email in brackets, URL', payload.name === 'Jane' && /jane@example\.com/.test(payload.message ?? '') && /https:\/\/example\.com\/brief/.test(payload.message ?? ''), JSON.stringify(payload));
-  const keys = ['budget', 'company', 'email', 'locale', 'message', 'name', 'projectType', 'receivedAt', 'role', 'subject', 'tier', 'timeline', 'type'];
+  const keys = ['budget', 'company', 'email', 'id', 'locale', 'message', 'name', 'projectType', 'receivedAt', 'role', 'subject', 'tier', 'timeline', 'type'];
   check('payload is exactly the known fields', hit && JSON.stringify(Object.keys(payload).sort()) === JSON.stringify(keys), Object.keys(payload).join(','));
+  check('payload carries a random delivery id (UUID v4), repeated as the Idempotency-Key header', /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(payload.id ?? '') && hit.headers['idempotency-key'] === payload.id, `${payload.id} / ${hit?.headers['idempotency-key']}`);
   check('payload type is syncflow.briefing and the subject is "[Briefing][tier] company, name"', payload.type === 'syncflow.briefing' && payload.subject === `[Briefing][${payload.tier}] ${payload.company}, ${payload.name}`, payload.subject);
   if (process.env.WEBHOOK_SECRET && hit) {
     const expected = `sha256=${createHmac('sha256', process.env.WEBHOOK_SECRET).update(hit.body).digest('hex')}`;
@@ -309,6 +331,18 @@ if (mock && TURNSTILE_MODE !== 'unset') {
   received.length = 0;
   await post(valid({ website: 'filled' }));
   check('honeypot submission is NOT delivered', received.length === 0);
+
+  // 4) Delivery retry (lib/server/deliver.ts): one more try after a transient failure, with the SAME delivery id, inside 10 s.
+  received.length = 0;
+  const once = await post(valid({ company: 'FAILONCE Ltd, Partner' }));
+  const ids = received.map((r) => r.headers['idempotency-key']);
+  check('a transient 503 from the receiver is retried once and the briefing is delivered (200)', once.status === 200 && received.length === 2, `status ${once.status}, receiver saw ${received.length} request(s)`);
+  check('both attempts carry the same delivery id, so the receiver can drop the duplicate', ids.length === 2 && ids[0] === ids[1] && /^[0-9a-f-]{36}$/.test(ids[0] ?? ''), ids.join(' | '));
+  received.length = 0;
+  const t0 = Date.now();
+  const never = await post(valid({ company: 'ALWAYSFAIL Ltd, Partner' }));
+  const took = Date.now() - t0;
+  check('a receiver that keeps failing: two attempts, the form hears 502, inside the 10 s budget', never.status === 502 && received.length === 2 && took < 10_000, `status ${never.status}, ${received.length} attempts, ${took} ms`);
 }
 
 section('Scene videos (docs/adr/0003, 0006)');

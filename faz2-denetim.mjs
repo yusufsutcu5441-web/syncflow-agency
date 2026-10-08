@@ -4,6 +4,7 @@
  * Faz 3: hareket ve kaydırma (Lenis ve Motion ilk yüke girmez, azaltılmış hareket, JS'siz görünürlük).
  * Faz 4: Blueprint ana sayfası, briefing (honeypot, Turnstile, origin, imzalı webhook), vitrin videoları, doğrulanmamış iddia yasağı.
  * Faz 5: 7 dil altyapısı (taslak diller uykuda, RTL, yayın listesi), hreflang/sitemap yalnızca yayındaki dillere.
+ * 2B-3 (docs/adr/0010): teslimde id + tek yeniden deneme (bütçe < 10 sn), hız sınırı uyarısı, security.txt süresi.
  * 2B-2 (docs/adr/0009): TR/EN odak, yedi dil iddiası yok, vitrin kilitli üç sektör (emlak, klinik, kurumsal hukuk), SaaS ve "Reach" bölümü yok.
  * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo.
  * Kullanım (proje kökünden):   node faz2-denetim.mjs [--root yol] [--build] [--json]
@@ -267,6 +268,24 @@ if (exists("app/api/briefing/route.ts")) {
 } else add(G4, "FAIL", "app/api/briefing/route.ts yok");
 exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /NEXT_PUBLIC_TURNSTILE_SITE_KEY/.test(read(".env.example")) && /CONTACT_WEBHOOK_URL/.test(read(".env.example"))
   ? add(G4, "PASS", ".env.example: webhook ve Turnstile anahtarları açıklanmış") : add(G4, "FAIL", ".env.example'da CONTACT_WEBHOOK_URL / TURNSTILE anahtarları yok");
+// 2B-3 (docs/adr/0010): teslim sözleşmesi, hız sınırı uyarısı, security.txt.
+{
+  const del = exists("lib/server/deliver.ts") ? read("lib/server/deliver.ts") : "";
+  const ms = (name) => Number(del.match(new RegExp(`const\\s+${name}\\s*=\\s*([0-9_]+)`))?.[1]?.replaceAll("_", "") ?? NaN);
+  const first = ms("FIRST_ATTEMPT_MS"), pause = ms("PAUSE_MS"), second = ms("SECOND_ATTEMPT_MS"), budget = ms("BUDGET_MS");
+  /crypto\.randomUUID\(\)/.test(del) && /['"]idempotency-key['"]/.test(del) && /\bid,/.test(del) ? add(G4, "PASS", "teslim: her başvuru rastgele bir id taşır ve Idempotency-Key başlığı olarak da gider (iki deneme aynı id)") : add(G4, "FAIL", "lib/server/deliver.ts: crypto.randomUUID() id'si, gövdede id ve Idempotency-Key başlığı yok");
+  first + pause + second < 10_000 && budget < 10_000 && first > 0 ? add(G4, "PASS", `teslim: en çok iki deneme, en kötü durumda ${first + pause + second} ms (< 10 sn)`) : add(G4, "FAIL", `teslim süre bütçesi 10 sn'yi aşıyor ya da okunamadı (${first}+${pause}+${second}, bütçe ${budget})`);
+  /status\s*>=\s*500/.test(del) && /408/.test(del) && /429/.test(del) && /'final'/.test(del) ? add(G4, "PASS", "teslim: yalnızca zaman aşımı, ağ hatası ve 5xx/408/429 yeniden denenir; 4xx kesindir") : add(G4, "FAIL", "teslim: yeniden deneme kuralı (5xx/408/429, 4xx kesin) bulunamadı");
+  const rl = exists("lib/security/rate-limit.ts") ? read("lib/security/rate-limit.ts") : "";
+  /NODE_ENV\s*===\s*['"]production['"]/.test(rl) && /UPSTASH_REDIS_REST_URL/.test(rl) && /console\.warn\(/.test(rl) ? add(G4, "PASS", "hız sınırı: üretimde Upstash yoksa örnek başına sayıldığı bir kez uyarılır") : add(G4, "FAIL", "lib/security/rate-limit.ts: üretimde Upstash yoksa uyarı yok");
+  if (!exists("public/.well-known/security.txt")) add(G4, "FAIL", "public/.well-known/security.txt yok (RFC 9116)");
+  else {
+    const t = read("public/.well-known/security.txt"), exp = t.match(/^Expires:\s*(\S+)/m)?.[1], days = exp ? (new Date(exp).getTime() - Date.now()) / 86_400_000 : NaN;
+    /^Contact:\s*mailto:contact@syncflow\.agency\s*$/m.test(t) && /^Canonical:\s*https:\/\/syncflow\.agency\/\.well-known\/security\.txt\s*$/m.test(t)
+      ? add(G4, "PASS", "security.txt: Contact ve Canonical doğru") : add(G4, "FAIL", "security.txt: Contact (mailto:contact@syncflow.agency) ya da Canonical eksik/yanlış");
+    days > 0 && days <= 366 ? add(G4, "PASS", `security.txt Expires ${exp} (${Math.round(days)} gün sonra; süresi dolmadan yenilenmeli)`) : add(G4, "FAIL", `security.txt Expires geçmişte ya da bir yıldan uzakta: ${exp} (RFC 9116)`);
+  }
+}
 // 2B-2 (docs/adr/0009): vitrin üç sektöre kilitli (emlak, klinik, kurumsal hukuk); SaaS ve dil/erişim bölümü yok; sitede yedi dil iddiası yok.
 {
   const show = exists("components/sections/Showcase.tsx") ? read("components/sections/Showcase.tsx") : "";
@@ -417,7 +436,7 @@ const color = process.stdout.isTTY && !process.env.NO_COLOR;
 const C = { PASS: "\x1b[32m", WARN: "\x1b[33m", FAIL: "\x1b[31m", INFO: "\x1b[90m", R: "\x1b[0m" };
 const sym = { PASS: "✔", WARN: "!", FAIL: "✖", INFO: "i" };
 let g = ""; const cnt = { PASS: 0, WARN: 0, FAIL: 0, INFO: 0 };
-console.log(`\nSyncFlow denetimi (Faz 2–5, 2B-1 ve 2B-2 kapısı: tokenlar, marka, i18n, TR/EN odak ve sektör kilidi, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
+console.log(`\nSyncFlow denetimi (Faz 2–5, 2B-1, 2B-2 ve 2B-3 kapısı: tokenlar, marka, i18n, TR/EN odak ve sektör kilidi, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
 for (const r of results) {
   if (r.group !== g) { g = r.group; console.log(`\n${g}`); }
   cnt[r.level]++;

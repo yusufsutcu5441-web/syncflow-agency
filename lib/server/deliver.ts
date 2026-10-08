@@ -11,6 +11,10 @@ import type { Budget, ProjectType, Role, Tier, Timeline } from '@/lib/briefing';
  * - https:// only. Plain http is accepted solely for loopback hosts so the flow can be tested locally.
  * - Redirects are refused (redirect: 'error'), which closes the classic SSRF trick of bouncing to an internal address.
  * - An optional HMAC-SHA256 signature lets the receiver prove a request really came from this site.
+ * - Every briefing carries a random delivery `id` (also sent as the Idempotency-Key header). The site tries at most TWICE,
+ *   inside a total budget under 10 seconds, and only after a timeout, a network error or a 5xx/408/429 answer: both attempts
+ *   carry the SAME id, so the receiver can drop a duplicate (docs/n8n-briefing.md "Çift kayıt"). A 4xx answer (the receiver
+ *   refused the request) is final and never retried.
  */
 
 export type BriefingPayload = {
@@ -27,7 +31,26 @@ export type BriefingPayload = {
   locale: string;
 };
 
-export type DeliveryResult = { ok: true; via: 'webhook' | 'dev-log' } | { ok: false; reason: 'not_configured' | 'failed' };
+export type DeliveryResult = { ok: true; via: 'webhook' | 'dev-log'; attempts?: number } | { ok: false; reason: 'not_configured' | 'failed'; attempts?: number };
+
+/** First try, pause, second try: 5.0 + 0.4 + at most 4.0 = under 9.5 s in the worst case. */
+const FIRST_ATTEMPT_MS = 5_000;
+const PAUSE_MS = 400;
+const SECOND_ATTEMPT_MS = 4_000;
+const BUDGET_MS = 9_500;
+
+type Attempt = 'ok' | 'retry' | 'final';
+
+/** One POST. A thrown error (timeout, refused connection, a redirect) and a transient status are worth another try. */
+async function attempt(url: string, headers: Record<string, string>, body: string, timeoutMs: number): Promise<Attempt> {
+  try {
+    const response = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(timeoutMs), cache: 'no-store', redirect: 'error' });
+    if (response.ok) return 'ok';
+    return response.status >= 500 || response.status === 408 || response.status === 429 ? 'retry' : 'final';
+  } catch {
+    return 'retry';
+  }
+}
 
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '[::1]']);
 
@@ -65,22 +88,25 @@ export async function deliverBriefing(lead: BriefingPayload): Promise<DeliveryRe
 
   // Ready-made subject for the mail node: "[Briefing][high] Company, Name". Both parts are already single-line plain text.
   const subject = `[Briefing][${lead.tier}] ${lead.company}, ${lead.name}`;
-  const body = JSON.stringify({ type: 'syncflow.briefing', receivedAt: new Date().toISOString(), subject, ...lead });
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  const id = crypto.randomUUID();
+  const body = JSON.stringify({ type: 'syncflow.briefing', id, receivedAt: new Date().toISOString(), subject, ...lead });
+  const headers: Record<string, string> = { 'content-type': 'application/json', 'idempotency-key': id };
   const secret = process.env.CONTACT_WEBHOOK_SECRET?.trim();
   if (secret) headers['x-syncflow-signature'] = `sha256=${await hmacHex(secret, body)}`;
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body,
-      signal: AbortSignal.timeout(8000),
-      cache: 'no-store',
-      redirect: 'error',
-    });
-    return response.ok ? { ok: true, via: 'webhook' } : { ok: false, reason: 'failed' };
-  } catch {
-    return { ok: false, reason: 'failed' };
+  const started = Date.now();
+  let outcome = await attempt(url, headers, body, FIRST_ATTEMPT_MS);
+  let attempts = 1;
+  if (outcome === 'retry') {
+    const left = BUDGET_MS - (Date.now() - started) - PAUSE_MS;
+    if (left >= 1_000) {
+      console.warn(`[briefing] delivery ${id}: first attempt failed, retrying once`);
+      await new Promise((resolve) => setTimeout(resolve, PAUSE_MS));
+      outcome = await attempt(url, headers, body, Math.min(left, SECOND_ATTEMPT_MS));
+      attempts = 2;
+    }
   }
+  if (outcome === 'ok') return { ok: true, via: 'webhook', attempts };
+  console.error(`[briefing] delivery ${id} failed after ${attempts} attempt(s)`);
+  return { ok: false, reason: 'failed', attempts };
 }

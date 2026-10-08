@@ -102,8 +102,18 @@ async function upstashHit({ key, limit, windowMs }: RateOptions): Promise<RateRe
   }
 }
 
+let warnedLocalOnly = false;
+
 export async function rateLimit(options: RateOptions): Promise<RateResult> {
-  return (await upstashHit(options)) ?? memoryHit(options);
+  const shared = await upstashHit(options);
+  if (shared) return shared;
+  // Production without the shared store: every server instance counts for itself, so on a serverless platform the limits are
+  // only best-effort. Say so once, where an operator will see it (README "Hız sınırı", docs/adr/0010).
+  if (!warnedLocalOnly && process.env.NODE_ENV === 'production' && !(process.env.UPSTASH_REDIS_REST_URL?.trim() && process.env.UPSTASH_REDIS_REST_TOKEN?.trim())) {
+    warnedLocalOnly = true;
+    console.warn('[rate-limit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are not set: limits are counted per server instance and are best-effort on serverless platforms.');
+  }
+  return memoryHit(options);
 }
 
 /**
