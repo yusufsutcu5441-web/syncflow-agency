@@ -3,7 +3,8 @@
  * SyncFlow denetimi. Faz 2: bağımlılıklar, tasarım tokenları (Blueprint, docs/adr/0006; palet ve marka 0007), next-intl iskeleti, CSP.
  * Faz 3: hareket ve kaydırma (Lenis ve Motion ilk yüke girmez, azaltılmış hareket, JS'siz görünürlük).
  * Faz 4: Blueprint ana sayfası, briefing (honeypot, Turnstile, origin, imzalı webhook), vitrin videoları, doğrulanmamış iddia yasağı.
- * Faz 5: 7 dil (taslak diller, RTL, yayın listesi), hreflang/sitemap yalnızca yayındaki dillere.
+ * Faz 5: 7 dil altyapısı (taslak diller uykuda, RTL, yayın listesi), hreflang/sitemap yalnızca yayındaki dillere.
+ * 2B-2 (docs/adr/0009): TR/EN odak, yedi dil iddiası yok, vitrin kilitli üç sektör (emlak, klinik, kurumsal hukuk), SaaS ve "Reach" bölümü yok.
  * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo.
  * Kullanım (proje kökünden):   node faz2-denetim.mjs [--root yol] [--build] [--json]
  *   --build  `npm run build` çalıştırır (production build)    --json  faz2-denetim.json yazar
@@ -179,13 +180,16 @@ if (exists(rt)) {
   const locs = m ? [...m[1].matchAll(/["']([^"']+)["']/g)].map((x) => x[1]) : [];
   if (!locs.length) add(G3, "WARN", "routing.ts içinde locales okunamadı");
   else { const want7 = ["en", "tr", "de", "fr", "es", "ar", "ja"], miss = want7.filter((l) => !locs.includes(l));
-    miss.length ? add(G3, "FAIL", `locales: ${locs.join(", ")} (7 dil gerekli, eksik: ${miss.join(", ")})`) : add(G3, "PASS", `locales: ${locs.join(", ")} (7 dil kodda açık)`); }
+    miss.length ? add(G3, "FAIL", `locales: ${locs.join(", ")} (altyapı yedi dili taşımalı, eksik: ${miss.join(", ")})`) : add(G3, "PASS", `locales: ${locs.join(", ")} (altyapıda yedi dil, uykuda; yalnızca yayın listesindekiler açık)`); }
   /defaultLocale/.test(t) ? add(G3, "PASS", "defaultLocale tanımlı") : add(G3, "FAIL", "defaultLocale yok");
 }
 // Yayın listesi (docs/adr/0006): üretimde yalnızca NEXT_PUBLIC_LAUNCHED_LOCALES (varsayılan en,tr) yayında; hreflang/sitemap/seçici bundan türer.
 if (exists("i18n/launch.ts")) {
   const t = read("i18n/launch.ts");
-  /NEXT_PUBLIC_LAUNCHED_LOCALES/.test(t) && /['"]en,tr['"]/.test(t) ? add(G3, "PASS", "i18n/launch.ts: üretimde varsayılan yayın listesi en,tr (NEXT_PUBLIC_LAUNCHED_LOCALES ile genişler)") : add(G3, "FAIL", "i18n/launch.ts: NEXT_PUBLIC_LAUNCHED_LOCALES / varsayılan 'en,tr' bulunamadı");
+  /NEXT_PUBLIC_LAUNCHED_LOCALES/.test(t) && /['"]en,tr['"]/.test(t) ? add(G3, "PASS", "i18n/launch.ts: varsayılan yayın listesi en,tr (NEXT_PUBLIC_LAUNCHED_LOCALES ile genişler)") : add(G3, "FAIL", "i18n/launch.ts: NEXT_PUBLIC_LAUNCHED_LOCALES / varsayılan 'en,tr' bulunamadı");
+  // 2B-2: geliştirmede de yedi dil açılmaz; diğer beşi yalnızca NEXT_PUBLIC_PREVIEW_LOCALES=1 ile (yayında yedi dil iddiası yok).
+  const openAll = stripComments(t).match(/const\s+OPEN_ALL\s*=\s*([^;]+);/)?.[1] ?? "";
+  /NEXT_PUBLIC_PREVIEW_LOCALES/.test(openAll) && !/NODE_ENV/.test(openAll) ? add(G3, "PASS", "yedi dil yalnızca NEXT_PUBLIC_PREVIEW_LOCALES=1 ile açılır; geliştirme sunucusu da yalnızca en,tr gösterir") : add(G3, "FAIL", "i18n/launch.ts: OPEN_ALL geliştirmede (NODE_ENV) yedi dili açıyor; yedi dil iddiası kalktı, yalnızca PREVIEW anahtarı açmalı");
   const users = ["app/sitemap.ts", "lib/jsonld.ts", "components/layout/LanguageSwitcher.tsx"].filter((f) => exists(f) && !/launch|OPEN_LOCALES/.test(read(f)));
   users.length ? add(G3, "FAIL", `yayın listesini kullanmayan dosya (kapalı dil sızar): ${users.join(", ")}`) : add(G3, "PASS", "sitemap, JSON-LD ve dil seçici yalnızca yayındaki dilleri listeliyor");
 } else add(G3, "FAIL", "i18n/launch.ts yok (hangi dillerin yayında olduğu tek yerden gelmeli)");
@@ -208,12 +212,12 @@ if (tr && en) {
   const empty = [...Object.entries(tr), ...Object.entries(en)].filter(([, v]) => typeof v === "string" && !v.trim()).map(([k]) => k);
   add(G3, mEn.length || mTr.length ? "FAIL" : "PASS", `mesaj anahtarı eşleşmesi: tr ${kt.size} / en ${ke.size}` + (mEn.length ? ` | en'de eksik: ${mEn.slice(0, 5).join(", ")}` : "") + (mTr.length ? ` | tr'de eksik: ${mTr.slice(0, 5).join(", ")}` : ""));
   if (empty.length) add(G3, "WARN", `boş çeviri: ${empty.slice(0, 5).join(", ")}`);
-  // Taslak diller (de fr es ar ja): Legal.* hariç her İngilizce anahtar bulunmalı, fazlalık olmamalı (eksik hukuk metni İngilizceden tamamlanır).
+  // Taslak diller (de fr es ar ja) uykuda ve yayında değil: İngilizceden geri kalabilirler (eksik anahtar İngilizceden tamamlanır), ama fazlalık anahtar olmamalı.
   for (const l of ["de", "fr", "es", "ar", "ja"]) {
     if (!exists(`messages/${l}.json`)) { add(G3, "FAIL", `messages/${l}.json yok`); continue; }
     let m; try { m = flat(readJSON(`messages/${l}.json`)); } catch (e) { add(G3, "FAIL", `messages/${l}.json okunamadı: ${e.message}`); continue; }
     const missing = [...ke].filter((k) => !k.startsWith("Legal.") && !(k in m)), extra = Object.keys(m).filter((k) => !ke.has(k));
-    add(G3, missing.length || extra.length ? "FAIL" : "PASS", `messages/${l}.json (taslak): ${Object.keys(m).length} anahtar` + (missing.length ? ` | eksik: ${missing.slice(0, 4).join(", ")}` : "") + (extra.length ? ` | fazla: ${extra.slice(0, 4).join(", ")}` : ""));
+    add(G3, extra.length ? "FAIL" : "PASS", `messages/${l}.json (uykuda taslak): ${Object.keys(m).length} anahtar` + (missing.length ? ` | İngilizceden ${missing.length} anahtar geride (yayında İngilizceye düşer)` : "") + (extra.length ? ` | fazla: ${extra.slice(0, 4).join(", ")}` : ""));
   }
 }
 // koda gömülü Türkçe metin ve yasaklı sınıf taraması
@@ -263,6 +267,23 @@ if (exists("app/api/briefing/route.ts")) {
 } else add(G4, "FAIL", "app/api/briefing/route.ts yok");
 exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /NEXT_PUBLIC_TURNSTILE_SITE_KEY/.test(read(".env.example")) && /CONTACT_WEBHOOK_URL/.test(read(".env.example"))
   ? add(G4, "PASS", ".env.example: webhook ve Turnstile anahtarları açıklanmış") : add(G4, "FAIL", ".env.example'da CONTACT_WEBHOOK_URL / TURNSTILE anahtarları yok");
+// 2B-2 (docs/adr/0009): vitrin üç sektöre kilitli (emlak, klinik, kurumsal hukuk); SaaS ve dil/erişim bölümü yok; sitede yedi dil iddiası yok.
+{
+  const show = exists("components/sections/Showcase.tsx") ? read("components/sections/Showcase.tsx") : "";
+  const keys = [...show.matchAll(/\{\s*key:\s*['"](\w+)['"]/g)].map((m) => m[1]);
+  keys.length === 3 && ["estate", "clinic", "law"].every((k) => keys.includes(k))
+    ? add(G4, "PASS", "vitrin tam üç sektör: estate, clinic, law (kilitli)") : add(G4, "FAIL", `vitrin kartları ${keys.join(", ") || "okunamadı"}; yalnızca estate, clinic, law olmalı (ADR 0009)`);
+  const saas = [];
+  for (const f of [...walk(abs("app"), [".tsx", ".ts"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])]) if (/saas/i.test(fs.readFileSync(f, "utf8"))) saas.push(rel(f));
+  for (const l of ["en", "tr"]) if (/saas/i.test(JSON.stringify(readJSON(`messages/${l}.json`)))) saas.push(`messages/${l}.json`);
+  if (exists("public/media/clips")) for (const n of fs.readdirSync(abs("public/media/clips"))) if (/saas/i.test(n)) saas.push(`public/media/clips/${n}`);
+  saas.length ? add(G4, "FAIL", `SaaS izi kaldı (sektör kilidi: emlak, klinik, kurumsal hukuk): ${saas.slice(0, 4).join(", ")}`) : add(G4, "PASS", "SaaS izi yok (kod, mesajlar, sahneler, videolar)");
+  const claim = /seven languages|7 languages|every language it deserves|all seven|yedi dil|7 dil|her dilde|hak ettiği her dil/i, hitsLang = [];
+  for (const l of ["en", "tr"]) for (const [k, v] of Object.entries(flat(readJSON(`messages/${l}.json`)))) if (typeof v === "string" && claim.test(v)) hitsLang.push(`${l}:${k}`);
+  const reachLeft = ["components/sections/Reach.tsx", "components/sections/ReachInteractive.tsx", "lib/reach.ts"].filter(exists);
+  hitsLang.length || reachLeft.length ? add(G4, "FAIL", `yedi dil/küresel erişim iddiası kaldı: ${[...hitsLang, ...reachLeft].slice(0, 4).join(", ")}`) : add(G4, "PASS", "sitede yedi dil ya da küresel erişim iddiası yok (Reach bölümü kalktı)");
+  /areaServed/.test(exists("lib/jsonld.ts") ? read("lib/jsonld.ts") : "") ? add(G4, "FAIL", "JSON-LD'de areaServed (\"Worldwide\") iddiası var") : add(G4, "PASS", "JSON-LD'de bölge iddiası yok");
+}
 // Karar 8 (docs/adr/0006): ölçülmemiş performans iddiası yayınlanmaz. Metinlerde yasaklı ifadeler + metrik kaynağı.
 {
   const BANNED = /locked\s*60|60\s*fps\s*locked|kilitli\s*60|120\s?hz|LCP\s*[<≤]\s*1[.,]2|TBT\s*[<≤]\s*50|INP\s*[<≤]\s*100|\bAV1\b|adaptive\s*bitrate|adaptif\s*bitrate|[+−-]\s*(?:212|38|64)\s*%|%\s*(?:212|38|64)\b|before[- ]and[- ]after|before-after|önce-sonra|kusursuz|flawless|%\s*100\s*(?:güvenli|uyumlu)|100%\s*(?:secure|compliant)|garanti/i;
@@ -277,7 +298,7 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
 
 /* ───────── 5) Sahne videoları (önceden render edilmiş, docs/adr/0003 ve 0006) ───────── */
 const G5 = "5. Sahne videoları (önceden render edilmiş)";
-const CLIPS = ["monolith", "estate", "clinic", "saas"];
+const CLIPS = ["monolith", "estate", "clinic", "law"];
 const clipMissing = [];
 for (const name of CLIPS) for (const ext of ["mp4", "webm", "webp"]) {
   const p = `public/media/clips/${name}.${ext}`;
@@ -396,7 +417,7 @@ const color = process.stdout.isTTY && !process.env.NO_COLOR;
 const C = { PASS: "\x1b[32m", WARN: "\x1b[33m", FAIL: "\x1b[31m", INFO: "\x1b[90m", R: "\x1b[0m" };
 const sym = { PASS: "✔", WARN: "!", FAIL: "✖", INFO: "i" };
 let g = ""; const cnt = { PASS: 0, WARN: 0, FAIL: 0, INFO: 0 };
-console.log(`\nSyncFlow denetimi (Faz 2–5 ve 2B-1 kapısı: tokenlar, marka, i18n ve 7 dil, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
+console.log(`\nSyncFlow denetimi (Faz 2–5, 2B-1 ve 2B-2 kapısı: tokenlar, marka, i18n, TR/EN odak ve sektör kilidi, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
 for (const r of results) {
   if (r.group !== g) { g = r.group; console.log(`\n${g}`); }
   cnt[r.level]++;

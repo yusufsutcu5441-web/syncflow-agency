@@ -14,8 +14,8 @@
  *                                secret): a missing token is refused, any token passes. Needs internet access.
  *                         off    no TURNSTILE_SECRET_KEY in development: the check is skipped.
  *                         unset  no TURNSTILE_SECRET_KEY in production: the form must answer 503.
- *   EXPECT_LOCALES      languages that must be public (default "en,tr", the production default; "en,tr,de,fr,es,ar,ja"
- *                       for a development server or NEXT_PUBLIC_PREVIEW_LOCALES=1). Every other language must answer 404.
+ *   EXPECT_LOCALES      languages that must be public (default "en,tr", in every environment; "en,tr,de,fr,es,ar,ja" only
+ *                       with NEXT_PUBLIC_PREVIEW_LOCALES=1). Every other language must answer 404.
  *   EXPECT_CSP_MODE     "enforce" to expect the enforcing CSP header instead of report-only.
  *   STRESS=1            also fire 250 page requests from one address to prove the page-level limiter.
  */
@@ -126,7 +126,9 @@ check('nonce changes on every request', Boolean(second) && second !== csp);
 check('<html lang="en" dir="ltr">', /<html[^>]*\blang="en"/.test(html) && /<html[^>]*\bdir="ltr"/.test(html));
 check('title is the studio title (no price)', /<title>syncflow\.agency \| Digital architecture studio<\/title>/.test(html));
 check('one <h1> with the two hero lines', (html.match(/<h1\b/g) ?? []).length === 1 && html.includes('Built in the dark.') && html.includes('Moves like liquid.'));
-check('the four Blueprint sections are there (architecture, showcase, reach, briefing)', ['architecture', 'showcase', 'reach', 'briefing'].every((id) => new RegExp(`<section[^>]*id="${id}"`).test(html)));
+check('the three sections are there (architecture, showcase, briefing) and the language section is gone', ['architecture', 'showcase', 'briefing'].every((id) => new RegExp(`<section[^>]*id="${id}"`).test(html)) && !/<section[^>]*id="reach"/.test(html));
+check('the showcase has exactly the three sectors (real estate, clinics, corporate law) and no SaaS', ['show-estate', 'show-clinic', 'show-law'].every((id) => html.includes(`id="${id}"`)) && !/show-saas|SaaS/.test(html));
+check('the page makes no multi-language claim', !/seven languages|7 languages|every language|yedi dil|her dilde/i.test(html));
 check('no Lemon Squeezy and no old offer anywhere in the page', !/lemonsqueezy|lemon\.js|\$2,500|\$2\.500|Start Project/i.test(html));
 check('the briefing panel is there and opts out of smooth scrolling (data-lenis-prevent)', /<form[^>]*data-lenis-prevent/.test(html));
 check('the contact address is published (mailto contact@syncflow.agency)', /href="mailto:contact@syncflow\.agency"/.test(html));
@@ -313,7 +315,7 @@ section('Scene videos (docs/adr/0003, 0006)');
 const mediaTypes = { mp4: 'video/mp4', webm: 'video/webm', webp: 'image/webp' };
 let mediaOk = true;
 let mediaDetail = '';
-for (const name of ['monolith', 'estate', 'clinic', 'saas']) {
+for (const name of ['monolith', 'estate', 'clinic', 'law']) {
   for (const [ext, type] of Object.entries(mediaTypes)) {
     const res = await get(`/media/clips/${name}.${ext}`, { headers: { range: 'bytes=0-0' } });
     const good = [200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type);
