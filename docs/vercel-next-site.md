@@ -25,6 +25,8 @@ Yani ortam değişkenleri girilmeden ilk deployment çalışır; yalnızca brief
 3. **Framework Preset:** Next.js (otomatik). **Root Directory:** `./` (boş). Build ve Install komutları varsayılan (`next build`, `npm install`). **Çıktı klasörünü değiştirmeyin.**
 4. **Henüz Deploy'a basmayın:** önce §3 ve §4'ü yapın. (İçe aktarırken Vercel, deponun varsayılan dalından, yani eski siteden, bir derleme başlatabilir. Bu derleme başarısız olur ya da boş çıkar, **normaldir ve zararsızdır**: alan adı bağlı değil. Başlarsa §3'ten sonra Redeploy edin.)
 
+5. **Eski projede (`syncflow-web`) `next-site` derlemesini kapatın.** 08.10 21:43Z'de `next-site`'e yapılan bir push, eski projede bir **Preview** derlemesi tetikledi ve **başarısız** oldu (o projenin Root Directory'si `syncflow-web`, `next-site`'te öyle bir klasör yok). Canlı site etkilenmedi, ama GitHub'da `next-site` ucu kırmızı görünür ve her push bir başarısız derleme daha üretir. Eski projede **Settings → Git → Ignored Build Step → Custom** alanına şunu girin: `[ "$VERCEL_GIT_COMMIT_REF" != "main" ]` (dal `main` değilse çıkış 0 = derlemeyi atla; `main`'de çıkış 1 = derle). Bu komutun etkisi **panelde doğrulanmadı**; deneyip eski sitenin `main` push'unda hâlâ derlendiğini ve `next-site` push'unda atlandığını kontrol edin.
+
 ## 3. Production Branch'i `next-site` yapın
 **Settings → Git → Production Branch → `next-site`**. `main` olarak kalırsa proje eski siteyi derlemeye çalışır. Bu ayarı yapmadan §6'daki adres kontrolleri anlamsız olur.
 

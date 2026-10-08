@@ -11,6 +11,7 @@
 | 20:35 | `main` yedekten geri alındı, yeni sürüm `next-site` dalına park edildi. Yeni deployment "başarılı" ama site hâlâ 404. |
 | 21:13 | Panelden Redeploy: yine 404. Alan adı **depo kökünü** statik dosya olarak sunuyordu (`/` 404, `/syncflow-web/index.html` 200, kök dizindeki iki boş dosya indirilebiliyordu). |
 | 21:25 | Panelde Root Directory `syncflow-web` yapıldı ve Redeploy: yeni deployment oluşmadı, site değişmedi (Redeploy güncel ayarı almadı). |
+| 21:43 | Kılavuz commit'i `next-site`'e itildi: eski `syncflow-web` projesinde bir **Preview** derlemesi tetiklendi ve **başarısız** oldu (Root Directory `syncflow-web`, `next-site`'te yok). Canlı site etkilenmedi (200). |
 | 21:32 | Uzak `main`'e içeriği değişmeyen **boş bir commit** (`44bbf02`, ileri sarma) itildi: git push yeni deployment tetikledi ve site eski haliyle geri geldi (`/`, `/kvkk/`, `/demo/*`, `robots.txt`, `sitemap.xml` 200; depo kökü artık 404). |
 
 Toplam kesinti yaklaşık **68 dakika** (20:24 → 21:32). Kök neden: projenin Root Directory ayarı, `main`'in yapısıyla (eski site bir alt klasörde) uyumsuzdu; Vercel boş ya da yanlış kökü "başarılı" saydı.
@@ -32,4 +33,4 @@ Toplam kesinti yaklaşık **68 dakika** (20:24 → 21:32). Kök neden: projenin 
 ## Açık olanlar
 - Vercel projesi (`syncflow-next`) henüz **oluşturulmadı**; adımlar sahibindedir (panel).
 - Vercel'de derleme ve `/og` yazı tipi izlemesi, canlı performans, HTTP/2 + Brotli altında ölçüm: yayından sonra doğrulanacak.
-- Eski projenin dal ayarı: `legacy-site` ve `next-site` dallarını **derlemiyor** (08.10'da bu dallara yapılan push'larda deployment kaydı oluşmadı); bu, eski projede dal filtresi olduğunu düşündürür ama panelden doğrulanmadı.
+- **Eski proje `next-site`'i Preview olarak derlemeye çalışıyor ve başarısız oluyor** (21:43). İlk push'larda (yeni dal oluşturma) deployment kaydı çıkmamıştı; bu yüzden "dal filtresi var" çıkarımı yanlıştı. Çözüm: eski projeye Ignored Build Step (docs/vercel-next-site.md §2 madde 5); panelde doğrulanmadı. Ayrı proje oluşunca `next-site` push'ları yalnızca orada derlenmeli.
