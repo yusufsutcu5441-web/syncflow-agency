@@ -1,5 +1,5 @@
 # syncflow.agency
-Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi. Görsel dil "Dark Monolith & Fluid Precision": siyah zemin, cam yüzeyler, ince çizgiler, ölçülü ışık ve akıcı hareket.
+Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi. Görsel dil "Dark Monolith & Fluid Precision": obsidian zemin, cam yüzeyler, ince çizgiler, ölçülü ışık ve akıcı hareket; renk ve marka sistemi B1/v2 (docs/adr/0007).
 Son güncelleme: 08.10.2026. Bu dosya kısa tutulur; ayrıntılar docs/ altına taşınır.
 
 ## Kaynak sırası
@@ -14,7 +14,7 @@ Son güncelleme: 08.10.2026. Bu dosya kısa tutulur; ayrıntılar docs/ altına 
 - **Vitrin kartları "konsept render"dir**, gerçek müşteri işi değil; kartta öyle yazar. "View Case" bağlantısı yok (vaka sayfası yok), yerine Briefing'e bağlantı var.
 - **Showcase yatay şeridi scroll-jacking yapmaz:** yerel `scroll-snap` şeridi + düğmeler (dokunmatikte yerel kaydırma kuralı).
 - **Küre dönmez:** hafif SVG, 7 şehir noktası sırayla yanıp söner, 7 dil etiketi tıklanır/odaklanır. Dönen küre sürekli boyama maliyeti ve 5 kapalı dil nedeniyle yapılmadı.
-- **Logo:** repoda `brand/` yok; wordmark Blueprint'teki gibi metin ("syncflow", `.agency` %40). Çizilmiş marka paketi gelince değişir.
+- **Logo (2B-1, docs/adr/0007):** B1 monogram + özel çizim v2 wordmark (`brand/`, eğriye çevrilmiş SVG). Blueprint'in metinle yazılmış "syncflow.agency" wordmark'ı ve `.agency` soluk eki kalktı: marka kuralı logoya ek, gölge, gradyan ya da canlı yazı tipi koymaz. Header'da yatay kilit, footer'da %6 opaklıkta dev çizili wordmark (dekoratif, `aria-hidden`).
 - **Dil yayını:** 7 dil kodda açık ve geliştirmede/önizlemede görünür; **üretimde yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`) yayınlanır** (hreflang, sitemap, dil seçici, 404). Diğer beşinin çevirileri TASLAKTIR: yerel çeviri ve hukuk incelemesinden sonra listeye eklenir. Hukuk metinleri (gizlilik, künye) TR/EN dışında İngilizceye düşer ve uyarı gösterir.
 
 ## Kararlar ve açık konular
@@ -24,20 +24,25 @@ Son güncelleme: 08.10.2026. Bu dosya kısa tutulur; ayrıntılar docs/ altına 
 - KARAR VERİLDİ (08.10.2026) Başvuru yanıtı: "24 saat içinde kurucu ekipten kişisel dönüş" sözü korunur. Kapasite cümlesi ("ayda 3"/"çeyrekte 3") yalnızca gerçekse yayınlanır; bugün yok.
 - KARAR VERİLDİ (07.10.2026) CSP: Faz 7'ye kadar `Content-Security-Policy-Report-Only`; `CSP_MODE=enforce` ile enforce (docs/adr/0001).
 - KARAR VERİLDİ (08.10.2026) Hareket, ışık ve cam yüzey Blueprint'e göre serbest (aşağıda). Lenis yalnızca masaüstünde ve dinamik import ile (docs/adr/0004).
-- AÇIK: varsayılan dil (`/` İngilizce, Türkçe `/tr`; Türkiye ilk pazarsa TR olabilir). AÇIK: Satoshi'nin Fontshare EULA'sı web yayınına izin veriyor mu (şimdilik Inter). AÇIK: "SyncFlow" ad/marka sorgusu (kullanıcı yürütüyor). AÇIK: LinkedIn, Instagram ve WhatsApp adresleri (verilmedi; footer'da yok). AÇIK: n8n webhook adresi, imza sırrı ve Turnstile anahtarları (verilmedi; bkz. .env.example).
+- AÇIK: varsayılan dil (`/` İngilizce, Türkçe `/tr`; Türkiye ilk pazarsa TR olabilir). KARAR VERİLDİ (08.10.2026) Yazı tipi: Instrument Sans (OFL); Satoshi ve Fontshare EULA sorusu kapandı. AÇIK: "SyncFlow" ad/marka sorgusu (kullanıcı yürütüyor). AÇIK: LinkedIn, Instagram ve WhatsApp adresleri (verilmedi; footer'da yok). AÇIK: n8n webhook adresi, imza sırrı ve Turnstile anahtarları (verilmedi; bkz. .env.example).
 
-## Tasarım tokenları (Blueprint, docs/adr/0006)
-- Zemin saf `#000000`; kart `#0a0a0a`; yükseltilmiş yüzey `#111113`. Metin beyaz `#ffffff`, ikincil `rgb(255 255 255 / 0.62)` (7,8:1), üçüncül `/ 0.5` (5,3:1; Blueprint'in %40'ı 3,65:1 ile WCAG AA'yı geçemez ve Lighthouse erişilebilirliğini 97'ye düşürür, bu yüzden `.agency` de %50). Hat: cam kenarlık `#ffffff1a` (%10), hover `#ffffff40` (%25). Şampanya ve platin artık vurgu değildir.
-- Cam yüzey: şeffaf zemin + 1px `#ffffff1a`; üst bar ve vitrin kartlarında `backdrop-filter` yalnızca masaüstünde ve kaydırınca. Seçili kart: `#ffffff` kenar + içeriden loş ışık.
-- Işık serbesttir ama ölçülüdür: imleci izleyen 600 px radyal spotlight (yalnızca ince işaretçi), Border Beam (conic-gradient, 8 sn, yalnızca `transform` ile dönen), düğme içi loş parlama. Aynı anda en çok 3 Border Beam + 1 spotlight; görünür alan dışında hepsi durur.
-- Köşe: kartlar 20 px, düğmeler ve rozetler hap (999 px). Gölge yok (ışık içeridedir).
+## Tasarım tokenları (Blueprint yapısı, B1/v2 renk sistemi: docs/adr/0006 ve 0007)
+- **Saf siyah (`#000`) ve saf beyaz (`#fff`) hiçbir yerde yok** (CSS, bileşenler, OG kartı, Remotion sahneleri, videolar); koyu her zaman obsidian, açık her zaman platin. Denetim bunu FAIL sayar.
+- Zemin obsidian `#0D0D0E`; katman 1 `#141416` (kart); katman 2 `#1A1A1E` (yükseltilmiş yüzey, menü). Metin platin `#E2E2E6` (zeminde 15,0:1), ikincil platin %70 (en kötü yüzeyde 6,5:1), üçüncül platin %60 (5,2:1). Hat: cam kenarlık `#ffffff1a` (%10), hover `#ffffff40` (%25): sahibin onayladığı yarı saydam çizgiler, blok değil. Şeffaf tonlar da paletten gelir (`rgb(226 226 230 / x)`, `rgb(13 13 14 / x)`).
+- **Şampanya `#D4C5A9` tek vurgu rengidir:** yalnızca birincil çağrı düğmesi ve tekil vurgular; logoda hiç kullanılmaz. Diğer her etkin durum (seçili kart, odak halkası, ilerleme) platin.
+- Cam yüzey: şeffaf zemin + 1px `#ffffff1a`; üst bar ve vitrin kartlarında `backdrop-filter` yalnızca masaüstünde ve kaydırınca. Seçili kart: platin kenar + içeriden loş ışık.
+- Işık serbesttir ama ölçülüdür: imleci izleyen 600 px radyal spotlight (yalnızca ince işaretçi), Border Beam (conic-gradient, 8 sn, yalnızca `transform` ile dönen), düğme içi loş parlama. Aynı anda en çok 3 Border Beam + 1 spotlight; görünür alan dışında hepsi durur. Logoya parlama, gölge, gradyan eklenmez.
+- **Hap düğme tek tarif:** `.btn` (52 px) ve `.btn-sm` (40 px), köşe `--radius-pill`; birincil = şampanya zemin + obsidian metin (11,4:1), ikincil = cam (`.btn-ghost`). Yuvarlak ikon düğmeleri (`.strip-btn`, `.frame-control`) ve seçim hapları (`.reach-chip`, `.role-chip`, `.overlay-chip`) aynı köşe ve kenar kuralını paylaşır.
+- **Mono etiket tek tarif:** `.label`, `.chip`, `.badge`, `.lang-trigger`, `.lang-item .code` tek kuraldan gelir (11 px mono, büyük harf, `--tracking-label` 0,18em). Büyük harf ve etiket aralığı CSS'te yalnızca o kuralda yazılır; yeni etiket aynı sınıflardan birini alır, kendi tipografisini yazmaz (denetim sayar). Arapça ve Japoncada büyük harf ve aralık kalkar.
+- Köşe: kartlar 20 px, paneller 28 px, düğmeler ve rozetler hap (999 px). Gölge yok (ışık içeridedir).
 - Başlık en çok 2 satır. Sola hizalı (RTL'de sağa, mantıksal özelliklerle).
 
 ## Tipografi
-- Gövde ve başlık: Inter (OFL, `public/fonts`, Latin + Türkçe alt kümeleri). Etiketler: sistem mono yığını (`ui-monospace, SFMono-Regular, Menlo, Consolas`), 11 px, geniş harf aralığı, büyük harf serbest (yalnızca bu mikro etiketlerde). Ağırlık 300 (wordmark ve büyük başlık), 400, 500. İtalik yok, `font-synthesis: none`.
+- Gövde ve başlık: **Instrument Sans** (OFL, `public/fonts`, Latin 30 KB + Türkçe 2 KB alt kümeleri, `scripts/build-fonts.py` resmi değişken yazı tipinden üretir; genişlik ekseni 100'e sabit, ağırlık ekseni 400–600). Etiketler: sistem mono yığını (`ui-monospace, SFMono-Regular, Menlo, Consolas`), 11 px, geniş harf aralığı, büyük harf (yalnızca bu mikro etiketlerde). **Ağırlık 400 ve 500** (büyük başlık da 400: ailede 300 yok); 600 yalnızca OG kartında. İtalik yok, `font-synthesis: none`. Yedek: Arial'dan ölçeklenen "Instrument Sans Fallback" (CLS 0).
 - AR ve JA: sistem yazı tipi yığınları (Segoe UI/Tahoma/Geeza Pro/Noto Sans Arabic; Yu Gothic/Hiragino Sans/Noto Sans JP). Arapçada harf aralığı SIFIR (bitişik yazı). Özel OFL yığını bu diller yayına alınırken seçilir.
 - Türkçe: İ ı Ş ş Ğ ğ Ç ç Ö ö Ü ü glif testi `scripts/check-fonts.py`; ₺ yazı tipinde yok (fiyat gösterilmediği sürece sorun değil). `lang` ve `dir` doğru olmalı.
-- Font dosyaları (Satoshi vb.) repoya commit edilmez.
+- Lisansı kısıtlı font dosyaları (Satoshi vb.) repoya commit edilmez; OFL fontlar (Instrument Sans) `public/fonts` altında durur ve `OFL.txt` yanında olur.
+- **Logo:** `brand/` paketi (B1 monogram, özel çizim v2 wordmark, `brand/README.md` kuralları: tek renk, koruma alanı 2u, asgari boyut monogram 16 px / yatay kilit 24 px / yığılmış kilit 48 px, oran bozulmaz). Kodda `components/ui/Logo.tsx` çizilmiş SVG yollarını `lib/brand-paths.ts`'ten okur; bu dosya, `app/icon.svg`, `app/apple-icon.png`, `public/brand/logo-512.png` `npm run brand:build` ile üretilir (`brand:check` ve denetim eskimişse FAIL). Ad/marka sorgusu (Türkpatent ve uluslararası) bitmeden logo nihai kabul edilmez.
 
 ## Motion
 - Tercihen `transform` ve `opacity`; layout özelliği animasyonlanmaz. Bilinçli istisnalar: SVG halka dolumu (`stroke-dashoffset`, 4 küçük halka, yalnızca görünürken) ve adım geçişinde `clip-path` (briefing paneli).
@@ -76,4 +81,4 @@ Ana sayfada 4 adım, ekran başına tek soru: (1) proje türü, (2) yatırım ar
 - `.env`, font dosyaları ve sırlar commit edilmez.
 
 ## Faz planı
-F0 Karar dondurma · F1 Logo ve tipografi (Blueprint wordmark'ı geçerli) · F2 Next.js 16 / Tailwind v4 (KAPI GEÇİLDİ 07.10.2026, `faz_2`) · F3 Motion ve scroll (KAPI GEÇİLDİ 08.10.2026, `faz_3`, docs/perf/faz3.md) · F4 Ana sayfa (Blueprint) ve Strategic Briefing (KAPI GEÇİLDİ 08.10.2026, `faz_4`: denetim 0 hata, duman 107/107, tarayıcı 60/60, Lighthouse masaüstü 100/100/100/100, mobil performans 93, docs/perf/faz4.md; açık: mobil LCP ≈ 2,9 sn > 2,5 sn hedefi) · F5 7 dil ve küresel SEO (TASLAK ÇEVİRİLERLE TAMAM 08.10.2026, `faz_5`; yayın listesi `en,tr`, beş dil yerel çeviri ve hukuk incelemesi bekliyor) · F6 n8n/Gmail gerçek teslim (n8n adresi, imza sırrı, Turnstile anahtarları gerekir) ve gerçek cihaz testi · F7 Güvenlik sıkılaştırma (CSP enforce), çeviri ve hukuk incelemesi · F8 Vercel ve lansman
+F0 Karar dondurma · F1 Logo ve tipografi (Blueprint wordmark'ı geçerli) · F2 Next.js 16 / Tailwind v4 (KAPI GEÇİLDİ 07.10.2026, `faz_2`) · F3 Motion ve scroll (KAPI GEÇİLDİ 08.10.2026, `faz_3`, docs/perf/faz3.md) · F4 Ana sayfa (Blueprint) ve Strategic Briefing (KAPI GEÇİLDİ 08.10.2026, `faz_4`: denetim 0 hata, duman 107/107, tarayıcı 60/60, Lighthouse masaüstü 100/100/100/100, mobil performans 93, docs/perf/faz4.md; açık: mobil LCP ≈ 2,9 sn > 2,5 sn hedefi) · F5 7 dil ve küresel SEO (TASLAK ÇEVİRİLERLE TAMAM 08.10.2026, `faz_5`; yayın listesi `en,tr`, beş dil yerel çeviri ve hukuk incelemesi bekliyor) · 2B-1 Tokenlar ve Marka (UYGULANDI 08.10.2026, `faz_2b1`, docs/adr/0007, docs/perf/faz2b1.md: obsidian paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo; masaüstü Lighthouse 100/100/100/100; açık: mobil performans bu sürüm için ölçülmedi, sayfada "ölçülecek" yazar) · 2B-2, 2B-3, 2B-4: kapsamı henüz tanımlı değil (sahibin paket tanımı bekleniyor) · F6 n8n/Gmail gerçek teslim (n8n adresi, imza sırrı, Turnstile anahtarları gerekir) ve gerçek cihaz testi · F7 Güvenlik sıkılaştırma (CSP enforce), çeviri ve hukuk incelemesi · F8 Vercel ve lansman

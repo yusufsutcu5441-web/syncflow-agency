@@ -19,25 +19,31 @@ export type Metric = {
   source: string;
 };
 
-const DESKTOP = 'desktop preset, local production build';
-const SOURCE = 'Lighthouse 13.5 (npm run perf), docs/perf/faz4.md';
+const DESKTOP = 'desktop preset, local production build, median of 3 runs';
+// Re-measured on the 2B-1 build (obsidian palette, Instrument Sans, B1 logo, re-rendered clips): docs/perf/faz2b1.md.
+const SOURCE = 'Lighthouse 13.5 (npm run perf), docs/perf/faz2b1.md';
 const FRAME_PROFILE = '1280x800, headless Chrome, 60 Hz, no CPU throttling';
-const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md';
+// The frame sampler was NOT re-run for 2B-1: its numbers belong to the Faz 4 build (the animations did not change, but the
+// measurement is that build's), so the entries keep that source and date.
+const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 build)';
 
 export const METRICS = {
   lighthousePerformance: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
   lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
   lighthouseBestPractices: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
   lighthouseSeo: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
+  // Not published until it is measured again on the 2B-1 build: the Faz 4 value (93, median of 7) belongs to the previous
+  // build, and the three unfinished mobile runs taken on this one (69-73, TBT 800-1000 ms) came while the machine was busy,
+  // so they neither confirm nor refute it. Run `npm run perf` on a quiet machine, then put the median here.
   lighthousePerformanceMobile: {
-    value: 93,
+    value: null,
     unit: 'score',
-    measuredAt: '2026-10-08',
-    profile: 'mobile preset, simulated slow 4G, 4x CPU slowdown, median of 7 runs (range 90-95)',
-    source: SOURCE,
+    measuredAt: '',
+    profile: 'mobile preset, simulated slow 4G, 4x CPU slowdown (not yet measured on the 2B-1 build)',
+    source: 'Lighthouse 13.5 (npm run perf), docs/perf/faz2b1.md',
   },
   cls: { value: 0, unit: 'cls', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
-  lcpDesktop: { value: 653, unit: 'ms', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
+  lcpDesktop: { value: 682, unit: 'ms', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
   tbtDesktop: { value: 0, unit: 'ms', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
   frameMedian: { value: 16.7, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
   frameP99: { value: 16.9, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },

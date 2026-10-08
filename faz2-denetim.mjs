@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * SyncFlow denetimi. Faz 2: bağımlılıklar, tasarım tokenları (Blueprint, docs/adr/0006), next-intl iskeleti, CSP.
+ * SyncFlow denetimi. Faz 2: bağımlılıklar, tasarım tokenları (Blueprint, docs/adr/0006; palet ve marka 0007), next-intl iskeleti, CSP.
  * Faz 3: hareket ve kaydırma (Lenis ve Motion ilk yüke girmez, azaltılmış hareket, JS'siz görünürlük).
  * Faz 4: Blueprint ana sayfası, briefing (honeypot, Turnstile, origin, imzalı webhook), vitrin videoları, doğrulanmamış iddia yasağı.
  * Faz 5: 7 dil (taslak diller, RTL, yayın listesi), hreflang/sitemap yalnızca yayındaki dillere.
+ * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo.
  * Kullanım (proje kökünden):   node faz2-denetim.mjs [--root yol] [--build] [--json]
  *   --build  `npm run build` çalıştırır (production build)    --json  faz2-denetim.json yazar
  * Hiçbir dosyayı değiştirmez; yalnızca okur ve raporlar. Çıkış kodu: FAIL varsa 1.
@@ -81,25 +82,74 @@ else {
   add(G2, "INFO", `Dosya: ${css}` + (css.startsWith("src/") ? "" : " (src/ olmadan: kök app/ düzeni)"));
   /@import\s+["']tailwindcss["']/.test(c) ? add(G2, "PASS", '@import "tailwindcss" var') : add(G2, "FAIL", '@import "tailwindcss" yok');
   /@theme\b/.test(c) ? add(G2, "PASS", "@theme bloğu var") : add(G2, "WARN", "@theme bloğu yok; tokenlar Tailwind yardımcı sınıflarına dönüşmez");
-  // Blueprint tokenları (docs/adr/0006): saf siyah zemin, #0a0a0a kart, #ffffff1a cam çizgi, #ffffff40 hover.
-  const req = { "#000000": "zemin (saf siyah)", "#0a0a0a": "kart", "#111113": "yükseltilmiş yüzey", "#ffffff": "metin (beyaz)" };
-  for (const [hex, name] of Object.entries(req)) low.includes(hex.toLowerCase()) ? add(G2, "PASS", `${hex} ${name}`) : add(G2, "FAIL", `${hex} ${name} tanımlı değil`);
-  /#ffffff1a|rgb\(\s*255\s+255\s+255\s*\/\s*0?\.1\s*\)/i.test(c)
-    ? add(G2, "PASS", "cam kenarlık #ffffff1a (%10 beyaz)") : add(G2, "FAIL", "cam kenarlık #ffffff1a / rgb(255 255 255 / 0.1) tanımlı değil");
-  /#ffffff40|rgb\(\s*255\s+255\s+255\s*\/\s*0?\.25\s*\)/i.test(c)
-    ? add(G2, "PASS", "hover kenarlığı #ffffff40 (%25 beyaz)") : add(G2, "FAIL", "hover kenarlığı #ffffff40 / rgb(255 255 255 / 0.25) tanımlı değil");
+
+  // Palet (docs/adr/0007): obsidian zemin, iki katman, platin metin, şampanya vurgu. Cam çizgiler sahibin onayladığı #ffffff1a ve #ffffff40.
+  const req = { "#0d0d0e": "zemin (obsidian)", "#141416": "katman 1", "#1a1a1e": "katman 2", "#e2e2e6": "metin (platin)", "#d4c5a9": "vurgu (şampanya)" };
+  for (const [hex, name] of Object.entries(req)) low.includes(hex) ? add(G2, "PASS", `${hex} ${name}`) : add(G2, "FAIL", `${hex} ${name} tanımlı değil`);
+  /#ffffff1a/i.test(c) ? add(G2, "PASS", "cam kenarlık #ffffff1a (%10)") : add(G2, "FAIL", "cam kenarlık #ffffff1a tanımlı değil");
+  /#ffffff40/i.test(c) ? add(G2, "PASS", "hover kenarlığı #ffffff40 (%25)") : add(G2, "FAIL", "hover kenarlığı #ffffff40 tanımlı değil");
   /-0?\.02em/.test(c) ? add(G2, "PASS", "display tracking -0.02em") : add(G2, "FAIL", "-0.02em tracking tanımı yok");
   /\[lang=['"]?ar['"]?\][^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c) || /:lang\(ar\)[^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c)
     ? add(G2, "PASS", "Arapçada harf aralığı sıfırlanıyor (bitişik yazı bozulmaz)") : add(G2, "FAIL", "Arapça için harf aralığı sıfırlaması yok (letter-spacing bitişik harfleri koparır)");
   const bad = [
     [/-0?\.045em|-0?\.04em/g, "eski sıkı tracking (-0.04/-0.045em); display için -0.02em olmalı", "FAIL"],
-    [/font-weight\s*:\s*(?:100|200|600|700|800|900)\b/g, "300-500 dışında ağırlık", "WARN"],
+    [/font-weight\s*:\s*(?:100|200|300|700|800|900)\b/g, "Instrument Sans'ta olmayan ağırlık (aile 400-600 taşır; 300 sessizce 400 çizilir)", "FAIL"],
     [/font-style\s*:\s*italic/g, "italik yasak", "WARN"],
-    [/\b(?:turquoise|aqua|cyan|teal|navy)\b|#(?:00ffff|40e0d0|2dd4bf|14b8a6|06b6d4)\b/gi, "turkuaz/lacivert tonu (Blueprint tek renklidir)", "FAIL"],
+    [/\b(?:turquoise|aqua|cyan|teal|navy)\b|#(?:00ffff|40e0d0|2dd4bf|14b8a6|06b6d4)\b/gi, "turkuaz/lacivert tonu (palet tek renklidir)", "FAIL"],
   ];
   let clean = true;
   for (const [re, msg, lvl] of bad) { const m = c.match(re); if (m) { clean = false; add(G2, lvl, `${msg}: ${[...new Set(m)].slice(0, 4).join(", ")}`); } }
   if (clean) add(G2, "PASS", "yasaklı değer bulunmadı");
+
+  // Saf siyah ve saf beyaz hiçbir yerde yok (CSS, bileşenler, OG kartı, Remotion sahneleri): koyular obsidian, açıklar platin.
+  const PURE = /#(?:000|000000|fff|ffffff)\b|rgba?\(\s*(?:0\s*[ ,]\s*0\s*[ ,]\s*0|255\s*[ ,]\s*255\s*[ ,]\s*255)\b|(?<![-\w])(?:black|white)(?![-\w])/gi;
+  const pureHits = [];
+  for (const f of [abs(css), ...walk(abs("app"), [".tsx", ".ts"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])]) {
+    if (rel(f).endsWith("brand-paths.ts")) continue;
+    for (const m of stripComments(fs.readFileSync(f, "utf8")).match(PURE) ?? []) pureHits.push(`${rel(f)}: ${m}`);
+  }
+  pureHits.length ? add(G2, "FAIL", `saf siyah/beyaz kaldı (${pureHits.length}); obsidian #0D0D0E ve platin #E2E2E6 kullanın: ${[...new Set(pureHits)].slice(0, 5).join(" | ")}`)
+    : add(G2, "PASS", "saf siyah ve saf beyaz yok (CSS, bileşenler, OG kartı, Remotion sahneleri)");
+
+  // Yazı tipi: Instrument Sans (OFL), kendi sunucumuzdan; Inter kalmadı.
+  /@font-face\s*\{[^}]*font-family:\s*['"]Instrument Sans['"][^}]*font-weight:\s*400\s+600/.test(c)
+    ? add(G2, "PASS", "@font-face 'Instrument Sans' (400-600) tanımlı") : add(G2, "FAIL", "@font-face 'Instrument Sans' font-weight 400 600 ile tanımlı değil");
+  /--font-sans:\s*['"]Instrument Sans['"]/.test(c) ? add(G2, "PASS", "--font-sans Instrument Sans ile başlıyor") : add(G2, "FAIL", "--font-sans Instrument Sans ile başlamıyor");
+  const fontFiles = ["public/fonts/instrument-sans-latin-v1.woff2", "public/fonts/instrument-sans-turkish-v1.woff2", "assets/og-instrument-sans-600.ttf"];
+  const lostFonts = fontFiles.filter((f) => !exists(f));
+  lostFonts.length ? add(G2, "FAIL", `yazı tipi dosyası yok: ${lostFonts.join(", ")} (scripts/build-fonts.py üretir)`) : add(G2, "PASS", "Instrument Sans dosyaları (Latin, Türkçe, OG kartı) var");
+  exists("public/fonts/OFL.txt") && /Instrument Sans/.test(read("public/fonts/OFL.txt")) ? add(G2, "PASS", "public/fonts/OFL.txt Instrument Sans lisansı") : add(G2, "FAIL", "public/fonts/OFL.txt Instrument Sans lisansını taşımıyor");
+  const oldInter = [...walk(abs("app"), [".tsx", ".ts", ".css"]), ...walk(abs("components"), [".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])].filter((f) => /['"]Inter['"]|inter-(?:latin|turkish)|og-inter/.test(fs.readFileSync(f, "utf8"))).map(rel)
+    .concat(exists("public/fonts") ? fs.readdirSync(abs("public/fonts")).filter((n) => /^inter-/i.test(n)).map((n) => `public/fonts/${n}`) : []);
+  oldInter.length ? add(G2, "FAIL", `eski Inter izi: ${oldInter.slice(0, 4).join(", ")}`) : add(G2, "PASS", "Inter izi kalmadı");
+
+  // Hap düğmeler: tek tarif (.btn), birincil şampanya.
+  /--radius-pill:\s*999px/.test(c) ? add(G2, "PASS", "--radius-pill 999px") : add(G2, "FAIL", "--radius-pill: 999px tanımlı değil");
+  /\.btn\s*\{[^}]*border-radius:\s*var\(--radius-pill\)/.test(c) ? add(G2, "PASS", ".btn hap (border-radius: var(--radius-pill))") : add(G2, "FAIL", ".btn hap değil");
+  /\.btn-primary\s*\{[^}]*background:\s*var\(--color-champagne\)/.test(c) ? add(G2, "PASS", "birincil düğme şampanya, tek vurgu rengi") : add(G2, "FAIL", ".btn-primary şampanya (--color-champagne) değil");
+
+  // Mono etiketler: tek tarif. Büyük harf ve etiket aralığı CSS'te yalnızca bir yerde yazılır.
+  const upper = (c.match(/text-transform:\s*uppercase/g) ?? []).length, track = (c.match(/letter-spacing:\s*var\(--tracking-label\)/g) ?? []).length;
+  const recipe = c.match(/((?:\.[\w-]+(?: \.[\w-]+)?,?\s*)+)\{[^}]*text-transform:\s*uppercase[^}]*\}/)?.[1] ?? "";
+  const members = [".label", ".chip", ".badge", ".lang-trigger", ".lang-item .code"].filter((m) => recipe.includes(m));
+  upper === 1 && track === 1 && members.length === 5
+    ? add(G2, "PASS", "büyük harfli mono etiket tek tarifte (.label .chip .badge .lang-trigger .lang-item .code)")
+    : add(G2, "FAIL", `etiket tarifi dağınık: text-transform:uppercase ${upper}x, letter-spacing:var(--tracking-label) ${track}x, tarifte ${members.length}/5 sınıf`);
+  /\.label,[^{]*\{[^}]*font-family:\s*var\(--font-mono\)/.test(c) ? add(G2, "PASS", "etiket tarifi mono yazı tipi (--font-mono)") : add(G2, "FAIL", "etiket tarifi --font-mono kullanmıyor");
+
+  // Marka paketi B1/v2 (brand/README.md): tek renk, eğriye çevrilmiş SVG, koddaki yollar paketle aynı.
+  const brandFiles = ["brand/README.md", "brand/favicon.svg", "brand/monogram-b1-platin.svg", "brand/monogram-b1-obsidian.svg", "brand/monogram-b1-small-platin.svg", "brand/lockup-horizontal-platin.svg", "brand/lockup-stacked-platin.svg", "brand/wordmark-platin.svg"];
+  const lostBrand = brandFiles.filter((f) => !exists(f));
+  lostBrand.length ? add(G2, "FAIL", `marka dosyası yok: ${lostBrand.join(", ")}`) : add(G2, "PASS", "brand/ paketi (B1 monogram, yatay ve yığılmış kilit, wordmark, favicon) depoda");
+  const brandSvgs = fs.existsSync(abs("brand")) ? fs.readdirSync(abs("brand")).filter((n) => n.endsWith(".svg") && n !== "construction-b1.svg") : [];
+  const offBrand = brandSvgs.filter((n) => { const t = read(`brand/${n}`); return /gradient|filter|shadow|<text|font-family/i.test(t) || [...t.matchAll(/fill="(#[0-9a-fA-F]{6})"/g)].some((m) => !["#E2E2E6", "#0D0D0E"].includes(m[1].toUpperCase())); });
+  offBrand.length ? add(G2, "FAIL", `logo dosyası tek renk/eğri kuralını bozuyor: ${offBrand.join(", ")}`) : add(G2, "PASS", `${brandSvgs.length} logo dosyası tek renk (platin ya da obsidian), eğri, gradyansız, canlı yazı tipsiz`);
+  const bb = spawnSync(process.execPath, ["scripts/build-brand.mjs", "--check"], { cwd: ROOT, encoding: "utf8" });
+  bb.status === 0 ? add(G2, "PASS", "lib/brand-paths.ts, app/icon.svg, apple-icon.png ve logo-512.png marka paketiyle aynı") : add(G2, "FAIL", `marka çıktıları eski: ${(bb.stdout + bb.stderr).trim().split("\n")[0]} (npm run brand:build)`);
+  const logo = exists("components/ui/Logo.tsx") ? read("components/ui/Logo.tsx") : "", head = exists("components/layout/Header.tsx") ? read("components/layout/Header.tsx") : "", foot = exists("components/layout/Footer.tsx") ? read("components/layout/Footer.tsx") : "";
+  /brand-paths/.test(logo) && /currentColor/.test(logo) && /<Logo\b/.test(head) && /<Logo\s+part="wordmark"/.test(foot) && !/Wordmark\b/.test(head + foot)
+    ? add(G2, "PASS", "header B1 yatay kilidi, footer çizili wordmark; metinle yazılmış wordmark kalmadı") : add(G2, "FAIL", "Logo bileşeni brand-paths/currentColor kullanmıyor ya da header/footer çizili logoyu kullanmıyor");
+  exists("app/apple-icon.png") && exists("public/brand/logo-512.png") && /logo-512\.png/.test(read("lib/jsonld.ts")) ? add(G2, "PASS", "apple-icon ve JSON-LD logosu raster (B1)") : add(G2, "FAIL", "apple-icon.png / JSON-LD logo-512.png eksik");
 }
 
 /* ───────── 3) next-intl TR/EN iskeleti ───────── */
@@ -169,7 +219,8 @@ if (tr && en) {
 // koda gömülü Türkçe metin ve yasaklı sınıf taraması
 const srcFiles = walk(abs(base === "." ? "app" : "src"), [".tsx", ".ts"]).concat(walk(abs("components"), [".tsx"]));
 const hard = [], banned = {};
-const BAN = { "italik": /\bitalic\b/, "kalın ağırlık": /\bfont-(?:extralight|thin|semibold|bold|extrabold|black)\b/,
+const BAN = { "italik": /\bitalic\b/, "ağırlık (Instrument Sans 400-600; yalnız font-normal ve font-medium)": /\bfont-(?:extralight|thin|light|semibold|bold|extrabold|black)\b/,
+  "saf siyah/beyaz sınıfı (obsidian ve ink kullanın)": /\b(?:bg|text|border|decoration|ring|fill|stroke|from|to|via|outline|divide)-(?:white|black)(?:\/\d+)?\b/,
   "gölge": /\bshadow-(?:md|lg|xl|2xl)\b/, "tracking-tighter": /\btracking-tighter\b/,
   "fiziksel yön (RTL'de bozulur; start/end kullanın)": /(?<![\w-])(?:ml|mr|pl|pr)-(?!auto\b)[\w.[\]]+|(?<![\w-])(?:left|right)-(?:\d|\[|px|full|1\/2)|\btext-(?:left|right)\b|\brounded-[lr]-|\bborder-[lr](?:-|\b)|\bfloat-(?:left|right)\b|\borigin-(?:left|right)\b/,
   "renkli Tailwind paleti": /\b(?:bg|text|border|from|to|via|ring)-(?:cyan|teal|sky|blue|indigo|violet|purple|fuchsia|pink|emerald|green|lime)-\d{2,3}\b/ };
@@ -181,7 +232,7 @@ for (const f of srcFiles) {
   });
 }
 hard.length ? add(G3, "WARN", `koda gömülü Türkçe metin (${hard.length} satır): ${hard.slice(0, 4).join(", ")}`) : add(G3, "PASS", "JSX içinde gömülü Türkçe metin bulunmadı");
-for (const [n, l] of Object.entries(banned)) add("2. Tasarım tokenları (globals.css)", n.startsWith("fiziksel yön") ? "FAIL" : "WARN", `bileşenlerde ${n}: ${l.slice(0, 3).join(", ")}${l.length > 3 ? ` (+${l.length - 3})` : ""}`);
+for (const [n, l] of Object.entries(banned)) add("2. Tasarım tokenları (globals.css)", n.startsWith("fiziksel yön") || n.startsWith("saf siyah") ? "FAIL" : "WARN", `bileşenlerde ${n}: ${l.slice(0, 3).join(", ")}${l.length > 3 ? ` (+${l.length - 3})` : ""}`);
 
 /* ───────── 4) Güvenlik ve depo hijyeni ───────── */
 const G4 = "4. Güvenlik ve depo hijyeni";
@@ -345,7 +396,7 @@ const color = process.stdout.isTTY && !process.env.NO_COLOR;
 const C = { PASS: "\x1b[32m", WARN: "\x1b[33m", FAIL: "\x1b[31m", INFO: "\x1b[90m", R: "\x1b[0m" };
 const sym = { PASS: "✔", WARN: "!", FAIL: "✖", INFO: "i" };
 let g = ""; const cnt = { PASS: 0, WARN: 0, FAIL: 0, INFO: 0 };
-console.log(`\nSyncFlow denetimi (Faz 2–5 kapısı: tokenlar, i18n ve 7 dil, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
+console.log(`\nSyncFlow denetimi (Faz 2–5 ve 2B-1 kapısı: tokenlar, marka, i18n ve 7 dil, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
 for (const r of results) {
   if (r.group !== g) { g = r.group; console.log(`\n${g}`); }
   cnt[r.level]++;
