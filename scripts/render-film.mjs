@@ -28,8 +28,8 @@ const outDir = join(root, 'public', 'media', 'clips');
 const { version } = JSON.parse(readFileSync(join(root, 'node_modules', 'remotion', 'package.json'), 'utf8'));
 
 // Mirrors remotion/config.ts (kept in plain JS here so this script needs no TypeScript runtime).
-const CLIPS = ['monolith', 'estate', 'clinic', 'saas'];
-const POSTER_FRAME = { monolith: 36, estate: 120, clinic: 70, saas: 150 };
+const CLIPS = ['monolith', 'estate', 'clinic', 'law'];
+const POSTER_FRAME = { monolith: 36, estate: 120, clinic: 70, law: 90 };
 
 /** Frames go through PNG, not the default JPEG, so thin lines and small text reach the encoder undamaged. */
 const COMMON = ['--muted', '--overwrite', '--image-format=png', '--log=error'];

@@ -18,7 +18,7 @@ import { useClientI18n } from '@/components/i18n/ClientI18n';
  */
 type Mode = 'visible' | 'hover';
 
-export function SceneVideo({ name, label, mode }: { name: 'monolith' | 'estate' | 'clinic' | 'saas'; label: string; mode: Mode }) {
+export function SceneVideo({ name, label, mode }: { name: 'monolith' | 'estate' | 'clinic' | 'law'; label: string; mode: Mode }) {
   const { messages } = useClientI18n();
   const t = messages.Showcase;
   const video = useRef<HTMLVideoElement>(null);
