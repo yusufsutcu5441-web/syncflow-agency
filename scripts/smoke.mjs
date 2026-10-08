@@ -9,6 +9,14 @@
  *   MOCK_WEBHOOK_PORT   start a mock receiver on this port to verify delivery. Start the app with
  *                       CONTACT_WEBHOOK_URL=http://127.0.0.1:<port>/hook (and optionally CONTACT_WEBHOOK_SECRET).
  *   WEBHOOK_SECRET      the same secret, to verify the HMAC signature.
+ *   TURNSTILE_MODE      how the server under test is configured (default "pass"):
+ *                         pass   TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA (Cloudflare's always-pass test
+ *                                secret): a missing token is refused, any token passes. Needs internet access.
+ *                         off    no TURNSTILE_SECRET_KEY in development: the check is skipped.
+ *                         unset  no TURNSTILE_SECRET_KEY in production: the form must answer 503.
+ *   EXPECT_LOCALES      languages that must be public (default "en,tr", the production default; "en,tr,de,fr,es,ar,ja"
+ *                       for a development server or NEXT_PUBLIC_PREVIEW_LOCALES=1). Every other language must answer 404.
+ *   EXPECT_CSP_MODE     "enforce" to expect the enforcing CSP header instead of report-only.
  *   STRESS=1            also fire 250 page requests from one address to prove the page-level limiter.
  */
 import { createHmac } from 'node:crypto';
@@ -16,6 +24,10 @@ import { createServer } from 'node:http';
 
 const BASE = (process.argv[2] ?? process.env.BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 const ORIGIN = new URL(BASE).origin;
+const ALL_LOCALES = ['en', 'tr', 'de', 'fr', 'es', 'ar', 'ja'];
+const OPEN = (process.env.EXPECT_LOCALES ?? 'en,tr').split(',').map((s) => s.trim()).filter(Boolean);
+const CLOSED = ALL_LOCALES.filter((l) => !OPEN.includes(l));
+const TURNSTILE_MODE = process.env.TURNSTILE_MODE ?? 'pass';
 const results = [];
 
 function check(name, ok, detail = '') {
@@ -33,20 +45,25 @@ const uniqueIp = (() => {
 })();
 
 const post = (body, { ip = uniqueIp(), headers = {}, raw = false } = {}) =>
-  fetch(`${BASE}/api/contact`, {
+  fetch(`${BASE}/api/briefing`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', origin: ORIGIN, 'x-forwarded-for': ip, ...headers },
     body: raw ? body : JSON.stringify(body),
   });
 
 const valid = (over = {}) => ({
+  projectType: 'showcase',
+  budget: 'b10',
+  timeline: 'w6',
   name: 'Jane Doe',
+  company: 'Acme Holding, Chief Marketing Officer',
   email: 'jane@example.com',
-  company: 'Acme',
-  message: 'We would like a new website for our firm, please get in touch.',
+  message: 'A cinematic site for our flagship residences.',
+  role: 'decider',
   consent: true,
   locale: 'en',
   website: '',
+  turnstileToken: TURNSTILE_MODE === 'pass' ? 'XXXX.DUMMY.TOKEN.XXXX' : undefined,
   elapsedMs: 9000,
   ...over,
 });
@@ -70,8 +87,7 @@ if (process.env.MOCK_WEBHOOK_PORT) {
 section('Home page, security headers, CSP nonce');
 const home = await get('/');
 const html = await home.text();
-// Faz 2 (docs/adr/0001-csp-report-only.md): the policy is delivered as Content-Security-Policy-Report-Only until Faz 7.
-// Run with EXPECT_CSP_MODE=enforce (after setting CSP_MODE=enforce on the server) to expect the enforcing header instead.
+// docs/adr/0001-csp-report-only.md: the policy is delivered as Content-Security-Policy-Report-Only until Faz 7.
 const expectEnforce = process.env.EXPECT_CSP_MODE === 'enforce';
 const cspHeader = expectEnforce ? 'content-security-policy' : 'content-security-policy-report-only';
 const otherCspHeader = expectEnforce ? 'content-security-policy-report-only' : 'content-security-policy';
@@ -91,12 +107,14 @@ check('CSP reports violations to /api/csp-report', csp.includes('report-uri /api
 check('upgrade-insecure-requests is only sent when enforcing (browsers ignore it in report-only)', expectEnforce || !csp.includes('upgrade-insecure-requests'));
 check('CSP has a per-request nonce + strict-dynamic', Boolean(nonce) && csp.includes("'strict-dynamic'"));
 const scriptSrc = /script-src ([^;]+)/.exec(csp)?.[1] ?? '';
-check("CSP script-src has no 'unsafe-inline' / 'unsafe-eval'", !scriptSrc.includes('unsafe-inline') && !scriptSrc.includes('unsafe-eval'), scriptSrc);
+// A development server needs 'unsafe-eval' for hot reloading; the production policy must not have it.
+const devServer = scriptSrc.includes('unsafe-eval');
+check("CSP script-src has no 'unsafe-inline' (and no 'unsafe-eval' in production)", !scriptSrc.includes('unsafe-inline') && (devServer || !scriptSrc.includes('unsafe-eval')), scriptSrc);
 check('CSP object-src none, base-uri self, frame-ancestors self', csp.includes("object-src 'none'") && csp.includes("base-uri 'self'") && csp.includes("frame-ancestors 'self'"));
 const origins = [...csp.matchAll(/https:\/\/[^\s;']+/g)].map((m) => m[0]);
-check('CSP names no third party except lemonsqueezy.com', origins.length > 0 && origins.every((o) => o.includes('lemonsqueezy.com')), origins.join(' '));
-check('CSP allows exactly one inline <style> hash (the lemon.js loader; the Remotion Player is gone)', (csp.match(/'sha256-[^']+'/g) ?? []).length === 1, csp.match(/'sha256-[^']+'/g)?.join(' '));
-check('CSP allows the overlay: lemon.js script + checkout frame', scriptSrc.includes('https://assets.lemonsqueezy.com') && /frame-src [^;]*https:\/\/\*\.lemonsqueezy\.com/.test(csp));
+check('CSP names no third party except challenges.cloudflare.com (Turnstile)', origins.length > 0 && origins.every((o) => o === 'https://challenges.cloudflare.com'), origins.join(' '));
+check('CSP allows no inline <style> hash (Lemon Squeezy is gone)', (csp.match(/'sha256-[^']+'/g) ?? []).length === 0, csp.match(/'sha256-[^']+'/g)?.join(' '));
+check('CSP allows the Turnstile script and challenge frame', scriptSrc.includes('https://challenges.cloudflare.com') && /frame-src [^;]*https:\/\/challenges\.cloudflare\.com/.test(csp));
 
 const scriptTags = [...html.matchAll(/<script\b([^>]*)>/gi)].map((m) => m[1]).filter((attrs) => !/type="application\/ld\+json"/i.test(attrs));
 const unnonced = scriptTags.filter((attrs) => !attrs.includes(`nonce="${nonce}"`));
@@ -105,17 +123,18 @@ check(`every executable <script> carries the nonce (${scriptTags.length} scripts
 const second = await (await get('/')).headers.get(cspHeader);
 check('nonce changes on every request', Boolean(second) && second !== csp);
 
-check('<html lang="en">', /<html[^>]*\blang="en"/.test(html));
-check('title contains the formatted price ($2,500)', /<title>[^<]*\$2,500[^<]*<\/title>/.test(html));
-check('one <h1>', (html.match(/<h1\b/g) ?? []).length === 1);
-
-const checkoutHref = 'https://syncflow.lemonsqueezy.com/checkout/buy/1c12f3f3-cf34-45bd-8ae6-2260b24d77c7?embed=1&amp;dark=1';
-const checkoutLinks = html.split(checkoutHref).length - 1;
-check(`checkout CTAs point to the overlay URL (found ${checkoutLinks})`, checkoutLinks >= 4);
+check('<html lang="en" dir="ltr">', /<html[^>]*\blang="en"/.test(html) && /<html[^>]*\bdir="ltr"/.test(html));
+check('title is the studio title (no price)', /<title>syncflow\.agency \| Digital architecture studio<\/title>/.test(html));
+check('one <h1> with the two hero lines', (html.match(/<h1\b/g) ?? []).length === 1 && html.includes('Built in the dark.') && html.includes('Moves like liquid.'));
+check('the four Blueprint sections are there (architecture, showcase, reach, briefing)', ['architecture', 'showcase', 'reach', 'briefing'].every((id) => new RegExp(`<section[^>]*id="${id}"`).test(html)));
+check('no Lemon Squeezy and no old offer anywhere in the page', !/lemonsqueezy|lemon\.js|\$2,500|\$2\.500|Start Project/i.test(html));
+check('the briefing panel is there and opts out of smooth scrolling (data-lenis-prevent)', /<form[^>]*data-lenis-prevent/.test(html));
+check('the contact address is published (mailto contact@syncflow.agency)', /href="mailto:contact@syncflow\.agency"/.test(html));
+check('no unverified claim in the HTML (locked 60 FPS, 120Hz, LCP < 1.2s, AV1, example percentages)', !/locked 60|60 FPS|120\s?Hz|LCP\s*&lt;|LCP\s*<|\bAV1\b|\+212|adaptive bitrate/i.test(html));
 
 const alternates = [...html.matchAll(/<link[^>]+rel="alternate"[^>]*>/g)].map((m) => m[0]);
 const hreflangs = alternates.map((a) => /hrefLang="([^"]+)"/i.exec(a)?.[1]).filter(Boolean);
-check('hreflang alternates: en tr + x-default, and no language that is not launched', ['en', 'tr', 'x-default'].every((l) => hreflangs.includes(l)) && !['de', 'fr', 'it'].some((l) => hreflangs.includes(l)), hreflangs.join(','));
+check(`hreflang alternates: ${OPEN.join(' ')} + x-default, and no language that is not public`, [...OPEN, 'x-default'].every((l) => hreflangs.includes(l)) && !CLOSED.some((l) => hreflangs.includes(l)), hreflangs.join(','));
 check('canonical link present', /<link[^>]+rel="canonical"/.test(html));
 check('Open Graph + Twitter card tags', /property="og:title"/.test(html) && /property="og:locale"/.test(html) && /name="twitter:card"/.test(html));
 
@@ -126,25 +145,30 @@ try {
 } catch {}
 const types = graph.map((n) => n['@type']);
 check('JSON-LD parses: Organization, WebSite, ProfessionalService', ['Organization', 'WebSite', 'ProfessionalService'].every((t) => types.includes(t)), types.join(','));
-const offer = graph.find((n) => n['@type'] === 'ProfessionalService')?.makesOffer;
-check('JSON-LD Offer: 2500 USD', offer?.price === '2500' && offer?.priceCurrency === 'USD');
-check('JSON-LD has no invented ratings/reviews/address', !/aggregateRating|review|streetAddress|telephone/.test(ld ?? ''));
+check('JSON-LD has no offer, price, ratings, reviews or address', !/makesOffer|"price"|aggregateRating|review|streetAddress|telephone/.test(ld ?? ''));
+const siteLangs = graph.find((n) => n['@type'] === 'WebSite')?.inLanguage ?? [];
+check('JSON-LD lists only the public languages', JSON.stringify([...siteLangs].sort()) === JSON.stringify([...OPEN].sort()), siteLangs.join(','));
 
 /* ── 2. Locales ──────────────────────────────────────────────────────────────────────────────── */
 section('Locales');
-const expectations = {
-  tr: { lang: 'tr', words: ['Projeyi Başlat', '$2.500'] },
+const MARKERS = {
+  tr: ['Karanlıkta inşa edilir.', 'Briefing Başlat'],
+  de: ['Im Dunkeln gebaut.'],
+  fr: ['Bâti dans l’obscurité.'],
+  es: ['Construido en la oscuridad.'],
+  ar: ['في الظلام', 'ويتحرّك كالسائل'],
+  ja: ['闇の中で築く。', '液体のように動く。'],
 };
-for (const [code, { lang, words }] of Object.entries(expectations)) {
+for (const code of OPEN.filter((l) => l !== 'en')) {
   const res = await get(`/${code}`);
-  // CLDR separates number and currency with a no-break space (U+00A0) or a narrow one (U+202F): compare with plain spaces.
-  const body = (await res.text()).split(String.fromCharCode(160)).join(' ').split(String.fromCharCode(0x202f)).join(' ');
-  check(`/${code} renders in ${code} (lang attr + translated CTA + local price)`, res.status === 200 && new RegExp(`<html[^>]*\\blang="${lang}"`).test(body) && words.every((w) => body.includes(w)), `status ${res.status}`);
+  const body = await res.text();
+  const dir = code === 'ar' ? 'rtl' : 'ltr';
+  check(`/${code} renders in ${code} (lang attr, dir="${dir}", translated hero)`, res.status === 200 && new RegExp(`<html[^>]*\\blang="${code}"`).test(body) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(body) && (MARKERS[code] ?? []).every((w) => body.includes(w)), `status ${res.status}`);
 }
 // The URL alone decides the language (docs/adr/0002): no redirect from Accept-Language, no cookie.
-for (const code of ['de', 'fr', 'it']) {
+for (const code of [...CLOSED, 'it', 'pt']) {
   const res = await get(`/${code}`);
-  check(`/${code} is not launched: 404`, res.status === 404, `status ${res.status}`);
+  check(`/${code} is not public: 404`, res.status === 404, `status ${res.status}`);
 }
 const trBrowser = await get('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9,en;q=0.5' } });
 check('a Turkish browser is NOT redirected: "/" stays English', trBrowser.status === 200 && /<html[^>]*\blang="en"/.test(await trBrowser.text()), `${trBrowser.status} ${trBrowser.headers.get('location')}`);
@@ -152,25 +176,30 @@ const staleCookie = await get('/', { headers: { 'accept-language': 'tr-TR,tr;q=0
 check('an old NEXT_LOCALE cookie is ignored', staleCookie.status === 200, `status ${staleCookie.status}`);
 const trVisit = await get('/tr');
 check('visiting /tr (or /) sets no cookie at all', !trVisit.headers.get('set-cookie') && !home.headers.get('set-cookie'), `${trVisit.headers.get('set-cookie')} | ${home.headers.get('set-cookie')}`);
+check('no Link: rel="alternate" header advertises a language that is not public', !CLOSED.some((l) => (home.headers.get('link') ?? '').includes(`hreflang="${l}"`)), home.headers.get('link') ?? '');
+if (OPEN.includes('de')) {
+  const legal = await get('/de/privacy');
+  const body = await legal.text();
+  check('draft languages show the legal text in English, marked as such', legal.status === 200 && /lang="en"/.test(body) && /Who is responsible/.test(body), `status ${legal.status}`);
+}
 
 section('Metadata routes and error pages');
 const sitemap = await (await get('/sitemap.xml')).text();
-check('sitemap lists 2 locale URLs with alternates', (sitemap.match(/<loc>/g) ?? []).length === 2 && /hreflang="x-default"/.test(sitemap));
+check(`sitemap lists ${OPEN.length} locale URLs with alternates (and no closed language)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)));
 const robots = await (await get('/robots.txt')).text();
 check('robots.txt disallows /api/ and links the sitemap', /Disallow: \/api\//.test(robots) && /Sitemap:/.test(robots));
 check('manifest + icon served', (await get('/manifest.webmanifest')).status === 200 && (await get('/icon.svg')).status === 200);
 const ogUrls = [...html.matchAll(/<meta[^>]+(?:property="og:image"|name="twitter:image")[^>]*content="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
-check('og:image and twitter:image use the explicit, redirect-free /og?locale= URL', ogUrls.length >= 2 && ogUrls.every((u) => /\/og\?locale=en&v=1$/.test(u)), ogUrls.join(' '));
-check('og:image:alt is localized and carries the price', /property="og:image:alt"[^>]*content="[^"]*\$2,500/.test(html));
-for (const loc of ['en', 'tr']) {
-  const r = await get(`/og?locale=${loc}&v=1`);
+check('og:image and twitter:image use the explicit, redirect-free /og?locale= URL', ogUrls.length >= 2 && ogUrls.every((u) => /\/og\?locale=en&v=2$/.test(u)), ogUrls.join(' '));
+check('og:image:alt is localized', /property="og:image:alt"[^>]*content="syncflow\.agency: Built in the dark\. Moves like liquid\./.test(html));
+for (const loc of OPEN) {
+  const r = await get(`/og?locale=${loc}&v=2`);
   const bytes = Buffer.from(await r.arrayBuffer());
   check(`/og?locale=${loc}: 200 image/png, 1200x630, > 10 KB`, r.status === 200 && r.headers.get('content-type') === 'image/png' && bytes.length > 10_000 && bytes.readUInt32BE(16) === 1200 && bytes.readUInt32BE(20) === 630, `${r.status} ${r.headers.get('content-type')} ${bytes.length}`);
 }
 const ogHeaders = (await get('/og?locale=tr')).headers;
 check('/og is cacheable at the edge (s-maxage) and rate-limit headers present', /s-maxage=\d+/.test(ogHeaders.get('cache-control') ?? '') && ogHeaders.get('ratelimit-limit') === '30', `${ogHeaders.get('cache-control')} | ${ogHeaders.get('ratelimit-limit')}`);
 check('/og with an unknown locale falls back to English instead of failing', (await get('/og?locale=xx')).status === 200);
-check('the /og image is not wrapped in a CSP-nonce page response (plain image, no redirect)', (await get('/og?locale=tr')).status === 200);
 const nf = await get('/definitely-not-here');
 const nfBody = await nf.text();
 check('unknown URL: 404 with the localized page and the same security headers', nf.status === 404 && nfBody.includes('doesn’t exist') && Boolean(nf.headers.get(cspHeader)) && nf.headers.get('x-content-type-options') === 'nosniff', `status ${nf.status}`);
@@ -179,21 +208,24 @@ for (const p of ['/privacy', '/imprint']) {
   const body = await res.text();
   check(`${p} renders and is noindex`, res.status === 200 && /name="robots"[^>]*content="noindex/.test(body), `status ${res.status}`);
 }
+check('the old contact endpoint is gone (404)', (await get('/api/contact')).status === 404);
 
-/* ── 3. Contact API hardening ────────────────────────────────────────────────────────────────── */
-section('Contact API: validation, abuse defences');
-check('GET /api/contact is rejected (405)', (await get('/api/contact')).status === 405);
-check('POST without Origin is rejected (403)', (await fetch(`${BASE}/api/contact`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })).status === 403);
+/* ── 3. Briefing API hardening ───────────────────────────────────────────────────────────────── */
+section('Briefing API: validation, abuse defences');
+check('GET /api/briefing is rejected (405)', (await get('/api/briefing')).status === 405);
+check('POST without Origin is rejected (403)', (await fetch(`${BASE}/api/briefing`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })).status === 403);
 check('POST from a foreign Origin is rejected (403)', (await post(valid(), { headers: { origin: 'https://evil.example' } })).status === 403);
 check('Sec-Fetch-Site: cross-site is rejected (403)', (await post(valid(), { headers: { 'sec-fetch-site': 'cross-site' } })).status === 403);
 check('non-JSON content type is rejected (415)', (await post('x=1', { raw: true, headers: { 'content-type': 'text/plain' } })).status === 415);
 check('malformed JSON is rejected (400)', (await post('{"name":', { raw: true })).status === 400);
 check('oversized body is rejected (413)', (await post(valid({ message: 'a'.repeat(9000) }))).status === 413);
-const bad = await post({ name: 'x', email: 'nope', message: 'short', consent: false, locale: 'en' });
+const bad = await post(valid({ name: 'x', company: '', email: 'nope', role: undefined, consent: false }));
 const badJson = await bad.json();
-check('invalid fields: 422 with machine-readable codes', bad.status === 422 && badJson.code === 'validation' && badJson.fields?.email === 'email' && badJson.fields?.consent === 'consent', JSON.stringify(badJson));
+check('invalid fields: 422 with machine-readable codes', bad.status === 422 && badJson.code === 'validation' && badJson.fields?.email === 'email' && badJson.fields?.consent === 'consent' && badJson.fields?.company === 'required' && badJson.fields?.role === 'required', JSON.stringify(badJson));
+check('an unknown answer option is rejected (422)', (await post(valid({ budget: 'free' }))).status === 422);
 check('unknown fields are rejected (strict schema)', (await post({ ...valid(), isAdmin: true })).status === 422);
 check('unsupported locale is rejected', (await post(valid({ locale: 'xx' }))).status === 422);
+check('a message over 300 characters is rejected (422)', (await post(valid({ message: 'a'.repeat(301) }))).status === 422);
 const bot = await post(valid({ website: 'http://spam.example' }));
 check('honeypot answers 200 (bots learn nothing)', bot.status === 200 && (await bot.json()).ok === true);
 const fast = await post(valid({ elapsedMs: 120 }));
@@ -201,16 +233,28 @@ check('instant submit answers 200 (silently discarded)', fast.status === 200);
 const apiHeaders = bad.headers;
 check('API responses are no-store with a locked-down CSP', apiHeaders.get('cache-control') === 'no-store' && (apiHeaders.get('content-security-policy') ?? '').includes("default-src 'none'"));
 
-if (mock) {
-  section('Delivery, sanitisation, signature (mock webhook)');
+section(`Turnstile (mode: ${TURNSTILE_MODE})`);
+if (TURNSTILE_MODE === 'pass') {
+  const noToken = await post(valid({ turnstileToken: undefined }));
+  const noTokenJson = await noToken.json();
+  check('a briefing without a Turnstile token is refused (400 verification)', noToken.status === 400 && noTokenJson.code === 'verification', JSON.stringify(noTokenJson));
+} else if (TURNSTILE_MODE === 'unset') {
+  const res = await post(valid());
+  check('production without TURNSTILE_SECRET_KEY refuses the form (503)', res.status === 503, `status ${res.status}`);
+} else {
+  check('development without TURNSTILE_SECRET_KEY skips the check (no token needed)', (await post(valid({ elapsedMs: 120 }))).status === 200);
+}
+
+if (mock && TURNSTILE_MODE !== 'unset') {
+  section('Delivery, sanitisation, classification, signature (mock webhook)');
   received.length = 0;
 
   // 1) Markup is refused explicitly (422), never delivered, never silently altered.
   const attacks = [
     ['<img> with onerror in the name', valid({ name: '<img src=x onerror=alert(1)>Jane' }), 'name'],
-    ['<script> in the message', valid({ message: '<script>alert(document.cookie)</script>Hello there, we need a site.' }), 'message'],
-    ['unterminated <svg onload> (would swallow the rest of the text)', valid({ message: 'Hello there, we need a site. <svg onload=alert(1)>\nSecond line' }), 'message'],
-    ['HTML comment / doctype', valid({ message: 'Hello there <!-- hidden --> we need a site please.' }), 'message'],
+    ['<script> in the one-sentence description', valid({ message: '<script>alert(document.cookie)</script>Hello' }), 'message'],
+    ['unterminated <svg onload> (would swallow the rest of the text)', valid({ message: 'Hello there. <svg onload=alert(1)>\nSecond line' }), 'message'],
+    ['HTML comment / doctype', valid({ message: 'Hello there <!-- hidden --> we need a site.' }), 'message'],
     ['markup in the company', valid({ company: 'ACME<iframe src=//evil.example>' }), 'company'],
   ];
   for (const [label, body, field] of attacks) {
@@ -223,53 +267,70 @@ if (mock) {
   // 2) Real-world text with harmless angle brackets and invisible characters is cleaned, not refused.
   const benign = valid({
     name: 'Jane',
-    company: `ACME${String.fromCharCode(0x202e)}gnp.exe${String.fromCharCode(0x200b)}`,
-    message: 'Hello, we need a site. Reach me at <jane@example.com> or see <https://example.com/brief> & "quotes"\nSecond line &lt;b&gt; 3 > 2',
+    company: `ACME${String.fromCharCode(0x202e)}gnp.exe${String.fromCharCode(0x200b)}, CMO`,
+    message: 'Reach me at <jane@example.com> or see <https://example.com/brief> & "quotes"',
   });
   const ok = await post(benign);
   check('valid submission answers 200', ok.status === 200, `status ${ok.status}`);
   const hit = received[0];
   const payload = hit ? JSON.parse(hit.body) : {};
-  check('webhook received exactly one lead', received.length === 1, `received ${received.length}`);
+  check('webhook received exactly one briefing', received.length === 1, `received ${received.length}`);
   const text = `${payload.name}${payload.company}${payload.message}`;
   check('no angle brackets survive sanitisation', hit && !/[<>]/.test(text), text);
   check('invisible / bidi-override characters stripped', hit && ![0x202e, 0x200b].some((c) => text.includes(String.fromCharCode(c))));
-  check('plain-text content kept: name, email in brackets, URL, second line', payload.name === 'Jane' && /jane@example\.com/.test(payload.message ?? '') && /https:\/\/example\.com\/brief/.test(payload.message ?? '') && /\nSecond line/.test(payload.message ?? ''), JSON.stringify(payload));
-  check('payload is exactly the known fields', hit && JSON.stringify(Object.keys(payload).sort()) === JSON.stringify(['company', 'email', 'locale', 'message', 'name', 'receivedAt', 'type']), Object.keys(payload).join(','));
+  check('plain-text content kept: name, email in brackets, URL', payload.name === 'Jane' && /jane@example\.com/.test(payload.message ?? '') && /https:\/\/example\.com\/brief/.test(payload.message ?? ''), JSON.stringify(payload));
+  const keys = ['budget', 'company', 'email', 'locale', 'message', 'name', 'projectType', 'receivedAt', 'role', 'subject', 'tier', 'timeline', 'type'];
+  check('payload is exactly the known fields', hit && JSON.stringify(Object.keys(payload).sort()) === JSON.stringify(keys), Object.keys(payload).join(','));
+  check('payload type is syncflow.briefing and the subject is "[Briefing][tier] company, name"', payload.type === 'syncflow.briefing' && payload.subject === `[Briefing][${payload.tier}] ${payload.company}, ${payload.name}`, payload.subject);
   if (process.env.WEBHOOK_SECRET && hit) {
     const expected = `sha256=${createHmac('sha256', process.env.WEBHOOK_SECRET).update(hit.body).digest('hex')}`;
     check('HMAC-SHA256 signature header verifies', hit.headers['x-syncflow-signature'] === expected, hit.headers['x-syncflow-signature']);
   }
+
+  // 3) The priority class is computed on the server, from the answers, never from anything the browser claims.
+  const tiers = [
+    ['$20k+ with a decision maker -> high', { budget: 'b20', role: 'decider' }, 'high'],
+    ['$20k+ with the decision team -> high', { budget: 'b20', role: 'team' }, 'high'],
+    ['$20k+ but only exploring -> medium', { budget: 'b20', role: 'exploring' }, 'medium'],
+    ['$10k-$20k -> medium', { budget: 'b10', role: 'decider' }, 'medium'],
+    ['"let us talk first" -> medium', { budget: 'talk', role: 'decider' }, 'medium'],
+    ['$5k-$10k (below the $10,000 floor) -> low', { budget: 'b5', role: 'decider' }, 'low'],
+  ];
+  for (const [label, over, want] of tiers) {
+    received.length = 0;
+    const res = await post(valid(over));
+    const got = received[0] ? JSON.parse(received[0].body).tier : undefined;
+    check(`tier: ${label}`, res.status === 200 && got === want, `status ${res.status}, tier ${got}`);
+  }
+  check('a tier sent by the browser is rejected (strict schema)', (await post({ ...valid(), tier: 'high' })).status === 422);
+
   received.length = 0;
   await post(valid({ website: 'filled' }));
   check('honeypot submission is NOT delivered', received.length === 0);
 }
 
-section('Showcase film files (docs/adr/0003)');
+section('Scene videos (docs/adr/0003, 0006)');
 const mediaTypes = { mp4: 'video/mp4', webm: 'video/webm', webp: 'image/webp' };
 let mediaOk = true;
 let mediaDetail = '';
-for (const loc of ['en', 'tr']) {
-  for (const layout of ['wide', 'tall']) {
-    for (const [ext, type] of Object.entries(mediaTypes)) {
-      const res = await get(`/media/showcase/architecture-${loc}-${layout}.${ext}`, { headers: { range: 'bytes=0-0' } });
-      const good = [200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type);
-      if (!good) {
-        mediaOk = false;
-        mediaDetail += `${loc}-${layout}.${ext}: ${res.status} ${res.headers.get('content-type')}; `;
-      }
-      await res.arrayBuffer();
+for (const name of ['monolith', 'estate', 'clinic', 'saas']) {
+  for (const [ext, type] of Object.entries(mediaTypes)) {
+    const res = await get(`/media/clips/${name}.${ext}`, { headers: { range: 'bytes=0-0' } });
+    const good = [200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type);
+    if (!good) {
+      mediaOk = false;
+      mediaDetail += `${name}.${ext}: ${res.status} ${res.headers.get('content-type')}; `;
     }
+    await res.arrayBuffer();
   }
 }
-check('all 12 film files are served with the right content type (en/tr x wide/tall x mp4/webm/webp)', mediaOk, mediaDetail);
-const ranged = await get('/media/showcase/architecture-en-wide.mp4', { headers: { range: 'bytes=0-99' } });
-check('the mp4 answers byte-range requests (scene tabs seek, preload="none" needs it)', ranged.status === 206 && /^bytes 0-99\//.test(ranged.headers.get('content-range') ?? '') && ranged.headers.get('accept-ranges') === 'bytes', `${ranged.status} ${ranged.headers.get('content-range')} ${ranged.headers.get('accept-ranges')}`);
+check('all 12 scene files are served with the right content type (4 scenes x mp4/webm/webp)', mediaOk, mediaDetail);
+const ranged = await get('/media/clips/estate.mp4', { headers: { range: 'bytes=0-99' } });
+check('the mp4 answers byte-range requests (preload="none" needs it)', ranged.status === 206 && /^bytes 0-99\//.test(ranged.headers.get('content-range') ?? '') && ranged.headers.get('accept-ranges') === 'bytes', `${ranged.status} ${ranged.headers.get('content-range')} ${ranged.headers.get('accept-ranges')}`);
 await ranged.arrayBuffer();
-const cached = (await get('/media/showcase/architecture-en-wide.webp')).headers.get('cache-control') ?? '';
-check('film files are cacheable for a week with background revalidation', /max-age=604800/.test(cached) && /stale-while-revalidate/.test(cached), cached);
-const noMedia = await get('/media/showcase/architecture-de-wide.mp4');
-check('there are no files for languages that are not launched (404)', noMedia.status === 404, `status ${noMedia.status}`);
+const cached = (await get('/media/clips/estate.webp')).headers.get('cache-control') ?? '';
+check('scene files are cacheable for a week with background revalidation', /max-age=604800/.test(cached) && /stale-while-revalidate/.test(cached), cached);
+check('the old architecture film is gone (404)', (await get('/media/showcase/architecture-en-wide.mp4')).status === 404);
 
 section('CSP report endpoint');
 const violation = {
@@ -293,9 +354,9 @@ check('GET /api/csp-report is rejected (405)', (await get('/api/csp-report')).st
 section('Rate limiting');
 const ip = uniqueIp();
 const statuses = [];
-for (let i = 0; i < 7; i++) statuses.push((await post(valid(), { ip })).status);
-const limited = await post(valid(), { ip });
-check(`contact route: first 5 pass, then 429 (statuses ${statuses.join(',')})`, statuses.slice(0, 5).every((s) => s !== 429) && statuses[5] === 429 && limited.status === 429);
+for (let i = 0; i < 7; i++) statuses.push((await post(valid({ elapsedMs: 120 }), { ip })).status);
+const limited = await post(valid({ elapsedMs: 120 }), { ip });
+check(`briefing route: first 5 pass, then 429 (statuses ${statuses.join(',')})`, statuses.slice(0, 5).every((s) => s !== 429) && statuses[5] === 429 && limited.status === 429);
 check('429 carries Retry-After', Number(limited.headers.get('retry-after')) > 0, limited.headers.get('retry-after'));
 check('a different address is not affected', (await post(valid({ elapsedMs: 120 }), { ip: uniqueIp() })).status === 200);
 
