@@ -232,6 +232,17 @@ for (const p of ['/privacy', '/imprint']) {
   check(`${p} renders and is noindex`, res.status === 200 && /name="robots"[^>]*content="noindex/.test(body), `status ${res.status}`);
 }
 check('the old contact endpoint is gone (404)', (await get('/api/contact')).status === 404);
+for (const [path, edited, sections] of [['/privacy', /Last edited:/, 9], ['/tr/privacy', /Son düzenleme:/, 9], ['/imprint', /Last edited:/, 5], ['/tr/imprint', /Son düzenleme:/, 5]]) {
+  const res = await get(path);
+  const body = await res.text();
+  const ids = [...body.matchAll(/<section[^>]*id="privacy-(p\d)"/g)].map((m) => m[1]);
+  const count = path.endsWith('privacy') ? ids.length : (body.match(/<h2\b/g) ?? []).length;
+  check(`${path}: ${sections} sections${path.endsWith('privacy') ? ' with ids' : ''}, a "last edited" line and the draft notice`, res.status === 200 && count === sections && edited.test(body) && /Draft:|Taslak:/.test(body), `status ${res.status}, ${count} sections`);
+}
+const privacyHtml = await (await get('/privacy')).text();
+check('privacy sections follow the notice order: responsible, briefing, collection, priority class, ...', JSON.stringify([...privacyHtml.matchAll(/<section[^>]*id="privacy-(p\d)"/g)].map((m) => m[1])) === JSON.stringify(['p1', 'p2', 'p8', 'p9', 'p3', 'p4', 'p5', 'p6', 'p7']));
+// The contact step is drawn in the browser, so the link is not a tag in the server HTML; its address travels in the component data.
+check('the briefing consent link is handed the section it consents to (/privacy#privacy-p2)', /\/privacy#privacy-p2/.test(html));
 
 /* ── 3. Briefing API hardening ───────────────────────────────────────────────────────────────── */
 section('Briefing API: validation, abuse defences');
