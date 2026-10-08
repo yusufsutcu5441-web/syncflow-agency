@@ -276,7 +276,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
           </h3>
           <p className="lead mt-5 max-w-xl">
             {before}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="text-ink underline decoration-white/30 underline-offset-4 hover:decoration-white" dir="ltr">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink" dir="ltr">
               {CONTACT_EMAIL}
             </a>
             {after}
@@ -456,7 +456,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
                 />
                 <span>
                   {t.step4.consent}{' '}
-                  <Link href={privacyHref} prefetch={false} className="text-ink underline decoration-white/30 underline-offset-4 transition-colors hover:decoration-white">
+                  <Link href={privacyHref} prefetch={false} className="text-ink underline decoration-ink/30 underline-offset-4 transition-colors hover:decoration-ink">
                     {t.step4.consentLink}
                   </Link>
                 </span>
@@ -480,7 +480,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
         {formError === 'unavailable' || formError === 'generic' ? (
           <span className="mt-2 block text-muted">
             {t.fallbackIntro}{' '}
-            <a href={mailto()} className="text-ink underline decoration-white/30 underline-offset-4 hover:decoration-white">
+            <a href={mailto()} className="text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
               {t.fallbackLink}
             </a>
           </span>

@@ -104,7 +104,7 @@ export async function Architecture() {
                     cls: number(METRICS.cls.value, 2),
                     lcp: METRICS.lcpDesktop.value === null ? h('pending') : `${number(METRICS.lcpDesktop.value / 1000, 1)} s`,
                     tbt: METRICS.tbtDesktop.value === null ? h('pending') : `${number(METRICS.tbtDesktop.value)} ms`,
-                    mobile: number(METRICS.lighthousePerformanceMobile.value),
+                    mobile: METRICS.lighthousePerformanceMobile.value === null ? h('pending') : number(METRICS.lighthousePerformanceMobile.value),
                   })}
                 </p>
                 {METRICS.lighthousePerformance.measuredAt ? (
@@ -158,9 +158,9 @@ function FrameGraph({ alt, median }: { alt: string; median: number | null }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="mt-4 h-28 w-full" role="img" aria-label={alt} preserveAspectRatio="none">
-      <line x1="0" x2={W} y1={y(33.3)} y2={y(33.3)} stroke="rgb(255 255 255 / 0.10)" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
-      <line x1="0" x2={W} y1={y(16.7)} y2={y(16.7)} stroke="rgb(255 255 255 / 0.18)" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
-      {points ? <polyline points={points} fill="none" stroke="#fff" strokeWidth="1.25" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /> : null}
+      <line x1="0" x2={W} y1={y(33.3)} y2={y(33.3)} stroke="rgb(226 226 230 / 0.10)" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
+      <line x1="0" x2={W} y1={y(16.7)} y2={y(16.7)} stroke="rgb(226 226 230 / 0.18)" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
+      {points ? <polyline points={points} fill="none" stroke="#E2E2E6" strokeWidth="1.25" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /> : null}
     </svg>
   );
 }

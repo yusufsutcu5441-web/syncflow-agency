@@ -22,7 +22,7 @@ type Props = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#000000',
+  themeColor: '#0D0D0E',
   colorScheme: 'dark',
 };
 
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   const t = await getTranslations({ locale, namespace: 'Meta' });
   const ogLocale = LOCALE_LABELS[locale];
   // Explicit, redirect-free URL of the share card (app/og/route.tsx). Bump v when the design changes.
-  const shareImage = `/og?locale=${locale}&v=2`;
+  const shareImage = `/og?locale=${locale}&v=3`;
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -78,8 +78,8 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   // Preload only the font files this page needs. Fonts are always fetched in CORS mode, hence crossOrigin.
-  preload('/fonts/inter-latin-v1.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
-  if (locale === 'tr') preload('/fonts/inter-turkish-v1.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+  preload('/fonts/instrument-sans-latin-v1.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+  if (locale === 'tr') preload('/fonts/instrument-sans-turkish-v1.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
 
   const [messages, a11y] = await Promise.all([getMessages(), getTranslations('A11y')]);
 

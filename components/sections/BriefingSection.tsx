@@ -21,7 +21,7 @@ export async function BriefingSection() {
         <noscript>
           <p className="body-muted mx-auto mt-10 max-w-xl text-center">
             {beforeEmail}
-            <a href={`mailto:${CONTACT_EMAIL}`} dir="ltr" className="text-ink underline decoration-white/30 underline-offset-4">
+            <a href={`mailto:${CONTACT_EMAIL}`} dir="ltr" className="text-ink underline decoration-ink/30 underline-offset-4">
               {CONTACT_EMAIL}
             </a>
             {afterEmail}
