@@ -39,9 +39,11 @@ Ayrıntı, ham koşular ve sınırlar [docs/perf/faz3.md](../perf/faz3.md)'de. �
 - **Telefon yükleme probu** (yavaş 4G, 4× CPU, 7 koşu): FCP/LCP 1.124 → 1.140 ms, fark yok. Maskeli girişin ilk sürümü her öğeyi yüklemede kuruyor ve ≈ +100 ms ile TBT sıçraması veriyordu; kurma ziyaretçinin kaydırmasına, ekranın bir ekran altına yayıldı.
 - **Tarayıcı 41/41, HTTP duman testi 87/87:** Lenis telefonda hiç istenmiyor, azaltılmış hareket her yerde saygı görüyor, JS kapalıyken tüm metin görünür, Faz 2 ile sayfa yüksekliği ve başlık kutuları birebir aynı.
 
-## Yapılmayanlar ve karar bekleyenler
+## Yapılmayanlar ve karar bekleyenler (Faz 3 anında; **sonradan çözüldü**)
 
-İsteğin üç kalemi CLAUDE.md'nin "Tasarım tokenları (pazarlığa kapalı)" bölümüyle ve denetim betiğiyle çelişir; bu yüzden **uygulanmadı** ve sahibinin kararını bekler:
+> **Güncelleme 08.10.2026:** Sahibi seçenek B'yi seçti ([ADR 0006](0006-blueprint-adopted.md)): cam kenarlık `#ffffff1a`, Border Beam ve imleç ışığı Faz 4'te Blueprint'in görsel diliyle uygulandı. CLAUDE.md ve denetim betiği önce güncellendi. Uygulama: Border Beam yalnızca `rotate` ile dönen koni gradyanlı halka (bileşik, yeniden boyama yok, en çok 3, ekran dışında durur, azaltılmış harekette gizli); imleç ışığı yalnızca `transform` ile taşınan 600 px radyal gradyan (yalnızca ince işaretçi). Aşağıdaki tablo tarihsel kayıttır.
+
+İsteğin üç kalemi CLAUDE.md'nin o günkü "Tasarım tokenları (pazarlığa kapalı)" bölümüyle ve denetim betiğiyle çelişiyordu; bu yüzden Faz 3'te **uygulanmadı** ve sahibinin kararını bekledi:
 
 | İstek | Çeliştiği yer |
 |---|---|

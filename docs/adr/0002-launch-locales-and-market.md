@@ -2,6 +2,7 @@
 
 - **Durum:** Kabul edildi, 07.10.2026 (Faz 2)
 - **Karar:** proje sahibi ("Sadece TR/EN dilleri kalsın"). Uygulama: Faz 2.
+- **Güncelleme 08.10.2026 (Faz 5, [ADR 0006](0006-blueprint-adopted.md)):** sahibi yedi dil altyapısını açtı. `routing.locales` artık `en tr de fr es ar ja`; ancak **hangi dillerin yayında olduğu** `i18n/launch.ts` ile ayrıldı: üretimde yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`), geliştirmede ve önizlemede yedisi. Yerel çeviri ve hukuk incelemesi kuralı yayın kapısı olarak aynen durur; `de fr es ar ja` bu oturumda yazılmış taslaktır. Aşağıdaki "Yeni dil açma kontrol listesi" artık yalnızca listeye kod eklemek ve incelemeyi içerir (mesaj dosyaları, RTL ve yazı tipi sistem yığınları hazırdır; film dil başına render gerektirmez). Madde 1'deki "`/de` 404 döner" üretimde hâlâ doğrudur.
 
 ## Bağlam
 

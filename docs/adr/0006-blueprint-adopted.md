@@ -20,7 +20,7 @@
 
 ## Blueprint'ten bilerek ayrılınanlar (gerekçe CLAUDE.md "Onaylı sapmalar")
 
-Hepsi sahibin kendi kararıyla çelişmeyen, gerçeklik ya da hukuk gerekçeli sapmalardır: doğrulanmamış performans iddiaları (60 FPS kilitli, 120 Hz, LCP < 1,2 sn, TBT < 50 ms, AV1, adaptif bitrate), kanıtsız örnek yüzdeler, sağlıkta önce-sonra, "üçüncü taraflarla paylaşılmaz" cümlesi (işleyiciler var), olmayan vaka sayfası bağlantısı, dönen küre (statik SVG), scroll-jacking (yerel `scroll-snap`), verilmeyen sosyal medya adresleri.
+Hepsi sahibin kendi kararıyla çelişmeyen, gerçeklik, hukuk ya da erişilebilirlik gerekçeli sapmalardır: doğrulanmamış performans iddiaları (60 FPS kilitli, 120 Hz, LCP < 1,2 sn, TBT < 50 ms, AV1, adaptif bitrate), kanıtsız örnek yüzdeler, sağlıkta önce-sonra, "üçüncü taraflarla paylaşılmaz" cümlesi (işleyiciler var), olmayan vaka sayfası bağlantısı, dönen küre (statik SVG), scroll-jacking (yerel `scroll-snap`), verilmeyen sosyal medya adresleri, hero alt metnindeki "ilk 400 ms / 120Hz için kalibre" cümleleri, "yaklaşık 90 saniye" (ölçülmedi) ve **%40 opaklıklı soluk metin ile `.agency` (%50 yapıldı)**: %40 beyaz siyah üstünde 3,65:1'dir, WCAG AA'nın 4,5:1'ini geçemez ve Lighthouse erişilebilirliğini 97'ye düşürdü (axe `color-contrast`, ilk ölçümde yakalandı). Sahibin "100/100 erişilebilirlik" isteği bu sapmayı gerektiriyor.
 
 ## Sonuçlar
 

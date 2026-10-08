@@ -345,7 +345,7 @@ const color = process.stdout.isTTY && !process.env.NO_COLOR;
 const C = { PASS: "\x1b[32m", WARN: "\x1b[33m", FAIL: "\x1b[31m", INFO: "\x1b[90m", R: "\x1b[0m" };
 const sym = { PASS: "✔", WARN: "!", FAIL: "✖", INFO: "i" };
 let g = ""; const cnt = { PASS: 0, WARN: 0, FAIL: 0, INFO: 0 };
-console.log(`\nSyncFlow denetimi (Faz 2 kapısı + Faz 3 hareket kapısı)\nKök: ${ROOT}`);
+console.log(`\nSyncFlow denetimi (Faz 2–5 kapısı: tokenlar, i18n ve 7 dil, güvenlik ve briefing, sahne videoları, hareket, doğrulanmamış iddia yasağı)\nKök: ${ROOT}`);
 for (const r of results) {
   if (r.group !== g) { g = r.group; console.log(`\n${g}`); }
   cnt[r.level]++;

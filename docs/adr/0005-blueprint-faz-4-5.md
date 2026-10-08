@@ -1,6 +1,6 @@
 # ADR 0005: Ana Sayfa Blueprint'i, Faz 4 (Strategic Briefing) ve Faz 5 (7 dil): uygunluk analizi, plan, karar bekleyenler
 
-- **Durum:** Önerildi, 08.10.2026. **Karar bekliyor.** Faz 4–5 kodu bu ADR onaylanana kadar yazılmadı.
+- **Durum:** Önerildi 08.10.2026; **sahibi onayladı, 08.10.2026** ("Tüm önerileri onaylıyorum, Blueprint esas alınarak uygulamaya geçilsin"). Yanıtların uygulaması ve sahibin önerilerden ayrıldığı yerler (görsel dil, SaaS kartı, satır içi briefing) [ADR 0006](0006-blueprint-adopted.md)'da. Aşağıdaki "Sahibinden gereken" bölümü artık tarihsel kayıttır.
 - **İstek:** proje sahibi, "syncflow.agency Ana Sayfa Blueprint" dokümanının (`syncflow-blueprint.docx`, 07.10.2026 23:01) tüm mimari, tasarım ve metin kurallarıyla uygulanmasını; 4 adımlı Strategic Briefing'i `contact@syncflow.agency`'ye bağlamamı (Faz 4); TR, EN, DE, FR, ES, AR, JA dillerini, Arapçada `dir="rtl"` aynalamayı ve küresel SEO'yu (Faz 5) istedi.
 - **Neden önce plan:** CLAUDE.md "Karmaşık işe plan modunda başla, planı göster, onay bekle" ve "açık olanları Claude Code kendisi dondurmaz, sorar" der. Blueprint, aynı dosyanın "pazarlığa kapalı" kurallarıyla 17 noktada çelişir ve beş girdi eksiktir. Çelişkiyi sessizce bir yana çözmek, ya kuralları ya da Blueprint'i sahibin haberi olmadan çiğnemek olurdu.
 
