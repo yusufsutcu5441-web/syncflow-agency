@@ -65,6 +65,15 @@ else {
   const runtimeDeps = pkg.dependencies ?? {};
   for (const name of ["@remotion/player", "remotion"]) if (runtimeDeps[name]) add(G1, "FAIL", `${name} çalışma zamanı bağımlılığı: Faz 2'de çıkarıldı, yalnızca devDependencies olabilir (docs/adr/0003)`);
   if (!runtimeDeps["@remotion/player"] && !runtimeDeps.remotion) add(G1, "PASS", "tarayıcı paketine Remotion girmiyor (remotion yalnızca devDependencies)");
+  // Vercel'in Node çalışma zamanı require() ile ES modülü yüklemez (ERR_REQUIRE_ESM). jsdom 27+ ESM-only bir zincir (@exodus/bytes) çeker
+  // ve /api/briefing canlıda 500 verir (docs/adr/0013). Sürüm numarasına değil davranışa bakılır: require(esm) kapalıyken yüklenmeli.
+  if (all.jsdom) {
+    const probe = spawnSync(process.execPath, ["--no-experimental-require-module", "-e", "require('jsdom')"], { cwd: ROOT, encoding: "utf8" });
+    let jv = null; try { jv = readJSON("node_modules/jsdom/package.json").version; } catch {}
+    if (!jv) add(G1, "WARN", "jsdom kurulu değil, require(esm) denemesi atlandı");
+    else if (probe.status === 0) add(G1, "PASS", `jsdom ${jv} require(esm) kapalıyken yükleniyor (Vercel çalışma zamanı böyle)`);
+    else add(G1, "FAIL", `jsdom ${jv} require(esm) kapalıyken yüklenmiyor: Vercel'de /api/briefing 500 verir. jsdom 26.x'e dönün (docs/adr/0013). ${(probe.stderr || "").split("\n").find((l) => /ERR_|Error/.test(l)) ?? ""}`.trim());
+  }
   for (const opt of ["motion", "lenis"]) add(G1, all[opt] ? "PASS" : "INFO", all[opt] ? `${opt} ${all[opt]}` : `${opt} henüz yok (Faz 3'te eklenecek)`);
   if (all.typescript) {
     let tv = null; try { tv = readJSON("node_modules/typescript/package.json").version; } catch {}

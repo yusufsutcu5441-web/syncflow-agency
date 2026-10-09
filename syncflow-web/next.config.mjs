@@ -32,7 +32,9 @@ const nextConfig = {
   outputFileTracingIncludes: { '/og': ['./assets/og-instrument-sans-600.ttf'] },
   // `ANALYZE=1 npm run build` emits source maps so bundle contents can be inspected (npm run analyze).
   productionBrowserSourceMaps: process.env.ANALYZE === '1',
-  // jsdom (used server-side by DOMPurify) must be loaded by Node, not bundled.
+  // jsdom (used server-side by DOMPurify) must be loaded by Node, not bundled. Keep jsdom on 26.x: 27+ require() an ES-only
+  // dependency chain, which Vercel's runtime refuses (ERR_REQUIRE_ESM), so /api/briefing answered 500 (docs/adr/0013).
+  // faz2-denetim.mjs checks that jsdom loads with require(esm) disabled.
   serverExternalPackages: ['jsdom'],
   // Lets a browser on 127.0.0.1 use the dev server (HMR/websocket). No effect in production.
   allowedDevOrigins: ['127.0.0.1'],

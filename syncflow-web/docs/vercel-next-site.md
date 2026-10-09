@@ -18,12 +18,13 @@ Panele, CLI'a ya da ayara gerek yoktur. Panelden "Redeploy" **eski kaynağı ve 
 En hızlı yoldan yavaş yola:
 
 1. **Panel (erişim varsa, anında):** Deployments → `531f569` kaynaklı son eski-site Production deployment'ı → **Promote to Production** (ya da *Instant Rollback*).
-2. **Git (terminalden, 1-3 dk):** taşıma commit'ini geri alıp itin; eski site `syncflow-web/` içinde geri gelir.
+2. **Git (terminalden, 1-3 dk):** taşımadan beri gelen **tüm** commit'leri geri alıp itin; eski site `syncflow-web/` içinde geri gelir.
    ```bash
-   git revert --no-edit <taşıma-commit-sha>   # 153 yeniden adlandırma + eski site dosyaları geri gelir
-   git push origin main                        # ileri sarma, zorlama yok
+   git revert --no-edit 531f569..HEAD   # 531f569 = taşımadan önceki main; en yeniden eskiye geri alır
+   git push origin main                 # ileri sarma, zorlama yok
    ```
-3. **Yedek:** yerel etiket `yedek-main-tasima-oncesi` = `531f569` (taşımadan önceki `main`); `git diff yedek-main-tasima-oncesi..main --stat` ile ne değiştiği görülür. Etiket yalnızca yerelde olduğundan, geçmişte `531f569` zaten uzak `main`'in atasıdır: `git revert` yolu her zaman çalışır.
+   Bu komut 09.10'da geçici bir dalda denendi: sonuç ağaç, `531f569`'un ağacıyla **aynı karmaya** (`600cfa4a59`) sahip. Yalnızca taşıma commit'ini geri almak, sonraki commit'ler aynı dosyalara dokunduğu için çakışır; hep aralığı kullanın.
+3. **Yedek:** yerel etiket `yedek-main-tasima-oncesi` = `531f569`; commit uzak `main`'in atasıdır, yani `git revert` yolu etiket olmasa da çalışır.
 
 Geri almadan sonra `https://syncflow.agency/` ve `/kvkk/` 200 vermeli (eski site).
 
@@ -52,6 +53,8 @@ Değişkenler **yalnızca panelden** girilir; o yüzden ilk yayında hiçbiri ta
 Temiz kopyada, hiçbir ortam değişkeni olmadan üretim sunucusu başlatılıp duman testi koşturuldu (`TURNSTILE_MODE=unset`): başlıklar, CSP (report-only + nonce), iki dil, `security.txt` ve briefing girdi savunması geçer; **Turnstile gizli anahtarı yokken briefing formu 503 verir** ve ziyaretçiye hazır e-posta taslağı (`mailto:`) çıkar, yanıtlar kaybolmaz. n8n akışı yoksa `CONTACT_WEBHOOK_*` boş kalır, aynı sonuç ([docs/n8n-briefing.md](n8n-briefing.md)). **Yani yayın günü form çalışmaz, e-posta bağlantısı çalışır.**
 
 ## 6. Yayından sonra kontroller (adres: `https://syncflow.agency`)
+
+İlk yayında (08.10 23:51Z = 09.10 02:51 yerel) bu liste canlıda koşuldu; sonuçlar ve bulunan hata [ADR 0013](adr/0013-app-moved-into-syncflow-web.md)'te. **Bir sonraki dağıtımdan sonra `/api/briefing` mutlaka denensin:** derlemenin başarılı olması, route'un çalıştığını göstermez (jsdom/`ERR_REQUIRE_ESM` hatası derlemede değil, çalışma zamanında çıktı).
 
 - [ ] Vercel/GitHub'da `main` için derleme **Ready**. (Panele girilemiyorsa: GitHub'daki commit durumu ya da aşağıdaki canlı ölçümler.)
 - [ ] `/` ve `/tr` **200**, başlık yeni sitenin başlığı (eski site değil); `/de`, `/fr`, `/ar` **404**.
