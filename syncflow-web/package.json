@@ -18,6 +18,7 @@
     "brand:check": "node scripts/build-brand.mjs --check",
     "check": "npm run check:messages && npm run typecheck && npm run lint",
     "smoke": "node scripts/smoke.mjs",
+    "live": "node scripts/live-check.mjs",
     "perf": "node scripts/lighthouse.mjs",
     "audit:secrets": "node scripts/audit-secrets.mjs",
     "film:render": "node scripts/render-film.mjs",

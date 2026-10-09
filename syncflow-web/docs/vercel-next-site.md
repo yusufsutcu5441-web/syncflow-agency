@@ -80,3 +80,30 @@ Temiz kopyada, hiçbir ortam değişkeni olmadan üretim sunucusu başlatılıp 
 - **Eski `Ignored Build Step` önerisi:** gerekmez; yalnızca `main` yayın dalıdır, diğer dallara push edilmez (§ başı).
 - **Alan adı taşıma ("geçiş günü") adımları:** kalktı; alan adı hiç taşınmadı, aynı proje yeni uygulamayı derliyor.
 - Panel/CLI sorunu (bu makinede): CLI, ağdaki TLS araya girmesi yüzünden çöktü (Sentry adresi için `*.btk.gov.tr` sertifikası, `self-signed certificate`). Panel/CLI gerekirse **farklı bir ağdan** (telefon paylaşımı, VPN) deneyin; TLS doğrulamasını kapatmayın.
+
+## 10. Alan adı, DNS ve "site açılmıyor" teşhisi (ölçüldü: 09.10.2026, 00:1xZ)
+
+**Hızlı ölçüm:** `npm run live` (ya da `node scripts/live-check.mjs https://syncflow.agency`). Üç çözümleyiciden DNS'i, TLS sertifikasını, sayfaları, `/og`'u ve `/api/briefing` savunmalarını okur; yalnızca okuma yapar. Her dağıtımdan sonra ve her "açılmıyor" bildiriminde ilk iş budur.
+
+| Konu | Durum |
+|---|---|
+| Alan adı ve DNS sağlayıcısı | **Spaceship** (`launch1.spaceship.net`, `launch2.spaceship.net`). DNS değişikliği orada yapılır, Vercel'de değil. |
+| `syncflow.agency` A kaydı | `216.198.79.1` (Vercel'in güncel adresi); Google, Cloudflare ve yerel çözümleyici aynı yanıtı veriyor. AAAA yok (sorun değil). |
+| **`www.syncflow.agency`** | **Kayıt yok (NXDOMAIN)**, sertifika da yalnızca `syncflow.agency` için. `www` yazan ziyaretçi "sunucu bulunamadı" görür. Aşağıdaki iki adımla düzelir. |
+| Sertifika | Let's Encrypt (YR1), `syncflow.agency`, 03.01.2027'ye kadar, Vercel yeniler. TLS 1.2 ve 1.3, tam zincir. |
+| `http://` | 308 ile `https://`'e gider. |
+| E-posta | MX `smtp.google.com` (Google), SPF `include:_spf.google.com`, DMARC `p=none`, yani `contact@syncflow.agency` posta alır (form hatasında `mailto:` oraya gider). |
+| Başka alt alan adı | Yok (`mail`, `n8n`, `app`, `api`, `admin`, `blog`, `staging`, `dev`, `panel` denendi). |
+
+**`www`'yi açmak (panel gerekir, terminalden yapılamaz):**
+1. Vercel → proje `syncflow-web` → **Settings → Domains → Add** `www.syncflow.agency`; "Redirect to `syncflow.agency`" seçin. Vercel size DNS değerini gösterir.
+2. Spaceship → alan adı → **DNS** → kayıt ekleyin: Tür `CNAME`, Host `www`, Değer `cname.vercel-dns.com` (Vercel başka bir değer gösteriyorsa onu kullanın). Sertifikayı Vercel kendisi alır (birkaç dakika).
+3. Doğrulama: `npm run live` içindeki `www.syncflow.agency` satırı PASS olmalı.
+
+**Yanlış alarmlar (bunlar site hatası değildir):**
+- Çevrimiçi ölçüm servislerinde (ör. check-host.net) **Singapur düğümü vercel.com ve nextjs.org dahil her Vercel sitesine 403 alır**; düğümün IP'si Vercel tarafından engelli. 09.10'da 40 noktadan 38'i 200 verdi; geri kalanlar servisin kendi düğüm sorunlarıydı (kendi DNS'i, zaman aşımı, boş sonuç).
+- Yanıtlardaki `RateLimit-*`, `Cross-Origin-Opener-Policy`, `X-DNS-Prefetch-Control` başlıkları **bizim kodumuzdan** gelir (`lib/security/rate-limit.ts`, `next.config.mjs`), Vercel güvenlik duvarından değil.
+
+**Bir ziyaretçide açılmıyorsa** (yukarıdaki ölçüm temizse sorun o kişinin ağında ya da tarayıcısındadır): tarayıcının tam hata iletisini (`ERR_NAME_NOT_RESOLVED`, `ERR_CONNECTION_*`, `ERR_CERT_*`, bir 4xx/5xx sayfası) ve yazılan tam adresi (`www` var mı?) isteyin; önce gizli pencere, sonra başka ağ (mobil veri) deneyin; Windows'ta `ipconfig /flushdns`.
+
+**HSTS uyarısı:** yanıtlarda `Strict-Transport-Security: ...; includeSubDomains; preload` var. Siteyi bir kez açan tarayıcı, `syncflow.agency`'nin **tüm alt alan adlarını** 2 yıl boyunca yalnızca HTTPS ile açar. İleride bir alt alan adı (ör. n8n paneli) kurulursa geçerli bir HTTPS sertifikası olmalı, aksi hâlde o tarayıcılarda açılmaz.
