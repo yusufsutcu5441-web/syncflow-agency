@@ -248,7 +248,7 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 - [ ] `NEXT_PUBLIC_SITE_URL` üretim alan adı. Search Console'a `sitemap.xml`. PageSpeed Insights ile canlı doğrulama, `lib/metrics.ts` güncelleme.
 - [ ] `public/.well-known/security.txt` `Expires` tarihini (2027-04-08) dolmadan yenileyin.
 - [ ] Remotion lisansı (4+ kişiyseniz).
-- [ ] **Giriş kapısı ve Hero** ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md)): (a) bot baypasını çalışan sunucuda `curl -A "Googlebot"` ile doğrulayın (HTML'de `class="gate"` olmamalı), (b) `npm run smoke`'u bu sürümle koşturun ve başvuruda `market` alanının teslimini sahte alıcıyla görün, (c) Lighthouse'ı kapıyla yeniden ölçün, (d) pazarın başka neyi şekillendireceğine karar verin, (e) Lighthouse performans puanı ve masaüstü TBT şimdilik "ölçülecek" yazıyor (`lib/metrics.ts`); kapıyla yeniden ölçüp güncelleyin, CLS, LCP ve diğer üç puan hâlâ 08.10.2026'dan, (f) kapının klavye akışını ve ekran okuyucuyu elle deneyin.
+- [ ] **Giriş kapısı ve Hero** ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md)): (a, b) bot baypası ve `market` teslimi yerelde `npm run smoke` ile doğrulandı (139/139); canlıda dağıtımdan sonra `npm run live` ve `curl -A "Googlebot"` ile (HTML'de `class="gate"` olmamalı) yineleyin, (c) Lighthouse'ı kapıyla yeniden ölçün, (d) pazarın başka neyi şekillendireceğine karar verin, (e) Lighthouse performans puanı ve masaüstü TBT şimdilik "ölçülecek" yazıyor (`lib/metrics.ts`); kapıyla yeniden ölçüp güncelleyin, CLS, LCP ve diğer üç puan hâlâ 08.10.2026'dan, (f) kapının klavye akışını ve ekran okuyucuyu elle deneyin.
 - [ ] **Sinema katmanı** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): (a) masaüstünde motor açıkken Lighthouse 89–96 / TBT ≈ 193 ms (kapalıyken 100 / 0) giderilsin ya da kabul edilsin, önce gerçek GPU'lu (başlıklı) Chrome'da ölçülsün; (b) motor kapıyı geçip çekilirse film posterleri yüklenmiyor (boş görsel), düzeltilsin; (c) sahne üstünde metin kontrastı ölçülsün; (d) **Cabinet Grotesk** web yayın izni sahibince doğrulansın ve Vercel derlemesinde `fonts:fetch`'in çalıştığı canlıda görülsün; (e) `?cinema-debug` kancası üretimde kalacak mı karar verilsin; (f) çalışma ağacındaki sinema işi commit edilsin (üretim hâlâ sinemadan önceki sürüm).
 - [ ] `npm run check`, `node faz2-denetim.mjs --build`, `npm start`, `npm run smoke`, `npm run audit:secrets`.
 
@@ -266,7 +266,7 @@ Ayrıntı: [docs/perf/cinema.md](docs/perf/cinema.md), karar: [ADR 0014](docs/ad
 |---|---|
 | `npm run check` | çeviri eşitliği (7 dil), `tsc` ve ESLint temiz |
 | `node faz2-denetim.mjs --build` | **0 hata**, 130 geçti, 1 bilinçli uyarı. WebGL motoru ilk yükte değil, ayrı lazy parça (6,7 KB gzip). İlk koşuda çıkan 2 hata denetimin eski yerlere bakmasındandı (kod değil) ve denetim düzeltildi |
-| `npm run smoke` | **121/121** (üretim, `en,tr`, sahte webhook alıcısı) |
+| `npm run smoke` | **139/139** (üretim, `en,tr`, sahte webhook alıcısı; giriş kapısı, bot baypası, çerezsizlik ve başvuruda `market` kontrolleri dahil) |
 | Lighthouse mobil (motor kapıyı geçmez) | `/` **94** (LCP 3,15 sn, TBT 55 ms), `/tr` **86** (76–90; LCP 3,27 sn, TBT 336 ms); JS 157 KB |
 | Lighthouse masaüstü, A/B | motor kapalı **100** (TBT 0–2 ms), motor açık **89–96** (TBT 135–236 ms); LCP ≈ 0,7 sn ve CLS 0 aynı; JS 171 KB |
 

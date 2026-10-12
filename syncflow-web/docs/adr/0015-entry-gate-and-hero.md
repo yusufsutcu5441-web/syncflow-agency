@@ -63,8 +63,9 @@ Motor başlayamazsa ya da kendini kapatırsa `reportCinemaOff()` (`lib/cinema/st
 - Kontrast: [docs/perf/cinema.md](../perf/cinema.md).
 
 **Doğrulanmayan:**
-- **Bot baypası çalışan sunucuda denenmedi** (kod ve denetim kuralı var; `User-Agent: Googlebot` ile HTML'de kapının olmadığı elle görülmedi).
-- Son hero wordmark'ı, kaydırma bağlantısı (`/#briefing`) düzeltmesi ve en son CSS rötuşları sonrası tarayıcı testi yapılmadı; HTTP duman testi (`npm run smoke`) bu özelliklerle koşulmadı; başvuruda `market` alanının gerçek uçtan uca teslimi (sahte alıcıyla bile) denenmedi.
+- **Bot baypası yerelde doğrulandı** (üretim derlemesi, `npm run smoke` 139/139): Googlebot, Bingbot, facebookexternalhit ve `/tr` için Googlebot kapıyı HTML'de görmez, içerik aynıdır; Lighthouse/PageSpeed kullanıcı aracısı ve sıradan tarayıcı kapıyı görür; kapı çerez bırakmaz; geçerli `?m=` ile kapı HTML'de yoktur; bilinmeyen `?m=` yok sayılır ve belge işaretlemesine yansımaz (Next yalnızca isteğin URL'sini kendi `<script>` yükünde JSON-kaçışlı taşır). **Canlı alan adında dağıtımdan sonra ayrıca bakılmalı** (`npm run live`, `curl -A "Googlebot"`).
+- Başvuruda `market` alanı sahte alıcıyla uçtan uca doğrulandı (smoke: `tr` teslim edilir, bilinmeyen değer 422).
+- Hero wordmark'ı, mobil monogram boyutu ve "ölçülecek" hero şeridi son build'de tek geçişle gözle kontrol edildi (masaüstü 1440×900, telefon 390×844; konsol hatası yok). **Bölüm çapası (`/#briefing`) düzeltmesi tarayıcıda denenmedi**; yeni 160 svh ritmi kaydırma sırasında ayrıca görüntülenmedi.
 - Lighthouse kapıyla yeniden ölçülmedi. Kapı ilk boyamanın LCP öğesi olur; sayı bilinmiyor.
 - Gerçek GPU'lu masaüstü, Safari, Firefox, gerçek telefon, ekran okuyucu ile elle deneme.
 - Kapının klavyeyle tam akışı (Tab sırası, çip seçimi) elle denenmedi.
