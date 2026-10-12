@@ -19,6 +19,7 @@ import {
   type Role,
   type Timeline,
 } from '@/lib/briefing';
+import { currentMarket } from '@/lib/market';
 import { CONTACT_EMAIL } from '@/lib/site';
 
 type Status = 'idle' | 'sending' | 'success' | 'error';
@@ -212,6 +213,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
           role: values.role,
           consent: true,
           locale,
+          market: currentMarket() ?? undefined,
           website,
           turnstileToken: token || undefined,
           elapsedMs: Math.max(0, Date.now() - lastStepAt.current),

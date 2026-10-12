@@ -7,6 +7,7 @@ import { useClientI18n } from '@/components/i18n/ClientI18n';
 import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { stripLocale, withLocale } from '@/lib/i18n-paths';
+import { MARKET_PARAM, parseMarket } from '@/lib/market';
 
 /**
  * Header language pill. Disclosure pattern: a button that reveals a list of language buttons.
@@ -14,15 +15,83 @@ import { stripLocale, withLocale } from '@/lib/i18n-paths';
  *  - Choosing one navigates to the same page and hash in the new language. The URL is the only place the choice lives:
  *    no cookie is written (CLAUDE.md, docs/adr/0002-launch-locales-and-market.md).
  *  - Fades in/out; arrow keys, Home/End, Escape and outside-click are supported; focus returns to the pill on close.
- *  - While the new language loads, <html data-switching> dims the page slightly (globals.css).
+ *  - The switch is staged (docs/adr/0014-cinematic-layer.md): the page goes dark and its text shifts in slices (CSS, plus a glitch burst in
+ *    the WebGL layer), the new language loads behind the dark, and it arrives out of it. prefers-reduced-motion gets a plain fade.
  */
+
+/**
+ * Changing the language remounts everything under [locale], including this component, so the staging lives at module level:
+ * `outDone` is the dark phase, `navDone` is set by the NEW switcher when it mounts (the new language is on screen).
+ */
+type Staging = { outDone: boolean; navDone: boolean; reduce: boolean };
+let staging: Staging | null = null;
+let failSafe = 0;
+
+type Phase = 'out' | 'hold' | 'in' | null;
+
+/**
+ * The veil is created here and appended to <body>, outside React's tree (like the WebGL canvas). React resets the attributes of
+ * <html> when the language changes, so a phase kept on <html> vanished at the moment of the switch and the new page flashed
+ * into view; the veil element and its attribute survive the remount. <html data-lang-switch> only drives the text glitch on
+ * <main> and the footer (both are new elements after the switch anyway).
+ */
+function veil(): HTMLElement {
+  let el = document.querySelector<HTMLElement>('.lang-veil');
+  if (!el) {
+    el = document.createElement('div');
+    el.className = 'lang-veil';
+    el.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function setPhase(phase: Phase) {
+  const el = veil();
+  if (phase) el.dataset.phase = phase;
+  else delete el.dataset.phase;
+  const root = document.documentElement;
+  if (phase === 'out' || phase === 'in') root.dataset.langSwitch = phase;
+  else delete root.dataset.langSwitch;
+}
+
+function settle() {
+  const s = staging;
+  if (!s || !(s.outDone && s.navDone)) return;
+  staging = null;
+  window.clearTimeout(failSafe);
+  setPhase('in');
+  window.setTimeout(() => setPhase(null), s.reduce ? 320 : 660);
+}
+
+function beginStaging(): boolean {
+  if (staging) return false;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const s: Staging = { outDone: false, navDone: false, reduce };
+  staging = s;
+  setPhase('out');
+  if (!reduce) window.dispatchEvent(new CustomEvent('cinema:glitch', { detail: { ms: 460 } }));
+  window.setTimeout(() => {
+    s.outDone = true;
+    setPhase('hold');
+    settle();
+  }, reduce ? 200 : 360);
+  // If the navigation never reports back (an error, a slow network), do not leave the visitor in the dark.
+  failSafe = window.setTimeout(() => {
+    s.outDone = true;
+    s.navDone = true;
+    settle();
+  }, 5000);
+  return true;
+}
+
 export function LanguageSwitcher() {
   const { locale, messages } = useClientI18n();
   const t = messages.Switcher;
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -47,12 +116,13 @@ export function LanguageSwitcher() {
     };
   }, [open]);
 
+  // A switcher that MOUNTS while a switch is staged is the new language's switcher: the navigation has landed.
   useEffect(() => {
-    document.documentElement.dataset.switching = String(pending);
-    return () => {
-      delete document.documentElement.dataset.switching;
-    };
-  }, [pending]);
+    veil();
+    if (!staging) return;
+    staging.navDone = true;
+    settle();
+  }, []);
 
   const items = () => Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? []);
 
@@ -70,7 +140,10 @@ export function LanguageSwitcher() {
     setOpen(false);
     triggerRef.current?.focus();
     if (next === locale) return;
-    const target = `${withLocale(stripLocale(pathname), next)}${window.location.hash}`;
+    // The market (?m=) travels with the visitor to the other language; nothing else from the query string does.
+    const market = parseMarket(new URLSearchParams(window.location.search).get(MARKET_PARAM));
+    const target = `${withLocale(stripLocale(pathname), next)}${market ? `?${MARKET_PARAM}=${market}` : ''}${window.location.hash}`;
+    if (!beginStaging()) return;
     startTransition(() => {
       router.replace(target, { scroll: false });
     });

@@ -33,7 +33,7 @@ export async function Showcase() {
         {CARDS.map(({ key, id, overlay }) => (
           <article key={key} id={id} className="show-card" data-video-host="" data-spotlight="" style={{ '--spot-size': '420px', '--spot-alpha': 0.07 } as CSSProperties}>
             <div className="spot" aria-hidden="true" />
-            <div className="frame">
+            <div className="frame" data-maskframe="">
               <SceneVideo name={key} mode="hover" label={t(`${key}.videoLabel`)} />
               <span className="badge">{t('concept')}</span>
               <span className={`overlay-chip ${overlay}`} aria-hidden="true">

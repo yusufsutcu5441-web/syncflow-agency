@@ -1,5 +1,6 @@
 import 'server-only';
 import type { Budget, ProjectType, Role, Tier, Timeline } from '@/lib/briefing';
+import type { Market } from '@/lib/market';
 
 /**
  * Delivery of a validated, sanitised briefing to the operator's own system (n8n, Make, Zapier, a Slack workflow, a CRM).
@@ -29,6 +30,8 @@ export type BriefingPayload = {
   email: string;
   message: string;
   locale: string;
+  /** Market chosen on the entry gate (docs/adr/0015-entry-gate-and-hero.md); absent when the visitor skipped it. */
+  market?: Market;
 };
 
 export type DeliveryResult = { ok: true; via: 'webhook' | 'dev-log'; attempts?: number } | { ok: false; reason: 'not_configured' | 'failed'; attempts?: number };

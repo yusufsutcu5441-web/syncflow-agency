@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { routing } from '@/i18n/routing';
 import { BUDGETS, LIMITS, PROJECT_TYPES, ROLES, TIMELINES, type FieldCode, type FieldErrors, type FieldName } from '@/lib/briefing';
+import { MARKETS } from '@/lib/market';
 import { hasControlChars } from '@/lib/text-safety';
 
 /**
@@ -28,6 +29,8 @@ export const briefingSchema = z.strictObject({
   role: z.enum(ROLES),
   consent: z.literal(true),
   locale: z.enum(routing.locales),
+  /** The market the visitor chose on the entry gate (?m=), if any. Only a tag for the receiver; nothing in the flow depends on it. */
+  market: z.enum(MARKETS).optional(),
   /** Cloudflare Turnstile response token (absent only in local development without keys). */
   turnstileToken: z.string().max(2048).optional(),
   /** Honeypot: real visitors never see or fill this field. */

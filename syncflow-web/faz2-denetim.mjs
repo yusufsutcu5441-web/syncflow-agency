@@ -105,7 +105,8 @@ else {
     ? add(G2, "PASS", "Arapçada harf aralığı sıfırlanıyor (bitişik yazı bozulmaz)") : add(G2, "FAIL", "Arapça için harf aralığı sıfırlaması yok (letter-spacing bitişik harfleri koparır)");
   const bad = [
     [/-0?\.045em|-0?\.04em/g, "eski sıkı tracking (-0.04/-0.045em); display için -0.02em olmalı", "FAIL"],
-    [/font-weight\s*:\s*(?:100|200|300|700|800|900)\b/g, "Instrument Sans'ta olmayan ağırlık (aile 400-600 taşır; 300 sessizce 400 çizilir)", "FAIL"],
+    // Yüklü yüzler: Instrument Sans 400-600, Instrument Serif 400, Syne 400-800, Cabinet Grotesk 500. 100/200/300/900 hiçbirinde yok.
+    [/font-weight\s*:\s*(?:100|200|300|900)\b/g, "hiçbir yüklü yazı tipinde olmayan ağırlık (300 sessizce 400 çizilir)", "FAIL"],
     [/font-style\s*:\s*italic/g, "italik yasak", "WARN"],
     [/\b(?:turquoise|aqua|cyan|teal|navy)\b|#(?:00ffff|40e0d0|2dd4bf|14b8a6|06b6d4)\b/gi, "turkuaz/lacivert tonu (palet tek renklidir)", "FAIL"],
   ];
@@ -135,13 +136,43 @@ else {
     .concat(exists("public/fonts") ? fs.readdirSync(abs("public/fonts")).filter((n) => /^inter-/i.test(n)).map((n) => `public/fonts/${n}`) : []);
   oldInter.length ? add(G2, "FAIL", `eski Inter izi: ${oldInter.slice(0, 4).join(", ")}`) : add(G2, "PASS", "Inter izi kalmadı");
 
+  // Sinematik tipografi (docs/adr/0014): Instrument Serif (başlık), Syne (bölüm sözcükleri), Cabinet Grotesk (düğme ve gezinti).
+  for (const [family, file, weights] of [["Instrument Serif", "public/fonts/instrument-serif-latin-v1.woff2", /font-weight:\s*400\s*;/], ["Syne", "public/fonts/syne-latin-v1.woff2", /font-weight:\s*400\s+800/]]) {
+    const face = new RegExp(`@font-face\\s*\\{[^}]*font-family:\\s*['"]${family}['"][^}]*\\}`).exec(c)?.[0] ?? "";
+    face && weights.test(face) && exists(file) ? add(G2, "PASS", `@font-face '${family}' tanımlı ve dosyası (${file.split("/").pop()}) var`) : add(G2, "FAIL", `'${family}' için @font-face ya da ${file} eksik`);
+  }
+  ["OFL-instrument-serif.txt", "OFL-syne.txt"].every((f) => exists(`public/fonts/${f}`) && /SIL OPEN FONT LICENSE/i.test(read(`public/fonts/${f}`)))
+    ? add(G2, "PASS", "Instrument Serif ve Syne OFL metinleri public/fonts altında") : add(G2, "FAIL", "OFL-instrument-serif.txt / OFL-syne.txt yok ya da OFL metni içermiyor");
+  // Cabinet Grotesk (ITF FFL v2.0): lisans dosyanın herkese açık depoda dağıtılmasını ve budanmasını yasaklar. Derlemede indirilir.
+  {
+    const tracked = spawnSync("git", ["ls-files", "--", "public/fonts"], { cwd: ROOT, encoding: "utf8" });
+    const trackedCabinet = tracked.status === 0 ? tracked.stdout.split("\n").filter((l) => /cabinet/i.test(l)) : [];
+    trackedCabinet.length ? add(G2, "FAIL", `Cabinet Grotesk dosyası git'te izleniyor (ITF FFL §02 herkese açık depoyu yasaklar): ${trackedCabinet.join(", ")}`)
+      : /cabinet-grotesk/.test(read(".gitignore")) ? add(G2, "PASS", "Cabinet Grotesk git'te değil ve .gitignore'da (ITF FFL §02)") : add(G2, "FAIL", ".gitignore Cabinet Grotesk dosyalarını dışlamıyor");
+    const fetcher = exists("scripts/fetch-fonts.mjs") ? read("scripts/fetch-fonts.mjs") : "";
+    const pkgJson = readJSON("package.json");
+    fetcher && /process\.exit\(0\)/.test(fetcher) && !/process\.exit\(1\)/.test(fetcher) && /prebuild/.test(JSON.stringify(pkgJson.scripts))
+      ? add(G2, "PASS", "scripts/fetch-fonts.mjs derlemeden önce çalışır, hata verse bile derlemeyi bozmaz (yedek: Instrument Sans)") : add(G2, "FAIL", "fetch-fonts.mjs yok ya da prebuild'e bağlı değil ya da hata ile çıkıyor");
+    /--font-ui:\s*['"]Cabinet Grotesk['"],\s*['"]Instrument Sans['"]/.test(c) ? add(G2, "PASS", "--font-ui Cabinet Grotesk ile başlıyor, yedek Instrument Sans") : add(G2, "FAIL", "--font-ui yedeği Instrument Sans olmayan bir yığın");
+    /@font-face\s*\{[^}]*font-family:\s*['"]Cabinet Grotesk['"][^}]*font-display:\s*optional/.test(c) ? add(G2, "PASS", "Cabinet Grotesk font-display: optional (sayfa kayması yok)") : add(G2, "FAIL", "Cabinet Grotesk font-display: optional değil (yüklenince düzeni kaydırır)");
+  }
+  // Bold ağırlıklar yalnızca Syne kuralında (Syne 400-800); başka ailede sentezlenir ya da 600'e düşer.
+  {
+    const blocks = c.match(/\{[^{}]*font-weight:\s*(?:700|800)\b[^{}]*\}/g) ?? [];
+    const strays = blocks.filter((b) => !/var\(--font-wide\)/.test(b));
+    strays.length ? add(G2, "FAIL", `700/800 ağırlık Syne (--font-wide) olmayan kuralda: ${strays.length}`) : add(G2, "PASS", `700/800 ağırlık yalnızca Syne kurallarında (${blocks.length} kural)`);
+  }
+
   // Hap düğmeler: tek tarif (.btn), birincil şampanya.
   /--radius-pill:\s*999px/.test(c) ? add(G2, "PASS", "--radius-pill 999px") : add(G2, "FAIL", "--radius-pill: 999px tanımlı değil");
   /\.btn\s*\{[^}]*border-radius:\s*var\(--radius-pill\)/.test(c) ? add(G2, "PASS", ".btn hap (border-radius: var(--radius-pill))") : add(G2, "FAIL", ".btn hap değil");
   /\.btn-primary\s*\{[^}]*background:\s*var\(--color-champagne\)/.test(c) ? add(G2, "PASS", "birincil düğme şampanya, tek vurgu rengi") : add(G2, "FAIL", ".btn-primary şampanya (--color-champagne) değil");
 
   // Mono etiketler: tek tarif. Büyük harf ve etiket aralığı CSS'te yalnızca bir yerde yazılır.
-  const upper = (c.match(/text-transform:\s*uppercase/g) ?? []).length, track = (c.match(/letter-spacing:\s*var\(--tracking-label\)/g) ?? []).length;
+  // Syne headlines in capitals (.chapter-word, --font-wide) are not labels: they are left out of the recipe count.
+  // The base .chapter-word rule sets the system face until Syne is near, so it does not carry var(--font-wide) itself: it is removed by name.
+  const cLabels = c.replace(/\{[^{}]*var\(--font-wide\)[^{}]*\}/g, "{}").replace(/\.chapter-word\s*\{[^{}]*\}/g, "{}");
+  const upper = (cLabels.match(/text-transform:\s*uppercase/g) ?? []).length, track = (c.match(/letter-spacing:\s*var\(--tracking-label\)/g) ?? []).length;
   const recipe = c.match(/((?:\.[\w-]+(?: \.[\w-]+)?,?\s*)+)\{[^}]*text-transform:\s*uppercase[^}]*\}/)?.[1] ?? "";
   const members = [".label", ".chip", ".badge", ".lang-trigger", ".lang-item .code"].filter((m) => recipe.includes(m));
   upper === 1 && track === 1 && members.length === 5
@@ -442,6 +473,12 @@ function bundleGate() {
   });
   const isLenis = (t) => /lenis-smooth|lenis-stopped|lenisVersion/.test(t);
   const isMotion = (t) => /commitStyles/.test(t) && /\.animate\(/.test(t);
+  const isEngine = (t) => /#version 300 es/.test(t);
+  const engineInInitial = chunks.filter((c) => initial.has(c.file) && isEngine(c.text));
+  const lazyEngine = chunks.filter((c) => isEngine(c.text) && !initial.has(c.file));
+  engineInInitial.length ? add("8. Sinema katmanı (WebGL, film, dil geçişi)", "FAIL", `WebGL motoru ilk yük parçasında: ${engineInInitial.map((c) => c.file).join(", ")}`)
+    : lazyEngine.length ? add("8. Sinema katmanı (WebGL, film, dil geçişi)", "PASS", `WebGL motoru ilk yükte değil, ayrı lazy parça: ${(lazyEngine.reduce((s, c) => s + c.gz, 0) / 1024).toFixed(1)} KB gzip (shader dahil)`)
+      : add("8. Sinema katmanı (WebGL, film, dil geçişi)", "WARN", "WebGL motoru parçası bulunamadı (shader metni işaretçisi değişmiş olabilir)");
   const leaked = chunks.filter((c) => initial.has(c.file) && (isLenis(c.text) || isMotion(c.text)));
   const lazyLenis = chunks.filter((c) => isLenis(c.text) && !initial.has(c.file));
   const lazyMotion = chunks.filter((c) => isMotion(c.text) && !initial.has(c.file));
@@ -452,6 +489,80 @@ function bundleGate() {
   lazyLenis.length && lazyMotion.length
     ? add(G6, "INFO", `lazy parçalar: lenis ${kb(lazyLenis)} KB, motion ${kb(lazyMotion)} KB (gzip). Lenis yalnızca masaüstünde, motion ilk etkileşimde iner`)
     : add(G6, "WARN", "lenis/motion lazy parçaları işaretçiyle bulunamadı (paket sürümü değişmiş olabilir): ilk yük denetimi geçersiz sayılmalı");
+}
+
+/* ───────── 8) Sinema katmanı (docs/adr/0014): ham WebGL2, scroll ile oynayan film, dil geçişi ───────── */
+const G8 = "8. Sinema katmanı (WebGL, film, dil geçişi)";
+{
+  const need = ["components/cinema/CinemaStage.tsx", "lib/cinema/engine.ts", "lib/cinema/shaders.ts", "lib/cinema/state.ts", "lib/enhance/film.ts", "components/sections/Film.tsx"];
+  const lost = need.filter((f) => !exists(f));
+  if (lost.length) add(G8, "FAIL", `sinema dosyası yok: ${lost.join(", ")}`);
+  else {
+    const stage = read("components/cinema/CinemaStage.tsx"), engine = read("lib/cinema/engine.ts"), shaders = read("lib/cinema/shaders.ts");
+    // Motor ve shader'lar yalnızca dinamik import ile (ilk yüke girmez); state ve film.ts küçüktür ve serbesttir.
+    const staticUse = [...walk(abs("app"), [".tsx", ".ts"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"])]
+      .filter((f) => !rel(f).startsWith("lib/cinema/") && /from\s+['"]@\/lib\/cinema\/(?:engine|shaders)['"]/.test(read(rel(f)))).map(rel);
+    staticUse.length ? add(G8, "FAIL", `motor/shader statik içe aktarılmış (ilk yüke girer): ${staticUse.join(", ")}`)
+      : /import\(\s*['"]@\/lib\/cinema\/engine['"]\s*\)/.test(stage) ? add(G8, "PASS", "WebGL motoru yalnızca dinamik import() ile yükleniyor") : add(G8, "FAIL", "CinemaStage motoru import() ile yüklemiyor");
+    // The capability check lives in lib/cinema/capable.ts (shared with the film section); the stage must call it.
+    const gate = exists("lib/cinema/capable.ts") ? read("lib/cinema/capable.ts") : "";
+    /cinemaCapable\(\)/.test(stage) && /prefers-reduced-motion/.test(gate) && /hover: hover\) and \(pointer: fine/.test(gate) && /saveData/.test(gate)
+      ? add(G8, "PASS", "motor yalnızca ince işaretçili masaüstünde, azaltılmış hareket ve veri tasarrufu yokken başlıyor (lib/cinema/capable.ts)") : add(G8, "FAIL", "CinemaStage cinemaCapable() çağırmıyor ya da lib/cinema/capable.ts kapısı eksik (reduced-motion, ince işaretçi, saveData)");
+    /getContext\(\s*['"]webgl2['"]/.test(engine) && /if \(!context\) return null/.test(engine) && /webglcontextlost/.test(engine)
+      ? add(G8, "PASS", "WebGL2 yoksa ya da bağlam kaybolursa motor sessizce çekiliyor (CSS yedeği kalır)") : add(G8, "FAIL", "motorda WebGL2 yokluğu/bağlam kaybı koruması eksik");
+    /clamp\(col,\s*vec3\(0\.05\d*,\s*0\.05\d*,\s*0\.054\d*\),\s*vec3\(0\.886\d*,\s*0\.886\d*,\s*0\.90\d*\)\)/.test(shaders)
+      ? add(G8, "PASS", "POST shader çıktısı paletin (#0D0D0E ... #E2E2E6) içine kıstırılıyor: saf siyah/beyaz üretemez") : add(G8, "FAIL", "POST shader paletin içine kıstırmıyor (saf siyah/beyaz çıkabilir)");
+    /document\.hidden/.test(engine) && /destroy\(\)/.test(engine) && /MIN_SCENE_SCALE/.test(engine) ? add(G8, "PASS", "motor sekme gizliyken durur, yavaş karede çözünürlüğü düşürür, çok yavaşsa kendini kapatır") : add(G8, "FAIL", "motorda sekme duraklatma ya da uyarlamalı kalite yok");
+    const deps = { ...readJSON("package.json").dependencies, ...readJSON("package.json").devDependencies };
+    const heavy = ["three", "@react-three/fiber", "@react-three/drei", "@react-three/postprocessing"].filter((d) => deps[d]);
+    heavy.length ? add(G8, "WARN", `${heavy.join(", ")} projede: ilk yükten uzak tutun ve paket boyutu etkisini raporlayın (ADR 0014 ham WebGL2 seçti)`) : add(G8, "PASS", "three.js / React Three Fiber yok: motor ham WebGL2 (ADR 0014)");
+    const posters = [0, 1, 2, 3].flatMap((i) => [`public/film/scene-${i}.webp`, `public/film/scene-${i}-portrait.webp`]).filter((f) => !exists(f));
+    posters.length ? add(G8, "FAIL", `film posteri yok (WebGL'siz cihazların görüntüsü): ${posters.join(", ")} (scripts/render-posters.mjs üretir)`) : add(G8, "PASS", "film yedeği: dört sahne için yatay ve dikey poster var");
+    /cinema-fallback/.test(read("app/globals.css")) && /prefers-reduced-motion/.test(read("app/globals.css")) ? add(G8, "PASS", "CSS yedeği (ışık + 35 mm gren) ve azaltılmış hareket kuralları var") : add(G8, "FAIL", "globals.css'te sinema yedeği ya da azaltılmış hareket kuralı yok");
+    const cssText = read("app/globals.css");
+    const sw = read("components/layout/LanguageSwitcher.tsx");
+    /beginStaging/.test(sw) && /prefers-reduced-motion/.test(sw) && /cinema:glitch/.test(sw) && /lang-veil\[data-phase/.test(cssText) && /\.lang-veil\[data-phase='out'\]\s*\{\s*animation-duration/.test(cssText)
+      ? add(G8, "PASS", "dil geçişi: kararma + glitch, hareket azaltmada yalnızca solma; perde React ağacı dışında (dil değişiminde silinmez)") : add(G8, "FAIL", "dil geçişi eksik (beginStaging, reduced-motion, cinema:glitch ya da perde kuralları)");
+    /document\.documentElement\.dataset\.(?:cinema|langSwitch)\s*=/.test(engine) ? add(G8, "FAIL", "motor <html> niteliği yazıyor: React dil değişiminde <html> niteliklerini sıfırlar (tuvale yazın)") : add(G8, "PASS", "kalıcı durum <html> üzerinde değil (React dil değişiminde onu sıfırlar)");
+  }
+}
+
+/* ───────── 9) Giriş kapısı, Hero ve kimlik (docs/adr/0015): çerezsiz kapı, bot baypası, platin amblem ───────── */
+const G9 = "9. Giriş kapısı, Hero ve kimlik";
+{
+  const need = ["components/gate/EntryGate.tsx", "lib/market.ts", "lib/crawlers.ts", "lib/enhance/hero.ts", "lib/enhance/mask-frame.ts"];
+  const lost = need.filter((f) => !exists(f));
+  if (lost.length) add(G9, "FAIL", `giriş kapısı/hero dosyası yok: ${lost.join(", ")}`);
+  else {
+    const code = (f) => stripComments(read(f));
+    const gate = code("components/gate/EntryGate.tsx"), page = code("app/[locale]/page.tsx"), crawlers = code("lib/crawlers.ts"), schema = code("lib/schemas/briefing.ts");
+    const css = stripComments(read("app/globals.css"));
+    // 1) Seçim yalnızca adreste: çerez ve tarayıcı depolaması yok (CLAUDE.md "i18n ve pazar").
+    const storage = ["components/gate/EntryGate.tsx", "lib/market.ts", "lib/crawlers.ts"].filter((f) => /document\.cookie|localStorage|sessionStorage|indexedDB/.test(code(f)));
+    storage.length ? add(G9, "FAIL", `çerez/depolama kullanımı: ${storage.join(", ")} (seçim yalnızca adreste, ?m=)`) : add(G9, "PASS", "kapı ve pazar çerez ve tarayıcı depolaması kullanmıyor: seçim adreste (?m=)");
+    // 2) JS'siz çalışır: pazarlar gerçek bağlantı; sunucuda açık gelir.
+    /<a\b[^>]*href=\{marketHref\(/.test(gate) && /entered=\{market !== null \|\| crawler\}/.test(page) ? add(G9, "PASS", "pazar seçenekleri gerçek <a href> bağlantısı ve kapı sunucuda render ediliyor (JS'siz de geçilir)") : add(G9, "FAIL", "pazar seçenekleri gerçek bağlantı değil ya da kapı sunucudan gelmiyor");
+    // 3) Erişilebilirlik: dialog, aria-modal, Escape, arka plan inert.
+    /role="dialog"/.test(gate) && /aria-modal/.test(gate) && /'Escape'/.test(gate) && /setAttribute\('inert'/.test(gate) ? add(G9, "PASS", "kapı role=dialog, aria-modal, Escape ile kapanır, arka plan inert") : add(G9, "FAIL", "kapıda dialog/aria-modal/Escape/inert eksik (kapı tuzak olmamalı)");
+    // 4) Yalnızca yayındaki diller; pazar beyaz listeli.
+    /OPEN_LOCALES\.map/.test(gate) && !/routing\.locales\.map/.test(gate) ? add(G9, "PASS", "kapı yalnızca yayındaki dilleri sunuyor (i18n/launch.ts)") : add(G9, "FAIL", "kapı yayında olmayan dilleri listeleyebilir (OPEN_LOCALES kullanın)");
+    /parseMarket\(/.test(page) && /z\.enum\(MARKETS\)/.test(schema) ? add(G9, "PASS", "pazar beyaz listeli (sayfa parseMarket, başvuru şeması z.enum)") : add(G9, "FAIL", "pazar parametresi beyaz listeyle doğrulanmıyor");
+    // 5) Arama motoru botları kapıyı görmez; Lighthouse/PageSpeed bilerek listede yok.
+    /isCrawler\(/.test(page) && /googlebot/i.test(crawlers) && !/lighthouse|pagespeed/i.test(crawlers) ? add(G9, "PASS", "arama motoru ve önizleme botları kapıyı atlar (lib/crawlers.ts); Lighthouse ölçtüğü şeyi görür") : add(G9, "FAIL", "bot baypası yok ya da Lighthouse/PageSpeed bota sayılıyor");
+    // 6) Lenis kapı açıkken durur.
+    /gate:change/.test(code("lib/enhance/smooth-scroll.ts")) && /gate:change/.test(gate) ? add(G9, "PASS", "kapı açıkken Lenis durur (gate:change)") : add(G9, "FAIL", "kapı açıkken Lenis durmuyor (gate:change)");
+    // 7) Logo saf platin: şampanya, parlama ya da gölge yok (brand/README.md).
+    const logoRule = /\.(?:gate-emblem|hero-monogram|gate-wordmark|hero-wordmark|logo)\b[^{}]*\{[^{}]*(?:champagne|212\s+197\s+169|#d4c5a9|box-shadow|drop-shadow|gradient)[^{}]*\}/i.test(css);
+    const logoJsx = [...walk(abs("components"), [".tsx"]), ...walk(abs("app"), [".tsx"])].filter((f) => /<Logo\b[^>]*champagne/.test(fs.readFileSync(f, "utf8"))).map(rel);
+    logoRule || logoJsx.length ? add(G9, "FAIL", `logoya şampanya/parlama/gölge/gradyan verilmiş: ${logoJsx.join(", ") || "globals.css"}`) : add(G9, "PASS", "amblem ve wordmark yalnızca platin: logoda şampanya, parlama, gölge, gradyan yok");
+    // 8) Hero: sabit sahne yalnızca yetenekli masaüstünde; maske çerçevesi JS'siz açık.
+    /@media \(min-width: 64rem\)[^{]*\(hover: hover\)[^{]*\(prefers-reduced-motion: no-preference\)\s*\{[^@]*\.hero-stage\s*\{[^}]*sticky/.test(css) ? add(G9, "PASS", "hero sahnesi yalnızca ince işaretçili, yeterince uzun, hareket azaltmasız masaüstünde sabit") : add(G9, "FAIL", "hero sticky kuralı yetenek koşullarına bağlı değil");
+    /var\(--mf,\s*1\)/.test(css) && /prefers-reduced-motion/.test(code("lib/enhance/mask-frame.ts")) ? add(G9, "PASS", "maske çerçeveleri JS'siz ve azaltılmış harekette açık (var(--mf, 1))") : add(G9, "FAIL", "maske çerçevesi JS'siz gizli kalabilir ya da azaltılmış hareketi saymıyor");
+    // 9) Kapı açıkken sayfa kilitli, hero girişi bekler.
+    /html:has\(\.gate\[data-state='open'\]\)/.test(css) && /animation-play-state:\s*paused/.test(css) ? add(G9, "PASS", "kapı açıkken sayfa kilitli ve hero girişi bekliyor (CSS :has)") : add(G9, "FAIL", "kapı açıkken kaydırma kilidi ya da hero bekletmesi yok");
+    // 10) Film yedeği: motor çekilirse posterler yüklenir (ADR 0014 boşluğu).
+    /CINEMA_OFF_EVENT/.test(code("lib/enhance/film.ts")) && /reportCinemaOff\(\)/.test(code("lib/cinema/engine.ts")) && /reportCinemaOff\(\)/.test(code("components/cinema/CinemaStage.tsx")) ? add(G9, "PASS", "motor başlamaz ya da kendini kapatırsa film posterlerini yükler (cinema:off)") : add(G9, "FAIL", "motor çekilince film posterleri yüklenmiyor (cinema:off bağlantısı eksik)");
+  }
 }
 
 /* ───────── 7) Build (isteğe bağlı) ───────── */

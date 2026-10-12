@@ -1,4 +1,7 @@
+import { initFilm } from './film';
+import { initHero } from './hero';
 import { initMagnetic } from './magnetic';
+import { initMaskFrame } from './mask-frame';
 import { initReveal } from './reveal';
 import { initRings } from './rings';
 import { initSmoothScroll } from './smooth-scroll';
@@ -12,6 +15,9 @@ import { initHeaderState, initPauseOffscreen, initStickyCta } from './ui-state';
  *
  *  - ui-state: header background after scrolling, mobile sticky CTA, off-screen animation pause (no animation engine).
  *  - spotlight, magnetic: the cursor-following light and the leaning primary button; fine pointers only.
+ *  - film: scroll position -> the film section's CSS variable --p, chapter, timecode and the cinema state (lib/cinema).
+ *  - hero: scroll position -> the hero's --hp (emblem depth, copy fade) and the cinema layer's hero brightness.
+ *  - mask-frame: scroll position -> --mf on media frames, the shutter-like mask opening (CSS does the clip-path).
  *  - rings: the Lighthouse rings fill when they come into view.
  *  - reveal: masked entrance for text below the fold. Motion is fetched on the visitor's first interaction.
  *  - smooth-scroll: Lenis, desktop only; the library is a separate chunk that touch devices never request.
@@ -31,6 +37,9 @@ export function initEnhancements(): () => void {
   run(initHeaderState);
   run(initStickyCta);
   run(initPauseOffscreen);
+  run(initFilm);
+  run(initHero);
+  run(initMaskFrame);
   run(initSpotlight);
   run(initMagnetic);
   run(initRings);

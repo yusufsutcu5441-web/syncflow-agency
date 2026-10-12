@@ -33,11 +33,14 @@ Gmail kimlik bilgisi Next uygulamasında hiçbir yerde tutulmaz (CLAUDE.md "Güv
   "company": "Acme Holding, Chief Marketing Officer",
   "email": "jane@acme.com",
   "message": "",
-  "locale": "en"
+  "locale": "en",
+  "market": "tr | int (isteğe bağlı: giriş kapısında pazar seçilmediyse alan hiç gelmez)"
 }
 ```
 
 **Teslim `id`'si ve yeniden deneme.** `id` her başvuru için rastgele bir UUID v4'tür. Site isteği **en çok iki kez** dener, toplam süre 9,5 sn'nin altında kalır: ilk deneme 5 sn, 0,4 sn bekleme, ikinci deneme en çok 4 sn. Yalnızca zaman aşımı, bağlantı hatası ve `5xx`, `408`, `429` yanıtında tekrar denenir; `4xx` (alıcı isteği reddetti) kesindir, tekrarlanmaz. **İki deneme de aynı `id`'yi taşır**, çünkü ilk deneme n8n'e ulaşıp yalnızca yanıt gecikmiş olabilir: alıcı çift e-postayı bu `id` ile ayıklamalıdır (aşağıda "Çift kayıt"). İki deneme de başarısızsa form `502` alır ve ziyaretçiye hazır e-posta taslağını önerir.
+
+`market` giriş kapısında ziyaretçinin seçtiği pazardır (`tr` Türkiye, `int` yurt dışı; [ADR 0015](adr/0015-entry-gate-and-hero.md)). Yalnızca bir etikettir: sınıflandırma, bütçe basamakları ya da konu satırı ona bağlı değildir. Ziyaretçi kapıyı seçmeden geçtiyse ya da adres `?m=` taşımıyorsa alan yoktur; akışta boş gelmesine hazır olun.
 
 Anlamlar: `budget` `b5` = $5k–$10k (taban altı), `b10` = $10k–$20k, `b20` = $20k+, `talk` = önce konuşalım. `tier` sunucuda hesaplanır (`lib/briefing.ts`): `b20` ve karar veren/karar ekibi = `high`; `b5` = `low`; kalanı `medium`. Alanlar düz metindir (işaretleme reddedilir, görünmez karakterler atılır); yine de bir HTML şablonunda kullanılacaksa kaçışlanmalıdır.
 
@@ -74,6 +77,7 @@ Ad Soyad: {{ $json.name }}
 Şirket ve unvan: {{ $json.company }}
 E-posta: {{ $json.email }}
 Dil: {{ $json.locale }}
+Pazar: {{ $json.market }}
 
 Proje: {{ $json.message }}
 ```

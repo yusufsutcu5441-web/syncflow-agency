@@ -23,6 +23,19 @@
   "Header": {
     "cta": "Briefing Başlat"
   },
+  "Gate": {
+    "eyebrow": "Dijital mimari stüdyosu",
+    "title": "Pazarınızı ve dilinizi seçin.",
+    "lead": "Seçiminiz sayfa adresinde durur. Çerez bırakmaz, tarayıcı depolaması kullanmayız.",
+    "marketLabel": "Pazar",
+    "languageLabel": "Dil",
+    "tr": "Türkiye",
+    "int": "Yurt dışı",
+    "trNote": "Varsayılan dil: Türkçe",
+    "intNote": "Varsayılan dil: İngilizce",
+    "enter": "Giriş",
+    "skip": "Seçmeden devam et"
+  },
   "Hero": {
     "eyebrow": "Dijital mimari stüdyosu — 2026’dan beri",
     "title1": "Karanlıkta inşa edilir.",
@@ -36,6 +49,22 @@
     "metricLcp": "En büyük içerik boyaması (LCP), masaüstü",
     "pending": "ölçülecek",
     "measured": "Ölçüm {date} · {tool} · {profile}"
+  },
+  "Film": {
+    "label": "Sinematik tanıtım filmi",
+    "cue": "Oynatmak için kaydırın",
+    "c1Word": "Madde",
+    "c1Line": "Her şey madde olarak başlar.",
+    "c1Text": "Obsidyen, toz ve basınç: bir markanın sesi olmadan önce ağırlığı vardır.",
+    "c2Word": "Biçim",
+    "c2Line": "Biçim bir karardır.",
+    "c2Text": "Her eğri tek bir soruyla kalır ya da kesilir: bir anlam taşıyor mu?",
+    "c3Word": "Işık",
+    "c3Line": "Işık tek süstür.",
+    "c3Text": "Önemli olanı aydınlatır, gerisini karanlığa bırakırız.",
+    "c4Word": "Hareket",
+    "c4Line": "Hareket, görünür olmuş zamandır.",
+    "c4Text": "Bir site, iyi kurgulanmış bir film gibi hareket etmeli: niyetle, gösteriş için değil."
   },
   "Architecture": {
     "label": "01 — Mimari",

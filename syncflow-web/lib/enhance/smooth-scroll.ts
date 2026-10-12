@@ -29,6 +29,14 @@ export function initSmoothScroll(): () => void {
 
   const wanted = () => finePointer.matches && !reducedMotion.matches;
 
+  // While the entry gate is open the page behind it must not scroll: Lenis moves the viewport with scrollTo, which the CSS scroll
+  // lock (overflow: hidden) does not stop. The gate announces itself with gate:change (components/gate/EntryGate.tsx).
+  const gateOpen = () => document.querySelector('.gate[data-state="open"]') !== null;
+  const onGate = (event: Event) => {
+    if ((event as CustomEvent<{ open?: boolean }>).detail?.open) instance?.stop();
+    else instance?.start();
+  };
+
   const attach = (lenis: Lenis): (() => void) => {
     const onClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -63,6 +71,7 @@ export function initSmoothScroll(): () => void {
       const { default: LenisClass } = await import('lenis');
       if (disposed || !wanted()) return;
       instance = new LenisClass({ duration: LENIS.duration, easing, autoRaf: true });
+      if (gateOpen()) instance.stop();
       detach = attach(instance);
     } catch {
       /* smooth scroll is optional: native scrolling stays */
@@ -85,12 +94,14 @@ export function initSmoothScroll(): () => void {
 
   finePointer.addEventListener('change', sync);
   reducedMotion.addEventListener('change', sync);
+  window.addEventListener('gate:change', onGate);
   sync();
 
   return () => {
     disposed = true;
     finePointer.removeEventListener('change', sync);
     reducedMotion.removeEventListener('change', sync);
+    window.removeEventListener('gate:change', onGate);
     stop();
   };
 }

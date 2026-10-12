@@ -23,6 +23,19 @@
   "Header": {
     "cta": "Start a Briefing"
   },
+  "Gate": {
+    "eyebrow": "Digital architecture studio",
+    "title": "Choose your market and language.",
+    "lead": "Your choice stays in the page address. We set no cookies and use no browser storage.",
+    "marketLabel": "Market",
+    "languageLabel": "Language",
+    "tr": "Türkiye",
+    "int": "International",
+    "trNote": "Default language: Türkçe",
+    "intNote": "Default language: English",
+    "enter": "Enter",
+    "skip": "Continue without choosing"
+  },
   "Hero": {
     "eyebrow": "Digital architecture studio — est. 2026",
     "title1": "Built in the dark.",
@@ -36,6 +49,22 @@
     "metricLcp": "Largest contentful paint (LCP), desktop",
     "pending": "to be measured",
     "measured": "Measured {date} · {tool} · {profile}"
+  },
+  "Film": {
+    "label": "Cinematic showreel",
+    "cue": "Scroll to play",
+    "c1Word": "Matter",
+    "c1Line": "Everything begins as matter.",
+    "c1Text": "Obsidian, dust and pressure: before a brand has a voice, it has weight.",
+    "c2Word": "Form",
+    "c2Line": "Form is a decision.",
+    "c2Text": "Every curve is kept or cut by one question: does it carry meaning?",
+    "c3Word": "Light",
+    "c3Line": "Light is the only ornament.",
+    "c3Text": "We light what matters and let the rest fall into the dark.",
+    "c4Word": "Motion",
+    "c4Line": "Motion is time made visible.",
+    "c4Text": "A site should move the way a well-cut film does: with intent, never for show."
   },
   "Architecture": {
     "label": "01 — Architecture",

@@ -33,8 +33,25 @@
     "scroll": "Desplazar",
     "metricPerformance": "Rendimiento Lighthouse, escritorio",
     "metricCls": "Desplazamiento de diseño (CLS), escritorio",
+    "metricLcp": "Mayor renderizado de contenido (LCP), escritorio",
     "pending": "por medir",
     "measured": "Medido el {date} · {tool} · {profile}"
+  },
+  "Film": {
+    "label": "Showreel cinematográfico",
+    "cue": "Desplázate para reproducir",
+    "c1Word": "Materia",
+    "c1Line": "Todo empieza como materia.",
+    "c1Text": "Obsidiana, polvo y presión: antes de tener voz, una marca tiene peso.",
+    "c2Word": "Forma",
+    "c2Line": "La forma es una decisión.",
+    "c2Text": "Cada curva se conserva o se corta con una sola pregunta: ¿lleva significado?",
+    "c3Word": "Luz",
+    "c3Line": "La luz es el único adorno.",
+    "c3Text": "Iluminamos lo que importa y dejamos que el resto caiga en la oscuridad.",
+    "c4Word": "Movimiento",
+    "c4Line": "El movimiento es el tiempo hecho visible.",
+    "c4Text": "Un sitio debe moverse como una película bien montada: con intención, nunca por exhibición."
   },
   "Architecture": {
     "label": "01 — Arquitectura",
@@ -81,6 +98,7 @@
     "estate": {
       "tag": "Inmobiliario",
       "title": "No es una propiedad. Es un escenario para vivir.",
+      "text": "Un ático con vistas al Bósforo no se compra desde una pantalla; se siente. Secuencias de entrada cinematográficas, simulación interactiva de la luz natural sobre los planos y un flujo de consulta que llega directamente a su equipo comercial.",
       "overlay": "Precio bajo petición",
       "videoLabel": "Una villa de fachada acristalada al atardecer, la cámara avanza despacio"
     },
@@ -90,6 +108,13 @@
       "text": "Para clínicas de cirugía estética, odontología o longevidad: una recepción digital serena, estéril y premium. Perfiles de profesionales y un flujo de citas guían a su paciente sin asustarlo.",
       "overlay": "Reserve una consulta privada",
       "videoLabel": "Un pasillo de clínica pálido en cámara lenta, una luz suave recorre el techo"
+    },
+    "law": {
+      "tag": "Derecho corporativo y asesoría",
+      "title": "La discreción es lo primero que lee un cliente.",
+      "text": "Para despachos de abogados y firmas de asesoría: una presencia digital sobria y precisa. Páginas de áreas de práctica y de socios, un flujo de consulta confidencial y una estructura en la que usted aprueba cada palabra, porque aplicar las normas de publicidad de la abogacía es su responsabilidad.",
+      "overlay": "Consulta confidencial",
+      "videoLabel": "Una columnata oscura que se aleja hacia una puerta iluminada, la cámara avanza despacio"
     }
   },
   "Briefing": {
@@ -112,6 +137,8 @@
       "showcaseDesc": "Una experiencia cinematográfica con una sola historia",
       "platform": "Plataforma inmobiliaria o de clínica",
       "platformDesc": "Arquitectura multipágina orientada a la demanda",
+      "law": "Sitio de despacho de abogados o asesoría",
+      "lawDesc": "Discreto, preciso, estructura primero",
       "unsure": "Aún no estoy seguro",
       "unsureDesc": "Definámoslo juntos"
     },
@@ -206,6 +233,8 @@
     "showcase": "Escaparate",
     "realEstate": "Inmobiliario",
     "clinics": "Clínicas privadas",
+    "law": "Derecho corporativo",
+    "languages": "Idiomas",
     "legal": "Legal",
     "privacy": "Privacidad",
     "imprint": "Aviso legal",

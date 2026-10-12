@@ -1,13 +1,13 @@
 # syncflow.agency
 
-Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)) üzerinde B1/v2 marka sistemi ([ADR 0007](docs/adr/0007-tokens-and-brand.md)): obsidian zemin, platin metin, Instrument Sans, çizili logo.
-**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (TR + EN yayında, yedi dillik altyapı uykuda) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · Remotion ile önceden render edilmiş sahne videoları · nonce tabanlı CSP (şimdilik report-only)**
+Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)) üzerinde B1/v2 marka sistemi ([ADR 0007](docs/adr/0007-tokens-and-brand.md)): obsidian zemin, platin metin, Instrument Sans, çizili logo. Üstüne **sinematik katman** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): tek WebGL2 tuvali, kaydırmayla oynayan dört bölümlük film ve sahneli dil geçişi.
+**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (TR + EN yayında, yedi dillik altyapı uykuda) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · Remotion ile önceden render edilmiş sahne videoları · ham WebGL2 sinema katmanı (yalnızca yetenekli masaüstünde, lazy) · nonce tabanlı CSP (şimdilik report-only)**
 
 | | |
 |---|---|
 | Diller | **Türkçe ve İngilizce** (`en` varsayılan `/`, `tr`). Her ortamda yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`) yayınlanır, geliştirme sunucusu dahil. `de fr es ar ja` (Arapça sağdan sola) **uykuda taslak** çeviridir: altyapı ve dosyalar durur, hiçbir yerde bağlantı verilmez, yalnızca `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile okunur. Sitede yedi dil iddiası yoktur ([ADR 0009](docs/adr/0009-niche-and-languages.md), [0002](docs/adr/0002-launch-locales-and-market.md)) |
 | Satış akışı | Başvuru bazlı: ana sayfadaki 4 adımlı **Strategic Briefing** → `/api/briefing` → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. Ödeme ve fiyat yok |
-| Bölümler | Hero · Mimari (3 Border Beam kartı) · Vitrin (kilitli üç sektör: Lüks Gayrimenkul, Özel Klinik, Kurumsal Hukuk ve Danışmanlık; 3 konsept video, yatay `scroll-snap` şerit) · Briefing · Kapanış ve footer |
+| Bölümler | Hero · Film (kaydırmayla oynayan 4 bölümlük sinema, [ADR 0014](docs/adr/0014-cinematic-layer.md)) · Mimari (3 Border Beam kartı) · Vitrin (kilitli üç sektör: Lüks Gayrimenkul, Özel Klinik, Kurumsal Hukuk ve Danışmanlık; 3 konsept video, yatay `scroll-snap` şerit) · Briefing · Kapanış ve footer |
 | Güvenlik | HSTS, CSP (nonce + strict-dynamic, **report-only**; üçüncü taraf yalnızca Cloudflare Turnstile), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, honeypot, sunucuya özel sırlar |
 
 > **Bu proje OneDrive / Masaüstü dışında durmalı.** `node_modules` ve `.next` on binlerce dosya içerir; OneDrive senkronu, Türkçe karakterli/boşluklu yollar ve Windows'un 260 karakter sınırı kurulumu ve Remotion'u bozar. Şu an `C:\Users\YAKUP\syncflow-agency\syncflow-web` altında.
@@ -34,7 +34,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run check` | Çeviri eşitliği + TypeScript + ESLint |
 | `npm run check:messages` | `en` ve `tr` anahtar/yer tutucu/etiket eşitliği; uykudaki taslak diller geride kalabilir (sayılır), fazlalık anahtar ya da bozuk yer tutucu hata (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
 | `npm run brand:build` / `brand:check` | `brand/*.svg` marka paketinden `lib/brand-paths.ts`, `app/icon.svg`, `app/apple-icon.png`, `public/brand/logo-512.png` üretir; `brand:check` eskimiş dosya varsa hata verir (denetim de çalıştırır) |
-| `npm run check:fonts` | Latin yazılı dillerdeki (en tr de fr es) her karakter Instrument Sans dosyalarında var mı (Python + `pip install fonttools brotli`; AR ve JA kasıtlı sistem yazı tipidir, `⌘ ✓` simgeleri açık istisnadır). Dosyaları yeniden üretmek: `python scripts/build-fonts.py "InstrumentSans[wdth,wght].ttf"` |
+| `npm run check:fonts` | Latin yazılı dillerdeki (en tr de fr es) her karakter Instrument Sans dosyalarında var mı (başlık, film sözcüğü ve düğme metinleri de kendi yüzlerinde: Instrument Serif, Syne, Cabinet Grotesk) (Python + `pip install fonttools brotli`; AR ve JA kasıtlı sistem yazı tipidir, `⌘ ✓` simgeleri açık istisnadır). Dosyaları yeniden üretmek: `python scripts/build-fonts.py "InstrumentSans[wdth,wght].ttf"` |
 | `node faz2-denetim.mjs --build` | **Aşama kapısı**: bağımlılıklar, tasarım belirteçleri, i18n, güvenlik, sahne videoları, hareket, doğrulanmamış iddia yasağı, ardından `npm run build` ve ilk yük paket denetimi |
 | `npm run smoke` | **Çalışan** sunucuya karşı HTTP güvenlik/işlev kontrolleri (aşağıda). Ortam değişkenleri `scripts/smoke.mjs` başlığında: `EXPECT_LOCALES`, `TURNSTILE_MODE`, `MOCK_WEBHOOK_PORT`, `WEBHOOK_SECRET`, `EXPECT_CSP_MODE` |
 | `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
@@ -42,6 +42,8 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
 | `npm run film:render` | Dört sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
 | `npm run remotion:studio` | Sahneleri Remotion Studio'da açar |
+| `npm run fonts:fetch` | Cabinet Grotesk'i (ITF FFL, depoda tutulamaz) resmi kaynaktan `public/fonts/` altına indirir; `dev` ve `build` öncesi kendiliğinden çalışır. İndirme başarısız olursa derlemeyi düşürmez, arayüz Instrument Sans'a düşer ([ADR 0014](docs/adr/0014-cinematic-layer.md)) |
+| `node scripts/render-posters.mjs` | Filmin yedek posterlerini (`public/film/`, yatay ve dikey) canlı motorun shader'larından render eder; Chrome ve Node ≥ 22.18 ister (başlığa bakın). Shader değişince yeniden çalıştırıp çıkan dosyaları commit'leyin |
 
 ---
 
@@ -58,25 +60,29 @@ app/
   globals.css              @font-face, belirteçler (@theme), taban katman, bileşen sınıfları (Border Beam, cam yüzey, briefing ...)
   robots.ts · sitemap.ts · manifest.ts · icon.svg
 components/
-  layout/    Header · Footer · StickyCta · LanguageSwitcher(client)
-  sections/  Hero · Architecture · Showcase + ShowcaseStrip(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
+  layout/    Header · Footer · StickyCta · LanguageSwitcher(client; sahneli dil geçişi)
+  cinema/    CinemaStage(client): yetenek kapısından sonra WebGL2 motorunu yükler, CSS yedeğini çizer
+  gate/      EntryGate(client): tam ekran pazar ve dil kapısı (sunucuda açık, gerçek bağlantılarla; çerezsiz, ?m=)
+  sections/  Hero · Film · Architecture · Showcase + ShowcaseStrip(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
   media/     SceneVideo(client): poster + önceden render edilmiş video, ekran dışında durur
   i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead
 lib/
+  market.ts        pazar (tr, int): beyaz listeli ?m= parametresi, önerilen dil, tab belleği   crawlers.ts  kapıyı atlayan arama motoru ve önizleme botları (ADR 0015)
   briefing.ts      seçenekler, sınırlar, zod'suz tarayıcı doğrulayıcı, sınıflandırma (tarayıcı + sunucu)
   metrics.ts       sitede yayınlanan TÜM performans sayıları (değer, tarih, profil, kaynak)
   schemas/briefing.ts (zod, strict)    server/ deliver.ts · turnstile.ts · sanitize.ts (server-only)    security/ csp.ts · rate-limit.ts
-  enhance/  ui-state (üstbilgi, mobil yapışkan CTA, ekran dışında durdurma) · spotlight · magnetic · rings · reveal (Motion) · smooth-scroll (Lenis)
+  enhance/  ui-state (üstbilgi, mobil yapışkan CTA, ekran dışında durdurma) · spotlight · magnetic · rings · reveal (Motion) · smooth-scroll (Lenis) · film (kaydırma → `--p` ve sinema durumu) · hero (kaydırma → `--hp`, amblem derinliği) · mask-frame (medya çerçevesi maskesi, `--mf`)
+  cinema/   engine (ham WebGL2) · shaders (GLSL) · state · capable (yetenek kapısı)
   motion/   tokens · ease      merge-messages.ts (taslak dillerde eksik metin İngilizceden)    i18n-paths.ts
 messages/   en tr de fr es ar ja (.json)
 i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/       adr/ (mimari kararlar 0001–0006) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
-public/     fonts/ Instrument Sans alt kümeleri (OFL)   media/clips/ render edilmiş sahneler   brand/logo-512.png
+docs/       adr/ (mimari kararlar 0001–0014) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+public/     fonts/ Instrument Sans, Instrument Serif, Syne alt kümeleri (OFL; Cabinet Grotesk git'te yok, derlemede iner)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
 assets/     og-instrument-sans-600.ttf (paylaşım kartı yazı tipi)
-remotion/   Render kaynağı, siteye girmez: config.ts, fonts.ts, Root.tsx, scenes/ (Monolith, Estate, Clinic, Saas)
-scripts/    check-messages · check-fonts · build-fonts · build-brand · smoke · audit-secrets · render-film · lighthouse · dev-inbox
+remotion/   Render kaynağı, siteye girmez: config.ts, fonts.ts, Root.tsx, scenes/ (Monolith, Estate, Clinic, Law)
+scripts/    check-messages · check-fonts · build-fonts · build-brand · smoke · audit-secrets · render-film · render-posters · fetch-fonts · lighthouse · dev-inbox
 ```
 
 ### Tasarım sistemi ("Dark Monolith & Fluid Precision")
@@ -87,7 +93,7 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 |---|---|
 | Renk | `obsidian` #0D0D0E (zemin) · `layer-1` #141416 (kart) · `layer-2` #1A1A1E (menü) · `ink` platin #E2E2E6 (15,0:1) · `muted` platin %70 (≥ 6,5:1) · `faint` platin %60 (≥ 5,2:1) · `champagne` #D4C5A9 (yalnızca birincil düğme ve tekil vurgu; obsidian metinle 11,4:1). **Saf siyah ve saf beyaz yok** (denetim FAIL sayar) |
 | Çizgi | `hairline` #ffffff1a (cam kenarlık) · `hairline-strong` #ffffff40 (hover) |
-| Tipografi | Instrument Sans 400/500 (OFL, Latin 30 KB + Türkçe 2 KB; ailede 300 yok) · etiketler tek tarifle sistem mono yığını, 11 px, geniş harf aralığı, büyük harf · `text-hero` `text-headline` `text-title` `text-lead` · AR ve JA sistem yazı tipi yığınları, Arapçada harf aralığı sıfır |
+| Tipografi | Metin: Instrument Sans 400/500 (OFL, Latin 30 KB + Türkçe 2 KB; ailede 300 yok) · başlıklar: Instrument Serif 400 (OFL) · film bölüm sözcükleri: Syne 700–800, büyük harf (OFL) · düğme ve gezinti: Cabinet Grotesk 500 (ITF FFL, derlemede iner; yedek Instrument Sans) · etiketler tek tarifle sistem mono yığını, 11 px, geniş harf aralığı, büyük harf · `text-hero` `text-headline` `text-title` `text-lead` · AR ve JA sistem yazı tipi yığınları, Arapçada harf aralığı sıfır |
 | Şekil | kartlar 20 px, panel 28 px, **tüm düğmeler hap (999 px)**: `.btn` 52 px, `.btn-sm` 40 px, birincil şampanya, ikincil cam · gölge yok (ışık içeridedir) |
 | Logo | `components/ui/Logo.tsx`: `lockupHorizontal` header'da 28 px (asgari 24), `wordmark` footer'da %6, tek renk platin (`currentColor`), oran bozulmaz, koruma alanı 2u (`brand/README.md`) |
 | Hareket | `--ease-lux` cubic-bezier(.16, 1, .3, 1) · maske süresi 1,1 sn, satır gecikmesi 80 ms |
@@ -147,6 +153,25 @@ Hareket bir **katmandır**: içerik sunucuda render edilir ve JS yokken tamamen 
 - **Ekran dışında durma:** sürekli (`infinite`) animasyon taşıyan öğe `data-pause-offscreen` alır; `IntersectionObserver` durdurur (kural **katman dışı** bir CSS kuralıdır, aksi hâlde bir bileşenin `animation` kısaltması onu ezerdi; tarayıcı testi tam bunu yakaladı). Videolar da ekran dışında durur.
 - **Vitrin şeridi** scroll-jacking yapmaz: yerel yatay `scroll-snap`, iki düğme ve klavye ile; tekerlek sayfayı kaydırmaya devam eder.
 
+### Sinematik katman ([ADR 0014](docs/adr/0014-cinematic-layer.md))
+
+Atmosfer katmanıdır; içerik ve erişilebilirlik onsuz da eksiksizdir.
+
+- **Tuval:** `lib/cinema/engine.ts` ham WebGL2 ile tek sabit tuval çizer (three.js yok). Dört sahne (kozmik madde, biyo-mekanik omurga, obsidiyen monolit, sıvı metal) kesirli çözünürlükte çizilir; ikinci geçiş renk sapması, bloom, mercek parıltısı, vinyet, 35 mm gren ve dil geçişi glitch'ini ekler ve çıktıyı obsidian–platin aralığına kıstırır (saf siyah ve beyaz üretemez).
+- **Yalnızca yetenekli cihazda:** ince işaretçi, azaltılmış hareket yok, veri tasarrufu yok, ≥ 900 px, ≥ 4 iş parçacığı (`lib/cinema/capable.ts`). Motor ayrı lazy parçadır (shader dahil 6,7 KB gzip, 12.10.2026), ilk boyama ve boşta kalma sonrası indirilir; telefonda hiç istenmez. Adrese `?cinema=off` eklemek kapatır, `?cinema-force` kapıyı atlar, `?cinema-debug` test kancasını açar.
+- **Film bölümü** (`components/sections/Film.tsx`, `lib/enhance/film.ts`): yüksek bölümde sticky sahne; yerel kaydırma, konum `--p` CSS değişkeniyle bölümlere dönüşür. Motor çalışmayan cihazlarda aynı dört sahne `public/film/` posterleridir (toplam ≈ 93 KB, film 3 ekran yaklaşınca indirilir).
+- **Dil geçişi** (`LanguageSwitcher.tsx`): kararma, metin dilimlerinin kayması, yeni dilin karanlıktan gelmesi; azaltılmış harekette düz solma.
+- **Kalite bütçesi:** ortam durumunda 30 kare/sn, sekme gizliyken durur, yavaş karede çözünürlük %80'e iner, yetmezse motor kendini kapatır; kapanırsa (ya da hiç başlayamazsa) film posterleri yüklenir.
+- **Metin kontrastı:** son geçiş parlaklığı sol (metin) sütunda 0,17 ile sınırlar. Ölçüm ve sınırları [docs/perf/cinema.md §5](docs/perf/cinema.md).
+
+### Giriş kapısı, Hero ve kimlik ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md))
+
+- **Kapı:** adreste geçerli `?m=tr|int` yoksa tam ekran bir kapı pazar ve dil sorar; sunucuda açık gelir ve pazar seçenekleri düz `<a href>`'tir, yani JS olmadan da geçilir. Seçim yalnızca adreste durur (`/tr?m=tr`): **çerez, `localStorage` ve `sessionStorage` yok**. Esc ya da "seçmeden devam et" kapatır; arka plan `inert`, kaydırma kilitli, Lenis durur. Arama motoru ve önizleme botları kapıyı görmez ([lib/crawlers.ts](lib/crawlers.ts); Lighthouse bilerek listede yok).
+- **Pazar** dilden ayrıdır; şu an yalnızca önerilen dili belirler ve başvuruya isteğe bağlı `market` etiketi ekler ([docs/n8n-briefing.md](docs/n8n-briefing.md)). Fiyat, hukuki metin ve vitrin pazara bağlı değildir (açık karar).
+- **Hero:** yetenekli masaüstünde 160 svh'lik sabit sahne; kaydırma `--hp` ile amblemi derinleştirir ve metni eritir. Telefonda, JS yokken ve azaltılmış harekette düz tek ekran.
+- **Kimlik:** B1 amblem ve wordmark yalnızca platin (şampanya, parlama, gölge, gradyan yok). Kapıda devasa tam platin amblem, hero'da %11–20 platin amblem, ikisinde %6 wordmark.
+- **Maske çerçeveleri:** `data-maskframe` taşıyan video çerçeveleri ekrana girerken açılır (`clip-path`); JS yokken ve azaltılmış harekette açıktır.
+
 `lenis` ve `motion` yalnızca `import()` ile kullanılabilir; `faz2-denetim.mjs` statik import'u hata sayar ve `--build` sonrası rotanın ilk yük parçalarında ikisinin de olmadığını doğrular.
 
 ---
@@ -155,7 +180,7 @@ Hareket bir **katmandır**: içerik sunucuda render edilir ve JS yokken tamamen 
 
 Sitede **Remotion çalışma zamanı yok**: videolar önceden render edilmiş dosyalardır ([ADR 0003](docs/adr/0003-showcase-film-static-render.md)). `remotion` yalnızca geliştirme bağımlılığıdır; `remotion/scenes/` altındaki sahneleri `scripts/render-film.mjs` ile render etmek içindir.
 
-- **Sahneler** (1280×720, 30 kare/sn, 8 sn kusursuz döngü, her biri tamamen kareden hesaplanır): `Monolith` (yavaşça dönen cam monolit; "mimari" kartı), `Estate` (gün batımında cam cepheli villa), `Clinic` (soluk klinik koridoru), `Saas` (karanlık panel, ⌘K paleti). **Konsept render'dır**, gerçek müşteri işi değildir; kartlarda öyle yazar. Sahnelerde okunabilir metin yoktur: altyazı HTML'dir, tek render her dile yeter.
+- **Sahneler** (1280×720, 30 kare/sn, 8 sn kusursuz döngü, her biri tamamen kareden hesaplanır): `Monolith` (yavaşça dönen cam monolit; "mimari" kartı), `Estate` (gün batımında cam cepheli villa), `Clinic` (soluk klinik koridoru), `Law` (tek ışıklı kapıya doğru uzanan karanlık sütunlu koridor; hukuk kartı). **Konsept render'dır**, gerçek müşteri işi değildir; kartlarda öyle yazar. Sahnelerde okunabilir metin yoktur: altyazı HTML'dir, tek render her dile yeter.
 - **Çıktı:** `public/media/clips/<ad>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (yedek) ve WebP poster. Toplam 12 dosya, yaklaşık 1,9 MB.
 - **Oynatma** (`components/media/SceneVideo.tsx`): HTML'de yalnızca poster gelir, video `preload="none"`. Ince işaretçide, görünürken (mimari kartı) ya da kartın üstüne gelince/odaklanınca (vitrin) oynar; **dokunmatikte, azaltılmış hareket ve Save-Data'da otomatik oynamaz** ve hiçbir şey indirilmez; ziyaretçi düğmeye basınca yüklenir. Ekran dışına çıkınca ve sekme gizlenince durur. Her videoda görünür bir oynat/duraklat düğmesi vardır (WCAG 2.2.2). Çerçeve oranı sabittir (CLS 0).
 - **Lisans:** Remotion yalnızca ≤ 3 kişilik kâr amaçlı şirketlerde/bireylerde ücretsizdir; **4+ kişilik şirketler için ücretli Company License gerekir** (remotion.pro). Render almak da lisans kapsamındadır.
@@ -223,6 +248,8 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 - [ ] `NEXT_PUBLIC_SITE_URL` üretim alan adı. Search Console'a `sitemap.xml`. PageSpeed Insights ile canlı doğrulama, `lib/metrics.ts` güncelleme.
 - [ ] `public/.well-known/security.txt` `Expires` tarihini (2027-04-08) dolmadan yenileyin.
 - [ ] Remotion lisansı (4+ kişiyseniz).
+- [ ] **Giriş kapısı ve Hero** ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md)): (a) bot baypasını çalışan sunucuda `curl -A "Googlebot"` ile doğrulayın (HTML'de `class="gate"` olmamalı), (b) `npm run smoke`'u bu sürümle koşturun ve başvuruda `market` alanının teslimini sahte alıcıyla görün, (c) Lighthouse'ı kapıyla yeniden ölçün, (d) pazarın başka neyi şekillendireceğine karar verin, (e) Lighthouse performans puanı ve masaüstü TBT şimdilik "ölçülecek" yazıyor (`lib/metrics.ts`); kapıyla yeniden ölçüp güncelleyin, CLS, LCP ve diğer üç puan hâlâ 08.10.2026'dan, (f) kapının klavye akışını ve ekran okuyucuyu elle deneyin.
+- [ ] **Sinema katmanı** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): (a) masaüstünde motor açıkken Lighthouse 89–96 / TBT ≈ 193 ms (kapalıyken 100 / 0) giderilsin ya da kabul edilsin, önce gerçek GPU'lu (başlıklı) Chrome'da ölçülsün; (b) motor kapıyı geçip çekilirse film posterleri yüklenmiyor (boş görsel), düzeltilsin; (c) sahne üstünde metin kontrastı ölçülsün; (d) **Cabinet Grotesk** web yayın izni sahibince doğrulansın ve Vercel derlemesinde `fonts:fetch`'in çalıştığı canlıda görülsün; (e) `?cinema-debug` kancası üretimde kalacak mı karar verilsin; (f) çalışma ağacındaki sinema işi commit edilsin (üretim hâlâ sinemadan önceki sürüm).
 - [ ] `npm run check`, `node faz2-denetim.mjs --build`, `npm start`, `npm run smoke`, `npm run audit:secrets`.
 
 ---
@@ -230,6 +257,20 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 ## 11. Doğrulama sonuçları
 
 Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
+
+### Sinematik katman (12.10.2026, `main` çalışma ağacı, commit edilmemiş)
+
+Ayrıntı: [docs/perf/cinema.md](docs/perf/cinema.md), karar: [ADR 0014](docs/adr/0014-cinematic-layer.md). Üretim derlemesi, Windows 11, Node 24.12, başsız Chrome 154, Lighthouse 13.5.
+
+| Denetim | Sonuç |
+|---|---|
+| `npm run check` | çeviri eşitliği (7 dil), `tsc` ve ESLint temiz |
+| `node faz2-denetim.mjs --build` | **0 hata**, 130 geçti, 1 bilinçli uyarı. WebGL motoru ilk yükte değil, ayrı lazy parça (6,7 KB gzip). İlk koşuda çıkan 2 hata denetimin eski yerlere bakmasındandı (kod değil) ve denetim düzeltildi |
+| `npm run smoke` | **121/121** (üretim, `en,tr`, sahte webhook alıcısı) |
+| Lighthouse mobil (motor kapıyı geçmez) | `/` **94** (LCP 3,15 sn, TBT 55 ms), `/tr` **86** (76–90; LCP 3,27 sn, TBT 336 ms); JS 157 KB |
+| Lighthouse masaüstü, A/B | motor kapalı **100** (TBT 0–2 ms), motor açık **89–96** (TBT 135–236 ms); LCP ≈ 0,7 sn ve CLS 0 aynı; JS 171 KB |
+
+**Doğrulanmayanlar:** gerçek GPU'lu masaüstü (Lighthouse ve kare ritmi), sahne üstünde metin kontrastı, motorun kendini kapatma davranışı, sinema için tarayıcı testleri, Safari/Firefox, gerçek telefon, ekran okuyucu, Vercel'de `fonts:fetch`.
 
 ### Faz 4 ve 5 (08.10.2026, `faz_4` ve `faz_5` dalları)
 
@@ -302,4 +343,4 @@ Ayrıntı: [docs/perf/faz2b4.md](docs/perf/faz2b4.md), karar: [ADR 0011](docs/ad
 
 ## 12. Üçüncü taraf lisanslar
 
-Instrument Sans (SIL OFL 1.1, `public/fonts/OFL.txt`) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS, Lenis, Motion (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca render için, özel lisans, §6) · Cloudflare Turnstile (yalnızca briefing'in son adımında yüklenir).
+Instrument Sans (SIL OFL 1.1, `public/fonts/OFL.txt`) · Instrument Serif (SIL OFL 1.1, `public/fonts/OFL-instrument-serif.txt`) · Syne (SIL OFL 1.1, `public/fonts/OFL-syne.txt`) · Cabinet Grotesk (Indian Type Foundry, ITF Free Font License v2.0; depoda tutulmaz, derlemede resmi kaynaktan indirilir, bkz. [ADR 0014](docs/adr/0014-cinematic-layer.md)) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS, Lenis, Motion (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca render için, özel lisans, §6) · Cloudflare Turnstile (yalnızca briefing'in son adımında yüklenir).

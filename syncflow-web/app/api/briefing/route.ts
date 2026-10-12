@@ -111,6 +111,7 @@ export async function POST(request: Request) {
     email: input.email,
     message,
     locale: input.locale,
+    ...(input.market ? { market: input.market } : {}),
   });
   if (!delivery.ok) {
     return delivery.reason === 'not_configured' ? fail('unavailable', 503) : fail('failed', 502);

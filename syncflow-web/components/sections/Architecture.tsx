@@ -46,7 +46,7 @@ export async function Architecture() {
               <h3 className="text-title mt-4">{t('c1Title')}</h3>
               <p className="body-muted mt-4">{t('c1Text')}</p>
               <p className="label mt-5">{t('c1Tags')}</p>
-              <div className="frame mt-7" data-video-host="">
+              <div className="frame mt-7" data-video-host="" data-maskframe="">
                 <SceneVideo name="monolith" mode="visible" label={t('c1VideoLabel')} />
                 <span className="badge">{t('c1Badge')}</span>
               </div>
@@ -107,9 +107,9 @@ export async function Architecture() {
                     mobile: METRICS.lighthousePerformanceMobile.value === null ? h('pending') : number(METRICS.lighthousePerformanceMobile.value),
                   })}
                 </p>
-                {METRICS.lighthousePerformance.measuredAt ? (
+                {METRICS.lighthouseAccessibility.measuredAt ? (
                   <p className="mt-2 text-xs text-faint">
-                    {t('c3Caption', { tool: 'Lighthouse', profile: METRICS.lighthousePerformance.profile, date: date(METRICS.lighthousePerformance.measuredAt) })}
+                    {t('c3Caption', { tool: 'Lighthouse', profile: METRICS.lighthouseAccessibility.profile, date: date(METRICS.lighthouseAccessibility.measuredAt) })}
                   </p>
                 ) : null}
               </div>
