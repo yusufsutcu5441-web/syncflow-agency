@@ -1,7 +1,7 @@
 # Sinema katmanı ölçümleri
 
 - **Tarih:** 12.10.2026
-- **Ölçülen kod:** `main` dalının çalışma ağacı, **commit edilmemiş** sinema katmanı dahil ([ADR 0014](../adr/0014-cinematic-layer.md)). Üretim derlemesi: `NEXT_PUBLIC_SITE_URL=http://localhost:3101 npm run build`, `next start -p 3101` (3100 portunda 09.10'dan kalma eski bir sunucu vardı, ona dokunulmadı).
+- **Ölçülen kod:** `main` dalının çalışma ağacı, sinema katmanı dahil (ölçüm sırasında commit edilmemişti; sonra `4bc5799` ile commit edildi ve `7cf5b50` ile canlıya alındı) ([ADR 0014](../adr/0014-cinematic-layer.md)). Üretim derlemesi: `NEXT_PUBLIC_SITE_URL=http://localhost:3101 npm run build`, `next start -p 3101` (3100 portunda 09.10'dan kalma eski bir sunucu vardı, ona dokunulmadı).
 - **Makine:** Windows 11, Node 24.12, Chrome 154 (başsız), Lighthouse 13.5.0. Ölçümler arka arkaya, başka ağır işlem çalıştırılmadan alındı; kullanıcının makinesi olduğu için dışarıdan gelen yük **denetlenmedi**. **Tek makine, yerel sunucu (HTTP/1.1, gzip).** Saha verisi (CrUX/RUM) değildir.
 - **Amaç:** sinema katmanının ([CLAUDE.md](../../CLAUDE.md) "Performans": her sinema değişikliğinden sonra mobil ve masaüstü ayrı ölçülür) ilk ölçümü. Bu katman için daha önce hiçbir ölçüm yoktu.
 
@@ -88,4 +88,4 @@ Film posterleri (WebGL'siz cihazların resmi) yeni shader ile yeniden render edi
 - **Motorun kendini kapatma davranışı** (kare süresi 24 ms'yi aşınca çözünürlük düşürme, alt sınırda kapanma) laboratuvarda gözlenmedi.
 - **Safari ve Firefox**, gerçek telefon, 120 Hz ekran, ekran okuyucu ile elle deneme.
 - **Sinema için tarayıcı testleri** (`puppeteer-core`): bu oturumda yazılıp koşulmadı.
-- **Vercel:** derleme sırasında `fonts:fetch`'in çalışıp indirilen `cabinet-grotesk-500.woff2`'nin dağıtıma girdiği canlıda doğrulanmadı.
+- **Vercel:** doğrulandı (12.10.2026 dağıtımından sonra `fonts/cabinet-grotesk-500.woff2` canlıda HTTP 200, 20.260 bayt): derleme sırasında `fonts:fetch` çalıştı ve dosya dağıtıma girdi.

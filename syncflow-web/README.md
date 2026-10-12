@@ -248,8 +248,8 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 - [ ] `NEXT_PUBLIC_SITE_URL` üretim alan adı. Search Console'a `sitemap.xml`. PageSpeed Insights ile canlı doğrulama, `lib/metrics.ts` güncelleme.
 - [ ] `public/.well-known/security.txt` `Expires` tarihini (2027-04-08) dolmadan yenileyin.
 - [ ] Remotion lisansı (4+ kişiyseniz).
-- [ ] **Giriş kapısı ve Hero** ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md)): (a, b) bot baypası ve `market` teslimi yerelde `npm run smoke` ile doğrulandı (139/139); canlıda dağıtımdan sonra `npm run live` ve `curl -A "Googlebot"` ile (HTML'de `class="gate"` olmamalı) yineleyin, (c) Lighthouse'ı kapıyla yeniden ölçün, (d) pazarın başka neyi şekillendireceğine karar verin, (e) Lighthouse performans puanı ve masaüstü TBT şimdilik "ölçülecek" yazıyor (`lib/metrics.ts`); kapıyla yeniden ölçüp güncelleyin, CLS, LCP ve diğer üç puan hâlâ 08.10.2026'dan, (f) kapının klavye akışını ve ekran okuyucuyu elle deneyin.
-- [ ] **Sinema katmanı** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): (a) masaüstünde motor açıkken Lighthouse 89–96 / TBT ≈ 193 ms (kapalıyken 100 / 0) giderilsin ya da kabul edilsin, önce gerçek GPU'lu (başlıklı) Chrome'da ölçülsün; (b) motor kapıyı geçip çekilirse film posterleri yüklenmiyor (boş görsel), düzeltilsin; (c) sahne üstünde metin kontrastı ölçülsün; (d) **Cabinet Grotesk** web yayın izni sahibince doğrulansın ve Vercel derlemesinde `fonts:fetch`'in çalıştığı canlıda görülsün; (e) `?cinema-debug` kancası üretimde kalacak mı karar verilsin; (f) çalışma ağacındaki sinema işi commit edilsin (üretim hâlâ sinemadan önceki sürüm).
+- [ ] **Giriş kapısı ve Hero** ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md)): (a, b) bot baypası ve `market` teslimi yerelde `npm run smoke` ile doğrulandı (139/139); canlıda da doğrulandı (12.10.2026 dağıtımı: `npm run live` 24 geçti; Googlebot, Bingbot ve facebookexternalhit kapıyı HTML'de görmüyor), (c) Lighthouse'ı kapıyla yeniden ölçün, (d) pazarın başka neyi şekillendireceğine karar verin, (e) Lighthouse performans puanı ve masaüstü TBT şimdilik "ölçülecek" yazıyor (`lib/metrics.ts`); kapıyla yeniden ölçüp güncelleyin, CLS, LCP ve diğer üç puan hâlâ 08.10.2026'dan, (f) kapının klavye akışını ve ekran okuyucuyu elle deneyin.
+- [ ] **Sinema katmanı** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): (a) masaüstünde motor açıkken Lighthouse 89–96 / TBT ≈ 193 ms (kapalıyken 100 / 0) giderilsin ya da kabul edilsin, önce gerçek GPU'lu (başlıklı) Chrome'da ölçülsün; (b) motor çekilince film posterleri yüklenir (giderildi 12.10.2026); (c) küçük etiketlerin sahne üstündeki kontrastı ölçülsün (büyük metin ve paragraflar ölçüldü); (d) **Cabinet Grotesk** web yayın izni sahibince doğrulansın (Vercel derlemesinde `fonts:fetch` çalıştı, dosya canlıda HTTP 200 veriyor); (e) `?cinema-debug` kancası üretimde kalacak mı karar verilsin; (f) commit edildi ve canlıda (`7cf5b50`, 12.10.2026).
 - [ ] `npm run check`, `node faz2-denetim.mjs --build`, `npm start`, `npm run smoke`, `npm run audit:secrets`.
 
 ---
@@ -258,7 +258,7 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 
 Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
 
-### Sinematik katman (12.10.2026, `main` çalışma ağacı, commit edilmemiş)
+### Sinematik katman, giriş kapısı ve Hero (12.10.2026, `7cf5b50`, canlıda)
 
 Ayrıntı: [docs/perf/cinema.md](docs/perf/cinema.md), karar: [ADR 0014](docs/adr/0014-cinematic-layer.md). Üretim derlemesi, Windows 11, Node 24.12, başsız Chrome 154, Lighthouse 13.5.
 
@@ -270,7 +270,9 @@ Ayrıntı: [docs/perf/cinema.md](docs/perf/cinema.md), karar: [ADR 0014](docs/ad
 | Lighthouse mobil (motor kapıyı geçmez) | `/` **94** (LCP 3,15 sn, TBT 55 ms), `/tr` **86** (76–90; LCP 3,27 sn, TBT 336 ms); JS 157 KB |
 | Lighthouse masaüstü, A/B | motor kapalı **100** (TBT 0–2 ms), motor açık **89–96** (TBT 135–236 ms); LCP ≈ 0,7 sn ve CLS 0 aynı; JS 171 KB |
 
-**Doğrulanmayanlar:** gerçek GPU'lu masaüstü (Lighthouse ve kare ritmi), sahne üstünde metin kontrastı, motorun kendini kapatma davranışı, sinema için tarayıcı testleri, Safari/Firefox, gerçek telefon, ekran okuyucu, Vercel'de `fonts:fetch`.
+**Canlı doğrulama (12.10.2026, dağıtımdan sonra, kullanıcı aracısı taklidiyle):** `npm run live` 24 geçti, 0 hata, 1 bilinen uyarı (`www` kaydı yok). Googlebot, Bingbot, facebookexternalhit ve Googlebot `/tr` kapıyı HTML'de görmüyor (içerik aynı); varsayılan ziyaretçi ve Lighthouse kullanıcı aracısı görüyor; `?m=` ile kapı yok; hiçbir yanıtta çerez yok; `fonts/cabinet-grotesk-500.woff2` HTTP 200 (Vercel derlemesinde `fonts:fetch` çalıştı).
+
+**Doğrulanmayanlar:** gerçek GPU'lu masaüstü (Lighthouse ve kare ritmi), küçük etiketlerin sahne üstünde kontrastı, motorun kendini kapatma davranışı, Lighthouse'ın kapıyla ölçümü, `/#briefing` çapa atlaması, canlı sitenin tarayıcıda gözle kontrolü, gerçek Googlebot, Safari/Firefox, gerçek telefon, ekran okuyucu.
 
 ### Faz 4 ve 5 (08.10.2026, `faz_4` ve `faz_5` dalları)
 
