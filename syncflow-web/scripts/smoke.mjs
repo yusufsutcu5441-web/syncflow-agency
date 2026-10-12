@@ -162,6 +162,51 @@ check('JSON-LD has no offer, price, ratings, reviews or address', !/makesOffer|"
 const siteLangs = graph.find((n) => n['@type'] === 'WebSite')?.inLanguage ?? [];
 check('JSON-LD lists only the public languages', JSON.stringify([...siteLangs].sort()) === JSON.stringify([...OPEN].sort()), siteLangs.join(','));
 
+/* ── 1b. Entry gate, market and crawlers (docs/adr/0015-entry-gate-and-hero.md) ───────────────── */
+section('Entry gate, market and crawlers (docs/adr/0015)');
+const UA = {
+  googlebot: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+  bingbot: 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+  facebook: 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+  // What Lighthouse and PageSpeed Insights send: they must get the gate, because they measure what a visitor gets.
+  lighthouse: 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36 Chrome-Lighthouse',
+  browser: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36',
+};
+const hasGate = (page) => /class="gate"/.test(page);
+const pageAs = async (path, ua) => {
+  const res = await get(path, ua ? { headers: { 'user-agent': ua } } : {});
+  return { res, page: await res.text() };
+};
+
+const gateHome = await pageAs('/');
+check('GET / without a market: the gate is in the HTML, open', hasGate(gateHome.page) && /data-state="open"/.test(gateHome.page));
+check('both markets are real links (the gate works without JavaScript)', /href="\/tr\?m=tr"/.test(gateHome.page) && /href="\/\?m=int"/.test(gateHome.page) && /data-market="tr"/.test(gateHome.page) && /data-market="int"/.test(gateHome.page));
+check('the gate is a dialog with a heading, and the page behind it is still in the HTML', /role="dialog"/.test(gateHome.page) && /aria-modal="true"/.test(gateHome.page) && /id="gate-title"/.test(gateHome.page) && gateHome.page.includes('Built in the dark.'));
+check('the gate offers only the public languages', (gateHome.page.match(/class="gate-lang"/g) ?? []).length === OPEN.length, `${(gateHome.page.match(/class="gate-lang"/g) ?? []).length} chips, ${OPEN.length} public languages`);
+check('the gate sets no cookie (the choice lives in the address only)', gateHome.res.headers.get('set-cookie') === null);
+for (const path of ['/?m=tr', '/?m=int', '/tr?m=tr']) {
+  const passed = await pageAs(path);
+  check(`${path}: a valid market in the address means the gate is passed (no gate in the HTML)`, passed.res.status === 200 && !hasGate(passed.page));
+}
+const unknown = await pageAs('/?m=ZZtopmarket');
+// Next.js serialises the request URL (query included) into its own router payload, JSON-escaped, inside <script> elements: that is not
+// markup. What must hold: the gate still shows, the value never reaches the document markup, and an HTML injection attempt is not reflected.
+const markup = unknown.page.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
+const injected = await pageAs('/?m=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E');
+check('an unknown market is ignored (the gate shows) and never reaches the document markup', hasGate(unknown.page) && !markup.includes('ZZtopmarket') && !injected.page.includes('<img src=x onerror'));
+const trGate = await pageAs('/tr');
+check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Pazarınızı ve dilinizi seçin.'));
+for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
+  const bot = await pageAs('/', ua);
+  check(`${name} gets the page without the gate, with the same content (h1, briefing section)`, bot.res.status === 200 && !hasGate(bot.page) && bot.page.includes('Built in the dark.') && /<section[^>]*id="briefing"/.test(bot.page));
+}
+const botTr = await pageAs('/tr', UA.googlebot);
+check('Googlebot on /tr gets no gate either', botTr.res.status === 200 && !hasGate(botTr.page) && /<html[^>]*lang="tr"/.test(botTr.page));
+for (const [name, ua] of [['Lighthouse / PageSpeed', UA.lighthouse], ['an ordinary browser', UA.browser]]) {
+  const visitor = await pageAs('/', ua);
+  check(`${name} gets the gate (it must see what a visitor sees)`, hasGate(visitor.page));
+}
+
 /* ── 2. Locales ──────────────────────────────────────────────────────────────────────────────── */
 section('Locales');
 const MARKERS = {
@@ -354,6 +399,15 @@ if (mock && TURNSTILE_MODE !== 'unset') {
   const never = await post(valid({ company: 'ALWAYSFAIL Ltd, Partner' }));
   const took = Date.now() - t0;
   check('a receiver that keeps failing: two attempts, the form hears 502, inside the 10 s budget', never.status === 502 && received.length === 2 && took < 10_000, `status ${never.status}, ${received.length} attempts, ${took} ms`);
+
+  // 5) The market chosen on the entry gate (docs/adr/0015) is an optional tag: whitelisted, delivered when present, absent otherwise.
+  received.length = 0;
+  const tagged = await post(valid({ market: 'tr' }));
+  const taggedPayload = received[0] ? JSON.parse(received[0].body) : {};
+  check('a briefing with a market tag is delivered with market "tr"', tagged.status === 200 && taggedPayload.market === 'tr', `status ${tagged.status}, market ${taggedPayload.market}`);
+  received.length = 0;
+  const moon = await post(valid({ market: 'moon' }));
+  check('an unknown market is rejected (strict enum) and never delivered', moon.status === 422 && received.length === 0, `status ${moon.status}, received ${received.length}`);
 }
 
 section('Scene videos (docs/adr/0003, 0006)');

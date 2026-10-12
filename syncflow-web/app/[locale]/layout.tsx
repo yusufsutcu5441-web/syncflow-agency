@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { preload } from 'react-dom';
 import type { ReactNode } from 'react';
+import { CinemaStage } from '@/components/cinema/CinemaStage';
 import { Experience } from '@/components/Experience';
 import { ClientI18nProvider } from '@/components/i18n/ClientI18n';
 import { Footer } from '@/components/layout/Footer';
@@ -78,21 +79,33 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   // Preload only the font files this page needs. Fonts are always fetched in CORS mode, hence crossOrigin.
-  preload('/fonts/instrument-sans-latin-v1.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
-  if (locale === 'tr') preload('/fonts/instrument-sans-turkish-v1.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+  // Above the fold: Instrument Sans (text), Instrument Serif (the headline: the likely LCP element) and Cabinet Grotesk 500
+  // (buttons, navigation; font-display: optional only uses it when it is ready for the first paint, hence the preload).
+  // Syne sits in the chapters below the fold and is not preloaded.
+  const font = { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' } as const;
+  preload('/fonts/instrument-sans-latin-v1.woff2', font);
+  preload('/fonts/instrument-serif-latin-v1.woff2', font);
+  preload('/fonts/cabinet-grotesk-500.woff2', font);
+  if (locale === 'tr') {
+    preload('/fonts/instrument-sans-turkish-v1.woff2', font);
+    preload('/fonts/instrument-serif-latin-ext-v1.woff2', font);
+  }
 
   const [messages, a11y] = await Promise.all([getMessages(), getTranslations('A11y')]);
 
   return (
     <html lang={locale} dir={LOCALE_LABELS[locale].dir}>
       <body>
+        {/* The cinema layer: a CSS fallback here, the WebGL canvas (desktop only) on <body> behind #site-root. */}
+        <CinemaStage />
+
         <a href="#main" className="skip-link">
           {a11y('skip')}
         </a>
 
         <div id="site-root">
           {/* Only the plain strings the interactive widgets read are sent to the browser (no next-intl client runtime). */}
-          <ClientI18nProvider locale={locale} messages={pick(messages, ['Switcher', 'Briefing', 'Showcase', 'Closing', 'ErrorPage'])}>
+          <ClientI18nProvider locale={locale} messages={pick(messages, ['Switcher', 'Briefing', 'Showcase', 'Closing', 'ErrorPage', 'Gate'])}>
             <Header />
             {children}
             <Footer />

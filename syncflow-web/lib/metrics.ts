@@ -28,7 +28,16 @@ const FRAME_PROFILE = '1280x800, headless Chrome, 60 Hz, no CPU throttling';
 const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 build)';
 
 export const METRICS = {
-  lighthousePerformance: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
+  // Not published until it is re-measured (owner decision, 12.10.2026: "ölçülecek"). The 08.10 value (100) belongs to the build
+  // before the cinema layer; with the layer on, the same desktop preset gave 89-96 (docs/perf/cinema.md), and it has not been
+  // re-measured with the entry gate. The page shows "to be measured" until a new median is put here.
+  lighthousePerformance: {
+    value: null,
+    unit: 'score',
+    measuredAt: '',
+    profile: 'desktop preset, local production build (not yet re-measured after the cinema layer and the entry gate)',
+    source: 'Lighthouse 13.5 (npm run perf), docs/perf/cinema.md',
+  },
   lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
   lighthouseBestPractices: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
   lighthouseSeo: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
@@ -44,7 +53,14 @@ export const METRICS = {
   },
   cls: { value: 0, unit: 'cls', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
   lcpDesktop: { value: 682, unit: 'ms', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
-  tbtDesktop: { value: 0, unit: 'ms', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
+  // Same reason: 0 ms (08.10) is contradicted by the later 12.10 runs with the cinema layer on (135-236 ms, docs/perf/cinema.md).
+  tbtDesktop: {
+    value: null,
+    unit: 'ms',
+    measuredAt: '',
+    profile: 'desktop preset, local production build (not yet re-measured after the cinema layer and the entry gate)',
+    source: 'Lighthouse 13.5 (npm run perf), docs/perf/cinema.md',
+  },
   frameMedian: { value: 16.7, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
   frameP99: { value: 16.9, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
 } as const satisfies Record<string, Metric>;

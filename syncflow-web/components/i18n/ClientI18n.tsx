@@ -10,7 +10,7 @@ import type en from '@/messages/en.json';
  * happens on the server, so next-intl's client runtime and its ICU message engine (~13 kB gzip) never reach the browser.
  * Strings with placeholders are filled with the tiny `fill` helper below.
  */
-export type ClientMessages = Pick<typeof en, 'Switcher' | 'Briefing' | 'Showcase' | 'Closing' | 'ErrorPage'>;
+export type ClientMessages = Pick<typeof en, 'Switcher' | 'Briefing' | 'Showcase' | 'Closing' | 'ErrorPage' | 'Gate'>;
 
 const ClientI18nContext = createContext<{ locale: AppLocale; messages: ClientMessages } | null>(null);
 

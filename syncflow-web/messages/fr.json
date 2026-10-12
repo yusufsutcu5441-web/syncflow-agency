@@ -33,8 +33,25 @@
     "scroll": "Défiler",
     "metricPerformance": "Performance Lighthouse, bureau",
     "metricCls": "Décalage de mise en page (CLS), bureau",
+    "metricLcp": "Rendu du plus grand contenu (LCP), bureau",
     "pending": "à mesurer",
     "measured": "Mesuré le {date} · {tool} · {profile}"
+  },
+  "Film": {
+    "label": "Showreel cinématographique",
+    "cue": "Faites défiler pour lancer la lecture",
+    "c1Word": "Matière",
+    "c1Line": "Tout commence par la matière.",
+    "c1Text": "Obsidienne, poussière et pression : avant d’avoir une voix, une marque a un poids.",
+    "c2Word": "Forme",
+    "c2Line": "La forme est une décision.",
+    "c2Text": "Chaque courbe est gardée ou coupée par une seule question : porte-t-elle du sens ?",
+    "c3Word": "Lumière",
+    "c3Line": "La lumière est le seul ornement.",
+    "c3Text": "Nous éclairons ce qui compte et laissons le reste tomber dans le noir.",
+    "c4Word": "Mouvement",
+    "c4Line": "Le mouvement est le temps rendu visible.",
+    "c4Text": "Un site doit bouger comme un film bien monté : avec intention, jamais pour la parade."
   },
   "Architecture": {
     "label": "01 — Architecture",
@@ -81,6 +98,7 @@
     "estate": {
       "tag": "Immobilier",
       "title": "Pas un bien. Une scène de vie.",
+      "text": "On n’achète pas un penthouse avec vue sur le Bosphore depuis un écran ; on le ressent. Des séquences d’entrée cinématographiques, une simulation interactive de la lumière du jour sur les plans, et un parcours de demande qui arrive directement chez votre équipe commerciale.",
       "overlay": "Prix sur demande",
       "videoLabel": "Une villa à façade vitrée au crépuscule, la caméra avance lentement"
     },
@@ -90,6 +108,13 @@
       "text": "Pour les cliniques de chirurgie esthétique, de dentisterie ou de longévité : un accueil numérique calme, stérile et haut de gamme. Des profils de praticiens et un parcours de rendez-vous guident votre patient sans l’effrayer.",
       "overlay": "Réserver une consultation privée",
       "videoLabel": "Un couloir de clinique pâle au ralenti, une lumière douce glisse le long du plafond"
+    },
+    "law": {
+      "tag": "Droit des affaires et conseil",
+      "title": "La discrétion est la première chose qu’un client lit.",
+      "text": "Pour les cabinets d’avocats et les structures de conseil : une présence numérique sobre et précise. Pages de domaines d’expertise et d’associés, un parcours de demande confidentiel et une structure où chaque mot est validé par vous, car l’application des règles de publicité des avocats relève de votre responsabilité.",
+      "overlay": "Demande confidentielle",
+      "videoLabel": "Une colonnade sombre qui s’éloigne vers une porte éclairée, la caméra avance lentement"
     }
   },
   "Briefing": {
@@ -112,6 +137,8 @@
       "showcaseDesc": "Une expérience cinématographique, une seule histoire",
       "platform": "Plateforme immobilière ou de clinique",
       "platformDesc": "Architecture multipage orientée demande",
+      "law": "Site de cabinet d’avocats ou de conseil",
+      "lawDesc": "Discret, précis, structure d’abord",
       "unsure": "Pas encore sûr",
       "unsureDesc": "Définissons-le ensemble"
     },
@@ -206,6 +233,8 @@
     "showcase": "Vitrine",
     "realEstate": "Immobilier",
     "clinics": "Cliniques privées",
+    "law": "Droit des affaires",
+    "languages": "Langues",
     "legal": "Informations légales",
     "privacy": "Confidentialité",
     "imprint": "Mentions légales",

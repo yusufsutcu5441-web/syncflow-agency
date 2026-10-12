@@ -33,8 +33,25 @@
     "scroll": "Scrollen",
     "metricPerformance": "Lighthouse-Performance, Desktop",
     "metricCls": "Layoutverschiebung (CLS), Desktop",
+    "metricLcp": "Largest Contentful Paint (LCP), Desktop",
     "pending": "wird gemessen",
     "measured": "Gemessen {date} · {tool} · {profile}"
+  },
+  "Film": {
+    "label": "Cinematische Showreel",
+    "cue": "Zum Abspielen scrollen",
+    "c1Word": "Materie",
+    "c1Line": "Alles beginnt als Materie.",
+    "c1Text": "Obsidian, Staub und Druck: Bevor eine Marke eine Stimme hat, hat sie Gewicht.",
+    "c2Word": "Form",
+    "c2Line": "Form ist eine Entscheidung.",
+    "c2Text": "Jede Kurve bleibt oder fällt durch eine Frage: Trägt sie Bedeutung?",
+    "c3Word": "Licht",
+    "c3Line": "Licht ist der einzige Schmuck.",
+    "c3Text": "Wir beleuchten, was zählt, und lassen den Rest im Dunkeln.",
+    "c4Word": "Bewegung",
+    "c4Line": "Bewegung ist sichtbar gemachte Zeit.",
+    "c4Text": "Eine Website sollte sich bewegen wie ein gut geschnittener Film: mit Absicht, nie zur Schau."
   },
   "Architecture": {
     "label": "01 — Architektur",
@@ -81,6 +98,7 @@
     "estate": {
       "tag": "Immobilien",
       "title": "Keine Immobilie. Eine Bühne zum Leben.",
+      "text": "Ein Penthouse mit Bosporusblick kauft man nicht vom Bildschirm; man spürt es. Filmische Eingangssequenzen, interaktive Tageslichtsimulation auf Grundrissen und eine Anfrage, die direkt bei Ihrem Vertriebsteam landet.",
       "overlay": "Preis auf Anfrage",
       "videoLabel": "Eine Villa mit Glasfassade in der Dämmerung, die Kamera fährt langsam heran"
     },
@@ -90,6 +108,13 @@
       "text": "Für Kliniken der ästhetischen Chirurgie, Zahnmedizin oder Longevity: ein ruhiger, steriler, hochwertiger digitaler Empfang. Arztprofile und ein Terminablauf führen Ihre Patientinnen und Patienten, ohne sie zu verunsichern.",
       "overlay": "Privaten Beratungstermin buchen",
       "videoLabel": "Ein heller Klinikflur in Zeitlupe, weiches Licht wandert an der Decke entlang"
+    },
+    "law": {
+      "tag": "Wirtschaftsrecht und Beratung",
+      "title": "Diskretion ist das Erste, was ein Mandant liest.",
+      "text": "Für Kanzleien und Beratungspraxen: ein zurückhaltender, präziser digitaler Auftritt. Seiten zu Tätigkeitsgebieten und Partnern, eine vertrauliche Anfrage und eine Struktur, in der jedes Wort von Ihnen freigegeben wird, denn die Anwendung der anwaltlichen Werberegeln liegt in Ihrer Verantwortung.",
+      "overlay": "Vertrauliche Anfrage",
+      "videoLabel": "Eine dunkle Säulenhalle, die auf eine beleuchtete Tür zuläuft, die Kamera bewegt sich langsam vorwärts"
     }
   },
   "Briefing": {
@@ -112,6 +137,8 @@
       "showcaseDesc": "Ein filmisches Erlebnis mit einer Geschichte",
       "platform": "Immobilien- oder Klinikplattform",
       "platformDesc": "Nachfrageorientierte, mehrseitige Architektur",
+      "law": "Kanzlei- oder Beratungswebsite",
+      "lawDesc": "Diskret, präzise, strukturorientiert",
       "unsure": "Noch nicht sicher",
       "unsureDesc": "Lassen Sie es uns gemeinsam klären"
     },
@@ -206,6 +233,8 @@
     "showcase": "Showcase",
     "realEstate": "Immobilien",
     "clinics": "Private Kliniken",
+    "law": "Wirtschaftsrecht",
+    "languages": "Sprachen",
     "legal": "Rechtliches",
     "privacy": "Datenschutz",
     "imprint": "Impressum",
