@@ -3,6 +3,7 @@
 - **Durum:** Kabul edildi, 07.10.2026 (Faz 2)
 - **Karar:** proje sahibi ("Statik render, MP4/WebM ve poster, canlı Player yükünü tamamen kaldırıyoruz"). Uygulama: Faz 2.
 - **Güncelleme 08.10.2026 (Faz 4, [ADR 0006](0006-blueprint-adopted.md)):** ilke aynı kaldı (tarayıcıda Remotion yok, dosyalar önceden render edilir), içerik değişti. Dört dilli mimari filmi ve `public/media/showcase/` kalktı; yerine dört kısa **döngü sahnesi** geldi (`remotion/scenes/`: cam monolit, gün batımında villa, klinik koridoru, SaaS paneli), 1280×720, 30 kare/sn, 8 sn kusursuz döngü, `public/media/clips/<ad>.{mp4,webm,webp}` (toplam 12 dosya, yaklaşık 1,9 MB). Sahnelerde okunabilir metin yoktur: altyazılar videonun üstünde HTML'dir, bu yüzden tek render her dile yeter ve dil başına yeniden render gerekmez. Oynatıcı `components/media/SceneVideo.tsx` (poster HTML'de, `preload="none"`, ince işaretçide görünürken ya da üstüne gelince oynar, ekran dışında durur, her zaman duraklat/oynat düğmesi vardır).
+- **Güncelleme (14.10.2026, [ADR 0019](0019-enterprise-tier.md)):** beşinci sahne `Logistics` (lojistik kartı) aynı hatla eklendi: `remotion/scenes/Logistics.tsx`, `npm run film:render -- --only=logistics`, çıktı `public/media/clips/logistics.{mp4,webm,webp}`; sahnede yazı yok, tek render yedi dile yeter.
 
 ## Bağlam
 

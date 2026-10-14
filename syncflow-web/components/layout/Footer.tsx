@@ -66,6 +66,11 @@ export async function Footer() {
                   {t('law')}
                 </Link>
               </li>
+              <li>
+                <Link href={here('show-logistics')} prefetch={false} className={linkClass}>
+                  {t('logistics')}
+                </Link>
+              </li>
             </ul>
           </div>
 

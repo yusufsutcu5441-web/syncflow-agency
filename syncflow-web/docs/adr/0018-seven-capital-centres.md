@@ -4,6 +4,7 @@
 - **Karar:** proje sahibi, 14.10.2026. İstek: "Sitede tam 7 dil ve pazar entegrasyonu olacaktı (EN, TR, AR, DE, FR, ES, ZH). Giriş kapısını (EntryGate) ve dil/pazar seçiciyi bu 7 küresel sermaye merkezi ile baştan inşa et"; her pazarın dili lüks mimari ve sermaye terminolojisine uygun eksiksiz yazılacak, para birimleri ve briefing akışı buna göre bağlanacak; "hemen uygula ve test et". Sahibin iki soruya yanıtı: yayın için **"Hepsini kur ve şimdi canlıya al"** (önerilen "önizlemede kur, canlı liste EN+TR kalsın" seçilmedi) ve Çince için **"Basitleştirilmiş Çince, Japonca uykuda"**.
 - **Yerine geçtiği:** [ADR 0009](0009-niche-and-languages.md)'un dil kararı (08.10.2026: "Türkçe ve İngilizce odak, yedi dil iddiası yok") ve [ADR 0016](0016-qualification-and-markets.md)'nın "dört pazar, dil yalnızca EN ve TR" kısmı. [ADR 0002](0002-launch-locales-and-market.md)'nin "yeni dil açma kontrol listesi" (yerel konuşur çeviri + hukuk incelemesi) bu kez **uygulanmadı**: sahibi bu riski bilerek üstlendi (aşağıda "Riskler").
 - **Tamamlar:** [ADR 0015](0015-entry-gate-and-hero.md) (giriş kapısı), [ADR 0016](0016-qualification-and-markets.md) (eşik ve para birimi).
+- **Güncelleme (14.10.2026, [ADR 0019](0019-enterprise-tier.md)):** bu ADR'deki asgari tutarlar (USD 25.000, EUR 22.500, AED 92.000, TRY 1.225.000) tarihsel kayıttır; güncel tutarlar USD 50.000, EUR 45.000, AED 184.000 ve TRY 2.475.000'dir. Yedi dil, yedi pazar ve kapı değişmedi.
 
 ## Bağlam
 

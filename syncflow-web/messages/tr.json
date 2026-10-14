@@ -43,7 +43,7 @@
     "eyebrow": "Dijital mimari stüdyosu — 2026’dan beri",
     "title1": "Karanlıkta inşa edilir.",
     "title2": "Sıvı gibi akar.",
-    "subtitle": "Adı işin kendisi olan yöneticiler için dijital mimari. Dar toleranslarla işlenir, sessizlikle bitirilir; söz verilmez, ölçülür.",
+    "subtitle": "Adı işin kendisi olan yöneticiler için kurumsal ölçekte dijital mimari ve güvenli iş akışı otomasyonu. Dar toleranslarla işlenir, sessizlikle bitirilir; söz verilmez, ölçülür.",
     "ctaPrimary": "Stratejik Briefing",
     "ctaSecondary": "Vitrin",
     "scroll": "Kaydır",
@@ -72,7 +72,7 @@
   "Architecture": {
     "label": "01 — Mimari",
     "title": "Süs değil, mühendislik.",
-    "intro": "Her piksel bir tolerans, her kare bir taahhüt. Üç sütun, burada kurulan bir sitenin neden yalnızca hızlı değil, ayarlı hissettirdiğini anlatır.",
+    "intro": "Her piksel bir tolerans, her kare bir taahhüt. Yüksek getirili dijital ekosistemler burada iki katmanda kurulur: yalnızca hızlı değil, ayarlı hissettiren bir ön yüz ve arızada güvenli kalacak biçimde tasarlanmış kurumsal otomasyon.",
     "c1Index": "I",
     "c1Title": "Video, kod değil. Sinema, tarayıcıda.",
     "c1Text": "Ağır render motorlarını ve kasan animasyon katmanlarını bıraktık. Hero ve vitrin akışlarınız, cihazın kendi video donanımının çözdüğü yerel MP4/WebM video olarak servis edilir; akış işlemciye çok az yük bindirir.",
@@ -97,11 +97,25 @@
     "c3BestPractices": "En iyi uygulamalar",
     "c3Seo": "SEO",
     "c3Detail": "Masaüstü: CLS {cls}, LCP {lcp}, TBT {tbt}. Mobil (simüle yavaş 4G, 4× CPU yavaşlatma): performans {mobile}.",
-    "c3Caption": "{tool}, {profile}, {date}."
+    "c3Caption": "{tool}, {profile}, {date}.",
+    "c4Index": "IV",
+    "c4Name": "Arızaya Dayanıklı Kurumsal Otomasyon",
+    "c4Title": "Bir şeyin bozulacağı güne göre kuruldu.",
+    "c4Text": "Kurumsal ölçekte bir şey mutlaka bozulur. Otomasyon bu gerçeğin etrafında kurulur: yedekli kuyruk mimarileri bir yol sessizleştiğinde olayları akıtmayı sürdürür, webhook’lar ise kendilerine güvenilmeden önce imzalanır ve doğrulanır.",
+    "c4Tags": "Yedekli kuyruklar · İmzalı webhook’lar · Idempotent teslim · Sınırlı yeniden deneme",
+    "c4DiagramAlt": "Kesintiye uğramış bir düğümü olan ana şeridin ve yükü onun çevresinden taşıyan yedek şeridin şeması",
+    "c4Caption": "Desenin şeması; ölçüm değildir.",
+    "c5Index": "V",
+    "c5Name": "Derin Kurumsal Entegrasyonlar",
+    "c5Title": "Zaten kullandığınız sistemlere bağlı.",
+    "c5Text": "Salesforce, SAP, HubSpot ve Oracle ilk taslaktan itibaren mimarinin parçasıdır; böylece potansiyel müşteriler, siparişler ve kayıtlar site ile işinizin zaten üzerinde çalıştığı sistemler arasında akabilir.",
+    "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
+    "c5DiagramAlt": "Dört sisteme bağlı merkezi bir düğümün şeması",
+    "c5Note": "Ürün adları sahiplerine aittir. Ortaklık ya da sertifika ima edilmez."
   },
   "Showcase": {
     "label": "02 — Vitrin",
-    "title": "Üç sektör.\nTek bir sessizlik standardı.",
+    "title": "Dört sektör.\nTek bir sessizlik standardı.",
     "subtitle": "Ölçülülük, son işlemdir. Her sektör kendi tonunda konuşur; standart asla değişmez.",
     "stripLabel": "Sektör vitrini, yana kaydırın",
     "prev": "Önceki proje",
@@ -131,6 +145,13 @@
       "text": "Hukuk büroları, danışmanlık yapıları ve özel sermaye (private equity) kuruluşları için: ölçülü, kesin bir varlık. Çalışma alanı ve ortak sayfaları, gizli bir başvuru ve her kelimesini sizin onayladığınız bir yapı; çünkü mesleğinizi düzenleyen reklam ve iletişim kurallarını uygulamak sizin sorumluluğunuzdadır.",
       "overlay": "Gizli başvuru",
       "videoLabel": "Aydınlık bir kapıya uzanan karanlık bir sütunlu koridor, kamera yavaşça ilerliyor"
+    },
+    "logistics": {
+      "tag": "Küresel lojistik ve B2B tedarik zinciri mimarisi",
+      "title": "Hiçbir şey beklemez. Hiçbir şey kaybolmaz.",
+      "text": "Lojistik operatörleri ve B2B tedarik zincirleri için: bir şerit sustuğunda veriyi akıtmayı sürdüren yedekli kuyruk mimarileri, siparişten rampaya ve faturaya kesintisiz bir veri akışı ve rutin kararları üstlenerek ekibinize istisnai olanları bırakan otomasyon.",
+      "overlay": "Kurumsal başvuru",
+      "videoLabel": "Paralel şeritlerden oluşan karanlık bir koridoru geçen koliler; bir şerit sustuğunda yedek şerit yanar ve akış durmaz"
     }
   },
   "Briefing": {
@@ -149,9 +170,9 @@
     "budget": {
       "title": "Yatırım",
       "lead": "Stüdyomuz {floor} ve üzerindeki projelerde çalışır. Sizinki nerede duruyor?",
-      "t1Desc": "Odaklı bir amiral gemisi: tek hikâye, hassasiyetle anlatılmış",
-      "t2Desc": "Derinlikli, çok bölümlü bir mimari",
-      "t3Desc": "Markalar ve bölgeler boyunca eksiksiz bir dijital mülk",
+      "t1Desc": "Çekirdek Mimari ve İş Akışı Otomasyonu",
+      "t2Desc": "Kurumsal Altyapı ve Çok Bölgeli Ekosistem",
+      "t3Desc": "Özel Küresel Ekosistemler",
       "micro": "Tutarlar pazarınızın para biriminde gösterilir. Yalnızca doğru ekibi ve doğru kapsamı hazırlamamıza yardım eder."
     },
     "project": {
@@ -245,6 +266,7 @@
     "realEstate": "Lüks gayrimenkul",
     "clinics": "Özel klinikler",
     "law": "Kurumsal hukuk ve danışmanlık",
+    "logistics": "Küresel lojistik ve B2B tedarik zinciri",
     "languages": "Diller",
     "legal": "Hukuki",
     "privacy": "Gizlilik",

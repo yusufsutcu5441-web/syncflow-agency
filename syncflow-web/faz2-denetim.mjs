@@ -6,6 +6,7 @@
  * Faz 5: 7 dil altyapısı (taslak diller uykuda, RTL, yayın listesi), hreflang/sitemap yalnızca yayındaki dillere.
  * 2B-4 (docs/adr/0011): hukuki sayfaların yapısı (KVKK m.10 / GDPR m.13), tarih, rıza bağlantısı; içerik yer tutuculu taslak kalır.
  * 2B-3 (docs/adr/0010): teslimde id + tek yeniden deneme (bütçe < 10 sn), hız sınırı uyarısı, security.txt süresi.
+ * 14.10.2026 (docs/adr/0019): kurumsal katman: asgari tutar USD 50.000 (basamaklar 1×/2×/5×), vitrin dört sektör (lojistik eklendi), Mimari bölümünde iki kurumsal sütun (animasyonlu Border Beam sayısı yine en çok 3).
  * 14.10.2026 (docs/adr/0018): yedi sermaye merkezi = yedi dil (en tr ar de fr es zh) ve yedi pazar, Japonca uykuda. "Yedi dil iddiası yok" kuralı pazarlama metni içindir; seçici bir iddia değildir.
  * 2B-2 (docs/adr/0009): TR/EN odak, yedi dil iddiası yok, vitrin kilitli üç sektör (emlak, klinik, kurumsal hukuk), SaaS ve "Reach" bölümü yok.
  * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo.
@@ -352,12 +353,12 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
     days > 0 && days <= 366 ? add(G4, "PASS", `security.txt Expires ${exp} (${Math.round(days)} gün sonra; süresi dolmadan yenilenmeli)`) : add(G4, "FAIL", `security.txt Expires geçmişte ya da bir yıldan uzakta: ${exp} (RFC 9116)`);
   }
 }
-// 2B-2 (docs/adr/0009): vitrin üç sektöre kilitli (emlak, klinik, kurumsal hukuk); SaaS ve dil/erişim bölümü yok; sitede yedi dil iddiası yok.
+// 2B-2 (docs/adr/0009) ve 14.10.2026 (docs/adr/0019): vitrin dört sektöre kilitli (emlak, klinik, kurumsal hukuk, lojistik); SaaS ve dil/erişim bölümü yok; sitede yedi dil iddiası yok.
 {
   const show = exists("components/sections/Showcase.tsx") ? read("components/sections/Showcase.tsx") : "";
   const keys = [...show.matchAll(/\{\s*key:\s*['"](\w+)['"]/g)].map((m) => m[1]);
-  keys.length === 3 && ["estate", "clinic", "law"].every((k) => keys.includes(k))
-    ? add(G4, "PASS", "vitrin tam üç sektör: estate, clinic, law (kilitli)") : add(G4, "FAIL", `vitrin kartları ${keys.join(", ") || "okunamadı"}; yalnızca estate, clinic, law olmalı (ADR 0009)`);
+  keys.length === 4 && ["estate", "clinic", "law", "logistics"].every((k) => keys.includes(k))
+    ? add(G4, "PASS", "vitrin tam dört sektör: estate, clinic, law, logistics (kilitli)") : add(G4, "FAIL", `vitrin kartları ${keys.join(", ") || "okunamadı"}; yalnızca estate, clinic, law, logistics olmalı (ADR 0009, 0019)`);
   const saas = [];
   for (const f of [...walk(abs("app"), [".tsx", ".ts"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])]) if (/saas/i.test(fs.readFileSync(f, "utf8"))) saas.push(rel(f));
   for (const l of PUBLIC_LOCALES) if (/saas/i.test(JSON.stringify(readJSON(`messages/${l}.json`)))) saas.push(`messages/${l}.json`);
@@ -383,7 +384,7 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
 
 /* ───────── 5) Sahne videoları (önceden render edilmiş, docs/adr/0003 ve 0006) ───────── */
 const G5 = "5. Sahne videoları (önceden render edilmiş)";
-const CLIPS = ["monolith", "estate", "clinic", "law"];
+const CLIPS = ["monolith", "estate", "clinic", "law", "logistics"];
 const clipMissing = [];
 for (const name of CLIPS) for (const ext of ["mp4", "webm", "webp"]) {
   const p = `public/media/clips/${name}.${ext}`;
@@ -436,8 +437,9 @@ for (const [file, what] of [["lib/enhance/spotlight.ts", "imleç ışığı"], [
   /prefers-reduced-motion:\s*reduce\)\s*\{\s*\.beam-card\s+\.beam\s*\{\s*display:\s*none/.test(css6)
     ? add(G6, "PASS", "Border Beam azaltılmış harekette gizleniyor") : add(G6, "FAIL", "Border Beam azaltılmış harekette gizlenmiyor");
   let beams = 0;
-  for (const dir of ["app", "components"]) for (const f of walk(abs(dir), [".tsx"])) beams += (fs.readFileSync(f, "utf8").match(/className="beam-card"/g) ?? []).length;
-  beams <= 3 ? add(G6, "PASS", `Border Beam sayısı ${beams} (üst sınır 3)`) : add(G6, "FAIL", `Border Beam sayısı ${beams}: aynı anda en çok 3 olmalı (60 FPS bütçesi)`);
+  // Sınır animasyonlu öğedir (<span className="beam">), kart kabuğu değil: kurumsal iki sütun (docs/adr/0019) aynı kabuğu ışınsız kullanır.
+  for (const dir of ["app", "components"]) for (const f of walk(abs(dir), [".tsx"])) beams += (fs.readFileSync(f, "utf8").match(/className="beam"/g) ?? []).length;
+  beams <= 3 ? add(G6, "PASS", `animasyonlu Border Beam sayısı ${beams} (üst sınır 3)`) : add(G6, "FAIL", `animasyonlu Border Beam sayısı ${beams}: aynı anda en çok 3 olmalı (60 FPS bütçesi)`);
 }
 // Sürekli (infinite) CSS animasyonları ekran dışında durmalı: öğe data-pause-offscreen taşır, betik bunu IntersectionObserver ile işler.
 {
@@ -583,7 +585,10 @@ const G10 = "10. Nitelik eşiği, pazarlar ve para birimi";
     JSON.stringify(markets) === JSON.stringify(["us", "tr", "me", "dach", "fr", "wealth", "asia"]) && markets.every((m) => rows[m]) ? add(G10, "PASS", `yedi pazar ve fiyat satırları: ${markets.map((m) => `${m} ${rows[m].currency} ${rows[m].floor}`).join(", ")}`) : add(G10, "FAIL", `pazarlar ya da fiyat satırları tutmuyor (pazarlar: ${markets.join(",")}; satırlar: ${Object.keys(rows).join(",")})`);
     const floors = {}; for (const m of markets) if (rows[m]) (floors[rows[m].currency] ??= new Set()).add(rows[m].floor);
     Object.values(floors).every((set) => set.size === 1) && Object.keys(floors).sort().join(",") === "AED,EUR,TRY,USD" ? add(G10, "PASS", "yedi pazar dört para birimini paylaşır (USD, EUR, AED, TRY) ve her para biriminin tek tabanı var") : add(G10, "FAIL", `aynı para birimi için farklı taban ya da eksik para birimi (${Object.entries(floors).map(([c, set]) => `${c}: ${[...set].join("/")}`).join("; ")})`);
-    rows.us?.currency === "USD" && rows.us?.floor === 25000 ? add(G10, "PASS", "ABD asgari tutarı USD 25.000 (sahibin kararı, 13.10.2026)") : add(G10, "FAIL", "ABD asgari tutarı USD 25.000 değil (CLAUDE.md kararı değişmeden değiştirilemez)");
+    rows.us?.currency === "USD" && rows.us?.floor === 50000 ? add(G10, "PASS", "ABD asgari tutarı USD 50.000 (sahibin kararı, 14.10.2026; 13.10.2026'da 25.000 idi)") : add(G10, "FAIL", "ABD asgari tutarı USD 50.000 değil (CLAUDE.md kararı değişmeden değiştirilemez)");
+    // Basamaklar asgari tutarın 1×-2×, 2×-5× ve 5× üstü (dolarda 50.000-100.000, 100.000-250.000, 250.000+; sahibin kararı 14.10.2026).
+    const bands = [...(/const BANDS = \[([\s\S]*?)\] as const/.exec(pricing)?.[1] ?? "").matchAll(/id:\s*'(t\d)',\s*from:\s*(\d+),\s*to:\s*(\d+|null)/g)].map((m) => `${m[1]}:${m[2]}-${m[3]}`).join(" ");
+    bands === "t1:1-2 t2:2-5 t3:5-null" ? add(G10, "PASS", "basamaklar asgari tutarın 1×-2×, 2×-5× ve 5× üstü (USD 50.000-100.000, 100.000-250.000, 250.000+)") : add(G10, "FAIL", `basamak katları yanlış (${bands || "okunamadı"}); beklenen t1:1-2 t2:2-5 t3:5-null`);
     // 2) Kur karşılıklarının tarihi ve gözden geçirme günü; geçtiyse uyar (çeyrekte bir).
     const review = /PRICING_NEXT_REVIEW\s*=\s*'(\d{4}-\d{2}-\d{2})'/.exec(pricing)?.[1], asOf = /PRICING_AS_OF\s*=\s*'(\d{4}-\d{2}-\d{2})'/.exec(pricing)?.[1];
     !review || !asOf ? add(G10, "FAIL", "lib/pricing.ts kur tarihini (PRICING_AS_OF) ya da bir sonraki gözden geçirmeyi (PRICING_NEXT_REVIEW) taşımıyor")

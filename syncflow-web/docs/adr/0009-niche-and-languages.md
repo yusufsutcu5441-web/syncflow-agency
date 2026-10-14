@@ -3,6 +3,7 @@
 - **Durum:** Kabul edildi ve uygulandı, 08.10.2026 (`faz_2b2` dalı). [ADR 0008](0008-2b-2-3-4-scope.md)'deki K1, K2 ve K7'ye sahibinin yanıtı. [ADR 0006](0006-blueprint-adopted.md)'nın vitrin kararını (Gayrimenkul, Klinik, SaaS) ve ana sayfadaki "Küresel erişim" bölümünü **yerine geçer**; 08.10'daki "yedi dil altyapısı aktif" kararının *kod* kısmı (altyapı, taslak çeviriler) korunur, *iddia* kısmı kalkar.
 - **Karar:** proje sahibi: (K1) "SaaS kaldırılacak. Doğrudan özgün kuralımız olan 3 ana sektöre kilitleniyoruz: Özel Sağlık/Klinik, Lüks Gayrimenkul, Kurumsal Hukuk ve Danışmanlık." (K2) "Türkçe ve İngilizce odaklı gidiyoruz. Sitede yedi dil iddiası kalkacak." (K7) "Hukuki sayfalarda şimdilik standart taslak (yer tutucu) metinler kalsın, avukat onayı sonrasında gerçek bilgileri gireceğiz."
 - **Güncelleme (14.10.2026, [ADR 0018](0018-seven-capital-centres.md)):** dil kararı değişti: "Türkçe ve İngilizce odak, yedi dil iddiası yok" yerini yedi sermaye merkezine bıraktı (yedi dil yayında, `ja` uykuda). "Yedi dil" ya da "küresel erişim" **pazarlama iddiası** hâlâ yazılmaz (denetim FAIL sayar); sektör kilidi (emlak, klinik, kurumsal hukuk) olduğu gibi durur.
+- **Güncelleme (14.10.2026, [ADR 0019](0019-enterprise-tier.md)):** vitrin kilidi dörtlüye çıktı (estate, clinic, law ve lojistik); SaaS yasağı, "dil ve küresel erişim bölümü yok" ve sektör kartlarının "stüdyonun kendi numunesi" olması aynen geçerlidir.
 
 ## Uygulama
 

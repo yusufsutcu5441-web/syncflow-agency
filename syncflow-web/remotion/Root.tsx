@@ -4,6 +4,7 @@ import { loadFonts } from './fonts';
 import { Clinic } from './scenes/Clinic';
 import { Estate } from './scenes/Estate';
 import { Law } from './scenes/Law';
+import { Logistics } from './scenes/Logistics';
 import { Monolith } from './scenes/Monolith';
 
 /**
@@ -16,6 +17,7 @@ const SCENES: Record<ClipName, () => React.JSX.Element> = {
   estate: Estate,
   clinic: Clinic,
   law: Law,
+  logistics: Logistics,
 };
 
 loadFonts();
