@@ -53,7 +53,7 @@ const post = (body, { ip = uniqueIp(), headers = {}, raw = false } = {}) =>
 
 const valid = (over = {}) => ({
   projectType: 'showcase',
-  budget: 'b10',
+  budget: 't1',
   timeline: 'w6',
   name: 'Jane Doe',
   company: 'Acme Holding, Chief Marketing Officer',
@@ -180,11 +180,14 @@ const pageAs = async (path, ua) => {
 
 const gateHome = await pageAs('/');
 check('GET / without a market: the gate is in the HTML, open', hasGate(gateHome.page) && /data-state="open"/.test(gateHome.page));
-check('both markets are real links (the gate works without JavaScript)', /href="\/tr\?m=tr"/.test(gateHome.page) && /href="\/\?m=int"/.test(gateHome.page) && /data-market="tr"/.test(gateHome.page) && /data-market="int"/.test(gateHome.page));
+check('all four markets are real links (the gate works without JavaScript)', ['us', 'eu', 'me'].every((m) => new RegExp(`href="/\\?m=${m}"`).test(gateHome.page)) && /href="\/tr\?m=tr"/.test(gateHome.page) && ['us', 'eu', 'me', 'tr'].every((m) => new RegExp(`data-market="${m}"`).test(gateHome.page)));
+check('each market names its currency (USD, EUR, AED, TRY)', ['USD', 'EUR', 'AED', 'TRY'].every((c) => gateHome.page.includes(c)));
+check('the first step of the briefing names the minimum in dollars and offers the bands above it (server-rendered, US default)', gateHome.page.includes('$25,000 – $50,000') && gateHome.page.includes('$50,000 – $100,000') && gateHome.page.includes('$100,000 +') && gateHome.page.includes('Below $25,000'));
+check('no old budget band (under $20k) is offered any more', !/\$5k|\$10k|\$20k|Let’s talk first|Let&#x27;s talk first/i.test(gateHome.page));
 check('the gate is a dialog with a heading, and the page behind it is still in the HTML', /role="dialog"/.test(gateHome.page) && /aria-modal="true"/.test(gateHome.page) && /id="gate-title"/.test(gateHome.page) && gateHome.page.includes('Built in the dark.'));
 check('the gate offers only the public languages', (gateHome.page.match(/class="gate-lang"/g) ?? []).length === OPEN.length, `${(gateHome.page.match(/class="gate-lang"/g) ?? []).length} chips, ${OPEN.length} public languages`);
 check('the gate sets no cookie (the choice lives in the address only)', gateHome.res.headers.get('set-cookie') === null);
-for (const path of ['/?m=tr', '/?m=int', '/tr?m=tr']) {
+for (const path of ['/?m=tr', '/?m=us', '/?m=eu', '/?m=me', '/?m=int', '/tr?m=tr']) {
   const passed = await pageAs(path);
   check(`${path}: a valid market in the address means the gate is passed (no gate in the HTML)`, passed.res.status === 200 && !hasGate(passed.page));
 }
@@ -195,7 +198,8 @@ const markup = unknown.page.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
 const injected = await pageAs('/?m=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E');
 check('an unknown market is ignored (the gate shows) and never reaches the document markup', hasGate(unknown.page) && !markup.includes('ZZtopmarket') && !injected.page.includes('<img src=x onerror'));
 const trGate = await pageAs('/tr');
-check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Pazarınızı ve dilinizi seçin.'));
+check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Pazarınızı seçin.'));
+check('/tr: the briefing names the minimum in lira and offers the lira bands', trGate.page.includes('₺1.225.000') && trGate.page.includes('₺2.450.000') && trGate.page.includes('₺4.900.000 +'));
 for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
   const bot = await pageAs('/', ua);
   check(`${name} gets the page without the gate, with the same content (h1, briefing section)`, bot.res.status === 200 && !hasGate(bot.page) && bot.page.includes('Built in the dark.') && /<section[^>]*id="briefing"/.test(bot.page));
@@ -369,12 +373,12 @@ if (mock && TURNSTILE_MODE !== 'unset') {
 
   // 3) The priority class is computed on the server, from the answers, never from anything the browser claims.
   const tiers = [
-    ['$20k+ with a decision maker -> high', { budget: 'b20', role: 'decider' }, 'high'],
-    ['$20k+ with the decision team -> high', { budget: 'b20', role: 'team' }, 'high'],
-    ['$20k+ but only exploring -> medium', { budget: 'b20', role: 'exploring' }, 'medium'],
-    ['$10k-$20k -> medium', { budget: 'b10', role: 'decider' }, 'medium'],
-    ['"let us talk first" -> medium', { budget: 'talk', role: 'decider' }, 'medium'],
-    ['$5k-$10k (below the $10,000 floor) -> low', { budget: 'b5', role: 'decider' }, 'low'],
+    ['top band with a decision maker -> high', { budget: 't3', role: 'decider' }, 'high'],
+    ['top band with the decision team -> high', { budget: 't3', role: 'team' }, 'high'],
+    ['top band but only exploring -> medium', { budget: 't3', role: 'exploring' }, 'medium'],
+    ['second band with a decision maker -> high', { budget: 't2', role: 'decider' }, 'high'],
+    ['second band but only exploring -> medium', { budget: 't2', role: 'exploring' }, 'medium'],
+    ['entry band (at the minimum) -> medium', { budget: 't1', role: 'decider' }, 'medium'],
   ];
   for (const [label, over, want] of tiers) {
     received.length = 0;
@@ -383,6 +387,14 @@ if (mock && TURNSTILE_MODE !== 'unset') {
     check(`tier: ${label}`, res.status === 200 && got === want, `status ${res.status}, tier ${got}`);
   }
   check('a tier sent by the browser is rejected (strict schema)', (await post({ ...valid(), tier: 'high' })).status === 422);
+
+  // The qualification (docs/adr/0016): nothing under the minimum is accepted. The old bands, "let us talk first" and any made-up code are refused and never delivered.
+  received.length = 0;
+  for (const budget of ['b5', 'b10', 'b20', 'talk', 'under', 'free', '']) {
+    const res = await post(valid({ budget }));
+    check(`budget "${budget}" is refused (422), it is not a band above the minimum`, res.status === 422, `status ${res.status}`);
+  }
+  check('none of the refused budgets reached the webhook', received.length === 0, `received ${received.length}`);
 
   received.length = 0;
   await post(valid({ website: 'filled' }));
@@ -405,6 +417,13 @@ if (mock && TURNSTILE_MODE !== 'unset') {
   const tagged = await post(valid({ market: 'tr' }));
   const taggedPayload = received[0] ? JSON.parse(received[0].body) : {};
   check('a briefing with a market tag is delivered with market "tr"', tagged.status === 200 && taggedPayload.market === 'tr', `status ${tagged.status}, market ${taggedPayload.market}`);
+  for (const market of ['us', 'eu', 'me']) {
+    received.length = 0;
+    const res = await post(valid({ market }));
+    check(`market "${market}" is accepted and delivered as a tag`, res.status === 200 && received[0] && JSON.parse(received[0].body).market === market, `status ${res.status}`);
+  }
+  received.length = 0;
+  check('the retired market "int" is not an API value (the browser maps it to "us")', (await post(valid({ market: 'int' }))).status === 422 && received.length === 0);
   received.length = 0;
   const moon = await post(valid({ market: 'moon' }));
   check('an unknown market is rejected (strict enum) and never delivered', moon.status === 422 && received.length === 0, `status ${moon.status}, received ${received.length}`);

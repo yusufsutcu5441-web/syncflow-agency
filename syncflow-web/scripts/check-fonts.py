@@ -28,7 +28,7 @@ turkish_only = turkish - latin
 # expected to cover them. These two symbols are drawn by the system symbol font in every language; listing them here makes
 # that a decision instead of a silent fallback.
 SYSTEM_FONT_LOCALES = {'ar', 'ja'}
-SYMBOL_FALLBACK = {'⌘', '✓'}  # keyboard hint, "copied" tick
+SYMBOL_FALLBACK = {'⌘', '✓', '₺'}  # keyboard hint, "copied" tick, lira sign (the Turkish briefing's amounts are formatted at run time by Intl; Instrument Sans has no U+20BA, the system font draws it)
 
 missing = {}
 turkish_use = {}
@@ -107,7 +107,7 @@ def role_strings(locale, data):
     gate = data.get('Gate', {})
     if 'title' in gate:
         yield 'Instrument Serif', gate['title']
-    for key in ('tr', 'int', 'enter', 'skip'):
+    for key in ('us', 'eu', 'me', 'tr', 'enter', 'skip'):
         if key in gate:
             yield 'Cabinet Grotesk', gate[key]
 

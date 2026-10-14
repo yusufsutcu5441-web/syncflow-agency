@@ -1696,6 +1696,13 @@ html.lenis body {
     opacity: 0.4;
     cursor: default;
   }
+  /* The polite decline of the briefing's first step (a budget below the minimum): a quiet glass note, no alarm colour. */
+  .decline {
+    padding: 1.25rem 1.4rem;
+    border-radius: 16px;
+    border: 1px solid var(--color-hairline-strong);
+    background: rgb(226 226 230 / 0.04);
+  }
   /* The parts that need JavaScript are laid out from the first paint but hidden until it is ready, so nothing moves when it arrives. */
   .gate:not([data-ready]) .gate-js {
     visibility: hidden;
@@ -1824,6 +1831,15 @@ html.lenis body {
   .frame[data-maskframe] video,
   .frame[data-maskframe] img {
     scale: calc(1.14 - 0.14 * var(--mf, 1));
+  }
+  /* Glass cards and the briefing panel rise through a curtain: the top edge of the mask lifts while the card settles 28 px. */
+  .beam-card[data-maskframe] {
+    clip-path: inset(calc((1 - var(--mf, 1)) * 18%) 0 0 0 round var(--radius-card));
+    translate: 0 calc((1 - var(--mf, 1)) * 28px);
+  }
+  .panel[data-maskframe] {
+    clip-path: inset(calc((1 - var(--mf, 1)) * 12%) 0 0 0 round var(--radius-panel));
+    translate: 0 calc((1 - var(--mf, 1)) * 28px);
   }
 }
 

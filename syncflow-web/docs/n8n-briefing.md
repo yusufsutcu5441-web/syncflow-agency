@@ -25,24 +25,24 @@ Gmail kimlik bilgisi Next uygulamasında hiçbir yerde tutulmaz (CLAUDE.md "Güv
   "receivedAt": "2026-10-08T12:00:00.000Z",
   "subject": "[Briefing][high] Acme Holding, Jane Doe",
   "projectType": "showcase | platform | law | unsure",
-  "budget": "b5 | b10 | b20 | talk",
+  "budget": "t1 | t2 | t3",
   "timeline": "w4 | w6 | w10 | flex",
   "role": "decider | team | exploring",
-  "tier": "high | medium | low",
+  "tier": "high | medium",
   "name": "Jane Doe",
   "company": "Acme Holding, Chief Marketing Officer",
   "email": "jane@acme.com",
   "message": "",
   "locale": "en",
-  "market": "tr | int (isteğe bağlı: giriş kapısında pazar seçilmediyse alan hiç gelmez)"
+  "market": "us | eu | me | tr"
 }
 ```
 
 **Teslim `id`'si ve yeniden deneme.** `id` her başvuru için rastgele bir UUID v4'tür. Site isteği **en çok iki kez** dener, toplam süre 9,5 sn'nin altında kalır: ilk deneme 5 sn, 0,4 sn bekleme, ikinci deneme en çok 4 sn. Yalnızca zaman aşımı, bağlantı hatası ve `5xx`, `408`, `429` yanıtında tekrar denenir; `4xx` (alıcı isteği reddetti) kesindir, tekrarlanmaz. **İki deneme de aynı `id`'yi taşır**, çünkü ilk deneme n8n'e ulaşıp yalnızca yanıt gecikmiş olabilir: alıcı çift e-postayı bu `id` ile ayıklamalıdır (aşağıda "Çift kayıt"). İki deneme de başarısızsa form `502` alır ve ziyaretçiye hazır e-posta taslağını önerir.
 
-`market` giriş kapısında ziyaretçinin seçtiği pazardır (`tr` Türkiye, `int` yurt dışı; [ADR 0015](adr/0015-entry-gate-and-hero.md)). Yalnızca bir etikettir: sınıflandırma, bütçe basamakları ya da konu satırı ona bağlı değildir. Ziyaretçi kapıyı seçmeden geçtiyse ya da adres `?m=` taşımıyorsa alan yoktur; akışta boş gelmesine hazır olun.
+`market` bütçenin hangi pazarın para biriminde yanıtlandığını söyler: `us` ABD (USD), `eu` Avrupa (EUR), `me` Orta Doğu (AED), `tr` Türkiye (TRY); [ADR 0015](adr/0015-entry-gate-and-hero.md), [ADR 0016](adr/0016-qualification-and-markets.md). Formdan her zaman gelir (ziyaretçinin giriş kapısında seçtiği pazar, seçmediyse sayfanın dilinin varsayılanı: Türkçe sayfa `tr`, diğerleri `us`); API'de isteğe bağlıdır, bu yüzden elle gönderilen bir yükte olmayabilir. **`budget` değerini `market` olmadan okumayın:** aynı `t2`, ABD'de $50.000–$100.000, Türkiye'de ₺2.450.000–₺4.900.000 demektir.
 
-Anlamlar: `budget` `b5` = $5k–$10k (taban altı), `b10` = $10k–$20k, `b20` = $20k+, `talk` = önce konuşalım. `tier` sunucuda hesaplanır (`lib/briefing.ts`): `b20` ve karar veren/karar ekibi = `high`; `b5` = `low`; kalanı `medium`. Alanlar düz metindir (işaretleme reddedilir, görünmez karakterler atılır); yine de bir HTML şablonunda kullanılacaksa kaçışlanmalıdır.
+Anlamlar: `budget` asgari tutarın katlarıdır (`lib/pricing.ts`): `t1` = asgari tutardan 2 katına kadar, `t2` = 2 ile 4 katı arası, `t3` = 4 katı ve üstü. Asgari tutar 13.10.2026 kararıyla USD 25.000'dir; diğer pazarlarda güncel kur karşılığı yuvarlanır: EUR 22.500, AED 92.000, TRY 1.225.000 (kur ve tarih `lib/pricing.ts` içinde, üç ayda bir gözden geçirilir). **Asgari tutarın altı için kod yoktur:** form onu tarayıcıda nazikçe reddeder, hiçbir şey göndermez ve sunucu `b5`, `b10`, `b20`, `talk`, `under` gibi her eski ya da uydurma değeri 422 ile reddeder. `tier` sunucuda hesaplanır (`lib/briefing.ts`): `t3` ya da `t2` ve karar veren/karar ekibi = `high`; kalanı `medium` (`low` sınıfı kalktı, çünkü her başvuru asgari tutarın üstündedir). Alanlar düz metindir (işaretleme reddedilir, görünmez karakterler atılır); yine de bir HTML şablonunda kullanılacaksa kaçışlanmalıdır.
 
 ## 3. n8n akışı
 

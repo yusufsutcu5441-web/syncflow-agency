@@ -53,9 +53,41 @@ float fbm(vec2 p) {
   return s;
 }
 
+/* ── light cascades and bokeh (docs/adr/0017-atmosphere.md) ─────────────────────────────────────────────────────────────────── */
+/* Slow vertical curtains of platin that warm towards champagne in their cores, in two depth layers drifting at different speeds: the far
+   layer is finer, dimmer and slower, and that parallax is the depth. Champagne lives only here, as warm light in the picture; it is never
+   a surface colour and never on the logo. The final pass still clamps every pixel to the palette and holds the text column to 0.17. */
+vec3 cascade(vec2 uv, float sway) {
+  vec3 acc = vec3(0.0);
+  for (int k = 0; k < 2; k++) {
+    float fk = float(k);
+    float depth = 1.0 + fk * 1.6;
+    float x = uv.x * (1.3 * depth) + 0.18 * sin(uTime * 0.045 / depth + uv.y * 0.8 + fk * 2.3) + sway * (0.4 / depth) + fk * 4.1;
+    float ray = pow(abs(sin(x * 3.1416 + uTime * 0.012 * depth)), 38.0 + fk * 30.0);
+    float curtain = smoothstep(-0.9, 0.9, uv.y) * (0.45 + 0.55 * noise(vec2(x * 2.0, uTime * 0.03 + fk * 7.0)));
+    vec3 tint = mix(PL, CH, 0.35 + 0.45 * noise(vec2(x * 1.3 + fk, uTime * 0.02)));
+    acc += tint * ray * curtain * (0.20 / depth);
+  }
+  return acc;
+}
+/* A few soft discs far behind the surface, drifting slowly: the out-of-focus lights of a long lens. */
+vec3 bokeh(vec2 uv) {
+  vec3 acc = vec3(0.0);
+  for (int i = 0; i < 6; i++) {
+    float fi = float(i);
+    vec2 c = vec2(h11(fi * 3.7) * 3.2 - 1.6, h11(fi * 5.3) * 1.8 - 0.9) + vec2(0.06 * sin(uTime * 0.03 + fi * 2.0), 0.05 * cos(uTime * 0.025 + fi * 1.3));
+    float r = 0.10 + 0.14 * h11(fi * 9.1);
+    float d = length(uv - c);
+    float disc = smoothstep(r, r * 0.6, d);
+    float rim = smoothstep(r * 0.8, r, d) * smoothstep(r * 1.1, r, d);
+    acc += mix(PL, CH, h11(fi * 2.9)) * (disc * 0.022 + rim * 0.03);
+  }
+  return acc;
+}
+
 /* ── 1. cosmic matter ───────────────────────────────────────────────────────────────────────── */
 vec3 cosmic(vec2 uv, float p) {
-  float t = uTime * 0.06;
+  float t = uTime * 0.04;
   vec2 q = rot(0.25 * sin(t) + p * 0.7) * (uv * 1.15);
   vec2 w = vec2(fbm(q + vec2(0.0, t)), fbm(q + vec2(5.2, 1.3) - t));
   float n = fbm(q * 1.4 + 2.2 * w);
@@ -73,7 +105,7 @@ vec3 cosmic(vec2 uv, float p) {
     float tw = 0.55 + 0.45 * sin(uTime * (0.8 + h * 2.0) + h * 50.0);
     dust += smoothstep(0.07 / (1.0 + fk * 0.3), 0.0, length(f - c)) * step(0.86, h) * tw / (1.0 + fk * 0.6);
   }
-  return col + PL * dust * 0.85;
+  return col + PL * dust * 0.85 + cascade(uv, p) * 0.7;
 }
 
 /* ── 2. bio-mechanical spine ────────────────────────────────────────────────────────────────── */
@@ -101,7 +133,7 @@ float mapBio(vec3 p, float t) {
   return d + 0.008 * sin(p.y * 46.0 + t);
 }
 vec3 biomech(vec2 uv, float p) {
-  float t = uTime * 0.35;
+  float t = uTime * 0.25;
   float ang = 0.35 + t * 0.25 + p * 2.4;
   vec3 ro = vec3(sin(ang) * 3.3, 0.25 + 0.35 * sin(p * 3.0), cos(ang) * 3.3);
   vec3 ww = normalize(-ro), uu = normalize(cross(ww, vec3(0.0, 1.0, 0.0))), vv = cross(uu, ww);
@@ -134,7 +166,7 @@ vec3 biomech(vec2 uv, float p) {
 float sdBox(vec3 p, vec3 b) { vec3 q = abs(p) - b; return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0); }
 float mapMono(vec3 p, float a) { p.xz = rot(a) * p.xz; return sdBox(p, vec3(0.5, 1.25, 0.11)) - 0.012; }
 vec3 monolith(vec2 uv, float p) {
-  float a = 0.45 + uTime * 0.08 + p * 1.6;
+  float a = 0.45 + uTime * 0.05 + p * 1.6;
   vec3 ro = vec3(0.0, -0.1 + 0.2 * p, -4.2);
   vec3 rd = normalize(vec3(uv.x, uv.y + 0.14, 2.0));
   vec3 col = mix(OB, L2, smoothstep(-0.9, 0.6, uv.y)) * 0.55;
@@ -178,10 +210,10 @@ float liquidHeight(vec2 q, vec2 w, vec2 m, float p) {
   vec2 s = q * 0.9 + 1.6 * w + p * 0.4;
   for (int i = 0; i < 3; i++) { h += a * noise(s); s = s * 2.03 + vec2(11.0, 7.0); a *= 0.5; }
   float md = length(q - m);
-  return h + 0.06 * sin(md * 18.0 - uTime * 2.2) * exp(-md * 2.8);
+  return h + 0.06 * sin(md * 18.0 - uTime * 1.5) * exp(-md * 2.8);
 }
 vec3 liquid(vec2 uv, float p) {
-  float t = uTime * 0.06;
+  float t = uTime * 0.036;
   vec2 w = vec2(fbm(uv * 0.8 + vec2(t, 0.0)), fbm(uv * 0.8 + vec2(3.1, t * 1.3)));
   vec2 m = (uMouse * 2.0 - 1.0) * vec2(uRes.x / uRes.y, 1.0);
   float e = 0.02;
@@ -191,7 +223,7 @@ vec3 liquid(vec2 uv, float p) {
   vec3 L = normalize(vec3(-0.45, 0.55, 0.7));
   float spec = pow(max(dot(n, normalize(L + vec3(0.0, 0.0, 1.0))), 0.0), 70.0);
   vec3 col = mix(OB, L2 * 1.2, smoothstep(0.15, 0.75, h)) + L2 * max(dot(n, L), 0.0) * 0.35;
-  return col + PL * spec * 0.7 + CH * spec * spec * 0.25;
+  return col + PL * spec * 0.7 + CH * spec * spec * 0.25 + cascade(uv, m.x) + bokeh(uv);
 }
 
 void main() {

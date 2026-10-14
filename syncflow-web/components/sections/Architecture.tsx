@@ -39,7 +39,7 @@ export async function Architecture() {
 
         <div className="grid gap-6">
           {/* I: native video */}
-          <article className="beam-card">
+          <article className="beam-card" data-maskframe="">
             <span className="beam" aria-hidden="true" data-pause-offscreen="" />
             <div className="beam-body p-6 md:p-8">
               <p className="label">{t('c1Index')}</p>
@@ -54,7 +54,7 @@ export async function Architecture() {
           </article>
 
           {/* II: frame time */}
-          <article className="beam-card">
+          <article className="beam-card" data-maskframe="">
             <span className="beam" aria-hidden="true" data-pause-offscreen="" />
             <div className="beam-body p-6 md:p-8">
               <p className="label">{t('c2Index')}</p>
@@ -85,7 +85,7 @@ export async function Architecture() {
           </article>
 
           {/* III: Lighthouse rings */}
-          <article className="beam-card">
+          <article className="beam-card" data-maskframe="">
             <span className="beam" aria-hidden="true" data-pause-offscreen="" />
             <div className="beam-body p-6 md:p-8">
               <p className="label">{t('c3Index')}</p>

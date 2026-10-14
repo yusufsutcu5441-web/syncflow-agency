@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, LoaderCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode, type RefObject } from 'react';
 import { fill, useClientI18n } from '@/components/i18n/ClientI18n';
 import {
   BUDGETS,
@@ -19,7 +19,8 @@ import {
   type Role,
   type Timeline,
 } from '@/lib/briefing';
-import { currentMarket } from '@/lib/market';
+import { currentMarket, defaultMarket, MARKET_EVENT } from '@/lib/market';
+import { formatBand, formatMoney, ladder, PRICING } from '@/lib/pricing';
 import { CONTACT_EMAIL } from '@/lib/site';
 
 type Status = 'idle' | 'sending' | 'success' | 'error';
@@ -43,6 +44,12 @@ const FORM_ERROR_MESSAGE = {
 } as const satisfies Record<FormError, string>;
 
 const TOTAL = 4;
+
+/** The market can change while the page is open (the entry gate sets it): re-read it when the gate says so. */
+const subscribeMarket = (onChange: () => void) => {
+  window.addEventListener(MARKET_EVENT, onChange);
+  return () => window.removeEventListener(MARKET_EVENT, onChange);
+};
 
 type TurnstileApi = {
   render: (container: HTMLElement, options: Record<string, unknown>) => string;
@@ -99,11 +106,24 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
   const [devOnly, setDevOnly] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [projectType, setProjectType] = useState<ProjectType | ''>('');
-  const [budget, setBudget] = useState<Budget | ''>('');
+  // 'under' = the visitor chose "below the minimum": nothing is sent, the step shows a polite decline instead (docs/adr/0016).
+  const [budget, setBudget] = useState<Budget | 'under' | ''>('');
   const [timeline, setTimeline] = useState<Timeline | ''>('');
   const [values, setValues] = useState<ContactValues>({ name: '', company: '', email: '', message: '', role: '', consent: false });
   const [website, setWebsite] = useState('');
   const [token, setToken] = useState('');
+
+  // The market sets the currency and the minimum of the first step (lib/pricing.ts). The server snapshot is the language's default
+  // market, so the HTML and the first client render agree; the visitor's real market replaces it right after hydration.
+  const market = useSyncExternalStore(
+    subscribeMarket,
+    () => currentMarket() ?? defaultMarket(locale),
+    () => defaultMarket(locale),
+  );
+  const { currency, floor } = PRICING[market];
+  const floorText = formatMoney(floor, currency, locale);
+  const bands = ladder(market);
+  const bandText = (id: Budget) => formatBand(bands.find((band) => band.id === id) ?? bands[0]!, currency, locale);
 
   const setField = <K extends keyof ContactValues>(key: K, value: ContactValues[K]) => {
     setValues((current) => ({ ...current, [key]: value }));
@@ -147,9 +167,11 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
     };
   }, [step, status, turnstileSiteKey]);
 
-  const answered = step === 1 ? projectType : step === 2 ? budget : step === 3 ? timeline : 'done';
+  const answered = step === 1 ? (budget === 'under' ? '' : budget) : step === 2 ? projectType : step === 3 ? timeline : 'done';
+  const declined = step === 1 && budget === 'under';
 
   const next = () => {
+    if (declined) return;
     if (!answered) {
       setPickError(true);
       return;
@@ -163,26 +185,28 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
     setStep((current) => Math.max(1, current - 1));
   };
 
-  const mailto = useCallback(() => {
+  // A plain function: it reads the current answers on every render, and the market-dependent band text with them.
+  const mailto = () => {
     const line = (label: string, value: string) => `${label}: ${value}`;
     const body = [
-      line(t.mailProject, projectType ? t.step1[projectType] : ''),
-      line(t.mailBudget, budget ? t.step2[budget] : ''),
-      line(t.mailTiming, timeline ? t.step3[timeline] : ''),
-      line(t.mailRole, values.role ? t.step4[values.role] : ''),
+      line(t.mailProject, projectType ? t.project[projectType] : ''),
+      line(t.mailBudget, budget && budget !== 'under' ? bandText(budget) : ''),
+      line(t.mailTiming, timeline ? t.timing[timeline] : ''),
+      line(t.mailRole, values.role ? t.contact[values.role] : ''),
       line(t.mailName, values.name.trim()),
       line(t.mailCompany, values.company.trim()),
       line(t.mailEmail, values.email.trim()),
       line(t.mailMessage, values.message.trim()),
     ].join('\n');
     return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t.mailSubject)}&body=${encodeURIComponent(body)}`;
-  }, [t, projectType, budget, timeline, values]);
+  };
 
   const focusFirstInvalid = () =>
     requestAnimationFrame(() => document.getElementById(formId)?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')?.focus());
 
   const submit = async () => {
-    if (status === 'sending' || !projectType || !budget || !timeline) return;
+    // A budget under the minimum never gets this far (the first step declines it); the server refuses it as well.
+    if (status === 'sending' || !projectType || !budget || budget === 'under' || !timeline) return;
 
     const found = validateContact(values);
     if (Object.keys(found).length > 0) {
@@ -213,7 +237,8 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
           role: values.role,
           consent: true,
           locale,
-          market: currentMarket() ?? undefined,
+          // The market whose currency the budget was answered in (the visitor's choice, or the language's default): the receiver needs it to read the band.
+          market,
           website,
           turnstileToken: token || undefined,
           elapsedMs: Math.max(0, Date.now() - lastStepAt.current),
@@ -294,7 +319,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
   }
 
   return (
-    <form id={formId} onSubmit={onSubmit} noValidate className="panel mx-auto mt-14 max-w-[720px] p-6 md:p-10" data-lenis-prevent="" aria-label={t.panelLabel}>
+    <form id={formId} onSubmit={onSubmit} noValidate className="panel mx-auto mt-14 max-w-[720px] p-6 md:p-10" data-lenis-prevent="" data-maskframe="" aria-label={t.panelLabel}>
       {progress}
 
       <p className="label mt-8" aria-live="polite">
@@ -302,10 +327,38 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
       </p>
 
       <div key={step} className="step-in mt-4">
+        {/* Step 1 is the qualification: the investment, in the currency of the visitor's market, with the minimum named in the question. */}
         {step === 1 ? (
+          <>
+            <Choice
+              title={t.budget.title}
+              lead={fill(t.budget.lead, { floor: floorText })}
+              headingRef={headingRef}
+              name="budget"
+              value={budget}
+              onChange={(v) => {
+                setBudget(v as Budget | 'under');
+                setPickError(false);
+              }}
+              options={[
+                ...BUDGETS.map((id) => ({ id: id as string, title: bandText(id), desc: t.budget[`${id}Desc`] })),
+                { id: 'under', title: fill(t.budget.underTitle, { floor: floorText }), desc: t.budget.underDesc },
+              ]}
+              footnote={t.budget.micro}
+            />
+            {declined ? (
+              <div className="decline mt-7" role="status">
+                <p className="text-title">{t.budget.declinedTitle}</p>
+                <p className="body-muted mt-3">{fill(t.budget.declinedBody, { floor: floorText })}</p>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
+        {step === 2 ? (
           <Choice
-            title={t.step1.title}
-            lead={t.step1.lead}
+            title={t.project.title}
+            lead={t.project.lead}
             headingRef={headingRef}
             name="projectType"
             value={projectType}
@@ -313,30 +366,14 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
               setProjectType(v as ProjectType);
               setPickError(false);
             }}
-            options={PROJECT_TYPES.map((id) => ({ id, title: t.step1[id], desc: t.step1[`${id}Desc`] }))}
-          />
-        ) : null}
-
-        {step === 2 ? (
-          <Choice
-            title={t.step2.title}
-            lead={t.step2.lead}
-            headingRef={headingRef}
-            name="budget"
-            value={budget}
-            onChange={(v) => {
-              setBudget(v as Budget);
-              setPickError(false);
-            }}
-            options={BUDGETS.map((id) => ({ id, title: t.step2[id], desc: t.step2[`${id}Desc`] }))}
-            footnote={t.step2.micro}
+            options={PROJECT_TYPES.map((id) => ({ id, title: t.project[id], desc: t.project[`${id}Desc`] }))}
           />
         ) : null}
 
         {step === 3 ? (
           <Choice
-            title={t.step3.title}
-            lead={t.step3.lead}
+            title={t.timing.title}
+            lead={t.timing.lead}
             headingRef={headingRef}
             name="timeline"
             value={timeline}
@@ -344,19 +381,19 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
               setTimeline(v as Timeline);
               setPickError(false);
             }}
-            options={TIMELINES.map((id) => ({ id, title: t.step3[id], desc: t.step3[`${id}Desc`] }))}
+            options={TIMELINES.map((id) => ({ id, title: t.timing[id], desc: t.timing[`${id}Desc`] }))}
           />
         ) : null}
 
         {step === 4 ? (
           <div>
             <h3 ref={headingRef} tabIndex={-1} className="text-headline outline-none">
-              {t.step4.title}
+              {t.contact.title}
             </h3>
-            <p className="body-muted mt-3">{t.step4.lead}</p>
+            <p className="body-muted mt-3">{t.contact.lead}</p>
 
             <div className="mt-9 grid gap-7">
-              <Field id={`${formId}-name`} label={t.step4.name} error={message('name')}>
+              <Field id={`${formId}-name`} label={t.contact.name} error={message('name')}>
                 <input
                   id={`${formId}-name`}
                   className="field-line"
@@ -370,7 +407,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
                   required
                 />
               </Field>
-              <Field id={`${formId}-company`} label={t.step4.company} error={message('company')}>
+              <Field id={`${formId}-company`} label={t.contact.company} error={message('company')}>
                 <input
                   id={`${formId}-company`}
                   className="field-line"
@@ -384,7 +421,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
                   required
                 />
               </Field>
-              <Field id={`${formId}-email`} label={t.step4.email} error={message('email')}>
+              <Field id={`${formId}-email`} label={t.contact.email} error={message('email')}>
                 <input
                   id={`${formId}-email`}
                   className="field-line"
@@ -400,7 +437,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
                   required
                 />
               </Field>
-              <Field id={`${formId}-message`} label={t.step4.message} error={message('message')}>
+              <Field id={`${formId}-message`} label={t.contact.message} error={message('message')}>
                 <input
                   id={`${formId}-message`}
                   className="field-line"
@@ -414,7 +451,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
               </Field>
 
               <fieldset aria-describedby={errors.role ? `${formId}-role-error` : undefined}>
-                <legend className="field-label">{t.step4.role}</legend>
+                <legend className="field-label">{t.contact.role}</legend>
                 <div className="role-chips mt-3">
                   {ROLES.map((id: Role, index) => (
                     <label key={id} className="role-chip">
@@ -426,7 +463,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
                         onChange={() => setField('role', id)}
                         data-invalid={index === 0 && errors.role ? 'true' : undefined}
                       />
-                      <span>{t.step4[id]}</span>
+                      <span>{t.contact[id]}</span>
                     </label>
                   ))}
                 </div>
@@ -441,7 +478,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
             {/* Honeypot: invisible and unreachable for people (and assistive tech), tempting for form-filling bots. */}
             <div aria-hidden="true" className="absolute start-[-9999px] h-0 w-0 overflow-hidden">
               <label>
-                {t.step4.honeypot}
+                {t.contact.honeypot}
                 <input type="text" name="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
               </label>
             </div>
@@ -457,9 +494,9 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
                   aria-describedby={errors.consent ? `${formId}-consent-error` : undefined}
                 />
                 <span>
-                  {t.step4.consent}{' '}
+                  {t.contact.consent}{' '}
                   <Link href={privacyHref} prefetch={false} className="text-ink underline decoration-ink/30 underline-offset-4 transition-colors hover:decoration-ink">
-                    {t.step4.consentLink}
+                    {t.contact.consentLink}
                   </Link>
                 </span>
               </label>
@@ -468,10 +505,10 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
                   {message('consent')}
                 </p>
               ) : null}
-              <p className="mt-4 text-xs leading-relaxed text-faint">{t.step4.micro}</p>
+              <p className="mt-4 text-xs leading-relaxed text-faint">{t.contact.micro}</p>
             </div>
 
-            {turnstileSiteKey ? <div ref={turnstileBox} className="mt-6 min-h-[65px]" aria-label={t.step4.securityCheck} /> : null}
+            {turnstileSiteKey ? <div ref={turnstileBox} className="mt-6 min-h-[65px]" aria-label={t.contact.securityCheck} /> : null}
           </div>
         ) : null}
       </div>
@@ -499,7 +536,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
           <span />
         )}
         {step < TOTAL ? (
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary" disabled={declined} aria-disabled={declined}>
             {t.next}
             <ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
           </button>
