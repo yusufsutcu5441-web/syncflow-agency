@@ -4,6 +4,7 @@
 - **Karar:** proje sahibi, 13.10.2026. İstek: pazarlık yapanları ilk adımda eleyen bir asgari bütçe eşiği, yalnızca yüksek sermayeli alıcıya hitap eden bir dil, ABD / Avrupa / Orta Doğu / Türkiye pazarları, para birimine ($, €, AED) ve pazara göre teklif yapısı. Sahibin dört yanıtı: (1) kilitli üçlü sektör kalır, dil yükselir; (2) eşikler **$25.000 ve güncel kur karşılıkları, çeyrekte bir gözden geçirmeyle**; (3) teklif yapısı = yerel para biriminde bütçe basamakları, sitede fiyat yayınlanmaz; (4) görsel taraf prosedürel sinema katmanının rafine edilmesi ([ADR 0017](0017-atmosphere.md)).
 - **Yerine geçtiği:** CLAUDE.md'nin 07.10.2026 "Fiyat" kararı (yurt dışı taban $10.000, Türkiye ₺100.000–₺500.000+), Blueprint'in bütçe basamakları ($5k–$10k, $10k–$20k, $20k+, "önce konuşalım"), "düşük" öncelik sınıfı ve [ADR 0015](0015-entry-gate-and-hero.md) §2'nin iki pazarı (`tr`, `int`).
 - **Tamamlar:** [ADR 0010](0010-briefing-delivery-and-security.md) (teslim sözleşmesi), [ADR 0015](0015-entry-gate-and-hero.md) (kapı ve pazar).
+- **Güncelleme (14.10.2026, sahibin kararı):** formun ilk adımından **"asgari tutarın altı" seçeneği ve nazik ret paneli kaldırıldı**; yalnızca asgari tutar ve üstü üç basamak kaldı ("Daha düşük bütçe seçeneği bırakma"). Filtre artık sorunun kendisidir (soru asgari tutarı adıyla söyler) ve sunucunun `budget` reddidir. Bu belgenin aşağıdaki "altı seçilirse nazik ret" anlatımları **tarihsel kayıttır**. Aynı gün: vitrin etiketleri "Architectural Specimen" ve "Production Prototype" oldu, metin dili bir kez daha sadeleştirildi ([ADR 0017](0017-atmosphere.md) §5), canlı ölçüm mühürlendi ([docs/perf/live-2026-10-14.md](../perf/live-2026-10-14.md)).
 
 ## Bağlam
 
@@ -28,13 +29,13 @@ Basamaklar asgari tutarın katlarıdır: `t1` = 1×–2×, `t2` = 2×–4×, `t3
 
 ### 2. Nitelik adımı: yatırım ilk soru
 
-Briefing'in sırası: **(1) yatırım**, (2) proje türü, (3) zamanlama, (4) iletişim. İlk adımın sorusu asgari tutarı adıyla söyler ("Stüdyomuz {floor} ve üzerindeki projelerde çalışır. Sizinki nerede duruyor?"), üç basamağı ve bir "asgari tutarın altı" seçeneğini sunar. **Altı seçilirse** bir nazik ret paneli çıkar, **Devam kilitlenir ve hiçbir şey gönderilmez**; tarayıcıda tutulur, sunucuya hiç ulaşmaz. "Önce konuşalım" kalktı: bütçesini söylemeyen içeri girmez.
+Briefing'in sırası: **(1) yatırım**, (2) proje türü, (3) zamanlama, (4) iletişim. İlk adımın sorusu asgari tutarı adıyla söyler ("Stüdyomuz {floor} ve üzerindeki projelerde çalışır. Sizinki nerede duruyor?") ve **yalnızca üç basamağı** sunar (asgari tutar ve üstü). *(Tarihsel, 14.10.2026'da kaldırıldı: ilk sürüm ayrıca bir "asgari tutarın altı" seçeneği ve altı seçilince çıkan nazik bir ret paneli sunuyordu, Devam'ı kilitliyordu ve hiçbir şey göndermiyordu.)* "Önce konuşalım" kalktı: bütçesini söylemeyen içeri girmez.
 
 **Sunucu da reddeder:** `budget` yalnızca `t1`, `t2`, `t3`dür (`z.enum(BUDGETS)`). Eski kodlar (`b5`, `b10`, `b20`, `talk`), `under`, boş ve uydurma her değer 422 alır ve hiçbir zaman teslim edilmez (smoke bunu her biri için sınar). Taban altı için **bir kod yoktur**, bu yüzden bir betik formu atlasa bile içeri giremez; ama sunucu yalnızca kodun varlığını görür, tutarın doğruluğunu değil (kimse gerçek parayı doğrulayamaz).
 
 ### 3. Öncelik sınıfı
 
-Her başvuru asgari tutarın üstünde olduğundan **"düşük" sınıf kalktı**: `t3` ya da `t2` ve karar veren ya da karar ekibi = `high`, geri kalanı `medium`. Gizlilik metninin 9. bölümü buna göre güncellendi ve ret panelinin hiçbir şey saklamadığını ve göndermediğini söyler (metin doğru kalmak zorundadır: otomatik karar yok; form bir bildirim gösterir, veri işlenmez).
+Her başvuru asgari tutarın üstünde olduğundan **"düşük" sınıf kalktı**: `t3` ya da `t2` ve karar veren ya da karar ekibi = `high`, geri kalanı `medium`. Gizlilik metninin 9. bölümü buna göre güncellendi (metin doğru kalmak zorundadır: otomatik karar yok). Ret paneli 14.10.2026'da kalktığı için onu anlatan cümle de çıkarıldı.
 
 ### 4. Dört pazar ve kapı
 
@@ -52,7 +53,7 @@ Kilitli üçlü sektör (özel sağlık, lüks gayrimenkul, kurumsal hukuk ve da
 
 ### 6. Gizlilik metni (taslak)
 
-`Legal.p2` pazarı ve yatırım basamağını sayar, `p4` pazarın adreste durduğunu ve saklanmadığını söyler, `p9` ret panelini ve "düşük" sınıfın kalktığını anlatır. **Hepsi taslaktır ve avukat onayı bekler**; dört pazar için gizlilik rejimleri (GDPR, ABD eyalet yasaları, BAE) ve sağlık ile hukuk reklam kuralları ülkeye göre değişir ve **hukuki sayfalar hâlâ yer tutuculudur**.
+`Legal.p2` pazarı ve yatırım basamağını sayar, `p4` pazarın adreste durduğunu ve saklanmadığını söyler, `p9` öncelik sınıfını ("düşük" sınıf kalktı) anlatır (ret paneli kalkınca onunla ilgili cümle çıkarıldı). **Hepsi taslaktır ve avukat onayı bekler**; dört pazar için gizlilik rejimleri (GDPR, ABD eyalet yasaları, BAE) ve sağlık ile hukuk reklam kuralları ülkeye göre değişir ve **hukuki sayfalar hâlâ yer tutuculudur**.
 
 ### 7. Lira işareti
 
@@ -60,17 +61,17 @@ Kilitli üçlü sektör (özel sağlık, lüks gayrimenkul, kurumsal hukuk ve da
 
 ### 8. Kapı
 
-Denetim bölüm 10: dört pazar ve fiyat satırları, ABD tabanı 25.000, kur tarihi ve gözden geçirme günü, bütçe kodları yalnızca `t1`-`t3` ve eski kodlar kaynakta yok, formun ilk adımı yatırım ve taban altı reddi, çeviride sabit tutar yok, pazar dilleri yalnızca EN ve TR, eski `?m=int` eşlemesi. Smoke 158/158: dört pazar bağlantısı, para birimleri, sunucu tarafı $ ve ₺ basamakları, eski bütçe metinlerinin yokluğu, yedi bütçe değerinin 422'si, `us/eu/me` etiketlerinin teslimi, `int`in 422'si.
+Denetim bölüm 10: dört pazar ve fiyat satırları, ABD tabanı 25.000, kur tarihi ve gözden geçirme günü, bütçe kodları yalnızca `t1`-`t3` ve eski kodlar kaynakta yok, formun ilk adımı yatırım ve yalnızca üç seçenek (altı seçeneği yok), çeviride sabit tutar yok, pazar dilleri yalnızca EN ve TR, eski `?m=int` eşlemesi. Smoke 158/158: dört pazar bağlantısı, para birimleri, sunucu tarafı $ ve ₺ basamakları, eski bütçe metinlerinin yokluğu, yedi bütçe değerinin 422'si, `us/eu/me` etiketlerinin teslimi, `int`in 422'si.
 
 ## Doğrulama durumu (13.10.2026)
 
-**Doğrulanan** (üretim derlemesi, yerel sunucu, başsız Chrome 154): `npm run check`, denetim 148 geçti 0 hata, build, smoke 158/158. Tarayıcıda: kapıda dört pazar ve kartlardaki "USD · English" vb.; Orta Doğu seçilince İngilizce çipi; Enter ile `/?m=me`; Orta Doğu'da AED basamakları ("AED 92,000 – AED 184,000", …, "Below AED 92,000"); taban altı seçilince nazik ret metni ve Devam kilidi; bir basamak seçip Devam ile "What are we building?"; Türkiye'de ₺ basamakları ("₺1.225.000 – ₺2.450.000", …, "₺1.225.000 altı"); konsol hatası yok.
+**Doğrulanan** (üretim derlemesi, yerel sunucu, başsız Chrome 154): `npm run check`, denetim 148 geçti 0 hata, build, smoke 158/158. Tarayıcıda: kapıda dört pazar ve kartlardaki "USD · English" vb.; Orta Doğu seçilince İngilizce çipi; Enter ile `/?m=me`; Orta Doğu'da AED basamakları ("AED 92,000 – AED 184,000", …, "Below AED 92,000"); taban altı seçilince nazik ret metni ve Devam kilidi (sonradan kaldırılan davranış); bir basamak seçip Devam ile "What are we building?"; Türkiye'de ₺ basamakları ("₺1.225.000 – ₺2.450.000", …, "₺1.225.000 altı"); konsol hatası yok.
 
-**Doğrulanmayan:** ret panelinin görsel kontrolü (yalnızca metin ve durum sınandı); briefing'in telefonda görünümü; `narrowSymbol` biçiminin diğer tarayıcılarda (özellikle AED); canlı alan adında davranış (dağıtım sonrası bkz. [docs/perf/live-2026-10-13.md](../perf/live-2026-10-13.md) varsa); gerçek n8n teslimi; avukat incelemesi.
+**Doğrulanmayan:** ret panelinin görsel kontrolü (yalnızca metin ve durum sınandı); briefing'in telefonda görünümü; `narrowSymbol` biçiminin diğer tarayıcılarda (özellikle AED); gerçek n8n teslimi; avukat incelemesi. (Canlı alan adında dört pazar, ₺ ve $ basamakları ve bot baypası 14.10.2026'da HTTP düzeyinde doğrulandı; Lighthouse sonuçları [docs/perf/live-2026-10-14.md](../perf/live-2026-10-14.md).)
 
 ## Açık kalemler
 
-1. **Ret için "kaynak":** CLAUDE.md'nin eski "nazik ret + kaynak" ifadesi, reddedilen ziyaretçiye ne verileceğini tanımlamıyor; şimdi yalnızca ret metni var.
+1. **~~Ret için "kaynak"~~ (kalktı, 14.10.2026):** ret paneli kaldırıldığı için bu kalem de düştü. Asgari tutarın altındaki ziyaretçi için artık hiçbir şey sunulmaz; soru asgari tutarı söyler, altında kalan ya en düşük basamağı işaretler ya da formu bırakır. **Risk:** en düşük basamağı bütçesi yetmese de işaretleyen bir başvuru içeri girer; sunucu yalnızca kodu görür, parayı doğrulayamaz.
 2. **Hukuk:** dört pazar için gizlilik ve sağlık/hukuk reklam çerçevesi; hukuki sayfalar yer tutuculu.
 3. **Kur gözden geçirmesi** her üç ayda (12.01.2027); denetim gün geçince uyarır.
 4. **Dil:** Orta Doğu için Arapça ve AB için yerel diller (Almanca vb.) açılmadı; yerel çeviri ve hukuk incelemesi gerekir.
