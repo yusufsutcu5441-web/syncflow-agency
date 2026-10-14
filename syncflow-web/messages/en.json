@@ -1,12 +1,12 @@
 {
   "Meta": {
     "title": "syncflow.agency | Digital architecture studio",
-    "description": "A digital architecture studio for owners, partners and principals whose name carries the business. Every engagement begins with a Strategic Briefing.",
+    "description": "A digital architecture studio for owners, partners and principals whose name is the business. Every engagement begins with a Strategic Briefing.",
     "ogTitle": "Built in the dark. Moves like liquid.",
-    "ogSubtitle": "Cinematic digital architecture for principals whose name carries the business.",
+    "ogSubtitle": "Digital architecture for principals whose name is the business.",
     "siteName": "syncflow.agency",
     "ogAlt": "syncflow.agency: Built in the dark. Moves like liquid.",
-    "organizationDescription": "syncflow.agency is a digital architecture studio that builds cinematic, high-performance websites for owners, partners and principals whose name carries the business."
+    "organizationDescription": "syncflow.agency is a digital architecture studio that builds cinematic, high-performance websites for owners, partners and principals whose name is the business."
   },
   "A11y": {
     "skip": "Skip to main content",
@@ -40,7 +40,7 @@
     "eyebrow": "Digital architecture studio — est. 2026",
     "title1": "Built in the dark.",
     "title2": "Moves like liquid.",
-    "subtitle": "We do not build websites. We engineer digital architecture for principals whose name carries the business: composed, fast, and measured rather than promised.",
+    "subtitle": "Digital architecture for principals whose name is the business. Machined to tight tolerances, finished in silence, and measured rather than promised.",
     "ctaPrimary": "Strategic Briefing",
     "ctaSecondary": "Showcase",
     "scroll": "Scroll",
@@ -69,7 +69,7 @@
   "Architecture": {
     "label": "01 — Architecture",
     "title": "Engineering, not decoration.",
-    "intro": "Every pixel is a decision, every frame a commitment. Three columns on why a site built here feels precise, not only fast.",
+    "intro": "Every pixel is a tolerance, every frame a commitment. Three columns on why a site built here feels calibrated, not merely quick.",
     "c1Index": "I",
     "c1Title": "Video, not code. Cinema, in the browser.",
     "c1Text": "We left heavy render engines and stuttering animation layers behind. Your hero and showcase streams are served as native MP4/WebM video, decoded by the device’s own video hardware, so the stream costs the processor little.",
@@ -99,33 +99,33 @@
   "Showcase": {
     "label": "02 — Showcase",
     "title": "Three industries.\nOne standard of silence.",
-    "subtitle": "Restrained, discreet, exact. Each industry speaks its own language; the standard does not change.",
+    "subtitle": "Restraint is the finish. Each industry speaks in its own register; the standard never changes.",
     "stripLabel": "Industry showcase, scroll sideways",
     "prev": "Previous project",
     "next": "Next project",
-    "concept": "Concept render",
-    "conceptNote": "Concept renders, not client work.",
+    "concept": "Architectural Specimen",
+    "conceptNote": "Production prototypes: studio specimens, not client work.",
     "cta": "Start a briefing",
     "play": "Play video",
     "pause": "Pause video",
     "estate": {
       "tag": "Luxury real estate",
       "title": "Not a property. A stage for living.",
-      "text": "A residence above the Bosphorus is not bought from a screen; it is felt. Cinematic arrival sequences, daylight studied on the floor plan, and an enquiry flow that reaches your principals directly.",
+      "text": "A residence above the Bosphorus is not bought from a screen; it is felt. A slow cinematic arrival, daylight studied across the plan, and an enquiry that reaches your principals directly.",
       "overlay": "Price on request",
       "videoLabel": "A glass-fronted villa at dusk, the camera moving slowly in"
     },
     "clinic": {
       "tag": "Private clinics",
       "title": "Trust is built in the first second.",
-      "text": "For aesthetic surgery, dental or longevity clinics: a calm, composed digital reception. Physician profiles and a patient-initiated appointment flow that guides without alarming.",
+      "text": "For aesthetic, dental and longevity clinics: a composed digital reception, never a sales floor. Physician profiles and a patient-initiated appointment that guides without alarming.",
       "overlay": "Book a private consultation",
       "videoLabel": "A pale clinic corridor in slow motion, soft light moving along the ceiling"
     },
     "law": {
       "tag": "Corporate law & advisory",
       "title": "Discretion is the first thing a client reads.",
-      "text": "For law firms, advisory practices and investment houses: a restrained, exact digital presence. Practice and partner pages, a confidential enquiry flow, and a structure in which every word is yours to approve, because applying the advertising and communications rules that govern your profession is your responsibility.",
+      "text": "For law firms, advisory practices and private equity houses: a restrained, exact presence. Practice and partner pages, a confidential enquiry, and a structure in which every word is yours to approve, because applying the advertising and communications rules of your profession is your responsibility.",
       "overlay": "Confidential enquiry",
       "videoLabel": "A dark colonnade receding towards a lit doorway, the camera moving slowly forward"
     }
@@ -146,13 +146,9 @@
     "budget": {
       "title": "Investment",
       "lead": "Our studio takes on projects from {floor}. Where does yours sit?",
-      "t1Desc": "A focused flagship: one considered story",
+      "t1Desc": "A focused flagship: one story, told with precision",
       "t2Desc": "A multi-section architecture with depth",
-      "t3Desc": "A full digital estate across brands and regions",
-      "underTitle": "Below {floor}",
-      "underDesc": "Not the right scope for our studio",
-      "declinedTitle": "Thank you for your candour.",
-      "declinedBody": "Our studio works on projects from {floor}. At a smaller scope we would be the wrong partner, and we would rather say so now than waste your time. You are welcome to return when the scope grows.",
+      "t3Desc": "A complete digital estate across brands and regions",
       "micro": "Figures are shown in your market’s currency. They only help us assemble the right team and the right scope."
     },
     "project": {
@@ -224,7 +220,7 @@
     "mailMessage": "About the project"
   },
   "Closing": {
-    "manifesto1": "A name that carries a business deserves a house built like architecture:",
+    "manifesto1": "A name that is the business deserves a house built like architecture:",
     "manifesto2": "silent, exact, and not easily forgotten.",
     "manifesto3": "Everything else is noise.",
     "contactTitle": "The next move is yours.",
@@ -295,7 +291,7 @@
     "p8h": "How we collect data, and whether you must provide it",
     "p8": "We collect data directly from you through the briefing form, and automatically as technical request data (see “Security and logs”). Your name, company, work email, role and the answers you select are needed to reply to your request; without them we cannot answer. The one-sentence description is optional.",
     "p9h": "Priority class, no automated decisions",
-    "p9": "From your answers (investment band and role) the server assigns the request an internal priority class (high or medium). It is written into the subject line of the e-mail we receive so that we can read requests in a sensible order. It does not send, refuse or answer anything automatically, and no decision with legal effect about you is made by a machine. The first step of the form shows a notice, and sends nothing, if you choose a budget below the minimum for your market; nothing about that choice is stored or transmitted. A person reads every request.",
+    "p9": "From your answers (investment band and role) the server assigns the request an internal priority class (high or medium). It is written into the subject line of the e-mail we receive so that we can read requests in a sensible order. It does not send, refuse or answer anything automatically, and no decision with legal effect about you is made by a machine. A person reads every request.",
     "imprintTitle": "Legal notice",
     "imprintIntro": "Provider information as required by law.",
     "i1h": "Company",

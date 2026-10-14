@@ -106,8 +106,8 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
   const [devOnly, setDevOnly] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [projectType, setProjectType] = useState<ProjectType | ''>('');
-  // 'under' = the visitor chose "below the minimum": nothing is sent, the step shows a polite decline instead (docs/adr/0016).
-  const [budget, setBudget] = useState<Budget | 'under' | ''>('');
+  // Only the three bands at or above the minimum exist: there is no "below" option to pick (docs/adr/0016). The question names the minimum.
+  const [budget, setBudget] = useState<Budget | ''>('');
   const [timeline, setTimeline] = useState<Timeline | ''>('');
   const [values, setValues] = useState<ContactValues>({ name: '', company: '', email: '', message: '', role: '', consent: false });
   const [website, setWebsite] = useState('');
@@ -167,11 +167,9 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
     };
   }, [step, status, turnstileSiteKey]);
 
-  const answered = step === 1 ? (budget === 'under' ? '' : budget) : step === 2 ? projectType : step === 3 ? timeline : 'done';
-  const declined = step === 1 && budget === 'under';
+  const answered = step === 1 ? budget : step === 2 ? projectType : step === 3 ? timeline : 'done';
 
   const next = () => {
-    if (declined) return;
     if (!answered) {
       setPickError(true);
       return;
@@ -190,7 +188,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
     const line = (label: string, value: string) => `${label}: ${value}`;
     const body = [
       line(t.mailProject, projectType ? t.project[projectType] : ''),
-      line(t.mailBudget, budget && budget !== 'under' ? bandText(budget) : ''),
+      line(t.mailBudget, budget ? bandText(budget) : ''),
       line(t.mailTiming, timeline ? t.timing[timeline] : ''),
       line(t.mailRole, values.role ? t.contact[values.role] : ''),
       line(t.mailName, values.name.trim()),
@@ -205,8 +203,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
     requestAnimationFrame(() => document.getElementById(formId)?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')?.focus());
 
   const submit = async () => {
-    // A budget under the minimum never gets this far (the first step declines it); the server refuses it as well.
-    if (status === 'sending' || !projectType || !budget || budget === 'under' || !timeline) return;
+    if (status === 'sending' || !projectType || !budget || !timeline) return;
 
     const found = validateContact(values);
     if (Object.keys(found).length > 0) {
@@ -329,30 +326,19 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
       <div key={step} className="step-in mt-4">
         {/* Step 1 is the qualification: the investment, in the currency of the visitor's market, with the minimum named in the question. */}
         {step === 1 ? (
-          <>
-            <Choice
-              title={t.budget.title}
-              lead={fill(t.budget.lead, { floor: floorText })}
-              headingRef={headingRef}
-              name="budget"
-              value={budget}
-              onChange={(v) => {
-                setBudget(v as Budget | 'under');
-                setPickError(false);
-              }}
-              options={[
-                ...BUDGETS.map((id) => ({ id: id as string, title: bandText(id), desc: t.budget[`${id}Desc`] })),
-                { id: 'under', title: fill(t.budget.underTitle, { floor: floorText }), desc: t.budget.underDesc },
-              ]}
-              footnote={t.budget.micro}
-            />
-            {declined ? (
-              <div className="decline mt-7" role="status">
-                <p className="text-title">{t.budget.declinedTitle}</p>
-                <p className="body-muted mt-3">{fill(t.budget.declinedBody, { floor: floorText })}</p>
-              </div>
-            ) : null}
-          </>
+          <Choice
+            title={t.budget.title}
+            lead={fill(t.budget.lead, { floor: floorText })}
+            headingRef={headingRef}
+            name="budget"
+            value={budget}
+            onChange={(v) => {
+              setBudget(v as Budget);
+              setPickError(false);
+            }}
+            options={BUDGETS.map((id) => ({ id: id as string, title: bandText(id), desc: t.budget[`${id}Desc`] }))}
+            footnote={t.budget.micro}
+          />
         ) : null}
 
         {step === 2 ? (
@@ -536,7 +522,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
           <span />
         )}
         {step < TOTAL ? (
-          <button type="submit" className="btn btn-primary" disabled={declined} aria-disabled={declined}>
+          <button type="submit" className="btn btn-primary">
             {t.next}
             <ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
           </button>

@@ -3,10 +3,10 @@
  * ölçülmüş olabilir"). Each entry carries what was measured, when, on which profile and by which tool. A `null`
  * value means "not measured yet": the page then says so instead of showing a number.
  *
- * Measured with `npm run perf` (Lighthouse 13.5, local production build, `next start`, canonical set to localhost) and with
- * the requestAnimationFrame sampler described in docs/perf/faz4.md, on 08.10.2026. Re-measure after every visual change and
- * update this file; `node faz2-denetim.mjs` checks that every entry has a date, a profile and a source.
- * Honest limits: a local server (HTTP/1.1, gzip), one machine, headless Chrome at 60 Hz. These are not field data.
+ * The Lighthouse numbers come from `npm run perf` against the live site (see below); the frame times come from the
+ * requestAnimationFrame sampler of docs/perf/faz4.md (08.10.2026). Re-measure after every visual change and update this
+ * file; `node faz2-denetim.mjs` checks that every entry has a date, a profile and a source.
+ * Honest limits: three runs, one machine, headless Chrome (lab data, not field data), the frame sampler at 60 Hz.
  */
 export type Metric = {
   value: number | null;
@@ -19,48 +19,28 @@ export type Metric = {
   source: string;
 };
 
-const DESKTOP = 'desktop preset, local production build, median of 3 runs';
-// Re-measured on the 2B-1 build (obsidian palette, Instrument Sans, B1 logo, re-rendered clips): docs/perf/faz2b1.md.
-const SOURCE = 'Lighthouse 13.5 (npm run perf), docs/perf/faz2b1.md';
 const FRAME_PROFILE = '1280x800, headless Chrome, 60 Hz, no CPU throttling';
 // The frame sampler was NOT re-run for 2B-1: its numbers belong to the Faz 4 build (the animations did not change, but the
 // measurement is that build's), so the entries keep that source and date.
 const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 build)';
 
+// The numbers below are the medians of three Lighthouse runs against the LIVE site (https://syncflow.agency, the deployment of
+// 91c009a with the cinema layer, the entry gate, the four markets and the qualification step), taken on 14.10.2026. Raw runs and the
+// spread: docs/perf/live-2026-10-14.md. They are what was measured, not what was hoped for: the desktop score ranged 84-100 (median 95)
+// and TBT 36-368 ms (median 177 ms). Re-measure after every visual change and put the new medians here.
+const LIVE = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency, docs/perf/live-2026-10-14.md';
+const LIVE_DESKTOP = 'desktop preset, live production (syncflow.agency), median of 3 runs';
+const LIVE_MOBILE = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 3 runs';
+
 export const METRICS = {
-  // Not published until it is re-measured (owner decision, 12.10.2026: "ölçülecek"). The 08.10 value (100) belongs to the build
-  // before the cinema layer; with the layer on, the same desktop preset gave 89-96 (docs/perf/cinema.md), and it has not been
-  // re-measured with the entry gate. The page shows "to be measured" until a new median is put here.
-  lighthousePerformance: {
-    value: null,
-    unit: 'score',
-    measuredAt: '',
-    profile: 'desktop preset, local production build (not yet re-measured after the cinema layer and the entry gate)',
-    source: 'Lighthouse 13.5 (npm run perf), docs/perf/cinema.md',
-  },
-  lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
-  lighthouseBestPractices: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
-  lighthouseSeo: { value: 100, unit: 'score', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
-  // Not published until it is measured again on the 2B-1 build: the Faz 4 value (93, median of 7) belongs to the previous
-  // build, and the three unfinished mobile runs taken on this one (69-73, TBT 800-1000 ms) came while the machine was busy,
-  // so they neither confirm nor refute it. Run `npm run perf` on a quiet machine, then put the median here.
-  lighthousePerformanceMobile: {
-    value: null,
-    unit: 'score',
-    measuredAt: '',
-    profile: 'mobile preset, simulated slow 4G, 4x CPU slowdown (not yet measured on the 2B-1 build)',
-    source: 'Lighthouse 13.5 (npm run perf), docs/perf/faz2b1.md',
-  },
-  cls: { value: 0, unit: 'cls', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
-  lcpDesktop: { value: 682, unit: 'ms', measuredAt: '2026-10-08', profile: DESKTOP, source: SOURCE },
-  // Same reason: 0 ms (08.10) is contradicted by the later 12.10 runs with the cinema layer on (135-236 ms, docs/perf/cinema.md).
-  tbtDesktop: {
-    value: null,
-    unit: 'ms',
-    measuredAt: '',
-    profile: 'desktop preset, local production build (not yet re-measured after the cinema layer and the entry gate)',
-    source: 'Lighthouse 13.5 (npm run perf), docs/perf/cinema.md',
-  },
+  lighthousePerformance: { value: 95, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  lighthouseBestPractices: { value: 100, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  lighthouseSeo: { value: 100, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  lighthousePerformanceMobile: { value: 93, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_MOBILE, source: LIVE },
+  cls: { value: 0, unit: 'cls', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  lcpDesktop: { value: 580, unit: 'ms', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  tbtDesktop: { value: 177, unit: 'ms', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
   frameMedian: { value: 16.7, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
   frameP99: { value: 16.9, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
 } as const satisfies Record<string, Metric>;

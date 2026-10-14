@@ -1,12 +1,12 @@
 {
   "Meta": {
     "title": "syncflow.agency | Dijital mimari stüdyosu",
-    "description": "Adı işini taşıyan sahipler, ortaklar ve yöneticiler için dijital mimari stüdyosu. Her çalışma bir Stratejik Briefing ile başlar.",
+    "description": "Adı işin kendisi olan sahipler, ortaklar ve yöneticiler için dijital mimari stüdyosu. Her çalışma bir Stratejik Briefing ile başlar.",
     "ogTitle": "Karanlıkta inşa edilir. Sıvı gibi akar.",
-    "ogSubtitle": "Adı işini taşıyan yöneticiler için sinematik dijital mimari.",
+    "ogSubtitle": "Adı işin kendisi olan yöneticiler için dijital mimari.",
     "siteName": "syncflow.agency",
     "ogAlt": "syncflow.agency: Karanlıkta inşa edilir. Sıvı gibi akar.",
-    "organizationDescription": "syncflow.agency, adı işini taşıyan sahipler, ortaklar ve yöneticiler için sinematik, yüksek performanslı web siteleri kuran bir dijital mimari stüdyosudur."
+    "organizationDescription": "syncflow.agency, adı işin kendisi olan sahipler, ortaklar ve yöneticiler için sinematik, yüksek performanslı web siteleri kuran bir dijital mimari stüdyosudur."
   },
   "A11y": {
     "skip": "Ana içeriğe geç",
@@ -40,7 +40,7 @@
     "eyebrow": "Dijital mimari stüdyosu — 2026’dan beri",
     "title1": "Karanlıkta inşa edilir.",
     "title2": "Sıvı gibi akar.",
-    "subtitle": "Web sitesi yapmıyoruz. Adı işini taşıyan yöneticiler için dijital mimari mühendisliği yapıyoruz: sakin, hızlı ve söz verilmeyip ölçülen.",
+    "subtitle": "Adı işin kendisi olan yöneticiler için dijital mimari. Dar toleranslarla işlenir, sessizlikle bitirilir; söz verilmez, ölçülür.",
     "ctaPrimary": "Stratejik Briefing",
     "ctaSecondary": "Vitrin",
     "scroll": "Kaydır",
@@ -69,7 +69,7 @@
   "Architecture": {
     "label": "01 — Mimari",
     "title": "Süs değil, mühendislik.",
-    "intro": "Her piksel bir karar, her kare bir taahhüt. Üç sütun, burada kurulan bir sitenin neden yalnızca hızlı değil, hassas hissettirdiğini anlatır.",
+    "intro": "Her piksel bir tolerans, her kare bir taahhüt. Üç sütun, burada kurulan bir sitenin neden yalnızca hızlı değil, ayarlı hissettirdiğini anlatır.",
     "c1Index": "I",
     "c1Title": "Video, kod değil. Sinema, tarayıcıda.",
     "c1Text": "Ağır render motorlarını ve kasan animasyon katmanlarını bıraktık. Hero ve vitrin akışlarınız, cihazın kendi video donanımının çözdüğü yerel MP4/WebM video olarak servis edilir; akış işlemciye çok az yük bindirir.",
@@ -99,33 +99,33 @@
   "Showcase": {
     "label": "02 — Vitrin",
     "title": "Üç sektör.\nTek bir sessizlik standardı.",
-    "subtitle": "Ölçülü, ketum, kesin. Her sektörün dili farklı, standart aynı.",
+    "subtitle": "Ölçülülük, son işlemdir. Her sektör kendi tonunda konuşur; standart asla değişmez.",
     "stripLabel": "Sektör vitrini, yana kaydırın",
     "prev": "Önceki proje",
     "next": "Sonraki proje",
-    "concept": "Konsept render",
-    "conceptNote": "Konsept render’lardır, müşteri işi değildir.",
+    "concept": "Mimari Numune",
+    "conceptNote": "Üretim prototipleri: stüdyonun kendi numuneleridir, müşteri işi değildir.",
     "cta": "Briefing başlat",
     "play": "Videoyu oynat",
     "pause": "Videoyu duraklat",
     "estate": {
       "tag": "Lüks gayrimenkul",
       "title": "Bir mülk değil, bir yaşam sahnesi.",
-      "text": "Boğaz üstünde bir konut ekrandan satın alınmaz; hissedilir. Sinematik karşılama akışları, kat planında incelenmiş gün ışığı ve doğrudan yöneticilerinize ulaşan bir talep akışı.",
+      "text": "Boğaz üstünde bir konut ekrandan satın alınmaz; hissedilir. Yavaş, sinematik bir karşılama, planda incelenmiş gün ışığı ve doğrudan yöneticilerinize ulaşan bir talep.",
       "overlay": "Fiyat talep üzerine",
       "videoLabel": "Gün batımında cam cepheli bir villa, kamera yavaşça içeri giriyor"
     },
     "clinic": {
       "tag": "Özel klinikler",
       "title": "Güven, ilk saniyede kurulur.",
-      "text": "Estetik cerrahi, diş hekimliği ya da longevity klinikleri için: sakin, derli toplu bir dijital karşılama. Hekim profilleri ve hastanın başlattığı bir randevu akışı; ürkütmeden yönlendirir.",
+      "text": "Estetik, diş ve longevity klinikleri için: satış reyonu değil, derli toplu bir dijital karşılama. Hekim profilleri ve ürkütmeden yönlendiren, hastanın başlattığı bir randevu.",
       "overlay": "Özel görüşme planlayın",
       "videoLabel": "Yavaş çekimde soluk bir klinik koridoru, tavanda gezinen yumuşak ışık"
     },
     "law": {
       "tag": "Kurumsal hukuk ve danışmanlık",
       "title": "Müvekkilin ilk okuduğu şey, ölçülülüktür.",
-      "text": "Hukuk büroları, danışmanlık yapıları ve yatırım evleri için: ölçülü, kesin bir dijital varlık. Çalışma alanı ve ortak sayfaları, gizliliği gözeten bir başvuru akışı ve her kelimesini sizin onayladığınız bir yapı; çünkü mesleğinizi düzenleyen reklam ve iletişim kurallarını uygulamak sizin sorumluluğunuzdadır.",
+      "text": "Hukuk büroları, danışmanlık yapıları ve özel sermaye (private equity) kuruluşları için: ölçülü, kesin bir varlık. Çalışma alanı ve ortak sayfaları, gizli bir başvuru ve her kelimesini sizin onayladığınız bir yapı; çünkü mesleğinizi düzenleyen reklam ve iletişim kurallarını uygulamak sizin sorumluluğunuzdadır.",
       "overlay": "Gizli başvuru",
       "videoLabel": "Aydınlık bir kapıya uzanan karanlık bir sütunlu koridor, kamera yavaşça ilerliyor"
     }
@@ -146,13 +146,9 @@
     "budget": {
       "title": "Yatırım",
       "lead": "Stüdyomuz {floor} ve üzerindeki projelerde çalışır. Sizinki nerede duruyor?",
-      "t1Desc": "Odaklı bir amiral gemisi: tek, özenle kurulmuş bir hikâye",
+      "t1Desc": "Odaklı bir amiral gemisi: tek hikâye, hassasiyetle anlatılmış",
       "t2Desc": "Derinlikli, çok bölümlü bir mimari",
-      "t3Desc": "Markalar ve bölgeler boyunca tam bir dijital mülk",
-      "underTitle": "{floor} altı",
-      "underDesc": "Stüdyomuz için doğru kapsam değil",
-      "declinedTitle": "Açık sözlülüğünüz için teşekkürler.",
-      "declinedBody": "Stüdyomuz {floor} ve üzerindeki projelerde çalışır. Daha küçük bir kapsamda yanlış ortak olurduk ve vaktinizi harcamadan bunu şimdi söylemeyi tercih ederiz. Kapsam büyüdüğünde sizi yeniden bekleriz.",
+      "t3Desc": "Markalar ve bölgeler boyunca eksiksiz bir dijital mülk",
       "micro": "Tutarlar pazarınızın para biriminde gösterilir. Yalnızca doğru ekibi ve doğru kapsamı hazırlamamıza yardım eder."
     },
     "project": {
@@ -224,7 +220,7 @@
     "mailMessage": "Proje hakkında"
   },
   "Closing": {
-    "manifesto1": "Adı bir işi taşıyan birine, mimari gibi kurulmuş bir ev yakışır:",
+    "manifesto1": "Adı işin kendisi olan birine, mimari gibi kurulmuş bir ev yakışır:",
     "manifesto2": "sessiz, kesin ve kolay unutulmayan.",
     "manifesto3": "Gerisi gürültüdür.",
     "contactTitle": "Bir sonraki hamle sizin.",
@@ -295,7 +291,7 @@
     "p8h": "Verileri nasıl topluyoruz ve sağlamanız gerekli mi",
     "p8": "Verileri doğrudan sizden briefing formu aracılığıyla ve otomatik olarak teknik istek verileri olarak topluyoruz (bkz. “Güvenlik ve kayıtlar”). Ad, şirket, iş e-postası, rol ve seçtiğiniz yanıtlar talebinizi yanıtlayabilmemiz için gereklidir; bunlar olmadan yanıt veremeyiz. Tek cümlelik açıklama isteğe bağlıdır.",
     "p9h": "Öncelik sınıfı, otomatik karar yok",
-    "p9": "Yanıtlarınızdan (yatırım basamağı ve rol) sunucu, talebe iç kullanıma yönelik bir öncelik sınıfı (yüksek ya da orta) atar. Bu sınıf, bize ulaşan e-postanın konu satırına yazılır ki talepleri makul bir sırayla okuyabilelim. Otomatik olarak hiçbir şey göndermez, reddetmez ya da yanıtlamaz; hakkınızda hukuki sonuç doğuran bir karar bir makine tarafından verilmez. Formun ilk adımı, pazarınız için asgari tutarın altında bir bütçe seçerseniz bir bildirim gösterir ve hiçbir şey göndermez; bu seçime dair hiçbir şey saklanmaz ya da iletilmez. Her talebi bir kişi okur.",
+    "p9": "Yanıtlarınızdan (yatırım basamağı ve rol) sunucu, talebe iç kullanıma yönelik bir öncelik sınıfı (yüksek ya da orta) atar. Bu sınıf, bize ulaşan e-postanın konu satırına yazılır ki talepleri makul bir sırayla okuyabilelim. Otomatik olarak hiçbir şey göndermez, reddetmez ya da yanıtlamaz; hakkınızda hukuki sonuç doğuran bir karar bir makine tarafından verilmez. Her talebi bir kişi okur.",
     "imprintTitle": "Künye",
     "imprintIntro": "Yasaların gerektirdiği hizmet sağlayıcı bilgileri.",
     "i1h": "Şirket",

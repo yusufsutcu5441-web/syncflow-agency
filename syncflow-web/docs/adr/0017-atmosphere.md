@@ -30,6 +30,11 @@ Hareket yaklaşık üçte bir hıza indi (sıvı metal 0,06 → 0,036, imleç da
 
 POST shader'ının metin sütunu parlaklık sınırı (sol bölge 0,17, [ADR 0015](0015-entry-gate-and-hero.md) §7) **değişmedi** ve ışık efektlerinden sonra uygulanır: kaskad ve bokeh sol sütunda bu sınırı aşamaz. Sağ ve orta bölgede (metnin az olduğu yer) açıktırlar. Son satır her pikseli obsidian–platin aralığına kıstırmaya devam eder.
 
+### 5. Vitrin etiketleri ve ton (14.10.2026, sahibin kararı)
+
+- **Etiketler:** vitrin kartlarındaki "Concept render" rozeti **"Architectural Specimen"** (TR: "Mimari Numune"), "Concept renders, not client work." notu **"Production prototypes: studio specimens, not client work."** (TR: "Üretim prototipleri: stüdyonun kendi numuneleridir, müşteri işi değildir.") oldu. İstek "konsept render" ibarelerini silip yerine bu iki etiketi koymaktı; **"müşteri işi değildir" nitelemesi bilerek korundu:** bu, CLAUDE.md'nin onaylı sapmasıdır (vitrin gerçek müşteri işi gibi sunulamaz; sağlık ve hukuk sektörlerinde yanıltıcı örnek riski vardır) ve "specimen" ya da "prototype" tek başına bunu söylemez. Nitelemeyi de kaldırmak sahibin ayrı ve açık bir kararı olur (önerilmez).
+- **Ton:** İngilizce ve Türkçe bir kez daha sadeleştirildi: kesin, ölçülü, işçilik sözcükleri ("dar toleranslar", "ayarlı", "son işlem"). Lamborghini ya da Audemars Piguet **adları kullanılmadı** (CLAUDE.md: referans markalar yalnızca iç tasarım dilidir, sitede geçmez ve ilişki ima edilmez). Kıtlık ya da kapasite sözü ("sınırlı sayıda müşteri") yazılmadı: kapasite cümlesi sahibin açık kararıdır ve gerçek olmadıkça yayınlanmaz. Hukuk ve danışmanlık kartında "private equity" kuruluşları anılır ve kart "mesleğinizi düzenleyen reklam ve iletişim kurallarını uygulamak sizin sorumluluğunuzdadır" der; vitrin hâlâ kilitli üç sektörle sınırlıdır, "Private Equity" yeni bir sektör sayfası değildir.
+
 ## Doğrulama durumu
 
 **Doğrulanan:** derleme, shader'ın iki bağlamda (canlı motor ve poster üretimi) derlenmesi (konsol hatası yok, posterler yeniden üretildi), hero ve briefing arka planında kaskad ve bokeh'in görünmesi (gözle, masaüstü 1440×900), briefing panelinin ve kartların ekranda tam açık görünmesi.

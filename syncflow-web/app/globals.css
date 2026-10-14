@@ -1696,13 +1696,6 @@ html.lenis body {
     opacity: 0.4;
     cursor: default;
   }
-  /* The polite decline of the briefing's first step (a budget below the minimum): a quiet glass note, no alarm colour. */
-  .decline {
-    padding: 1.25rem 1.4rem;
-    border-radius: 16px;
-    border: 1px solid var(--color-hairline-strong);
-    background: rgb(226 226 230 / 0.04);
-  }
   /* The parts that need JavaScript are laid out from the first paint but hidden until it is ready, so nothing moves when it arrives. */
   .gate:not([data-ready]) .gate-js {
     visibility: hidden;
