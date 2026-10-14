@@ -5,6 +5,7 @@
 - **Yerine geçtiği:** CLAUDE.md'nin 07.10.2026 "Fiyat" kararı (yurt dışı taban $10.000, Türkiye ₺100.000–₺500.000+), Blueprint'in bütçe basamakları ($5k–$10k, $10k–$20k, $20k+, "önce konuşalım"), "düşük" öncelik sınıfı ve [ADR 0015](0015-entry-gate-and-hero.md) §2'nin iki pazarı (`tr`, `int`).
 - **Tamamlar:** [ADR 0010](0010-briefing-delivery-and-security.md) (teslim sözleşmesi), [ADR 0015](0015-entry-gate-and-hero.md) (kapı ve pazar).
 - **Güncelleme (14.10.2026, sahibin kararı):** formun ilk adımından **"asgari tutarın altı" seçeneği ve nazik ret paneli kaldırıldı**; yalnızca asgari tutar ve üstü üç basamak kaldı ("Daha düşük bütçe seçeneği bırakma"). Filtre artık sorunun kendisidir (soru asgari tutarı adıyla söyler) ve sunucunun `budget` reddidir. Bu belgenin aşağıdaki "altı seçilirse nazik ret" anlatımları **tarihsel kayıttır**. Aynı gün: vitrin etiketleri "Architectural Specimen" ve "Production Prototype" oldu, metin dili bir kez daha sadeleştirildi ([ADR 0017](0017-atmosphere.md) §5), canlı ölçüm mühürlendi ([docs/perf/live-2026-10-14.md](../perf/live-2026-10-14.md)).
+- **Güncelleme (14.10.2026, [ADR 0018](0018-seven-capital-centres.md)):** dört pazar yedi pazara çıktı (`eu` ikiye bölündü: `dach` ve `fr`; `wealth` ve `asia` eklendi); dört para birimi ve her birinin tek tabanı değişmedi (USD 25.000, EUR 22.500, AED 92.000, TRY 1.225.000). Tutarlar sayfanın dilinin sayı biçimiyle yazılır; Arapçada ISO kodu.
 
 ## Bağlam
 

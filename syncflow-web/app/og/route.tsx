@@ -11,8 +11,8 @@ import { SITE_URL } from '@/lib/site';
  * Social share card (1200x630): GET /og?locale=tr
  * Headline and subtitle for og:image / twitter:image (LinkedIn, Slack, X, iMessage previews). Referenced from
  * generateMetadata with an explicit URL, so there is no redirect. The locale is whitelisted (public languages only);
- * anything else falls back to English. Arabic and Japanese cards are set in English: the share-card font (a static Instrument
- * Sans SemiBold built by scripts/build-fonts.py) has no Arabic or Japanese glyphs and would print empty boxes; their
+ * anything else falls back to English. Arabic, Chinese and Japanese cards are set in English: the share-card font (a static Instrument
+ * Sans SemiBold built by scripts/build-fonts.py) has no Arabic or CJK glyphs and would print empty boxes; their
  * og:title and og:description (the page text) are still in their own language. The response is cacheable for a year at the
  * edge (the "v" query value is bumped when the design changes), and /og is rate limited in proxy.ts because rendering an
  * image costs real CPU.

@@ -198,9 +198,10 @@ export function LanguageSwitcher() {
           const label = LOCALE_LABELS[code];
           const selected = code === locale;
           return (
-            <button key={code} type="button" lang={label.hreflang} dir={label.dir} className="lang-item" aria-current={selected ? 'true' : undefined} onClick={() => choose(code)}>
+            <button key={code} type="button" lang={label.hreflang} className="lang-item" aria-current={selected ? 'true' : undefined} onClick={() => choose(code)}>
               <span className="flex items-center gap-2.5">
-                {label.native}
+                {/* The direction belongs to the name only: the row (name left, code right) reads the same in every item, Arabic included. */}
+                <span dir={label.dir}>{label.native}</span>
                 {selected ? <Check size={14} strokeWidth={2} aria-hidden="true" /> : null}
               </span>
               <span className="code">

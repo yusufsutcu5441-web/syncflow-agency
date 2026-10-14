@@ -80,9 +80,18 @@ const expect = async (name, path, status, extra) => {
 const plain = await fetch(`http://${HOST}/`, { redirect: 'manual', signal: AbortSignal.timeout(20000) }).catch((e) => ({ status: 0, error: e.message, headers: new Headers() }));
 say([301, 302, 307, 308].includes(plain.status) && /^https:/.test(plain.headers.get('location') ?? '') ? 'PASS' : 'FAIL', 'http:// redirects to https://', `-> ${plain.status} ${plain.headers.get('location') ?? plain.error ?? ''}`);
 await expect('home', '/', 200, async (r) => { const t = (await r.text()).match(/<title>([^<]*)/)?.[1] ?? ''; return { ok: t.length > 0, detail: `"${t}"` }; });
-await expect('tr', '/tr', 200, async (r) => ({ ok: /<html[^>]*lang="tr"/.test(await r.text()) }));
+// The seven capital-centre languages (docs/adr/0018): each answers 200 with its own lang and dir and the entry gate's seven cards
+// (this client is no crawler, so it gets the gate). A language that is not public must still answer 404: Japanese is dormant.
+for (const [path, lang, dir] of [['/', 'en', 'ltr'], ['/tr', 'tr', 'ltr'], ['/ar', 'ar', 'rtl'], ['/de', 'de', 'ltr'], ['/fr', 'fr', 'ltr'], ['/es', 'es', 'ltr'], ['/zh', 'zh-Hans', 'ltr']]) {
+  await expect(`${path === '/' ? 'en' : path.slice(1)} (lang ${lang}, dir ${dir}, seven gate cards)`, path, 200, async (r) => {
+    const html = await r.text();
+    const cards = (html.match(/data-market="/g) ?? []).length;
+    return { ok: new RegExp(`<html[^>]*\\blang="${lang}"`).test(html) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(html) && cards === 7, detail: `${cards} cards` };
+  });
+}
 for (const p of ['/privacy', '/imprint', '/robots.txt', '/sitemap.xml', '/.well-known/security.txt']) await expect(p, p, 200);
-for (const p of ['/de', '/fr', '/ar']) await expect(p, p, 404);
+await expect('ja is dormant', '/ja', 404);
+await expect('sitemap lists the seven languages', '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === 7, detail: `${n} URLs` }; });
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });
 const home = await get('/tr');
 const h = (n) => home.headers.get(n);

@@ -3,6 +3,7 @@
 - **Durum:** Kabul edildi ve uygulandı, 12.10.2026. Kod `feat/cinema-gateway` dalında commit edildi (`4bc5799`, `6a4aa04`), `7cf5b50` ile `main`'e birleşti ve 12.10.2026'da canlıya alındı ([ADR 0014](0014-cinematic-layer.md) ile birlikte).
 - **Karar:** proje sahibi, 12.10.2026. İstek: ilk girişte pazar ve dil soran sinematik tam ekran bir kapı; derinlik veren, Lenis ile akışkan, "oradaymışım" hissi veren bir Hero ve maske geçişleri; devasa B1 amblem ve wordmark. Sahibin sonraki üç kararı: (1) amblem saf platin kalır, şampanya yalnızca birincil CTA ve tekil vurgularda; (2) arama motoru botları kapıyı görmez (User-Agent baypası); (3) 3100'deki eski süreç kapatılır, belgeler eşitlenir, son üretim build'i alınır.
 - **Tamamlar:** [ADR 0002](0002-launch-locales-and-market.md) (dil ve pazar URL'de, çerez yok), [ADR 0004](0004-motion-and-smooth-scroll.md) (Lenis, maskeli giriş), [ADR 0014](0014-cinematic-layer.md) (sinema katmanı). **Dokunmadığı:** marka paketi kuralları, fiyat, hukuk dili, CSP.
+- **Güncelleme (14.10.2026, [ADR 0018](0018-seven-capital-centres.md)):** kapı yedi karta çıktı (her kart bir dil ve pazar), amblem genişliği ile metin sütunu bağlandı, kapı üstten kayar ve telefonda amblem hayalet oldu. Pazar kodları `us tr me dach fr wealth asia`; eski `?m=int` ve `?m=eu` adreste geçerli kalır.
 
 ## Bağlam
 

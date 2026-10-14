@@ -82,10 +82,14 @@ export default async function LocaleLayout({ children, params }: Props) {
   // Above the fold: Instrument Sans (text), Instrument Serif (the headline: the likely LCP element) and Cabinet Grotesk 500
   // (buttons, navigation; font-display: optional only uses it when it is ready for the first paint, hence the preload).
   // Syne sits in the chapters below the fold and is not preloaded.
+  // Arabic, Chinese (and Japanese) are set in system stacks (app/globals.css :lang rules): the web fonts would not be used, so they are not preloaded.
+  const systemFonts = locale === 'ar' || locale === 'zh' || locale === 'ja';
   const font = { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' } as const;
-  preload('/fonts/instrument-sans-latin-v1.woff2', font);
-  preload('/fonts/instrument-serif-latin-v1.woff2', font);
-  preload('/fonts/cabinet-grotesk-500.woff2', font);
+  if (!systemFonts) {
+    preload('/fonts/instrument-sans-latin-v1.woff2', font);
+    preload('/fonts/instrument-serif-latin-v1.woff2', font);
+    preload('/fonts/cabinet-grotesk-500.woff2', font);
+  }
   if (locale === 'tr') {
     preload('/fonts/instrument-sans-turkish-v1.woff2', font);
     preload('/fonts/instrument-serif-latin-ext-v1.woff2', font);
@@ -94,7 +98,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   const [messages, a11y] = await Promise.all([getMessages(), getTranslations('A11y')]);
 
   return (
-    <html lang={locale} dir={LOCALE_LABELS[locale].dir}>
+    <html lang={LOCALE_LABELS[locale].hreflang} dir={LOCALE_LABELS[locale].dir}>
       <body>
         {/* The cinema layer: a CSS fallback here, the WebGL canvas (desktop only) on <body> behind #site-root. */}
         <CinemaStage />

@@ -51,18 +51,46 @@ function split(node: ReactNode, counter: Counter): ReactNode {
   return node;
 }
 
+// Chinese and Japanese are written without spaces, so "a word between spaces" can be a whole sentence: one unbreakable box that would
+// overflow the line. Such runs are cut into words with the platform's own segmenter instead (docs/adr/0018).
+const CJK = /[぀-ヿ㐀-鿿豈-﫿]/;
+// Closing punctuation never starts a line and opening punctuation never ends one: they stay glued to their neighbour.
+const CLOSING = /^[，。、．！？；：）】」』》〉”’…—,.!?;:)\]]+$/;
+const OPENING = /^[（【「『《〈“‘([]+$/;
+
+function cjkWords(run: string): string[] {
+  const segmenter = new Intl.Segmenter('zh', { granularity: 'word' });
+  const words: string[] = [];
+  let carry = '';
+  for (const { segment } of segmenter.segment(run)) {
+    if (OPENING.test(segment)) {
+      carry += segment;
+    } else if (CLOSING.test(segment) && words.length > 0) {
+      words[words.length - 1] += segment;
+    } else {
+      words.push(carry + segment);
+      carry = '';
+    }
+  }
+  if (carry) words.push(carry);
+  return words;
+}
+
 function splitText(text: string, counter: Counter): ReactNode {
-  return text.split(/([ \t\r\n]+)/).map((part, index) => {
-    if (part === '') return null;
+  return text.split(/([ \t\r\n]+)/).flatMap((part, index) => {
+    if (part === '') return [];
     // A newline in a message is a deliberate line break (a heading of two sentences breaks between them).
-    if (/^[ \t\r\n]+$/.test(part)) return part.includes('\n') ? <br key={index} /> : ' ';
-    const order = counter.next++;
-    return (
-      <span key={index} className="mw">
-        <span className="mi" style={{ '--i': order } as CSSProperties}>
-          {part}
+    if (/^[ \t\r\n]+$/.test(part)) return [part.includes('\n') ? <br key={index} /> : ' '];
+    const words = CJK.test(part) ? cjkWords(part) : [part];
+    return words.map((word, wordIndex) => {
+      const order = counter.next++;
+      return (
+        <span key={`${index}-${wordIndex}`} className="mw">
+          <span className="mi" style={{ '--i': order } as CSSProperties}>
+            {word}
+          </span>
         </span>
-      </span>
-    );
+      );
+    });
   });
 }

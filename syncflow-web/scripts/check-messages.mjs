@@ -23,11 +23,12 @@ const SOURCE = 'en';
 const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
 const locales = files.map((f) => f.replace(/\.json$/, ''));
 /**
- * Draft languages (docs/adr/0006, 0009): dormant, not public (the site is Turkish and English). They may lag behind English: a
- * key they lack falls back to the English text (lib/merge-messages.ts), and the lag is only counted here. They may not add keys,
- * and a translation they do carry must keep its placeholders and tags.
+ * Draft languages (docs/adr/0006, 0018): dormant, not public. Today that is Japanese only; the seven capital-centre languages (en tr
+ * ar de fr es zh) are public and must carry every key. A draft may lag behind English: a key it lacks falls back to the English text
+ * (lib/merge-messages.ts), and the lag is only counted here. It may not add keys, and a translation it does carry must keep its
+ * placeholders and tags.
  */
-const DRAFT = new Set(['de', 'fr', 'es', 'ar', 'ja']);
+const DRAFT = new Set(['ja']);
 
 /** Same in every language on purpose. Compared after trimming. */
 const SAME_OK = new Set([
@@ -72,6 +73,8 @@ const SAME_OK = new Set([
   'Name',
   'Flexible',
   'Legal',
+  'Cookies',
+  'Contact',
 ]);
 
 const verbose = process.argv.includes('--verbose');
@@ -157,7 +160,7 @@ for (const locale of locales) {
 }
 
 const total = Object.keys(enFlat).length;
-console.log(`messages: ${locales.length} locales (${locales.join(', ')}), ${total} keys in English and Turkish`);
+console.log(`messages: ${locales.length} locales (${locales.join(', ')}), ${total} keys in each public language`);
 if (lagging.size) console.log(`  draft languages lag behind English (fall back to it, not public): ${[...lagging].map(([l, n]) => `${l} ${n}`).join(', ')} keys`);
 for (const w of warnings) console.log(`  warn  ${w}`);
 if (verbose) for (const m of placeholderKeys.keys()) console.log(`  todo  ${m}`);
@@ -168,5 +171,5 @@ if (errors.length) {
   process.exit(1);
 }
 const todo = placeholderKeys.size;
-console.log(`\nOK: key trees of en and tr match, drafts add no keys, placeholders and tags match everywhere. ${warnings.length} warning(s).`);
+console.log(`\nOK: key trees of the seven public languages match English, drafts add no keys, placeholders and tags match everywhere. ${warnings.length} warning(s).`);
 if (todo) console.log(`TODO before launch: ${todo} legal strings still contain [BRACKETED] placeholders (list them with --verbose; --strict fails on them).`);

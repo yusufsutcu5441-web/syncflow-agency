@@ -4,15 +4,16 @@ import { routing, type AppLocale } from './routing';
  * Which languages are PUBLIC. One list feeds the language switcher, the footer, hreflang, the sitemap, JSON-LD and the
  * 404 for everything else, so a closed language cannot leak anywhere (faz2-denetim.mjs checks that each of them uses it).
  *
- *   every environment   only NEXT_PUBLIC_LAUNCHED_LOCALES (default "en,tr"); the default language is always open. The site
- *                       is Turkish and English: it does not advertise more (docs/adr/0009).
- *   preview             NEXT_PUBLIC_PREVIEW_LOCALES=1 opens all seven (in development and in production builds alike), only
- *                       to read the dormant draft translations in a browser. Nothing public links to them.
+ *   every environment   only NEXT_PUBLIC_LAUNCHED_LOCALES (default "en,tr,ar,de,fr,es,zh": the seven capital-centre languages,
+ *                       docs/adr/0018); the default language is always open. Japanese is the one dormant draft.
+ *   preview             NEXT_PUBLIC_PREVIEW_LOCALES=1 opens every routed language (in development and in production builds
+ *                       alike), only to read the dormant draft translation in a browser. Nothing public links to it.
  *
- * Launching a language = add its code to NEXT_PUBLIC_LAUNCHED_LOCALES after a native translation and a legal review
- * (docs/adr/0002-launch-locales-and-market.md). NEXT_PUBLIC_ variables are inlined at build time: rebuild after changing it.
+ * Closing a language = remove its code from NEXT_PUBLIC_LAUNCHED_LOCALES (or set it on the host). Opening one = add it, after a
+ * native translation and a legal review (docs/adr/0002-launch-locales-and-market.md). NEXT_PUBLIC_ variables are inlined at
+ * build time: rebuild after changing it.
  */
-const LAUNCHED = (process.env.NEXT_PUBLIC_LAUNCHED_LOCALES ?? 'en,tr')
+const LAUNCHED = (process.env.NEXT_PUBLIC_LAUNCHED_LOCALES ?? 'en,tr,ar,de,fr,es,zh')
   .split(',')
   .map((code) => code.trim())
   .filter(Boolean);
