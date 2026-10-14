@@ -71,6 +71,8 @@ Gizlilik ve künye yedi dilde de çevrildi (aynı yer tutucular, aynı "Taslak" 
 
 `check:messages`, `check:fonts`, `tsc`, ESLint, `audit-secrets`, `brand:check` temiz; `node faz2-denetim.mjs --build` **152 geçti, 0 hata**; `npm run smoke` üretim derlemesinde **189/189**; Chrome 154'te (başsız, 1440×900 ve 390×844) kapı akışı **17/17**: DACH kartı → `/de?m=dach` ve euro basamakları, Asya kartı → `/zh?m=asia` ve dolar basamakları, Orta Doğu kartı + İngilizce çip → `/?m=me` ve `AED 92,000`, yedi dil çipi, Esc, üst bar seçicisinde yedi dil ve İspanyolca'ya geçişte `?m=` korunumu; konsol ve sayfa hatası yok; yatay taşma yok; `/ar`, `/zh`, `/fr`, `/de` ve kapının ekran görüntüleri gözle incelendi.
 
+**Canlıda** (`main` `e35c5c0`, yayın birkaç dakikada tamamlandı; host panelinde eski bir `NEXT_PUBLIC_LAUNCHED_LOCALES` kalmamıştı): `npm run live` **29 geçti, 0 hata, 1 uyarı** (`www` kaydı yok, bilinen eksik): yedi dilin her biri 200 ve kendi `lang`/`dir` ile, her birinde kapının yedi kartı, sitemap yedi adres, `/ja` 404, briefing savunmaları yerinde; aynı tarayıcı akışı canlı sitede de **17/17**; kapı, `/ar` ve briefing canlı ekran görüntüsünde yerelle aynı. Duman testi canlıya karşı **çalıştırılmaz** (gerçek başvuru gönderir).
+
 ## Riskler ve AÇIK konular (dürüst kayıt)
 
 - **Çeviriler araç yazımıdır; yerel konuşur gözden geçirmedi.** Ton, terim ve hukuk ifadeleri (özellikle Almanca *Impressum* ve Fransızca *mentions légales* yükümlülükleri, Arapça ve Çince resmî dil) bir yerel editörden geçmelidir. Sahibi yayını bu riskle onayladı.
