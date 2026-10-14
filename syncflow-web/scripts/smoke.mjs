@@ -14,8 +14,8 @@
  *                                secret): a missing token is refused, any token passes. Needs internet access.
  *                         off    no TURNSTILE_SECRET_KEY in development: the check is skipped.
  *                         unset  no TURNSTILE_SECRET_KEY in production: the form must answer 503.
- *   EXPECT_LOCALES      languages that must be public (default "en,tr", in every environment; "en,tr,de,fr,es,ar,ja" only
- *                       with NEXT_PUBLIC_PREVIEW_LOCALES=1). Every other language must answer 404.
+ *   EXPECT_LOCALES      languages that must be public (default "en,tr,ar,de,fr,es,zh", in every environment: the seven capital centres,
+ *                       docs/adr/0018; "en,tr,ar,de,fr,es,zh,ja" only with NEXT_PUBLIC_PREVIEW_LOCALES=1). Every other language must answer 404.
  *   EXPECT_CSP_MODE     "enforce" to expect the enforcing CSP header instead of report-only.
  *   STRESS=1            also fire 250 page requests from one address to prove the page-level limiter.
  */
@@ -24,9 +24,12 @@ import { createServer } from 'node:http';
 
 const BASE = (process.argv[2] ?? process.env.BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 const ORIGIN = new URL(BASE).origin;
-const ALL_LOCALES = ['en', 'tr', 'de', 'fr', 'es', 'ar', 'ja'];
-const OPEN = (process.env.EXPECT_LOCALES ?? 'en,tr').split(',').map((s) => s.trim()).filter(Boolean);
+const ALL_LOCALES = ['en', 'tr', 'ar', 'de', 'fr', 'es', 'zh', 'ja'];
+const OPEN = (process.env.EXPECT_LOCALES ?? 'en,tr,ar,de,fr,es,zh').split(',').map((s) => s.trim()).filter(Boolean);
 const CLOSED = ALL_LOCALES.filter((l) => !OPEN.includes(l));
+// <html lang>, hreflang and JSON-LD carry the BCP 47 tag of the language (Simplified Chinese is zh-Hans).
+const HTML_LANG = { zh: 'zh-Hans' };
+const TAGS = OPEN.map((l) => HTML_LANG[l] ?? l);
 const TURNSTILE_MODE = process.env.TURNSTILE_MODE ?? 'pass';
 const results = [];
 
@@ -147,7 +150,7 @@ check('no unverified claim in the HTML (locked 60 FPS, 120Hz, LCP < 1.2s, AV1, e
 
 const alternates = [...html.matchAll(/<link[^>]+rel="alternate"[^>]*>/g)].map((m) => m[0]);
 const hreflangs = alternates.map((a) => /hrefLang="([^"]+)"/i.exec(a)?.[1]).filter(Boolean);
-check(`hreflang alternates: ${OPEN.join(' ')} + x-default, and no language that is not public`, [...OPEN, 'x-default'].every((l) => hreflangs.includes(l)) && !CLOSED.some((l) => hreflangs.includes(l)), hreflangs.join(','));
+check(`hreflang alternates: ${TAGS.join(' ')} + x-default, and no language that is not public`, [...TAGS, 'x-default'].every((l) => hreflangs.includes(l)) && !CLOSED.some((l) => hreflangs.includes(HTML_LANG[l] ?? l)), hreflangs.join(','));
 check('canonical link present', /<link[^>]+rel="canonical"/.test(html));
 check('Open Graph + Twitter card tags', /property="og:title"/.test(html) && /property="og:locale"/.test(html) && /name="twitter:card"/.test(html));
 
@@ -160,7 +163,7 @@ const types = graph.map((n) => n['@type']);
 check('JSON-LD parses: Organization, WebSite, ProfessionalService', ['Organization', 'WebSite', 'ProfessionalService'].every((t) => types.includes(t)), types.join(','));
 check('JSON-LD has no offer, price, ratings, reviews or address', !/makesOffer|"price"|aggregateRating|review|streetAddress|telephone/.test(ld ?? ''));
 const siteLangs = graph.find((n) => n['@type'] === 'WebSite')?.inLanguage ?? [];
-check('JSON-LD lists only the public languages', JSON.stringify([...siteLangs].sort()) === JSON.stringify([...OPEN].sort()), siteLangs.join(','));
+check('JSON-LD lists only the public languages', JSON.stringify([...siteLangs].sort()) === JSON.stringify([...TAGS].sort()), siteLangs.join(','));
 
 /* ── 1b. Entry gate, market and crawlers (docs/adr/0015-entry-gate-and-hero.md) ───────────────── */
 section('Entry gate, market and crawlers (docs/adr/0015)');
@@ -180,15 +183,17 @@ const pageAs = async (path, ua) => {
 
 const gateHome = await pageAs('/');
 check('GET / without a market: the gate is in the HTML, open', hasGate(gateHome.page) && /data-state="open"/.test(gateHome.page));
-check('all four markets are real links (the gate works without JavaScript)', ['us', 'eu', 'me'].every((m) => new RegExp(`href="/\\?m=${m}"`).test(gateHome.page)) && /href="\/tr\?m=tr"/.test(gateHome.page) && ['us', 'eu', 'me', 'tr'].every((m) => new RegExp(`data-market="${m}"`).test(gateHome.page)));
-check('each market names its currency (USD, EUR, AED, TRY)', ['USD', 'EUR', 'AED', 'TRY'].every((c) => gateHome.page.includes(c)));
+const MARKET_LINKS = { us: '/?m=us', tr: '/tr?m=tr', me: '/ar?m=me', dach: '/de?m=dach', fr: '/fr?m=fr', wealth: '/es?m=wealth', asia: '/zh?m=asia' };
+check('all seven capital centres are real links (the gate works without JavaScript), each to its own language', Object.entries(MARKET_LINKS).every(([m, href]) => gateHome.page.includes(`href="${href}"`) && new RegExp(`data-market="${m}"`).test(gateHome.page)));
+check('each card is headed by its language in its own script and direction', [['en', 'English', 'ltr'], ['tr', 'Türkçe', 'ltr'], ['ar', 'العربية', 'rtl'], ['de', 'Deutsch', 'ltr'], ['fr', 'Français', 'ltr'], ['es', 'Español', 'ltr'], ['zh-Hans', '中文', 'ltr']].every(([l, name, dir]) => gateHome.page.includes(`class="gate-market-name" lang="${l}" dir="${dir}">${name}`)));
+check('each card names its currency (USD, EUR, AED, TRY)', ['USD', 'EUR', 'AED', 'TRY'].every((c) => gateHome.page.includes(c)));
 check('the first step of the briefing names the minimum in dollars and offers the bands above it (server-rendered, US default)', gateHome.page.includes('$25,000 – $50,000') && gateHome.page.includes('$50,000 – $100,000') && gateHome.page.includes('$100,000 +'));
 check('the first step has exactly three options, all at or above the minimum: there is no "below" choice', (gateHome.page.match(/name="budget"/g) ?? []).length === 3 && !/Below \$|below the minimum/i.test(gateHome.page), `${(gateHome.page.match(/name="budget"/g) ?? []).length} budget options`);
 check('no old budget band (under $20k) is offered any more', !/\$5k|\$10k|\$20k|Let’s talk first|Let&#x27;s talk first/i.test(gateHome.page));
 check('the gate is a dialog with a heading, and the page behind it is still in the HTML', /role="dialog"/.test(gateHome.page) && /aria-modal="true"/.test(gateHome.page) && /id="gate-title"/.test(gateHome.page) && gateHome.page.includes('Built in the dark.'));
 check('the gate offers only the public languages', (gateHome.page.match(/class="gate-lang"/g) ?? []).length === OPEN.length, `${(gateHome.page.match(/class="gate-lang"/g) ?? []).length} chips, ${OPEN.length} public languages`);
 check('the gate sets no cookie (the choice lives in the address only)', gateHome.res.headers.get('set-cookie') === null);
-for (const path of ['/?m=tr', '/?m=us', '/?m=eu', '/?m=me', '/?m=int', '/tr?m=tr']) {
+for (const path of ['/?m=us', '/tr?m=tr', '/ar?m=me', '/de?m=dach', '/fr?m=fr', '/es?m=wealth', '/zh?m=asia', '/?m=int', '/?m=eu', '/de?m=fr']) {
   const passed = await pageAs(path);
   check(`${path}: a valid market in the address means the gate is passed (no gate in the HTML)`, passed.res.status === 200 && !hasGate(passed.page));
 }
@@ -199,7 +204,7 @@ const markup = unknown.page.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
 const injected = await pageAs('/?m=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E');
 check('an unknown market is ignored (the gate shows) and never reaches the document markup', hasGate(unknown.page) && !markup.includes('ZZtopmarket') && !injected.page.includes('<img src=x onerror'));
 const trGate = await pageAs('/tr');
-check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Pazarınızı seçin.'));
+check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Sermaye merkezinizi seçin.'));
 check('/tr: the briefing names the minimum in lira and offers the lira bands', trGate.page.includes('₺1.225.000') && trGate.page.includes('₺2.450.000') && trGate.page.includes('₺4.900.000 +'));
 for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
   const bot = await pageAs('/', ua);
@@ -212,21 +217,54 @@ for (const [name, ua] of [['Lighthouse / PageSpeed', UA.lighthouse], ['an ordina
   check(`${name} gets the gate (it must see what a visitor sees)`, hasGate(visitor.page));
 }
 
+/* ── 1c. Seven capital centres (docs/adr/0018-seven-capital-centres.md) ───────────────────────── */
+section('Seven capital centres: each page speaks its language, names its currency (docs/adr/0018)');
+const normalise = (text) => text.replace(/[\s\u00a0\u202f]+/g, ' ');
+const CENTRES = [
+  // [language, path, gate title, the briefing's floor as that page formats it, a word of the briefing in that language]
+  ['en', '/', 'Choose your capital center.', '$25,000', 'Investment'],
+  ['tr', '/tr', 'Sermaye merkezinizi seçin.', '₺1.225.000', 'Yatırım'],
+  ['ar', '/ar', 'اختر مركزك المالي.', '92,000', 'الاستثمار'],
+  ['de', '/de', 'Wählen Sie Ihren Finanzplatz.', '22.500 €', 'Investition'],
+  ['fr', '/fr', 'Choisissez votre place financière.', '22 500 €', 'Investissement'],
+  ['es', '/es', 'Elija su plaza financiera.', '$25,000', 'Inversión'],
+  ['zh', '/zh', '选择您的资本中心。', '$25,000', '投资'],
+];
+for (const [code, path, title, floor, word] of CENTRES) {
+  if (!OPEN.includes(code)) continue;
+  const centre = await pageAs(path);
+  const text = normalise(centre.page);
+  check(`${path}: the gate speaks ${code}, and the briefing opens at ${floor} in the page's own number format`, centre.res.status === 200 && hasGate(centre.page) && centre.page.includes(title) && text.includes(floor) && centre.page.includes(word), `status ${centre.res.status}`);
+}
+if (OPEN.includes('ar')) {
+  const ar = await pageAs('/ar');
+  check('/ar is right-to-left, with the dirham figure (92,000 AED) and the gate cards in the markup', /<html[^>]*\bdir="rtl"/.test(ar.page) && normalise(ar.page).includes('92,000 AED') && ar.page.includes('data-market="me"'));
+}
+if (OPEN.includes('zh')) {
+  const zh = await pageAs('/zh');
+  check('/zh is Simplified Chinese (lang zh-Hans) and the page names no web font it does not ship', /<html[^>]*\blang="zh-Hans"/.test(zh.page) && !/instrument-sans-latin/.test(zh.page.replace(/<script[\s\S]*?<\/script>/g, '')) );
+}
+const crossed = await pageAs('/de?m=wealth');
+check('the market and the language are independent: /de?m=wealth is German and the gate is passed', crossed.res.status === 200 && !hasGate(crossed.page) && /<html[^>]*\blang="de"/.test(crossed.page));
+
+
 /* ── 2. Locales ──────────────────────────────────────────────────────────────────────────────── */
 section('Locales');
 const MARKERS = {
   tr: ['Karanlıkta inşa edilir.', 'Briefing Başlat'],
-  de: ['Im Dunkeln gebaut.'],
-  fr: ['Bâti dans l’obscurité.'],
-  es: ['Construido en la oscuridad.'],
-  ar: ['في الظلام', 'ويتحرّك كالسائل'],
+  ar: ['بُني في العتمة.', 'ينساب كالسائل.'],
+  de: ['Im Dunkeln gebaut.', 'Fließt wie Flüssigkeit.'],
+  fr: ['Bâti dans l’ombre.', 'Glisse comme un liquide.'],
+  es: ['Construido en la oscuridad.', 'Fluye como un líquido.'],
+  zh: ['筑于暗处。', '流动如液。'],
   ja: ['闇の中で築く。', '液体のように動く。'],
 };
 for (const code of OPEN.filter((l) => l !== 'en')) {
   const res = await get(`/${code}`);
   const body = await res.text();
   const dir = code === 'ar' ? 'rtl' : 'ltr';
-  check(`/${code} renders in ${code} (lang attr, dir="${dir}", translated hero)`, res.status === 200 && new RegExp(`<html[^>]*\\blang="${code}"`).test(body) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(body) && (MARKERS[code] ?? []).every((w) => body.includes(w)), `status ${res.status}`);
+  const htmlLang = HTML_LANG[code] ?? code;
+  check(`/${code} renders in ${code} (lang attr, dir="${dir}", translated hero)`, res.status === 200 && new RegExp(`<html[^>]*\\blang="${htmlLang}"`).test(body) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(body) && (MARKERS[code] ?? []).every((w) => body.includes(w)), `status ${res.status}`);
 }
 // The URL alone decides the language (docs/adr/0002): no redirect from Accept-Language, no cookie.
 for (const code of [...CLOSED, 'it', 'pt']) {
@@ -240,10 +278,16 @@ check('an old NEXT_LOCALE cookie is ignored', staleCookie.status === 200, `statu
 const trVisit = await get('/tr');
 check('visiting /tr (or /) sets no cookie at all', !trVisit.headers.get('set-cookie') && !home.headers.get('set-cookie'), `${trVisit.headers.get('set-cookie')} | ${home.headers.get('set-cookie')}`);
 check('no Link: rel="alternate" header advertises a language that is not public', !CLOSED.some((l) => (home.headers.get('link') ?? '').includes(`hreflang="${l}"`)), home.headers.get('link') ?? '');
-if (OPEN.includes('de')) {
-  const legal = await get('/de/privacy');
+for (const [code, heading] of [['de', 'Datenschutzhinweis'], ['fr', 'Notice de confidentialité'], ['es', 'Aviso de privacidad'], ['ar', 'إشعار الخصوصية'], ['zh', '隐私声明']]) {
+  if (!OPEN.includes(code)) continue;
+  const legal = await get(`/${code}/privacy`);
   const body = await legal.text();
-  check('draft languages show the legal text in English, marked as such', legal.status === 200 && /lang="en"/.test(body) && /Who is responsible/.test(body), `status ${legal.status}`);
+  check(`/${code}/privacy carries the draft legal text in its own language (no English fallback marker)`, legal.status === 200 && body.includes(heading) && !/class="chip mt-3 normal-case" lang="en"/.test(body), `status ${legal.status}`);
+}
+if (OPEN.includes('ja')) {
+  const legal = await get('/ja/privacy');
+  const body = await legal.text();
+  check('the dormant Japanese draft shows the legal text in English, marked as such', legal.status === 200 && /lang="en"/.test(body) && /Who is responsible/.test(body), `status ${legal.status}`);
 }
 
 section('security.txt (RFC 9116)');
@@ -418,13 +462,15 @@ if (mock && TURNSTILE_MODE !== 'unset') {
   const tagged = await post(valid({ market: 'tr' }));
   const taggedPayload = received[0] ? JSON.parse(received[0].body) : {};
   check('a briefing with a market tag is delivered with market "tr"', tagged.status === 200 && taggedPayload.market === 'tr', `status ${tagged.status}, market ${taggedPayload.market}`);
-  for (const market of ['us', 'eu', 'me']) {
+  for (const market of ['us', 'me', 'dach', 'fr', 'wealth', 'asia']) {
     received.length = 0;
     const res = await post(valid({ market }));
     check(`market "${market}" is accepted and delivered as a tag`, res.status === 200 && received[0] && JSON.parse(received[0].body).market === market, `status ${res.status}`);
   }
   received.length = 0;
-  check('the retired market "int" is not an API value (the browser maps it to "us")', (await post(valid({ market: 'int' }))).status === 422 && received.length === 0);
+  check('the retired markets "int" and "eu" are not API values (the browser maps them to "us" and "dach")', (await post(valid({ market: 'int' }))).status === 422 && (await post(valid({ market: 'eu' }))).status === 422 && received.length === 0);
+  received.length = 0;
+  check('every public language is accepted by the API as the page language', (await Promise.all(OPEN.map((locale) => post(valid({ locale }))))).every((res) => res.status === 200));
   received.length = 0;
   const moon = await post(valid({ market: 'moon' }));
   check('an unknown market is rejected (strict enum) and never delivered', moon.status === 422 && received.length === 0, `status ${moon.status}, received ${received.length}`);

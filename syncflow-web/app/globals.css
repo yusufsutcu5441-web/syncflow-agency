@@ -243,14 +243,35 @@
   --tracking-title: 0.01em;
   --tracking-label: 0.08em;
 }
-html[lang='ar'] body,
-html[lang='ja'] body {
+/* Simplified Chinese (docs/adr/0018): the same decision as Japanese, a system stack per platform (PingFang on Apple, Microsoft YaHei on
+   Windows, Noto Sans CJK on Android and Linux). A full CJK web font is several megabytes even subset, which the page budget does not allow. */
+:lang(zh) {
+  --font-sans: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans SC', 'Noto Sans CJK SC', 'Source Han Sans SC', system-ui, sans-serif;
+  --font-mono: var(--font-sans);
+  --font-display: var(--font-sans);
+  --font-wide: var(--font-sans);
+  --font-ui: var(--font-sans);
+  --tracking-display: 0.01em;
+  --tracking-title: 0.01em;
+  --tracking-label: 0.08em;
+}
+html:lang(ar) body,
+html:lang(ja) body,
+html:lang(zh) body {
   line-height: 1.8;
 }
-html[lang='ar'],
-html[lang='ja'] {
+html:lang(ar),
+html:lang(ja),
+html:lang(zh) {
   --mask-pad: 0.34em;
   --mask-dist: 150%;
+}
+/* Chinese has no capitals either; its small labels keep the same legible size as Arabic's. */
+html:lang(zh) .label,
+html:lang(zh) .badge,
+html:lang(zh) .chip {
+  font-size: 0.8125rem;
+  text-transform: none;
 }
 /* Arabic has no capitals and no wide tracking: its small labels need a little more size to stay readable. */
 html[lang='ar'] .label,
@@ -1454,12 +1475,18 @@ html.lenis body {
   }
 
   .gate {
+    /* The emblem's width, and the width the text column may take so that it never runs under the emblem (platin on platin is
+       invisible): the right edge of the emblem sits 3vw from the screen edge, the column starts at the container's edge. */
+    --gate-emblem: min(88vh, 44vw);
+    --gate-col: calc(97vw - var(--gate-emblem) - max(var(--space-gutter), (100vw - var(--max-container)) / 2) - 1.5rem);
     position: fixed;
     inset: 0;
     z-index: 80;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    /* Not flex-end: a column taller than the screen (seven cards on a phone) would lose its top above the scroll start. The body pushes
+       itself to the bottom with an auto margin instead, which collapses when there is no room. */
+    justify-content: flex-start;
     padding-block: calc(var(--header-h) + 1.5rem) clamp(1.5rem, 5vh, 3.5rem);
     overflow-x: clip;
     overflow-y: auto;
@@ -1505,7 +1532,7 @@ html.lenis body {
     z-index: 1;
     inset-inline-end: 3vw;
     inset-block-start: 50%;
-    width: min(88vh, 58vw);
+    width: var(--gate-emblem);
     translate: 0 -50%;
     color: var(--color-ink);
     pointer-events: none;
@@ -1567,9 +1594,10 @@ html.lenis body {
     display: grid;
     justify-items: start;
     gap: 1.25rem;
+    margin-block-start: auto;
   }
   .gate-body > * {
-    max-width: 38rem;
+    max-width: min(38rem, var(--gate-col));
   }
   .gate-title {
     margin: 0;
@@ -1593,17 +1621,28 @@ html.lenis body {
     gap: 0.65rem;
     justify-items: start;
   }
+  /* Seven capital centres: four cards to a row on a desktop (4 + 3), two on a phone. */
+  .gate-body > .gate-group:has(.gate-markets) {
+    max-width: min(44rem, var(--gate-col));
+    width: 100%;
+  }
   .gate-markets {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
     gap: 0.75rem;
-    width: min(100%, 34rem);
+    width: 100%;
   }
   /* A market is a real link (it works without JavaScript); chosen = platin border and a dim glow from inside, as the briefing options. */
   .gate-market {
     display: grid;
-    gap: 0.3rem;
-    padding: 1.05rem 1.25rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'index currency'
+      'name name'
+      'note note';
+    align-content: start;
+    row-gap: 0.3rem;
+    padding: 0.9rem 1.05rem 1rem;
     border-radius: 16px;
     border: 1px solid var(--color-hairline);
     background: rgb(226 226 230 / 0.03);
@@ -1614,15 +1653,34 @@ html.lenis body {
       background-color 0.3s ease,
       box-shadow 0.4s ease;
   }
+  .gate-market-index {
+    grid-area: index;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    color: var(--color-faint);
+  }
   .gate-market-name {
+    grid-area: name;
+    justify-self: start;
     font-family: var(--font-ui);
     font-size: 1.25rem;
     font-weight: 500;
-    line-height: 1.2;
+    line-height: 1.25;
     letter-spacing: var(--tracking-title);
   }
   .gate-market-note {
+    grid-area: note;
     font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--color-faint);
+  }
+  .gate-market-currency {
+    grid-area: currency;
+    unicode-bidi: isolate;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
     color: var(--color-faint);
   }
   .gate-market[aria-current='true'] {
@@ -1707,15 +1765,23 @@ html.lenis body {
     visibility: visible;
   }
   @media (max-width: 47.99rem) {
+    .gate {
+      --gate-col: 100%;
+    }
     .gate-emblem {
-      inset-inline: 0;
-      inset-block-start: calc(var(--header-h) + 0.25rem);
-      width: min(66vw, 30vh);
-      margin-inline: auto;
+      inset-block-start: 14%;
+      width: 112vw;
+      margin-inline: 0;
+      inset-inline: auto -22vw;
       translate: none;
+      opacity: 0.11;
+    }
+    .gate-markets {
+      gap: 0.6rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .gate-market {
-      padding: 0.85rem 1rem;
+      padding: 0.7rem 0.85rem 0.8rem;
     }
     .gate-market-name {
       font-size: 1.05rem;
@@ -1727,16 +1793,6 @@ html.lenis body {
     }
   }
 
-  /* A short phone has no room for the emblem above the text: it becomes a large ghost behind it, like the hero's. */
-  @media (max-width: 47.99rem) and (max-height: 46rem) {
-    .gate-emblem {
-      inset-block-start: 14%;
-      width: 112vw;
-      margin-inline: 0;
-      inset-inline: auto -22vw;
-      opacity: 0.11;
-    }
-  }
 
   /* Hero: .hero is the tall wrapper, .hero-stage the screen-sized stage (sticky on a capable desktop). */
   .hero {

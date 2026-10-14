@@ -23,7 +23,7 @@ export default async function HomePage({ params, searchParams }: Props) {
   if (!isOpenLocale(locale)) notFound();
   setRequestLocale(locale);
 
-  // The market lives in the address (?m=tr | ?m=int), whitelisted here; a valid one also means the entry gate was passed
+  // The market lives in the address (?m=us | tr | me | dach | fr | wealth | asia), whitelisted here; a valid one also means the entry gate was passed
   // (docs/adr/0015-entry-gate-and-hero.md). Nothing else from the query string is read.
   const market = parseMarket((await searchParams)[MARKET_PARAM]);
   // Search-engine and link-preview crawlers get the page without the gate (lib/crawlers.ts); the content is the same for everyone.

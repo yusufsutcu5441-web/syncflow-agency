@@ -37,6 +37,12 @@ let revealPending = false;
 
 const subscribeNever = () => () => {};
 
+/**
+ * Only the markets whose suggested language is public get a card (a closed language is never linked, i18n/launch.ts). With the seven
+ * capital-centre languages open that is all seven; if the host closes one, its card goes with it.
+ */
+const markets: readonly Market[] = MARKETS.filter((code) => OPEN_LOCALES.includes(MARKET_DEFAULT_LOCALE[code]));
+
 function marketHref(market: Market): string {
   const suggested = MARKET_DEFAULT_LOCALE[market];
   const locale = OPEN_LOCALES.includes(suggested) ? suggested : routing.defaultLocale;
@@ -179,15 +185,37 @@ export function EntryGate({ entered, market }: { entered: boolean; market: Marke
             {t.marketLabel}
           </p>
           <div className="gate-markets">
-            {MARKETS.map((code) => (
-              <a key={code} href={marketHref(code)} className="gate-market" data-market={code} aria-current={picked === code ? 'true' : undefined} onClick={(event) => choose(event, code)}>
-                <span className="gate-market-name">{t[code]}</span>
-                {/* The currency of the briefing and the default language: derived from the pricing and market config, so no wording to translate. */}
-                <span className="gate-market-note">
-                  {PRICING[code].currency} · {LOCALE_LABELS[MARKET_DEFAULT_LOCALE[code]].native}
-                </span>
-              </a>
-            ))}
+            {markets.map((code, index) => {
+              const card = LOCALE_LABELS[MARKET_DEFAULT_LOCALE[code]];
+              const { currency } = PRICING[code];
+              return (
+                <a
+                  key={code}
+                  href={marketHref(code)}
+                  className="gate-market"
+                  data-market={code}
+                  // The card is named by its own language first (the visitor finds it whatever language the page is in), then the
+                  // region in the page's language: "Deutsch, DACH and Switzerland, EUR".
+                  hrefLang={card.hreflang}
+                  aria-current={picked === code ? 'true' : undefined}
+                  onClick={(event) => choose(event, code)}
+                >
+                  {/* Laid out as a grid (index and currency on the first row), read in this order: language, region, currency. */}
+                  <span className="gate-market-index" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <span className="gate-market-name" lang={card.hreflang} dir={card.dir}>
+                    {card.native}
+                  </span>
+                  {/* The region is in the page's language. */}
+                  <span className="gate-market-note">{t[code]}</span>
+                  {/* The currency comes from the pricing config, so it needs no wording. */}
+                  <span className="gate-market-currency" dir="ltr">
+                    {currency}
+                  </span>
+                </a>
+              );
+            })}
           </div>
         </div>
 

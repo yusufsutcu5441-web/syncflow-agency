@@ -16,14 +16,16 @@ const PRIVACY = ['p1', 'p2', 'p8', 'p9', 'p3', 'p4', 'p5', 'p6', 'p7'] as const;
 const IMPRINT = ['i1', 'i2', 'i3', 'i4', 'i5'] as const;
 
 /**
- * Privacy notice / legal notice. Drafts with [BRACKETED] fields to complete (see README: launch checklist). Only English and
- * Turkish carry reviewed text; the other languages show the English text (lib/merge-messages.ts), marked as such.
+ * Privacy notice / legal notice. Drafts with [BRACKETED] fields to complete and no lawyer's review yet (see README: launch checklist).
+ * The seven public languages carry the text (docs/adr/0018); a language without it (the dormant Japanese draft) shows the English
+ * text (lib/merge-messages.ts), marked as such.
  */
+const LEGAL_TEXT: readonly AppLocale[] = ['en', 'tr', 'ar', 'de', 'fr', 'es', 'zh'];
+
 export async function LegalPage({ kind }: { kind: 'privacy' | 'imprint' }) {
   const [t, locale, format] = await Promise.all([getTranslations('Legal'), getLocale() as Promise<AppLocale>, getFormatter()]);
   const privacy = kind === 'privacy';
-  // Reviewed legal text exists in English and Turkish only; every other language shows the English text.
-  const englishFallback = locale !== 'en' && locale !== 'tr';
+  const englishFallback = !LEGAL_TEXT.includes(locale);
 
   return (
     <main id="main" className="pb-24 pt-32 md:pb-32 md:pt-44">

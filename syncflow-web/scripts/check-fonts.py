@@ -24,10 +24,10 @@ turkish = set(TTFont(os.path.join(root, 'public', 'fonts', 'instrument-sans-turk
 covered = latin | turkish
 turkish_only = turkish - latin
 
-# Arabic and Japanese are set in system font stacks on purpose (app/globals.css :lang rules), so Instrument Sans is not
+# Arabic, Chinese and Japanese are set in system font stacks on purpose (app/globals.css :lang rules), so Instrument Sans is not
 # expected to cover them. These two symbols are drawn by the system symbol font in every language; listing them here makes
 # that a decision instead of a silent fallback.
-SYSTEM_FONT_LOCALES = {'ar', 'ja'}
+SYSTEM_FONT_LOCALES = {'ar', 'zh', 'ja'}
 SYMBOL_FALLBACK = {'⌘', '✓', '₺'}  # keyboard hint, "copied" tick, lira sign (the Turkish briefing's amounts are formatted at run time by Intl; Instrument Sans has no U+20BA, the system font draws it)
 
 missing = {}
@@ -103,11 +103,12 @@ def role_strings(locale, data):
         for value in group.values():
             if isinstance(value, str):
                 yield 'Cabinet Grotesk', value
-    # Entry gate (docs/adr/0015): the title is set in Instrument Serif, the market names and the buttons in Cabinet Grotesk.
+    # Entry gate (docs/adr/0015, 0018): the title is set in Instrument Serif; the region names and the buttons in Cabinet Grotesk. (The
+    # card headings are the languages' own names, set in each language's font; Arabic and Chinese in system stacks.)
     gate = data.get('Gate', {})
     if 'title' in gate:
         yield 'Instrument Serif', gate['title']
-    for key in ('us', 'eu', 'me', 'tr', 'enter', 'skip'):
+    for key in ('us', 'tr', 'me', 'dach', 'fr', 'wealth', 'asia', 'enter', 'skip'):
         if key in gate:
             yield 'Cabinet Grotesk', gate[key]
 

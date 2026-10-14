@@ -6,6 +6,7 @@
  * Faz 5: 7 dil altyapısı (taslak diller uykuda, RTL, yayın listesi), hreflang/sitemap yalnızca yayındaki dillere.
  * 2B-4 (docs/adr/0011): hukuki sayfaların yapısı (KVKK m.10 / GDPR m.13), tarih, rıza bağlantısı; içerik yer tutuculu taslak kalır.
  * 2B-3 (docs/adr/0010): teslimde id + tek yeniden deneme (bütçe < 10 sn), hız sınırı uyarısı, security.txt süresi.
+ * 14.10.2026 (docs/adr/0018): yedi sermaye merkezi = yedi dil (en tr ar de fr es zh) ve yedi pazar, Japonca uykuda. "Yedi dil iddiası yok" kuralı pazarlama metni içindir; seçici bir iddia değildir.
  * 2B-2 (docs/adr/0009): TR/EN odak, yedi dil iddiası yok, vitrin kilitli üç sektör (emlak, klinik, kurumsal hukuk), SaaS ve "Reach" bölümü yok.
  * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo.
  * Kullanım (proje kökünden):   node faz2-denetim.mjs [--root yol] [--build] [--json]
@@ -28,6 +29,8 @@ const exists = (p) => fs.existsSync(abs(p));
 const read = (p) => fs.readFileSync(abs(p), "utf8");
 const readJSON = (p) => JSON.parse(read(p));
 const first = (list) => list.find(exists);
+/** Yayındaki yedi dil (ADR 0018): her birinin mesaj dosyası eksiksiz olmalı. Japonca uykuda taslaktır. */
+const PUBLIC_LOCALES = ["en", "tr", "ar", "de", "fr", "es", "zh"];
 const stripComments = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
 function walk(dir, exts, out = []) {
   if (!fs.existsSync(dir)) return out;
@@ -221,17 +224,17 @@ if (exists(rt)) {
   const t = stripComments(read(rt)), m = t.match(/locales\s*:\s*\[([^\]]*)\]/);
   const locs = m ? [...m[1].matchAll(/["']([^"']+)["']/g)].map((x) => x[1]) : [];
   if (!locs.length) add(G3, "WARN", "routing.ts içinde locales okunamadı");
-  else { const want7 = ["en", "tr", "de", "fr", "es", "ar", "ja"], miss = want7.filter((l) => !locs.includes(l));
-    miss.length ? add(G3, "FAIL", `locales: ${locs.join(", ")} (altyapı yedi dili taşımalı, eksik: ${miss.join(", ")})`) : add(G3, "PASS", `locales: ${locs.join(", ")} (altyapıda yedi dil, uykuda; yalnızca yayın listesindekiler açık)`); }
+  else { const want7 = [...PUBLIC_LOCALES, "ja"], miss = want7.filter((l) => !locs.includes(l));
+    miss.length ? add(G3, "FAIL", `locales: ${locs.join(", ")} (altyapı yedi yayın dilini ve uykudaki Japoncayı taşımalı, eksik: ${miss.join(", ")})`) : add(G3, "PASS", `locales: ${locs.join(", ")} (yedi dil yayında, Japonca uykuda; yalnızca yayın listesindekiler açık)`); }
   /defaultLocale/.test(t) ? add(G3, "PASS", "defaultLocale tanımlı") : add(G3, "FAIL", "defaultLocale yok");
 }
-// Yayın listesi (docs/adr/0006): üretimde yalnızca NEXT_PUBLIC_LAUNCHED_LOCALES (varsayılan en,tr) yayında; hreflang/sitemap/seçici bundan türer.
+// Yayın listesi (docs/adr/0006): üretimde yalnızca NEXT_PUBLIC_LAUNCHED_LOCALES (varsayılan en,tr,ar,de,fr,es,zh: ADR 0018) yayında; hreflang/sitemap/seçici bundan türer.
 if (exists("i18n/launch.ts")) {
   const t = read("i18n/launch.ts");
-  /NEXT_PUBLIC_LAUNCHED_LOCALES/.test(t) && /['"]en,tr['"]/.test(t) ? add(G3, "PASS", "i18n/launch.ts: varsayılan yayın listesi en,tr (NEXT_PUBLIC_LAUNCHED_LOCALES ile genişler)") : add(G3, "FAIL", "i18n/launch.ts: NEXT_PUBLIC_LAUNCHED_LOCALES / varsayılan 'en,tr' bulunamadı");
-  // 2B-2: geliştirmede de yedi dil açılmaz; diğer beşi yalnızca NEXT_PUBLIC_PREVIEW_LOCALES=1 ile (yayında yedi dil iddiası yok).
+  /NEXT_PUBLIC_LAUNCHED_LOCALES/.test(t) && /['"]en,tr,ar,de,fr,es,zh['"]/.test(t) ? add(G3, "PASS", "i18n/launch.ts: varsayılan yayın listesi en,tr,ar,de,fr,es,zh (NEXT_PUBLIC_LAUNCHED_LOCALES ile daralır ya da genişler)") : add(G3, "FAIL", "i18n/launch.ts: NEXT_PUBLIC_LAUNCHED_LOCALES / varsayılan 'en,tr,ar,de,fr,es,zh' bulunamadı");
+  // Uykudaki dil (Japonca) geliştirmede de açılmaz; yalnızca NEXT_PUBLIC_PREVIEW_LOCALES=1 ile okunur.
   const openAll = stripComments(t).match(/const\s+OPEN_ALL\s*=\s*([^;]+);/)?.[1] ?? "";
-  /NEXT_PUBLIC_PREVIEW_LOCALES/.test(openAll) && !/NODE_ENV/.test(openAll) ? add(G3, "PASS", "yedi dil yalnızca NEXT_PUBLIC_PREVIEW_LOCALES=1 ile açılır; geliştirme sunucusu da yalnızca en,tr gösterir") : add(G3, "FAIL", "i18n/launch.ts: OPEN_ALL geliştirmede (NODE_ENV) yedi dili açıyor; yedi dil iddiası kalktı, yalnızca PREVIEW anahtarı açmalı");
+  /NEXT_PUBLIC_PREVIEW_LOCALES/.test(openAll) && !/NODE_ENV/.test(openAll) ? add(G3, "PASS", "uykudaki dil yalnızca NEXT_PUBLIC_PREVIEW_LOCALES=1 ile açılır; geliştirme sunucusu da yalnızca yayın listesini gösterir") : add(G3, "FAIL", "i18n/launch.ts: OPEN_ALL geliştirmede (NODE_ENV) uykudaki dili açıyor; yalnızca PREVIEW anahtarı açmalı");
   const users = ["app/sitemap.ts", "lib/jsonld.ts", "components/layout/LanguageSwitcher.tsx"].filter((f) => exists(f) && !/launch|OPEN_LOCALES/.test(read(f)));
   users.length ? add(G3, "FAIL", `yayın listesini kullanmayan dosya (kapalı dil sızar): ${users.join(", ")}`) : add(G3, "PASS", "sitemap, JSON-LD ve dil seçici yalnızca yayındaki dilleri listeliyor");
 } else add(G3, "FAIL", "i18n/launch.ts yok (hangi dillerin yayında olduğu tek yerden gelmeli)");
@@ -315,9 +318,9 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
   const order = lp.match(/const\s+PRIVACY\s*=\s*\[([^\]]*)\]/)?.[1].match(/'(\w+)'/g)?.map((x) => x.slice(1, -1)) ?? [];
   const need = ["p1", "p2", "p8", "p9", "p3", "p4", "p5", "p6", "p7"];
   const legalTexts = {};
-  for (const l of ["en", "tr"]) legalTexts[l] = flat(readJSON(`messages/${l}.json`)["Legal"] ?? {});
+  for (const l of PUBLIC_LOCALES) legalTexts[l] = flat(readJSON(`messages/${l}.json`)["Legal"] ?? {});
   const missingKeys = [];
-  for (const l of ["en", "tr"]) for (const k of need) for (const key of [k, `${k}h`]) if (!legalTexts[l][key]) missingKeys.push(`${l}:Legal.${key}`);
+  for (const l of PUBLIC_LOCALES) for (const k of need) for (const key of [k, `${k}h`]) if (!legalTexts[l][key]) missingKeys.push(`${l}:Legal.${key}`);
   order.join() === need.join() && !missingKeys.length
     ? add(G4, "PASS", "gizlilik metni: sorumlu, amaç ve hukuki sebep, toplama yöntemi ve zorunluluk, otomatik karar, güvenlik/kayıt, çerez, aktarım, saklama, haklar sırasıyla ve EN/TR'de tam")
     : add(G4, "FAIL", `gizlilik metni bölüm sırası/anahtarları eksik (sıra: ${order.join(",") || "okunamadı"}; eksik: ${missingKeys.slice(0, 4).join(", ")})`);
@@ -325,8 +328,8 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
     ? add(G4, "PASS", "yasal sayfalar: her bölümün id'si ve \"son düzenleme\" tarihi var") : add(G4, "FAIL", "LegalPage: bölüm id'leri (privacy-<anahtar>) ya da 'son düzenleme' tarihi yok");
   const bs = exists("components/sections/BriefingSection.tsx") ? read("components/sections/BriefingSection.tsx") : "";
   /#privacy-p2/.test(bs) && order.includes("p2") ? add(G4, "PASS", "rıza kutusundaki bağlantı, rızanın dayandığı bölüme (privacy-p2) gidiyor") : add(G4, "FAIL", "briefing rıza bağlantısı #privacy-p2 bölümüne gitmiyor");
-  const claim = /compliant|uyumludur|uyumlu\b|guaranteed|garanti/i, claims = [];
-  for (const l of ["en", "tr"]) for (const [k, v] of Object.entries(legalTexts[l])) if (typeof v === "string" && claim.test(v)) claims.push(`${l}:Legal.${k}`);
+  const claim = /compliant|uyumludur|uyumlu\b|guaranteed|\bgaranti(?:li|yoruz|dir)?\b|garantiert\b|garantit\b|garantizamos\b|نضمن|保证|vollständig konform|entièrement conforme|totalmente conforme|完全合规/i, claims = [];
+  for (const l of PUBLIC_LOCALES) for (const [k, v] of Object.entries(legalTexts[l])) if (typeof v === "string" && claim.test(v)) claims.push(`${l}:Legal.${k}`);
   claims.length ? add(G4, "FAIL", `hukuki metin uyum/garanti iddiası içeriyor (avukat onayı olmadan yazılmaz): ${claims.slice(0, 4).join(", ")}`) : add(G4, "PASS", "hukuki metinde \"uyumludur\"/\"garanti\" gibi bir yeterlilik iddiası yok");
   const brackets = Object.values(legalTexts.en).filter((v) => typeof v === "string" && /\[[^\]]+\]/.test(v)).length, draft = Boolean(legalTexts.en.draft && legalTexts.tr.draft);
   draft ? add(G4, "INFO", `hukuki sayfalar yer tutuculu taslak: EN'de ${brackets} bölümde köşeli parantezli alan var (K7: avukat onayı ve gerçek bilgiler bekleniyor); "taslak" uyarısı sayfada duruyor. check:messages --strict bu yüzden kırmızıdır, bilinçli.`) : add(G4, "FAIL", "Legal.draft (taslak uyarısı) kalkmış: avukat onayı olmadan kaldırılmaz");
@@ -357,18 +360,18 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
     ? add(G4, "PASS", "vitrin tam üç sektör: estate, clinic, law (kilitli)") : add(G4, "FAIL", `vitrin kartları ${keys.join(", ") || "okunamadı"}; yalnızca estate, clinic, law olmalı (ADR 0009)`);
   const saas = [];
   for (const f of [...walk(abs("app"), [".tsx", ".ts"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])]) if (/saas/i.test(fs.readFileSync(f, "utf8"))) saas.push(rel(f));
-  for (const l of ["en", "tr"]) if (/saas/i.test(JSON.stringify(readJSON(`messages/${l}.json`)))) saas.push(`messages/${l}.json`);
+  for (const l of PUBLIC_LOCALES) if (/saas/i.test(JSON.stringify(readJSON(`messages/${l}.json`)))) saas.push(`messages/${l}.json`);
   if (exists("public/media/clips")) for (const n of fs.readdirSync(abs("public/media/clips"))) if (/saas/i.test(n)) saas.push(`public/media/clips/${n}`);
   saas.length ? add(G4, "FAIL", `SaaS izi kaldı (sektör kilidi: emlak, klinik, kurumsal hukuk): ${saas.slice(0, 4).join(", ")}`) : add(G4, "PASS", "SaaS izi yok (kod, mesajlar, sahneler, videolar)");
   const claim = /seven languages|7 languages|every language it deserves|all seven|yedi dil|7 dil|her dilde|hak ettiği her dil/i, hitsLang = [];
-  for (const l of ["en", "tr"]) for (const [k, v] of Object.entries(flat(readJSON(`messages/${l}.json`)))) if (typeof v === "string" && claim.test(v)) hitsLang.push(`${l}:${k}`);
+  for (const l of PUBLIC_LOCALES) for (const [k, v] of Object.entries(flat(readJSON(`messages/${l}.json`)))) if (typeof v === "string" && claim.test(v)) hitsLang.push(`${l}:${k}`);
   const reachLeft = ["components/sections/Reach.tsx", "components/sections/ReachInteractive.tsx", "lib/reach.ts"].filter(exists);
   hitsLang.length || reachLeft.length ? add(G4, "FAIL", `yedi dil/küresel erişim iddiası kaldı: ${[...hitsLang, ...reachLeft].slice(0, 4).join(", ")}`) : add(G4, "PASS", "sitede yedi dil ya da küresel erişim iddiası yok (Reach bölümü kalktı)");
   /areaServed/.test(exists("lib/jsonld.ts") ? read("lib/jsonld.ts") : "") ? add(G4, "FAIL", "JSON-LD'de areaServed (\"Worldwide\") iddiası var") : add(G4, "PASS", "JSON-LD'de bölge iddiası yok");
 }
 // Karar 8 (docs/adr/0006): ölçülmemiş performans iddiası yayınlanmaz. Metinlerde yasaklı ifadeler + metrik kaynağı.
 {
-  const BANNED = /locked\s*60|60\s*fps\s*locked|kilitli\s*60|120\s?hz|LCP\s*[<≤]\s*1[.,]2|TBT\s*[<≤]\s*50|INP\s*[<≤]\s*100|\bAV1\b|adaptive\s*bitrate|adaptif\s*bitrate|[+−-]\s*(?:212|38|64)\s*%|%\s*(?:212|38|64)\b|before[- ]and[- ]after|before-after|önce-sonra|kusursuz|flawless|%\s*100\s*(?:güvenli|uyumlu)|100%\s*(?:secure|compliant)|garanti/i;
+  const BANNED = /locked\s*60|60\s*fps\s*locked|kilitli\s*60|120\s?hz|LCP\s*[<≤]\s*1[.,]2|TBT\s*[<≤]\s*50|INP\s*[<≤]\s*100|\bAV1\b|adaptive\s*bitrate|adaptif\s*bitrate|[+−-]\s*(?:212|38|64)\s*%|%\s*(?:212|38|64)\b|before[- ]and[- ]after|before-after|önce-sonra|kusursuz|flawless|%\s*100\s*(?:güvenli|uyumlu)|100%\s*(?:secure|compliant)|\bgaranti(?:li|yoruz|dir)?\b/i;
   const hits = [];
   if (exists("messages")) for (const f of fs.readdirSync(abs("messages")).filter((n) => n.endsWith(".json"))) for (const [k, v] of Object.entries(flat(readJSON(`messages/${f}`)))) if (typeof v === "string" && BANNED.test(v)) hits.push(`${f}:${k}`);
   hits.length ? add(G4, "FAIL", `doğrulanmamış/yasak iddia (${hits.length}): ${hits.slice(0, 4).join(", ")}`) : add(G4, "PASS", "metinlerde doğrulanmamış iddia yok (kilitli 60 FPS, 120 Hz, LCP/TBT/INP eşikleri, AV1, örnek yüzdeler, önce-sonra)");
@@ -574,10 +577,12 @@ const G10 = "10. Nitelik eşiği, pazarlar ve para birimi";
   else {
     const code = (f) => stripComments(read(f));
     const pricing = code("lib/pricing.ts"), market = code("lib/market.ts"), briefing = code("lib/briefing.ts"), form = code("components/sections/Briefing.tsx"), schema = code("lib/schemas/briefing.ts");
-    // 1) Dört pazar, her birinin para birimi ve asgari tutarı; ABD tabanı 25.000 USD (sahibin kararı 13.10.2026).
+    // 1) Yedi pazar (ADR 0018), her birinin para birimi ve asgari tutarı; ABD tabanı 25.000 USD (sahibin kararı 13.10.2026). Bir para biriminin tek tabanı olur.
     const markets = [...(/MARKETS\s*=\s*\[([^\]]*)\]/.exec(market)?.[1] ?? "").matchAll(/'([a-z]+)'/g)].map((m) => m[1]);
-    const rows = Object.fromEntries([...pricing.matchAll(/\b(us|eu|me|tr):\s*\{\s*currency:\s*'([A-Z]{3})',\s*floor:\s*([\d_]+)\s*\}/g)].map((m) => [m[1], { currency: m[2], floor: Number(m[3].replaceAll("_", "")) }]));
-    JSON.stringify(markets) === JSON.stringify(["us", "eu", "me", "tr"]) && markets.every((m) => rows[m]) ? add(G10, "PASS", `dört pazar ve fiyat satırları: ${markets.map((m) => `${m} ${rows[m].currency} ${rows[m].floor}`).join(", ")}`) : add(G10, "FAIL", `pazarlar ya da fiyat satırları tutmuyor (pazarlar: ${markets.join(",")}; satırlar: ${Object.keys(rows).join(",")})`);
+    const rows = Object.fromEntries([...pricing.matchAll(/\b(us|tr|me|dach|fr|wealth|asia):\s*\{\s*currency:\s*'([A-Z]{3})',\s*floor:\s*([\d_]+)\s*\}/g)].map((m) => [m[1], { currency: m[2], floor: Number(m[3].replaceAll("_", "")) }]));
+    JSON.stringify(markets) === JSON.stringify(["us", "tr", "me", "dach", "fr", "wealth", "asia"]) && markets.every((m) => rows[m]) ? add(G10, "PASS", `yedi pazar ve fiyat satırları: ${markets.map((m) => `${m} ${rows[m].currency} ${rows[m].floor}`).join(", ")}`) : add(G10, "FAIL", `pazarlar ya da fiyat satırları tutmuyor (pazarlar: ${markets.join(",")}; satırlar: ${Object.keys(rows).join(",")})`);
+    const floors = {}; for (const m of markets) if (rows[m]) (floors[rows[m].currency] ??= new Set()).add(rows[m].floor);
+    Object.values(floors).every((set) => set.size === 1) && Object.keys(floors).sort().join(",") === "AED,EUR,TRY,USD" ? add(G10, "PASS", "yedi pazar dört para birimini paylaşır (USD, EUR, AED, TRY) ve her para biriminin tek tabanı var") : add(G10, "FAIL", `aynı para birimi için farklı taban ya da eksik para birimi (${Object.entries(floors).map(([c, set]) => `${c}: ${[...set].join("/")}`).join("; ")})`);
     rows.us?.currency === "USD" && rows.us?.floor === 25000 ? add(G10, "PASS", "ABD asgari tutarı USD 25.000 (sahibin kararı, 13.10.2026)") : add(G10, "FAIL", "ABD asgari tutarı USD 25.000 değil (CLAUDE.md kararı değişmeden değiştirilemez)");
     // 2) Kur karşılıklarının tarihi ve gözden geçirme günü; geçtiyse uyar (çeyrekte bir).
     const review = /PRICING_NEXT_REVIEW\s*=\s*'(\d{4}-\d{2}-\d{2})'/.exec(pricing)?.[1], asOf = /PRICING_AS_OF\s*=\s*'(\d{4}-\d{2}-\d{2})'/.exec(pricing)?.[1];
@@ -592,12 +597,14 @@ const G10 = "10. Nitelik eşiği, pazarlar ve para birimi";
     /step === 1[\s\S]{0,260}t\.budget\.title/.test(form) && /BUDGETS\.map/.test(form) && !/'under'/.test(form) && !/declined/.test(form) ? add(G10, "PASS", "formun ilk adımı yatırım ve yalnızca üç basamak sunar (asgari tutar ve üstü); daha düşük bir seçenek yok") : add(G10, "FAIL", "yatırım ilk adım değil ya da formda asgari tutarın altında bir seçenek var");
     // 5) Para birimi ve tutarlar yalnızca lib/pricing.ts'ten: çeviri dosyalarında tutar yok ("fiyat listesi yayınlanmaz").
     const amount = /(?:[$€₺]\s?\d|\d[\d.,]*\s?(?:USD|EUR|AED|TRY|TL|\$|€|₺))|\bAED\s?\d/;
-    const withAmounts = ["en", "tr"].flatMap((l) => Object.entries((function flat(o, p = "", out = {}) { for (const [k, v] of Object.entries(o)) typeof v === "object" && v ? flat(v, `${p}${k}.`, out) : (out[`${p}${k}`] = v); return out; })(readJSON(`messages/${l}.json`))).filter(([, v]) => typeof v === "string" && amount.test(v)).map(([k]) => `${l}:${k}`));
+    const withAmounts = PUBLIC_LOCALES.flatMap((l) => Object.entries((function flat(o, p = "", out = {}) { for (const [k, v] of Object.entries(o)) typeof v === "object" && v ? flat(v, `${p}${k}.`, out) : (out[`${p}${k}`] = v); return out; })(readJSON(`messages/${l}.json`))).filter(([, v]) => typeof v === "string" && amount.test(v)).map(([k]) => `${l}:${k}`));
     withAmounts.length ? add(G10, "FAIL", `çeviride sabit tutar var (tutar yalnızca lib/pricing.ts'ten gelir): ${withAmounts.slice(0, 4).join(", ")}`) : add(G10, "PASS", "çeviri dosyalarında sabit tutar yok: tutarlar lib/pricing.ts'ten biçimlenir (Intl)");
-    // 6) Pazarın dili yalnızca yayındaki iki dil; Orta Doğu ve diğerleri İngilizce, Türkiye Türkçe.
-    /MARKET_DEFAULT_LOCALE[^=]*=\s*\{\s*us:\s*'en',\s*eu:\s*'en',\s*me:\s*'en',\s*tr:\s*'tr'\s*\}/.test(market) ? add(G10, "PASS", "pazarların varsayılan dili yalnızca yayındaki dillerdir (us, eu, me: en; tr: tr)") : add(G10, "FAIL", "MARKET_DEFAULT_LOCALE yayında olmayan bir dile işaret ediyor ya da değişmiş");
+    // 6) Her pazarın önerdiği dil yayındaki yedi dilden biridir ve her dil tam bir pazarın dilidir (bire bir; ADR 0018).
+    const dl = Object.fromEntries([...(/MARKET_DEFAULT_LOCALE[^=]*=\s*\{([^}]*)\}/.exec(market)?.[1] ?? "").matchAll(/(\w+):\s*'(\w+)'/g)].map((m) => [m[1], m[2]]));
+    const dlValues = Object.values(dl);
+    markets.every((m) => dl[m] && PUBLIC_LOCALES.includes(dl[m])) && new Set(dlValues).size === PUBLIC_LOCALES.length && PUBLIC_LOCALES.every((l) => dlValues.includes(l)) ? add(G10, "PASS", `pazarların önerdiği diller yayındaki yedi dildir, bire bir (${markets.map((m) => `${m}: ${dl[m]}`).join(", ")})`) : add(G10, "FAIL", "MARKET_DEFAULT_LOCALE yayında olmayan bir dile işaret ediyor, bir dil birden çok pazarda ya da bir pazar eksik");
     // 7) Eski ?m=int bağlantıları hâlâ geçerli (dolar pazarı); API'de 'int' yok.
-    /LEGACY[^=]*=\s*\{\s*int:\s*'us'\s*\}/.test(market) && !/'int'/.test(schema) ? add(G10, "PASS", "eski ?m=int bağlantısı dolar pazarına eşlenir, API değeri değildir") : add(G10, "FAIL", "eski ?m=int eşlemesi yok ya da API 'int' kabul ediyor");
+    /LEGACY[^=]*=\s*\{\s*int:\s*'us',\s*eu:\s*'dach'\s*\}/.test(market) && !/'int'|'eu'/.test(schema) ? add(G10, "PASS", "eski ?m=int ve ?m=eu bağlantıları geçerli kalır (dolar ve Almanca/euro pazarı), API değeri değildir") : add(G10, "FAIL", "eski ?m=int / ?m=eu eşlemesi yok ya da API bu değerleri kabul ediyor");
   }
 }
 

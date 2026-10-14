@@ -15,7 +15,8 @@ export function initRings(): () => void {
   const hosts = Array.from(document.querySelectorAll<HTMLElement>('[data-rings]'));
   if (hosts.length === 0) return () => {};
 
-  const numberFormat = new Intl.NumberFormat(document.documentElement.lang || undefined);
+  // Latin digits in every language, as the server draws them (an Arabic page would otherwise count in Arabic-Indic digits and end in Latin ones).
+  const numberFormat = new Intl.NumberFormat(`${document.documentElement.lang || 'en'}-u-nu-latn`);
   const frames = new Set<number>();
 
   const count = (element: HTMLElement, delay: number) => {
