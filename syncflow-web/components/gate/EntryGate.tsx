@@ -9,6 +9,7 @@ import { OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
 import { MARKET_DEFAULT_LOCALE, MARKETS, rememberMarket, withMarket, type Market } from '@/lib/market';
+import { PRICING } from '@/lib/pricing';
 
 /**
  * The entry gate (docs/adr/0015-entry-gate-and-hero.md): a full-screen cinematic layer on the home page that asks for a market and a
@@ -181,7 +182,10 @@ export function EntryGate({ entered, market }: { entered: boolean; market: Marke
             {MARKETS.map((code) => (
               <a key={code} href={marketHref(code)} className="gate-market" data-market={code} aria-current={picked === code ? 'true' : undefined} onClick={(event) => choose(event, code)}>
                 <span className="gate-market-name">{t[code]}</span>
-                <span className="gate-market-note">{t[`${code}Note`]}</span>
+                {/* The currency of the briefing and the default language: derived from the pricing and market config, so no wording to translate. */}
+                <span className="gate-market-note">
+                  {PRICING[code].currency} · {LOCALE_LABELS[MARKET_DEFAULT_LOCALE[code]].native}
+                </span>
               </a>
             ))}
           </div>

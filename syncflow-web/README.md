@@ -6,7 +6,7 @@ Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith
 | | |
 |---|---|
 | Diller | **Türkçe ve İngilizce** (`en` varsayılan `/`, `tr`). Her ortamda yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr`) yayınlanır, geliştirme sunucusu dahil. `de fr es ar ja` (Arapça sağdan sola) **uykuda taslak** çeviridir: altyapı ve dosyalar durur, hiçbir yerde bağlantı verilmez, yalnızca `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile okunur. Sitede yedi dil iddiası yoktur ([ADR 0009](docs/adr/0009-niche-and-languages.md), [0002](docs/adr/0002-launch-locales-and-market.md)) |
-| Satış akışı | Başvuru bazlı: ana sayfadaki 4 adımlı **Strategic Briefing** → `/api/briefing` → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. Ödeme ve fiyat yok |
+| Satış akışı | Başvuru bazlı: ana sayfadaki 4 adımlı **Strategic Briefing** → `/api/briefing` → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. İlk adım nitelik eşiğidir: stüdyo asgari USD 25.000'lik projelere çalışır (AB €22.500, Orta Doğu AED 92.000, Türkiye ₺1.225.000; [ADR 0016](docs/adr/0016-qualification-and-markets.md)), altı kabul edilmez. Ödeme ve fiyat listesi yok |
 | Bölümler | Hero · Film (kaydırmayla oynayan 4 bölümlük sinema, [ADR 0014](docs/adr/0014-cinematic-layer.md)) · Mimari (3 Border Beam kartı) · Vitrin (kilitli üç sektör: Lüks Gayrimenkul, Özel Klinik, Kurumsal Hukuk ve Danışmanlık; 3 konsept video, yatay `scroll-snap` şerit) · Briefing · Kapanış ve footer |
 | Güvenlik | HSTS, CSP (nonce + strict-dynamic, **report-only**; üçüncü taraf yalnızca Cloudflare Turnstile), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, honeypot, sunucuya özel sırlar |
 
@@ -67,7 +67,8 @@ components/
   media/     SceneVideo(client): poster + önceden render edilmiş video, ekran dışında durur
   i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead
 lib/
-  market.ts        pazar (tr, int): beyaz listeli ?m= parametresi, önerilen dil, tab belleği   crawlers.ts  kapıyı atlayan arama motoru ve önizleme botları (ADR 0015)
+  market.ts        pazar (us, eu, me, tr): beyaz listeli ?m= parametresi, önerilen dil, tab belleği   crawlers.ts  kapıyı atlayan arama motoru ve önizleme botları (ADR 0015)
+  pricing.ts       asgari tutar ve basamaklar, pazar başına para birimi (USD 25.000 ve kur karşılıkları), Intl biçimi: fiyatın TEK kaynağı (ADR 0016)
   briefing.ts      seçenekler, sınırlar, zod'suz tarayıcı doğrulayıcı, sınıflandırma (tarayıcı + sunucu)
   metrics.ts       sitede yayınlanan TÜM performans sayıları (değer, tarih, profil, kaynak)
   schemas/briefing.ts (zod, strict)    server/ deliver.ts · turnstile.ts · sanitize.ts (server-only)    security/ csp.ts · rate-limit.ts
@@ -118,7 +119,7 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 **Briefing girdi savunması** (`app/api/briefing/route.ts`): yalnızca POST + JSON, `Origin` host'u ile eşleşmeli (yoksa 403), `Sec-Fetch-Site: cross-site` reddedilir, gövde ≤ 8 KB (hem başlık hem gerçek okuma), **zod `strictObject`** (bilinmeyen alan ve tarayıcıdan gelen `tier` reddedilir), honeypot + 2,5 sn altı "anında gönderim" tuzağı (bota başarı gibi yanıt), **Cloudflare Turnstile sunucuda doğrulanır** (belirteç yoksa ya da geçersizse 400 `verification`; üretimde gizli anahtar yoksa 503), ardından **DOMPurify (jsdom)**:
 - HTML-benzeri işaretleme (`<script>`, `<img onerror>`, kapatılmamış `<svg>` …) **açıkça reddedilir** (422 `invalid`); sessizce silinmez.
 - `Ad <ad@firma.com>` ve `<https://…>` zararsız biçimleri düz metne çevrilir; kontrol karakterleri ve görünmez/çift yönlü ("Trojan Source") karakterler silinir.
-- **Öncelik sınıfı (yüksek/orta/düşük) sunucuda hesaplanır** (`lib/briefing.ts`): $20k+ ve karar veren/karar ekibi = yüksek, $5k–$10k (taban $10.000'ın altı) = düşük, kalanı orta.
+- **Bütçe yalnızca asgari tutarın üstündeki üç basamaktır** (`t1`, `t2`, `t3`; asgari tutarın 1-2×, 2-4×, 4× ve üstü): `budget` değeri `lib/briefing.ts`'in dışında hiçbir şeyi kabul etmez, eski kodlar (`b5`, `b10`, `b20`, `talk`), `under` ve her uydurma değer 422 alır ve teslim edilmez. **Öncelik sınıfı (yüksek/orta) sunucuda hesaplanır:** `t3` ya da `t2` ve karar veren/karar ekibi = yüksek, kalanı orta ("düşük" sınıf kalktı).
 - Teslimat: `CONTACT_WEBHOOK_URL` (yalnızca `https://`, loopback hariç), yönlendirme izlenmez (SSRF), isteğe bağlı **HMAC-SHA256** imzası `x-syncflow-signature`; yük `type: "syncflow.briefing"`, her başvuruya rastgele bir **`id`** (UUID v4, ayrıca `Idempotency-Key` başlığı) ve hazır `subject` (`[Briefing][high] Şirket, Ad`). **En çok iki deneme, toplam < 9,5 sn**, yalnızca zaman aşımı/ağ hatası/5xx/408/429'da; iki deneme de aynı `id`'yi taşır, **n8n tekrarı `id`'ye göre ayıklamalıdır** ([docs/n8n-briefing.md](docs/n8n-briefing.md) "Çift kayıt"); iki deneme de başarısızsa `502` ve hazır e-posta taslağı ([ADR 0010](docs/adr/0010-briefing-delivery-and-security.md)).
 
 **`security.txt`** (RFC 9116): `public/.well-known/security.txt`, `Expires` **2027-04-08**; süresi dolarsa denetim ve duman testi kırmızıya döner, yenileyin. **CSP enforce hazırlığı:** aynı derleme `CSP_MODE=enforce` ile gerçek bloklama altında denendi (duman 115/115, gerçek Turnstile widget'ı 12/12 ve üç tarayıcı seti geçti, [docs/perf/faz2b3.md](docs/perf/faz2b3.md)); varsayılan hâlâ report-only, geçiş F7'de ve yalnızca bir ortam değişkeni.
@@ -164,10 +165,11 @@ Atmosfer katmanıdır; içerik ve erişilebilirlik onsuz da eksiksizdir.
 - **Kalite bütçesi:** ortam durumunda 30 kare/sn, sekme gizliyken durur, yavaş karede çözünürlük %80'e iner, yetmezse motor kendini kapatır; kapanırsa (ya da hiç başlayamazsa) film posterleri yüklenir.
 - **Metin kontrastı:** son geçiş parlaklığı sol (metin) sütunda 0,17 ile sınırlar. Ölçüm ve sınırları [docs/perf/cinema.md §5](docs/perf/cinema.md).
 
-### Giriş kapısı, Hero ve kimlik ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md))
+### Giriş kapısı, pazarlar, Hero ve kimlik ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md), [0016](docs/adr/0016-qualification-and-markets.md))
 
-- **Kapı:** adreste geçerli `?m=tr|int` yoksa tam ekran bir kapı pazar ve dil sorar; sunucuda açık gelir ve pazar seçenekleri düz `<a href>`'tir, yani JS olmadan da geçilir. Seçim yalnızca adreste durur (`/tr?m=tr`): **çerez, `localStorage` ve `sessionStorage` yok**. Esc ya da "seçmeden devam et" kapatır; arka plan `inert`, kaydırma kilitli, Lenis durur. Arama motoru ve önizleme botları kapıyı görmez ([lib/crawlers.ts](lib/crawlers.ts); Lighthouse bilerek listede yok).
-- **Pazar** dilden ayrıdır; şu an yalnızca önerilen dili belirler ve başvuruya isteğe bağlı `market` etiketi ekler ([docs/n8n-briefing.md](docs/n8n-briefing.md)). Fiyat, hukuki metin ve vitrin pazara bağlı değildir (açık karar).
+- **Kapı:** adreste geçerli `?m=us|eu|me|tr` yoksa tam ekran bir kapı pazar ve dil sorar; sunucuda açık gelir ve pazar seçenekleri düz `<a href>`'tir, yani JS olmadan da geçilir. Seçim yalnızca adreste durur (`/tr?m=tr`): **çerez, `localStorage` ve `sessionStorage` yok**. Esc ya da "seçmeden devam et" kapatır; arka plan `inert`, kaydırma kilitli, Lenis durur. Arama motoru ve önizleme botları kapıyı görmez ([lib/crawlers.ts](lib/crawlers.ts); Lighthouse bilerek listede yok).
+- **Pazar** dilden ayrıdır (ABD, Avrupa, Orta Doğu, Türkiye; dil yalnızca EN ve TR): önerilen dili, **briefing'in para birimini ve asgari tutarını** ([ADR 0016](docs/adr/0016-qualification-and-markets.md)) belirler ve başvuruya `market` etiketi ekler ([docs/n8n-briefing.md](docs/n8n-briefing.md)). Hukuki metin ve vitrin pazara bağlı değildir (açık karar; hukuki sayfalar yer tutuculu).
+- **Atmosfer** ([ADR 0017](docs/adr/0017-atmosphere.md)): sinema katmanına platin/şampanya ışık kaskadları, iki katmanlı derinlik ve bokeh eklendi, hareket yaklaşık üçte bir hıza indi; kartlar ve briefing paneli ekrana girerken maske ile açılır. Prosedürel bir atmosferdir, fotogerçekçi görüntü değildir.
 - **Hero:** yetenekli masaüstünde 160 svh'lik sabit sahne; kaydırma `--hp` ile amblemi derinleştirir ve metni eritir. Telefonda, JS yokken ve azaltılmış harekette düz tek ekran.
 - **Kimlik:** B1 amblem ve wordmark yalnızca platin (şampanya, parlama, gölge, gradyan yok). Kapıda devasa tam platin amblem, hero'da %11–20 platin amblem, ikisinde %6 wordmark.
 - **Maske çerçeveleri:** `data-maskframe` taşıyan video çerçeveleri ekrana girerken açılır (`clip-path`); JS yokken ve azaltılmış harekette açıktır.
@@ -197,7 +199,7 @@ Sahne değişince komutu çalıştırıp çıkan dosyaları commit'leyin. Remoti
 
 ## 7. Strategic Briefing ve e-posta teslimatı
 
-Ana sayfada, ziyaretçiyi 4 ekrandan geçiren cam bir panel (`#briefing`): (1) proje türü, (2) yatırım aralığı ($5k–$10k, $10k–$20k, $20k+, önce konuşalım), (3) zamanlama, (4) iletişim (ad soyad, şirket ve unvan, iş e-postası, tek cümle proje, karar yetkisi, **işaretsiz** rıza kutusu). Ekran başına tek soru, klavye ile tamamlanır (Boşluk seçer, Enter devam eder), her adımda odak yeni başlığa taşınır, ilerleme çizgisi 4 parçadır, geçiş `clip-path` açılmasıdır. Tarayıcıda hiçbir şey saklanmaz (çerez ve depolama yok).
+Ana sayfada, ziyaretçiyi 4 ekrandan geçiren cam bir panel (`#briefing`): (1) **yatırım**, pazarın para biriminde üç basamak ve bir "asgari tutarın altı" seçeneği (ABD'de $25.000–$50.000, $50.000–$100.000, $100.000 +; altı seçilirse nazik bir ret gösterilir, Devam kilitlenir, hiçbir şey gönderilmez; tutarlar `lib/pricing.ts`'ten gelir), (2) proje türü, (3) zamanlama, (4) iletişim (ad soyad, şirket ve unvan, iş e-postası, tek cümle proje, karar yetkisi, **işaretsiz** rıza kutusu). Ekran başına tek soru, klavye ile tamamlanır (Boşluk seçer, Enter devam eder), her adımda odak yeni başlığa taşınır, ilerleme çizgisi 4 parçadır, geçiş `clip-path` açılmasıdır. Tarayıcıda hiçbir şey saklanmaz (çerez ve depolama yok).
 
 - **Başarı ekranı:** Blueprint metni ("24 saat içinde kurucu ekibimiz size kişisel olarak yazacak"). **Bu söz yalnızca gerçekse yayınlanmalıdır** (CLAUDE.md kapasite kuralı); sahibi korunmasını istedi.
 - **Teslimat:** form → `/api/briefing` (Turnstile + zod + DOMPurify + hız sınırı) → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. n8n akışının adımları, HMAC doğrulama kodu ve deneme komutları: [docs/n8n-briefing.md](docs/n8n-briefing.md).

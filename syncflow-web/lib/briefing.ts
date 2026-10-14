@@ -9,8 +9,12 @@
  */
 
 export const PROJECT_TYPES = ['showcase', 'platform', 'law', 'unsure'] as const;
-/** b5 = $5k-$10k (below the $10,000 floor of CLAUDE.md, class "low"), b10 = $10k-$20k, b20 = $20k+, talk = "let's talk first". */
-export const BUDGETS = ['b5', 'b10', 'b20', 'talk'] as const;
+/**
+ * The budget bands above the minimum (lib/pricing.ts: t1 = 1x to 2x the minimum, t2 = 2x to 4x, t3 = 4x and above), in the currency of the
+ * visitor's market. There is deliberately no code for "below the minimum" and no "let's talk first": a request under the minimum is declined
+ * in the browser before anything is sent, and the server refuses any other value (docs/adr/0016-qualification-and-markets.md).
+ */
+export const BUDGETS = ['t1', 't2', 't3'] as const;
 export const TIMELINES = ['w4', 'w6', 'w10', 'flex'] as const;
 export const ROLES = ['decider', 'team', 'exploring'] as const;
 
@@ -18,12 +22,14 @@ export type ProjectType = (typeof PROJECT_TYPES)[number];
 export type Budget = (typeof BUDGETS)[number];
 export type Timeline = (typeof TIMELINES)[number];
 export type Role = (typeof ROLES)[number];
-export type Tier = 'high' | 'medium' | 'low';
+export type Tier = 'high' | 'medium';
 
-/** Priority class that decides the e-mail subject prefix. Below the price floor = low; the largest budget with a decision maker = high. */
+/**
+ * Priority class that decides the e-mail subject prefix. Every request is already at or above the minimum, so there is no "low" class
+ * any more: the two upper bands with someone who decides (or sits in the decision team) = high, everything else = medium.
+ */
 export function classify({ budget, role }: { budget: Budget; role: Role }): Tier {
-  if (budget === 'b5') return 'low';
-  if (budget === 'b20' && role !== 'exploring') return 'high';
+  if ((budget === 't3' || budget === 't2') && role !== 'exploring') return 'high';
   return 'medium';
 }
 

@@ -565,6 +565,42 @@ const G9 = "9. Giriş kapısı, Hero ve kimlik";
   }
 }
 
+/* ───────── 10) Nitelik eşiği, pazarlar ve para birimi (docs/adr/0016) ───────── */
+const G10 = "10. Nitelik eşiği, pazarlar ve para birimi";
+{
+  const need = ["lib/pricing.ts", "lib/market.ts", "lib/briefing.ts", "components/sections/Briefing.tsx", "lib/schemas/briefing.ts"];
+  const lost = need.filter((f) => !exists(f));
+  if (lost.length) add(G10, "FAIL", `dosya yok: ${lost.join(", ")}`);
+  else {
+    const code = (f) => stripComments(read(f));
+    const pricing = code("lib/pricing.ts"), market = code("lib/market.ts"), briefing = code("lib/briefing.ts"), form = code("components/sections/Briefing.tsx"), schema = code("lib/schemas/briefing.ts");
+    // 1) Dört pazar, her birinin para birimi ve asgari tutarı; ABD tabanı 25.000 USD (sahibin kararı 13.10.2026).
+    const markets = [...(/MARKETS\s*=\s*\[([^\]]*)\]/.exec(market)?.[1] ?? "").matchAll(/'([a-z]+)'/g)].map((m) => m[1]);
+    const rows = Object.fromEntries([...pricing.matchAll(/\b(us|eu|me|tr):\s*\{\s*currency:\s*'([A-Z]{3})',\s*floor:\s*([\d_]+)\s*\}/g)].map((m) => [m[1], { currency: m[2], floor: Number(m[3].replaceAll("_", "")) }]));
+    JSON.stringify(markets) === JSON.stringify(["us", "eu", "me", "tr"]) && markets.every((m) => rows[m]) ? add(G10, "PASS", `dört pazar ve fiyat satırları: ${markets.map((m) => `${m} ${rows[m].currency} ${rows[m].floor}`).join(", ")}`) : add(G10, "FAIL", `pazarlar ya da fiyat satırları tutmuyor (pazarlar: ${markets.join(",")}; satırlar: ${Object.keys(rows).join(",")})`);
+    rows.us?.currency === "USD" && rows.us?.floor === 25000 ? add(G10, "PASS", "ABD asgari tutarı USD 25.000 (sahibin kararı, 13.10.2026)") : add(G10, "FAIL", "ABD asgari tutarı USD 25.000 değil (CLAUDE.md kararı değişmeden değiştirilemez)");
+    // 2) Kur karşılıklarının tarihi ve gözden geçirme günü; geçtiyse uyar (çeyrekte bir).
+    const review = /PRICING_NEXT_REVIEW\s*=\s*'(\d{4}-\d{2}-\d{2})'/.exec(pricing)?.[1], asOf = /PRICING_AS_OF\s*=\s*'(\d{4}-\d{2}-\d{2})'/.exec(pricing)?.[1];
+    !review || !asOf ? add(G10, "FAIL", "lib/pricing.ts kur tarihini (PRICING_AS_OF) ya da bir sonraki gözden geçirmeyi (PRICING_NEXT_REVIEW) taşımıyor")
+      : new Date(review) < new Date() ? add(G10, "WARN", `fiyat karşılıklarının gözden geçirme günü geçti (${review}); kuru yeniden alıp lib/pricing.ts'i güncelleyin`) : add(G10, "PASS", `fiyat karşılıkları ${asOf} kuruyla, bir sonraki gözden geçirme ${review}`);
+    // 3) Bütçe kodları yalnızca asgari tutarın üstündeki üç basamak; eski kodlar ve "taban altı" sunucuda yok.
+    const budgets = [...(/BUDGETS\s*=\s*\[([^\]]*)\]/.exec(briefing)?.[1] ?? "").matchAll(/'([a-z0-9]+)'/g)].map((m) => m[1]);
+    JSON.stringify(budgets) === JSON.stringify(["t1", "t2", "t3"]) && /z\.enum\(BUDGETS\)/.test(schema) && !/under/.test(schema) ? add(G10, "PASS", "sunucu yalnızca t1, t2, t3 kabul eder (taban altı için kod yok)") : add(G10, "FAIL", `bütçe kodları ya da şema yanlış (kodlar: ${budgets.join(",")})`);
+    const oldCodes = [...walk(abs("app"), [".ts", ".tsx"]), ...walk(abs("components"), [".tsx"]), ...walk(abs("lib"), [".ts", ".tsx"])].filter((f) => /['"](?:b5|b10|b20|talk)['"]/.test(stripComments(fs.readFileSync(f, "utf8")))).map(rel);
+    oldCodes.length ? add(G10, "FAIL", `eski bütçe kodu kaynakta: ${oldCodes.join(", ")}`) : add(G10, "PASS", "eski bütçe kodları (b5, b10, b20, talk) kaynakta yok");
+    // 4) Form: yatırım ilk adım, taban altı nazikçe reddedilir ve hiçbir şey gönderilmez.
+    /step === 1[\s\S]{0,260}t\.budget\.title/.test(form) && /'under'/.test(form) && /declined/.test(form) && /budget === 'under'/.test(form) ? add(G10, "PASS", "formun ilk adımı yatırım; taban altı seçim nazik ret gösterir ve gönderimi engeller") : add(G10, "FAIL", "yatırım ilk adım değil ya da taban altı seçim reddedilmiyor");
+    // 5) Para birimi ve tutarlar yalnızca lib/pricing.ts'ten: çeviri dosyalarında tutar yok ("fiyat listesi yayınlanmaz").
+    const amount = /(?:[$€₺]\s?\d|\d[\d.,]*\s?(?:USD|EUR|AED|TRY|TL|\$|€|₺))|\bAED\s?\d/;
+    const withAmounts = ["en", "tr"].flatMap((l) => Object.entries((function flat(o, p = "", out = {}) { for (const [k, v] of Object.entries(o)) typeof v === "object" && v ? flat(v, `${p}${k}.`, out) : (out[`${p}${k}`] = v); return out; })(readJSON(`messages/${l}.json`))).filter(([, v]) => typeof v === "string" && amount.test(v)).map(([k]) => `${l}:${k}`));
+    withAmounts.length ? add(G10, "FAIL", `çeviride sabit tutar var (tutar yalnızca lib/pricing.ts'ten gelir): ${withAmounts.slice(0, 4).join(", ")}`) : add(G10, "PASS", "çeviri dosyalarında sabit tutar yok: tutarlar lib/pricing.ts'ten biçimlenir (Intl)");
+    // 6) Pazarın dili yalnızca yayındaki iki dil; Orta Doğu ve diğerleri İngilizce, Türkiye Türkçe.
+    /MARKET_DEFAULT_LOCALE[^=]*=\s*\{\s*us:\s*'en',\s*eu:\s*'en',\s*me:\s*'en',\s*tr:\s*'tr'\s*\}/.test(market) ? add(G10, "PASS", "pazarların varsayılan dili yalnızca yayındaki dillerdir (us, eu, me: en; tr: tr)") : add(G10, "FAIL", "MARKET_DEFAULT_LOCALE yayında olmayan bir dile işaret ediyor ya da değişmiş");
+    // 7) Eski ?m=int bağlantıları hâlâ geçerli (dolar pazarı); API'de 'int' yok.
+    /LEGACY[^=]*=\s*\{\s*int:\s*'us'\s*\}/.test(market) && !/'int'/.test(schema) ? add(G10, "PASS", "eski ?m=int bağlantısı dolar pazarına eşlenir, API değeri değildir") : add(G10, "FAIL", "eski ?m=int eşlemesi yok ya da API 'int' kabul ediyor");
+  }
+}
+
 /* ───────── 7) Build (isteğe bağlı) ───────── */
 if (DO_BUILD) {
   const r = spawnSync("npm", ["run", "build"], { cwd: ROOT, shell: true, encoding: "utf8", maxBuffer: 1 << 26 });

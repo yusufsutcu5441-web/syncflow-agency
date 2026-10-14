@@ -1,12 +1,9 @@
 {
   "Meta": {
     "title": "syncflow.agency | Studio für digitale Architektur",
-    "description": "Wir entwickeln filmische digitale Architektur für Marken, deren Ruf das Produkt ist. Beginnen Sie mit einem Strategic Briefing.",
     "ogTitle": "Im Dunkeln gebaut. Bewegt sich wie Flüssigkeit.",
-    "ogSubtitle": "Filmische digitale Architektur für Marken, deren Ruf das Produkt ist.",
     "siteName": "syncflow.agency",
-    "ogAlt": "syncflow.agency: Im Dunkeln gebaut. Bewegt sich wie Flüssigkeit.",
-    "organizationDescription": "syncflow.agency ist ein Studio für digitale Architektur, das filmische, hochperformante Websites für Marken baut, deren Ruf das Produkt ist."
+    "ogAlt": "syncflow.agency: Im Dunkeln gebaut. Bewegt sich wie Flüssigkeit."
   },
   "A11y": {
     "skip": "Zum Hauptinhalt springen",
@@ -27,7 +24,6 @@
     "eyebrow": "Studio für digitale Architektur — seit 2026",
     "title1": "Im Dunkeln gebaut.",
     "title2": "Bewegt sich wie Flüssigkeit.",
-    "subtitle": "Wir bauen keine Websites. Wir entwickeln filmische digitale Architektur für Marken, deren Ruf das Produkt ist: Erlebnisse, die flüssig bleiben, schnell laden und gemessen statt versprochen werden.",
     "ctaPrimary": "Strategic Briefing",
     "ctaSecondary": "Showcase",
     "scroll": "Scrollen",
@@ -56,7 +52,6 @@
   "Architecture": {
     "label": "01 — Architektur",
     "title": "Ingenieurskunst, keine Dekoration.",
-    "intro": "Jeder Pixel ist eine Entscheidung, jedes Bild ein Versprechen. Die drei Spalten erklären, warum sich eine hier gebaute Website präzise anfühlt und nicht nur schnell.",
     "c1Index": "I",
     "c1Title": "Video statt Code. Kino im Browser.",
     "c1Text": "Wir haben schwere Render-Engines und ruckelnde Animationsebenen hinter uns gelassen. Ihre Hero- und Showcase-Streams werden als natives MP4/WebM-Video ausgeliefert und von der Videohardware des Geräts dekodiert, sodass der Stream den Prozessor kaum belastet.",
@@ -65,7 +60,6 @@
     "c1VideoLabel": "Ein gläserner Monolith dreht sich langsam vor schwarzem Hintergrund",
     "c2Index": "II",
     "c2Title": "Flüssig, wo es zählt.",
-    "c2Text": "Scrollen und Übergänge folgen dem Bildtakt des Displays. Auf Desktops mit Maus oder Trackpad glättet Lenis das Scrollen; Touch-Geräte behalten ihr natives, unmittelbares Scrollen. Die Seite bewegt sich wie eine Verlängerung Ihres Fingers, nicht unter ihm.",
     "c2Tags": "Lenis Smooth Scroll · requestAnimationFrame · GPU-komponierte Transformationen",
     "c2GraphLabel": "Bildzeit",
     "c2Median": "Median",
@@ -74,7 +68,6 @@
     "c2GraphAlt": "Liniendiagramm der Bildzeit, flach auf dem 60-Hz-Bildintervall",
     "c3Index": "III",
     "c3Title": "Schönheit wird zu Luxus, wenn sie messbar ist.",
-    "c3Text": "Performance, Barrierefreiheit, Best Practices, SEO: vier Ringe, gemessen auf genau dieser Seite. Ein Besucher mit hohem Budget, der nach drei Sekunden geht, wird von keinem Manifest zurückgewonnen; deshalb messen wir zuerst und sprechen danach.",
     "c3Tags": "CLS · LCP · TBT · gemessen, datiert und belegt",
     "c3Performance": "Performance",
     "c3Accessibility": "Barrierefreiheit",
@@ -86,7 +79,6 @@
   "Showcase": {
     "label": "02 — Showcase",
     "title": "Drei Branchen.\nEin Standard der Stille.",
-    "subtitle": "Ruhig, zurückhaltend, vertrauenswürdig. Jede Branche spricht ihre eigene Sprache; der Standard ist derselbe.",
     "stripLabel": "Branchen-Showcase, seitlich scrollen",
     "prev": "Vorheriges Projekt",
     "next": "Nächstes Projekt",
@@ -96,23 +88,19 @@
     "play": "Video abspielen",
     "pause": "Video pausieren",
     "estate": {
-      "tag": "Immobilien",
       "title": "Keine Immobilie. Eine Bühne zum Leben.",
-      "text": "Ein Penthouse mit Bosporusblick kauft man nicht vom Bildschirm; man spürt es. Filmische Eingangssequenzen, interaktive Tageslichtsimulation auf Grundrissen und eine Anfrage, die direkt bei Ihrem Vertriebsteam landet.",
       "overlay": "Preis auf Anfrage",
       "videoLabel": "Eine Villa mit Glasfassade in der Dämmerung, die Kamera fährt langsam heran"
     },
     "clinic": {
       "tag": "Private Kliniken",
       "title": "Vertrauen entsteht in der ersten Sekunde.",
-      "text": "Für Kliniken der ästhetischen Chirurgie, Zahnmedizin oder Longevity: ein ruhiger, steriler, hochwertiger digitaler Empfang. Arztprofile und ein Terminablauf führen Ihre Patientinnen und Patienten, ohne sie zu verunsichern.",
       "overlay": "Privaten Beratungstermin buchen",
       "videoLabel": "Ein heller Klinikflur in Zeitlupe, weiches Licht wandert an der Decke entlang"
     },
     "law": {
       "tag": "Wirtschaftsrecht und Beratung",
       "title": "Diskretion ist das Erste, was ein Mandant liest.",
-      "text": "Für Kanzleien und Beratungspraxen: ein zurückhaltender, präziser digitaler Auftritt. Seiten zu Tätigkeitsgebieten und Partnern, eine vertrauliche Anfrage und eine Struktur, in der jedes Wort von Ihnen freigegeben wird, denn die Anwendung der anwaltlichen Werberegeln liegt in Ihrer Verantwortung.",
       "overlay": "Vertrauliche Anfrage",
       "videoLabel": "Eine dunkle Säulenhalle, die auf eine beleuchtete Tür zuläuft, die Kamera bewegt sich langsam vorwärts"
     }
@@ -120,7 +108,6 @@
   "Briefing": {
     "label": "04 — Strategic Briefing",
     "title": "Kein Formular.\nEin Gespräch mit Absicht.",
-    "subtitle": "Vier Schritte. Im Gegenzug eine persönliche strategische Antwort unseres Gründungsteams innerhalb von 24 Stunden.",
     "panelLabel": "Strategic Briefing, vier Schritte",
     "stepOf": "Schritt {current} von {total}",
     "progressLabel": "Fortschritt",
@@ -130,60 +117,6 @@
     "sending": "Wird gesendet …",
     "choose": "Wählen Sie eine Option, um fortzufahren.",
     "noscript": "Das Briefing benötigt JavaScript. Sie können uns direkt unter {email} schreiben.",
-    "step1": {
-      "title": "Worum geht es im Projekt?",
-      "lead": "Was bauen wir?",
-      "showcase": "Marken-Showcase-Website",
-      "showcaseDesc": "Ein filmisches Erlebnis mit einer Geschichte",
-      "platform": "Immobilien- oder Klinikplattform",
-      "platformDesc": "Nachfrageorientierte, mehrseitige Architektur",
-      "law": "Kanzlei- oder Beratungswebsite",
-      "lawDesc": "Diskret, präzise, strukturorientiert",
-      "unsure": "Noch nicht sicher",
-      "unsureDesc": "Lassen Sie es uns gemeinsam klären"
-    },
-    "step2": {
-      "title": "Investitionsrahmen",
-      "lead": "Welchen Budgetrahmen haben Sie für dieses Projekt vorgesehen?",
-      "b5": "$5k – $10k",
-      "b5Desc": "Ein fokussiertes, einseitiges filmisches Erlebnis",
-      "b10": "$10k – $20k",
-      "b10Desc": "Mehrteilige, mehrsprachige Architektur",
-      "b20": "$20k +",
-      "b20Desc": "Ein vollständiges digitales Ökosystem",
-      "talk": "Erst sprechen",
-      "talkDesc": "Den Umfang legen wir gemeinsam fest",
-      "micro": "Das hilft uns nur dabei, das richtige Team und den richtigen Umfang vorzubereiten."
-    },
-    "step3": {
-      "title": "Zeitplan",
-      "lead": "Wann soll es live gehen?",
-      "w4": "4 – 6 Wochen",
-      "w4Desc": "Beschleunigte Lieferung",
-      "w6": "6 – 10 Wochen",
-      "w6Desc": "Standardprozess der Architektur",
-      "w10": "10 Wochen +",
-      "w10Desc": "Umfassende, gestufte Lieferung",
-      "flex": "Flexibel",
-      "flexDesc": "Qualität geht vor"
-    },
-    "step4": {
-      "title": "Wie erreichen wir Sie?",
-      "lead": "Letzter Schritt. Wie sollen wir uns melden?",
-      "name": "Vor- und Nachname",
-      "company": "Unternehmen & Position",
-      "email": "Geschäftliche E-Mail",
-      "message": "Beschreiben Sie das Projekt in einem Satz (optional)",
-      "role": "Ihre Rolle bei der Entscheidung",
-      "decider": "Ich entscheide",
-      "team": "Teil des Entscheidungsteams",
-      "exploring": "Ich prüfe Optionen",
-      "consent": "Ich bin damit einverstanden, dass Sie mich zu dieser Anfrage kontaktieren und meine Angaben zu diesem Zweck verarbeitet werden.",
-      "consentLink": "Datenschutzhinweis",
-      "micro": "Ihre Angaben werden nur für diese Anfrage verwendet. Unsere Formular- und E-Mail-Dienstleister (Cloudflare Turnstile, n8n, Gmail) verarbeiten sie in unserem Auftrag, nur um sie zuzustellen.",
-      "securityCheck": "Sicherheitsprüfung",
-      "honeypot": "Dieses Feld leer lassen"
-    },
     "errorFix": "Bitte prüfen Sie die markierten Felder.",
     "errorRate": "Zu viele Versuche. Bitte warten Sie einige Minuten und versuchen Sie es erneut.",
     "errorVerification": "Die Sicherheitsprüfung wurde nicht bestanden. Bitte versuchen Sie es erneut.",
@@ -199,7 +132,6 @@
     "fieldInvalid": "Bitte entfernen Sie nicht unterstützte Zeichen.",
     "successTitle": "Briefing erhalten.",
     "successBody": "Unser Gründungsteam prüft Ihre Anfrage. Innerhalb von 24 Stunden schreiben wir Ihnen persönlich von {email}.",
-    "successLink": "Schauen Sie sich inzwischen den Showcase an",
     "devOnly": "Entwicklungsmodus: Es ist kein Webhook konfiguriert, daher wurde nichts per E-Mail gesendet.",
     "mailSubject": "Strategic Briefing",
     "mailProject": "Projekt",
@@ -212,8 +144,6 @@
     "mailMessage": "Zum Projekt"
   },
   "Closing": {
-    "manifesto1": "Wir glauben, dass sich das Web wie Architektur anfühlen sollte:",
-    "manifesto2": "still, präzise und unvergesslich.",
     "manifesto3": "Alles andere ist Lärm.",
     "contactTitle": "Der nächste Schritt liegt bei Ihnen.",
     "emailLabel": "Schreiben Sie uns",
@@ -231,9 +161,7 @@
     "performance": "Performance",
     "briefing": "Briefing",
     "showcase": "Showcase",
-    "realEstate": "Immobilien",
     "clinics": "Private Kliniken",
-    "law": "Wirtschaftsrecht",
     "languages": "Sprachen",
     "legal": "Rechtliches",
     "privacy": "Datenschutz",

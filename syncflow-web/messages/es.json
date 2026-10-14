@@ -1,12 +1,9 @@
 {
   "Meta": {
     "title": "syncflow.agency | Estudio de arquitectura digital",
-    "description": "Diseñamos arquitectura digital cinematográfica para marcas cuya reputación es el producto. Empiece con un Strategic Briefing.",
     "ogTitle": "Construido en la oscuridad. Se mueve como un líquido.",
-    "ogSubtitle": "Arquitectura digital cinematográfica para marcas cuya reputación es el producto.",
     "siteName": "syncflow.agency",
-    "ogAlt": "syncflow.agency: Construido en la oscuridad. Se mueve como un líquido.",
-    "organizationDescription": "syncflow.agency es un estudio de arquitectura digital que construye sitios web cinematográficos y de alto rendimiento para marcas cuya reputación es el producto."
+    "ogAlt": "syncflow.agency: Construido en la oscuridad. Se mueve como un líquido."
   },
   "A11y": {
     "skip": "Saltar al contenido principal",
@@ -27,7 +24,6 @@
     "eyebrow": "Estudio de arquitectura digital — desde 2026",
     "title1": "Construido en la oscuridad.",
     "title2": "Se mueve como un líquido.",
-    "subtitle": "No hacemos sitios web. Diseñamos arquitectura digital cinematográfica para marcas cuya reputación es el producto: experiencias que se mantienen fluidas, cargan rápido y se miden en lugar de prometerse.",
     "ctaPrimary": "Strategic Briefing",
     "ctaSecondary": "Escaparate",
     "scroll": "Desplazar",
@@ -56,7 +52,6 @@
   "Architecture": {
     "label": "01 — Arquitectura",
     "title": "Ingeniería, no decoración.",
-    "intro": "Cada píxel es una decisión, cada fotograma una promesa. Las tres columnas explican por qué un sitio construido aquí se siente preciso y no solo rápido.",
     "c1Index": "I",
     "c1Title": "Vídeo, no código. Cine, en el navegador.",
     "c1Text": "Dejamos atrás los motores de renderizado pesados y las capas de animación entrecortadas. Sus flujos de hero y escaparate se sirven como vídeo nativo MP4/WebM, decodificado por el hardware de vídeo del dispositivo, de modo que el flujo apenas carga el procesador.",
@@ -65,7 +60,6 @@
     "c1VideoLabel": "Un monolito de cristal gira lentamente sobre fondo negro",
     "c2Index": "II",
     "c2Title": "Fluido donde importa.",
-    "c2Text": "El desplazamiento y las transiciones siguen el ritmo de imagen de la pantalla. En ordenadores con ratón o panel táctil, Lenis suaviza el desplazamiento; los dispositivos táctiles conservan su desplazamiento nativo e inmediato. La página se mueve como una extensión de su dedo, no por debajo de él.",
     "c2Tags": "Desplazamiento suave con Lenis · requestAnimationFrame · transformaciones compuestas por la GPU",
     "c2GraphLabel": "Tiempo por fotograma",
     "c2Median": "mediana",
@@ -74,7 +68,6 @@
     "c2GraphAlt": "Gráfico de línea del tiempo por fotograma, plano en el intervalo de 60 Hz",
     "c3Index": "III",
     "c3Title": "La belleza se vuelve lujo cuando puede medirse.",
-    "c3Text": "Rendimiento, accesibilidad, buenas prácticas, SEO: cuatro anillos, medidos en esta misma página. A un visitante de alto presupuesto que se va a los tres segundos no lo recupera ningún manifiesto; por eso medimos primero y hablamos después.",
     "c3Tags": "CLS · LCP · TBT · medido, fechado y con fuente",
     "c3Performance": "Rendimiento",
     "c3Accessibility": "Accesibilidad",
@@ -86,7 +79,6 @@
   "Showcase": {
     "label": "02 — Escaparate",
     "title": "Tres sectores.\nUn solo estándar de silencio.",
-    "subtitle": "Sereno, sobrio, digno de confianza. Cada sector habla su propio idioma; el estándar es el mismo.",
     "stripLabel": "Escaparate por sectores, desplazamiento horizontal",
     "prev": "Proyecto anterior",
     "next": "Proyecto siguiente",
@@ -96,23 +88,19 @@
     "play": "Reproducir vídeo",
     "pause": "Pausar vídeo",
     "estate": {
-      "tag": "Inmobiliario",
       "title": "No es una propiedad. Es un escenario para vivir.",
-      "text": "Un ático con vistas al Bósforo no se compra desde una pantalla; se siente. Secuencias de entrada cinematográficas, simulación interactiva de la luz natural sobre los planos y un flujo de consulta que llega directamente a su equipo comercial.",
       "overlay": "Precio bajo petición",
       "videoLabel": "Una villa de fachada acristalada al atardecer, la cámara avanza despacio"
     },
     "clinic": {
       "tag": "Clínicas privadas",
       "title": "La confianza se construye en el primer segundo.",
-      "text": "Para clínicas de cirugía estética, odontología o longevidad: una recepción digital serena, estéril y premium. Perfiles de profesionales y un flujo de citas guían a su paciente sin asustarlo.",
       "overlay": "Reserve una consulta privada",
       "videoLabel": "Un pasillo de clínica pálido en cámara lenta, una luz suave recorre el techo"
     },
     "law": {
       "tag": "Derecho corporativo y asesoría",
       "title": "La discreción es lo primero que lee un cliente.",
-      "text": "Para despachos de abogados y firmas de asesoría: una presencia digital sobria y precisa. Páginas de áreas de práctica y de socios, un flujo de consulta confidencial y una estructura en la que usted aprueba cada palabra, porque aplicar las normas de publicidad de la abogacía es su responsabilidad.",
       "overlay": "Consulta confidencial",
       "videoLabel": "Una columnata oscura que se aleja hacia una puerta iluminada, la cámara avanza despacio"
     }
@@ -120,7 +108,6 @@
   "Briefing": {
     "label": "04 — Strategic Briefing",
     "title": "No es un formulario.\nEs una conversación con intención.",
-    "subtitle": "Cuatro pasos. A cambio, una respuesta estratégica personal de nuestro equipo fundador en 24 horas.",
     "panelLabel": "Strategic Briefing, cuatro pasos",
     "stepOf": "Paso {current} de {total}",
     "progressLabel": "Progreso",
@@ -130,60 +117,6 @@
     "sending": "Enviando…",
     "choose": "Elija una opción para continuar.",
     "noscript": "El briefing necesita JavaScript. Puede escribirnos directamente a {email}.",
-    "step1": {
-      "title": "¿Cuál es el proyecto?",
-      "lead": "¿Qué vamos a construir?",
-      "showcase": "Sitio escaparate de marca",
-      "showcaseDesc": "Una experiencia cinematográfica con una sola historia",
-      "platform": "Plataforma inmobiliaria o de clínica",
-      "platformDesc": "Arquitectura multipágina orientada a la demanda",
-      "law": "Sitio de despacho de abogados o asesoría",
-      "lawDesc": "Discreto, preciso, estructura primero",
-      "unsure": "Aún no estoy seguro",
-      "unsureDesc": "Definámoslo juntos"
-    },
-    "step2": {
-      "title": "Rango de inversión",
-      "lead": "¿Qué rango de presupuesto ha reservado para este proyecto?",
-      "b5": "$5k – $10k",
-      "b5Desc": "Una experiencia cinematográfica enfocada, de una sola página",
-      "b10": "$10k – $20k",
-      "b10Desc": "Arquitectura de varias secciones y multilingüe",
-      "b20": "$20k +",
-      "b20Desc": "Un ecosistema digital a gran escala",
-      "talk": "Hablemos primero",
-      "talkDesc": "Definiremos el alcance juntos",
-      "micro": "Esto solo nos ayuda a preparar el equipo y el alcance adecuados."
-    },
-    "step3": {
-      "title": "Plazos",
-      "lead": "¿Cuándo quiere que esté en línea?",
-      "w4": "4 – 6 semanas",
-      "w4Desc": "Entrega acelerada",
-      "w6": "6 – 10 semanas",
-      "w6Desc": "Proceso de arquitectura estándar",
-      "w10": "10 semanas +",
-      "w10Desc": "Entrega completa y por fases",
-      "flex": "Flexible",
-      "flexDesc": "La calidad va primero"
-    },
-    "step4": {
-      "title": "¿Cómo le localizamos?",
-      "lead": "Último paso. ¿Cómo debemos ponernos en contacto?",
-      "name": "Nombre y apellidos",
-      "company": "Empresa y cargo",
-      "email": "Correo de trabajo",
-      "message": "Describa el proyecto en una frase (opcional)",
-      "role": "Su papel en la decisión",
-      "decider": "Yo decido",
-      "team": "Formo parte del equipo de decisión",
-      "exploring": "Estoy explorando opciones",
-      "consent": "Acepto que se me contacte sobre esta solicitud y que mis respuestas se traten con ese fin.",
-      "consentLink": "Aviso de privacidad",
-      "micro": "Sus datos se usan solo para esta solicitud. Nuestros proveedores de formulario y correo (Cloudflare Turnstile, n8n, Gmail) los tratan por cuenta nuestra, únicamente para entregarla.",
-      "securityCheck": "Comprobación de seguridad",
-      "honeypot": "Deje este campo vacío"
-    },
     "errorFix": "Revise los campos marcados.",
     "errorRate": "Demasiados intentos. Espere unos minutos e inténtelo de nuevo.",
     "errorVerification": "La comprobación de seguridad no se superó. Inténtelo de nuevo.",
@@ -199,7 +132,6 @@
     "fieldInvalid": "Elimine los caracteres no admitidos.",
     "successTitle": "Briefing recibido.",
     "successBody": "Nuestro equipo fundador está revisando su solicitud. En 24 horas le escribiremos personalmente desde {email}.",
-    "successLink": "Mientras tanto, vea el escaparate",
     "devOnly": "Modo de desarrollo: no hay ningún webhook configurado, así que no se envió nada por correo.",
     "mailSubject": "Strategic Briefing",
     "mailProject": "Proyecto",
@@ -212,8 +144,6 @@
     "mailMessage": "Sobre el proyecto"
   },
   "Closing": {
-    "manifesto1": "Creemos que la web debe sentirse como arquitectura:",
-    "manifesto2": "silenciosa, precisa e imposible de olvidar.",
     "manifesto3": "Todo lo demás es ruido.",
     "contactTitle": "El siguiente paso es suyo.",
     "emailLabel": "Escríbanos",
@@ -231,9 +161,7 @@
     "performance": "Rendimiento",
     "briefing": "Briefing",
     "showcase": "Escaparate",
-    "realEstate": "Inmobiliario",
     "clinics": "Clínicas privadas",
-    "law": "Derecho corporativo",
     "languages": "Idiomas",
     "legal": "Legal",
     "privacy": "Privacidad",
