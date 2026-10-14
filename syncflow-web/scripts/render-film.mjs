@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Renders the four scene videos from the Remotion compositions (remotion/) into public/media/clips/.
+ * Renders the five scene videos from the Remotion compositions (remotion/) into public/media/clips/.
  * For every scene it writes three files:
  *   <name>.mp4   H.264, played wherever the browser can decode it (smaller here, hardware-decoded on phones)
  *   <name>.webm  VP9, the fallback for browsers without H.264
@@ -28,8 +28,8 @@ const outDir = join(root, 'public', 'media', 'clips');
 const { version } = JSON.parse(readFileSync(join(root, 'node_modules', 'remotion', 'package.json'), 'utf8'));
 
 // Mirrors remotion/config.ts (kept in plain JS here so this script needs no TypeScript runtime).
-const CLIPS = ['monolith', 'estate', 'clinic', 'law'];
-const POSTER_FRAME = { monolith: 36, estate: 120, clinic: 70, law: 90 };
+const CLIPS = ['monolith', 'estate', 'clinic', 'law', 'logistics'];
+const POSTER_FRAME = { monolith: 36, estate: 120, clinic: 70, law: 90, logistics: 70 };
 
 /** Frames go through PNG, not the default JPEG, so thin lines and small text reach the encoder undamaged. */
 const COMMON = ['--muted', '--overwrite', '--image-format=png', '--log=error'];

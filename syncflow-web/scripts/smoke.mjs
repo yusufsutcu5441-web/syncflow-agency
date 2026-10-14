@@ -141,7 +141,13 @@ check('<html lang="en" dir="ltr">', /<html[^>]*\blang="en"/.test(html) && /<html
 check('title is the studio title (no price)', /<title>syncflow\.agency \| Digital architecture studio<\/title>/.test(html));
 check('one <h1> with the two hero lines', (html.match(/<h1\b/g) ?? []).length === 1 && html.includes('Built in the dark.') && html.includes('Moves like liquid.'));
 check('the three sections are there (architecture, showcase, briefing) and the language section is gone', ['architecture', 'showcase', 'briefing'].every((id) => new RegExp(`<section[^>]*id="${id}"`).test(html)) && !/<section[^>]*id="reach"/.test(html));
-check('the showcase has exactly the three sectors (real estate, clinics, corporate law) and no SaaS', ['show-estate', 'show-clinic', 'show-law'].every((id) => html.includes(`id="${id}"`)) && !/show-saas|SaaS/.test(html));
+check('the showcase has exactly the four sectors (real estate, clinics, corporate law, logistics) and no SaaS', ['show-estate', 'show-clinic', 'show-law', 'show-logistics'].every((id) => html.includes(`id="${id}"`)) && !/show-saas|SaaS/.test(html));
+// The words of a heading may sit in separate masked spans, so phrases are compared against the page's text with the tags removed.
+const pageText = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
+check('the showcase headline counts four industries and the footer links the logistics card', pageText.includes('Four industries.') && html.includes('href="/#show-logistics"'));
+check('the architecture section carries the two enterprise columns (fail-safe automation, deep integrations) and the note that implies no partnership', pageText.includes('Fail-Safe Enterprise Automation') && pageText.includes('Deep Enterprise Integrations') && pageText.includes('Salesforce') && pageText.includes('SAP') && pageText.includes('HubSpot') && pageText.includes('Oracle') && pageText.includes('No partnership or certification is implied.'));
+check('the hero and the architecture intro carry the owner\u2019s three phrases (enterprise scale, secure workflow automation, high-ROI digital ecosystems)', /enterprise scale/i.test(pageText) && /secure workflow automation/i.test(pageText) && /high-ROI digital ecosystems/i.test(pageText));
+check('no invented enterprise credential in the page (no SLA, SOC 2, ISO 27001, uptime percentage or partner badge)', !/\bSLA\b|SOC ?2|ISO ?27001|99\.9+ ?%|uptime|certified partner/i.test(pageText));
 check('the page makes no multi-language claim', !/seven languages|7 languages|every language|yedi dil|her dilde/i.test(html));
 check('no Lemon Squeezy and no old offer anywhere in the page', !/lemonsqueezy|lemon\.js|\$2,500|\$2\.500|Start Project/i.test(html));
 check('the briefing panel is there and opts out of smooth scrolling (data-lenis-prevent)', /<form[^>]*data-lenis-prevent/.test(html));
@@ -187,7 +193,9 @@ const MARKET_LINKS = { us: '/?m=us', tr: '/tr?m=tr', me: '/ar?m=me', dach: '/de?
 check('all seven capital centres are real links (the gate works without JavaScript), each to its own language', Object.entries(MARKET_LINKS).every(([m, href]) => gateHome.page.includes(`href="${href}"`) && new RegExp(`data-market="${m}"`).test(gateHome.page)));
 check('each card is headed by its language in its own script and direction', [['en', 'English', 'ltr'], ['tr', 'Türkçe', 'ltr'], ['ar', 'العربية', 'rtl'], ['de', 'Deutsch', 'ltr'], ['fr', 'Français', 'ltr'], ['es', 'Español', 'ltr'], ['zh-Hans', '中文', 'ltr']].every(([l, name, dir]) => gateHome.page.includes(`class="gate-market-name" lang="${l}" dir="${dir}">${name}`)));
 check('each card names its currency (USD, EUR, AED, TRY)', ['USD', 'EUR', 'AED', 'TRY'].every((c) => gateHome.page.includes(c)));
-check('the first step of the briefing names the minimum in dollars and offers the bands above it (server-rendered, US default)', gateHome.page.includes('$25,000 – $50,000') && gateHome.page.includes('$50,000 – $100,000') && gateHome.page.includes('$100,000 +'));
+check('the first step of the briefing names the minimum in dollars and offers the three bands above it (server-rendered, US default)', gateHome.page.includes('$50,000 – $100,000') && gateHome.page.includes('$100,000 – $250,000') && gateHome.page.includes('$250,000 +'));
+check('the old $25,000 floor is gone: no $25,000 option and no $25,000 – $50,000 band anywhere in the page', !/\$25,000/.test(gateHome.page));
+check('the three bands carry the enterprise descriptions (core architecture, enterprise infrastructure, custom ecosystems)', gateHome.page.includes('Core Architecture &amp; Workflow Automation') && gateHome.page.includes('Enterprise Infrastructure &amp; Multi-Region Ecosystem') && gateHome.page.includes('Custom Global Ecosystems'));
 check('the first step has exactly three options, all at or above the minimum: there is no "below" choice', (gateHome.page.match(/name="budget"/g) ?? []).length === 3 && !/Below \$|below the minimum/i.test(gateHome.page), `${(gateHome.page.match(/name="budget"/g) ?? []).length} budget options`);
 check('no old budget band (under $20k) is offered any more', !/\$5k|\$10k|\$20k|Let’s talk first|Let&#x27;s talk first/i.test(gateHome.page));
 check('the gate is a dialog with a heading, and the page behind it is still in the HTML', /role="dialog"/.test(gateHome.page) && /aria-modal="true"/.test(gateHome.page) && /id="gate-title"/.test(gateHome.page) && gateHome.page.includes('Built in the dark.'));
@@ -205,7 +213,7 @@ const injected = await pageAs('/?m=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E');
 check('an unknown market is ignored (the gate shows) and never reaches the document markup', hasGate(unknown.page) && !markup.includes('ZZtopmarket') && !injected.page.includes('<img src=x onerror'));
 const trGate = await pageAs('/tr');
 check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Sermaye merkezinizi seçin.'));
-check('/tr: the briefing names the minimum in lira and offers the lira bands', trGate.page.includes('₺1.225.000') && trGate.page.includes('₺2.450.000') && trGate.page.includes('₺4.900.000 +'));
+check('/tr: the briefing names the minimum in lira and offers the lira bands', trGate.page.includes('₺2.475.000') && trGate.page.includes('₺4.950.000') && trGate.page.includes('₺12.375.000 +'));
 for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
   const bot = await pageAs('/', ua);
   check(`${name} gets the page without the gate, with the same content (h1, briefing section)`, bot.res.status === 200 && !hasGate(bot.page) && bot.page.includes('Built in the dark.') && /<section[^>]*id="briefing"/.test(bot.page));
@@ -222,13 +230,13 @@ section('Seven capital centres: each page speaks its language, names its currenc
 const normalise = (text) => text.replace(/[\s\u00a0\u202f]+/g, ' ');
 const CENTRES = [
   // [language, path, gate title, the briefing's floor as that page formats it, a word of the briefing in that language]
-  ['en', '/', 'Choose your capital center.', '$25,000', 'Investment'],
-  ['tr', '/tr', 'Sermaye merkezinizi seçin.', '₺1.225.000', 'Yatırım'],
-  ['ar', '/ar', 'اختر مركزك المالي.', '92,000', 'الاستثمار'],
-  ['de', '/de', 'Wählen Sie Ihren Finanzplatz.', '22.500 €', 'Investition'],
-  ['fr', '/fr', 'Choisissez votre place financière.', '22 500 €', 'Investissement'],
-  ['es', '/es', 'Elija su plaza financiera.', '$25,000', 'Inversión'],
-  ['zh', '/zh', '选择您的资本中心。', '$25,000', '投资'],
+  ['en', '/', 'Choose your capital center.', '$50,000', 'Investment'],
+  ['tr', '/tr', 'Sermaye merkezinizi seçin.', '₺2.475.000', 'Yatırım'],
+  ['ar', '/ar', 'اختر مركزك المالي.', '184,000', 'الاستثمار'],
+  ['de', '/de', 'Wählen Sie Ihren Finanzplatz.', '45.000 €', 'Investition'],
+  ['fr', '/fr', 'Choisissez votre place financière.', '45 000 €', 'Investissement'],
+  ['es', '/es', 'Elija su plaza financiera.', '$50,000', 'Inversión'],
+  ['zh', '/zh', '选择您的资本中心。', '$50,000', '投资'],
 ];
 for (const [code, path, title, floor, word] of CENTRES) {
   if (!OPEN.includes(code)) continue;
@@ -238,7 +246,7 @@ for (const [code, path, title, floor, word] of CENTRES) {
 }
 if (OPEN.includes('ar')) {
   const ar = await pageAs('/ar');
-  check('/ar is right-to-left, with the dirham figure (92,000 AED) and the gate cards in the markup', /<html[^>]*\bdir="rtl"/.test(ar.page) && normalise(ar.page).includes('92,000 AED') && ar.page.includes('data-market="me"'));
+  check('/ar is right-to-left, with the dirham figure (184,000 AED) and the gate cards in the markup', /<html[^>]*\bdir="rtl"/.test(ar.page) && normalise(ar.page).includes('184,000 AED') && ar.page.includes('data-market="me"'));
 }
 if (OPEN.includes('zh')) {
   const zh = await pageAs('/zh');
@@ -480,7 +488,7 @@ section('Scene videos (docs/adr/0003, 0006)');
 const mediaTypes = { mp4: 'video/mp4', webm: 'video/webm', webp: 'image/webp' };
 let mediaOk = true;
 let mediaDetail = '';
-for (const name of ['monolith', 'estate', 'clinic', 'law']) {
+for (const name of ['monolith', 'estate', 'clinic', 'law', 'logistics']) {
   for (const [ext, type] of Object.entries(mediaTypes)) {
     const res = await get(`/media/clips/${name}.${ext}`, { headers: { range: 'bytes=0-0' } });
     const good = [200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type);
@@ -491,7 +499,7 @@ for (const name of ['monolith', 'estate', 'clinic', 'law']) {
     await res.arrayBuffer();
   }
 }
-check('all 12 scene files are served with the right content type (4 scenes x mp4/webm/webp)', mediaOk, mediaDetail);
+check('all 15 scene files are served with the right content type (5 scenes x mp4/webm/webp)', mediaOk, mediaDetail);
 const ranged = await get('/media/clips/estate.mp4', { headers: { range: 'bytes=0-99' } });
 check('the mp4 answers byte-range requests (preload="none" needs it)', ranged.status === 206 && /^bytes 0-99\//.test(ranged.headers.get('content-range') ?? '') && ranged.headers.get('accept-ranges') === 'bytes', `${ranged.status} ${ranged.headers.get('content-range')} ${ranged.headers.get('accept-ranges')}`);
 await ranged.arrayBuffer();

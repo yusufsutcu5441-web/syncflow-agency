@@ -43,7 +43,7 @@
     "eyebrow": "Estudio de arquitectura digital — desde 2026",
     "title1": "Construido en la oscuridad.",
     "title2": "Fluye como un líquido.",
-    "subtitle": "Arquitectura digital para directivos cuyo nombre es el negocio. Trabajada con tolerancias mínimas, terminada en silencio y medida, no prometida.",
+    "subtitle": "Arquitectura digital a escala empresarial para directivos cuyo nombre es el negocio: automatización segura de flujos de trabajo, trabajada con tolerancias mínimas, terminada en silencio y medida, no prometida.",
     "ctaPrimary": "Briefing Estratégico",
     "ctaSecondary": "Muestrario",
     "scroll": "Desplazar",
@@ -72,7 +72,7 @@
   "Architecture": {
     "label": "01 — Arquitectura",
     "title": "Ingeniería, no decoración.",
-    "intro": "Cada píxel es una tolerancia, cada fotograma un compromiso. Tres columnas sobre por qué un sitio construido aquí se siente calibrado, y no solo rápido.",
+    "intro": "Cada píxel es una tolerancia, cada fotograma un compromiso. Los ecosistemas digitales de alto ROI se construyen aquí en dos capas: un front-end que se siente calibrado, y no solo rápido, y una automatización empresarial diseñada para fallar con seguridad.",
     "c1Index": "I",
     "c1Title": "Vídeo, no código. Cine, en el navegador.",
     "c1Text": "Hemos dejado atrás los motores de renderizado pesados y las capas de animación entrecortadas. Sus flujos de hero y de muestrario se sirven como vídeo MP4/WebM nativo, decodificado por el hardware de vídeo del propio dispositivo, de modo que el procesador apenas trabaja.",
@@ -97,11 +97,25 @@
     "c3BestPractices": "Buenas prácticas",
     "c3Seo": "SEO",
     "c3Detail": "Escritorio: CLS {cls}, LCP {lcp}, TBT {tbt}. Móvil (4G lenta simulada, CPU ralentizada 4×): rendimiento {mobile}.",
-    "c3Caption": "{tool}, {profile}, {date}."
+    "c3Caption": "{tool}, {profile}, {date}.",
+    "c4Index": "IV",
+    "c4Name": "Automatización empresarial a prueba de fallos",
+    "c4Title": "Construida para el día en que algo falle.",
+    "c4Text": "A escala empresarial, algo siempre falla. Por eso la automatización se construye alrededor de ese hecho: arquitecturas de colas redundantes mantienen los eventos en movimiento cuando una ruta enmudece, y los webhooks se firman y se verifican antes de que nada confíe en ellos.",
+    "c4Tags": "Colas redundantes · Webhooks firmados · Entrega idempotente · Reintentos acotados",
+    "c4DiagramAlt": "Esquema de un carril principal con un nodo interrumpido y un carril de reserva que lleva la carga a su alrededor",
+    "c4Caption": "Esquema del patrón, no una medición.",
+    "c5Index": "V",
+    "c5Name": "Integraciones empresariales profundas",
+    "c5Title": "Conectada a los sistemas que ya hacen funcionar su empresa.",
+    "c5Text": "Salesforce, SAP, HubSpot y Oracle forman parte de la arquitectura desde el primer boceto, para que clientes potenciales, pedidos y registros puedan circular entre el sitio y los sistemas sobre los que ya funciona su empresa.",
+    "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
+    "c5DiagramAlt": "Esquema de un nodo central conectado a cuatro sistemas",
+    "c5Note": "Los nombres de producto pertenecen a sus propietarios. No se insinúa ninguna alianza ni certificación."
   },
   "Showcase": {
     "label": "02 — Muestrario",
-    "title": "Tres sectores.\nUn mismo estándar de silencio.",
+    "title": "Cuatro sectores.\nUn mismo estándar de silencio.",
     "subtitle": "La contención es el acabado. Cada sector habla en su propio registro; el estándar nunca cambia.",
     "stripLabel": "Muestrario por sectores, desplácese lateralmente",
     "prev": "Proyecto anterior",
@@ -131,6 +145,13 @@
       "text": "Para despachos de abogados, firmas de asesoría y casas de capital privado: una presencia contenida y exacta. Páginas de áreas de práctica y de socios, una consulta confidencial y una estructura en la que usted aprueba cada palabra, porque aplicar las normas de publicidad y comunicación de su profesión es responsabilidad suya.",
       "overlay": "Consulta confidencial",
       "videoLabel": "Una columnata oscura que se aleja hacia una puerta iluminada, con la cámara avanzando despacio"
+    },
+    "logistics": {
+      "tag": "Logística global y arquitectura de cadena de suministro B2B",
+      "title": "Nada espera. Nada se pierde.",
+      "text": "Para operadores logísticos y cadenas de suministro B2B: arquitecturas de colas redundantes que mantienen los datos en movimiento cuando un carril enmudece, un flujo de datos ininterrumpido del pedido al muelle y a la factura, y una automatización que asume las decisiones rutinarias para que su gente tome las excepcionales.",
+      "overlay": "Consulta empresarial",
+      "videoLabel": "Paquetes cruzando un corredor oscuro de carriles paralelos; cuando un carril enmudece, uno de reserva se ilumina y el flujo no se detiene"
     }
   },
   "Briefing": {
@@ -149,9 +170,9 @@
     "budget": {
       "title": "Inversión",
       "lead": "Nuestro estudio acepta proyectos desde {floor}. ¿Dónde se sitúa el suyo?",
-      "t1Desc": "Un proyecto insignia enfocado: una historia, contada con precisión",
-      "t2Desc": "Una arquitectura de varias secciones, con profundidad",
-      "t3Desc": "Un patrimonio digital completo, entre marcas y regiones",
+      "t1Desc": "Arquitectura central y automatización de flujos de trabajo",
+      "t2Desc": "Infraestructura empresarial y ecosistema multirregional",
+      "t3Desc": "Ecosistemas globales a medida",
       "micro": "Las cifras se muestran en la moneda de su mercado. Solo nos ayudan a reunir el equipo y el alcance adecuados."
     },
     "project": {
@@ -245,6 +266,7 @@
     "realEstate": "Inmobiliaria de lujo",
     "clinics": "Clínicas privadas",
     "law": "Derecho corporativo y asesoría",
+    "logistics": "Logística global y cadena de suministro B2B",
     "languages": "Idiomas",
     "legal": "Legal",
     "privacy": "Privacidad",

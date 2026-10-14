@@ -6,8 +6,8 @@ Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith
 | | |
 |---|---|
 | Diller ve pazarlar | **Yedi sermaye merkezi, yedi dil, yedi pazar** ([ADR 0018](docs/adr/0018-seven-capital-centres.md)): English (`/`, ABD ve küresel, USD), Türkçe (`/tr`, Türkiye, TRY), العربية (`/ar`, Orta Doğu ve Dubai, AED, sağdan sola), Deutsch (`/de`, DACH ve İsviçre, EUR), Français (`/fr`, Monako ve Fransa, EUR), Español (`/es`, küresel servet, USD), 中文 (`/zh`, Basitleştirilmiş Çince, Asya merkezleri, USD). Her ortamda yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr,ar,de,fr,es,zh`) yayınlanır, geliştirme sunucusu dahil; `ja` **uykuda taslak** (yalnızca `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile okunur). **Beş yeni dilin çevirileri araç yazımıdır; yerel konuşur ve hukuk incelemesinden geçmedi** (sahibi bunu bilerek canlıya aldı). Sitede "yedi dil" ya da "küresel erişim" pazarlama iddiası yoktur |
-| Satış akışı | Başvuru bazlı: ana sayfadaki 4 adımlı **Strategic Briefing** → `/api/briefing` → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. İlk adım nitelik eşiğidir: stüdyo asgari USD 25.000'lik projelere çalışır (AB €22.500, Orta Doğu AED 92.000, Türkiye ₺1.225.000; [ADR 0016](docs/adr/0016-qualification-and-markets.md)), altı kabul edilmez. Ödeme ve fiyat listesi yok |
-| Bölümler | Hero · Film (kaydırmayla oynayan 4 bölümlük sinema, [ADR 0014](docs/adr/0014-cinematic-layer.md)) · Mimari (3 Border Beam kartı) · Vitrin (kilitli üç sektör: Lüks Gayrimenkul, Özel Klinik, Kurumsal Hukuk ve Danışmanlık; 3 "Architectural Specimen" videosu, yani stüdyonun kendi numuneleri, müşteri işi değil; yatay `scroll-snap` şerit) · Briefing · Kapanış ve footer |
+| Satış akışı | Başvuru bazlı: ana sayfadaki 4 adımlı **Strategic Briefing** → `/api/briefing` → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. İlk adım nitelik eşiğidir: stüdyo asgari USD 50.000'lik projelere çalışır (Avro bölgesi €45.000, Orta Doğu AED 184.000, Türkiye ₺2.475.000; [ADR 0016](docs/adr/0016-qualification-and-markets.md), [0019](docs/adr/0019-enterprise-tier.md)), altı kabul edilmez. Ödeme ve fiyat listesi yok |
+| Bölümler | Hero · Film (kaydırmayla oynayan 4 bölümlük sinema, [ADR 0014](docs/adr/0014-cinematic-layer.md)) · Mimari (5 kart: ön yüzün 3 Border Beam'li kartı ve kurumsal katmanın 2 kartı, [ADR 0019](docs/adr/0019-enterprise-tier.md)) · Vitrin (kilitli dört sektör: Lüks Gayrimenkul, Özel Klinik, Kurumsal Hukuk ve Danışmanlık, Lojistik ve B2B tedarik zinciri; 4 "Architectural Specimen" videosu, yani stüdyonun kendi numuneleri, müşteri işi değil; yatay `scroll-snap` şerit) · Briefing · Kapanış ve footer |
 | Güvenlik | HSTS, CSP (nonce + strict-dynamic, **report-only**; üçüncü taraf yalnızca Cloudflare Turnstile), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, honeypot, sunucuya özel sırlar |
 
 > **Bu proje OneDrive / Masaüstü dışında durmalı.** `node_modules` ve `.next` on binlerce dosya içerir; OneDrive senkronu, Türkçe karakterli/boşluklu yollar ve Windows'un 260 karakter sınırı kurulumu ve Remotion'u bozar. Şu an `C:\Users\YAKUP\syncflow-agency\syncflow-web` altında.
@@ -40,7 +40,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
-| `npm run film:render` | Dört sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
+| `npm run film:render` | Beş sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
 | `npm run remotion:studio` | Sahneleri Remotion Studio'da açar |
 | `npm run fonts:fetch` | Cabinet Grotesk'i (ITF FFL, depoda tutulamaz) resmi kaynaktan `public/fonts/` altına indirir; `dev` ve `build` öncesi kendiliğinden çalışır. İndirme başarısız olursa derlemeyi düşürmez, arayüz Instrument Sans'a düşer ([ADR 0014](docs/adr/0014-cinematic-layer.md)) |
 | `node scripts/render-posters.mjs` | Filmin yedek posterlerini (`public/film/`, yatay ve dikey) canlı motorun shader'larından render eder; Chrome ve Node ≥ 22.18 ister (başlığa bakın). Shader değişince yeniden çalıştırıp çıkan dosyaları commit'leyin |
@@ -68,7 +68,7 @@ components/
   i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead
 lib/
   market.ts        pazar (us, eu, me, tr): beyaz listeli ?m= parametresi, önerilen dil, tab belleği   crawlers.ts  kapıyı atlayan arama motoru ve önizleme botları (ADR 0015)
-  pricing.ts       asgari tutar ve basamaklar, pazar başına para birimi (USD 25.000 ve kur karşılıkları), Intl biçimi: fiyatın TEK kaynağı (ADR 0016)
+  pricing.ts       asgari tutar ve basamaklar, pazar başına para birimi (USD 50.000 ve kur karşılıkları), Intl biçimi: fiyatın TEK kaynağı (ADR 0016)
   briefing.ts      seçenekler, sınırlar, zod'suz tarayıcı doğrulayıcı, sınıflandırma (tarayıcı + sunucu)
   metrics.ts       sitede yayınlanan TÜM performans sayıları (değer, tarih, profil, kaynak)
   schemas/briefing.ts (zod, strict)    server/ deliver.ts · turnstile.ts · sanitize.ts (server-only)    security/ csp.ts · rate-limit.ts
@@ -182,13 +182,13 @@ Atmosfer katmanıdır; içerik ve erişilebilirlik onsuz da eksiksizdir.
 
 Sitede **Remotion çalışma zamanı yok**: videolar önceden render edilmiş dosyalardır ([ADR 0003](docs/adr/0003-showcase-film-static-render.md)). `remotion` yalnızca geliştirme bağımlılığıdır; `remotion/scenes/` altındaki sahneleri `scripts/render-film.mjs` ile render etmek içindir.
 
-- **Sahneler** (1280×720, 30 kare/sn, 8 sn kusursuz döngü, her biri tamamen kareden hesaplanır): `Monolith` (yavaşça dönen cam monolit; "mimari" kartı), `Estate` (gün batımında cam cepheli villa), `Clinic` (soluk klinik koridoru), `Law` (tek ışıklı kapıya doğru uzanan karanlık sütunlu koridor; hukuk kartı). **Konsept render'dır**, gerçek müşteri işi değildir; kartlarda öyle yazar. Sahnelerde okunabilir metin yoktur: altyazı HTML'dir, tek render her dile yeter.
-- **Çıktı:** `public/media/clips/<ad>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (yedek) ve WebP poster. Toplam 12 dosya, yaklaşık 1,9 MB.
+- **Sahneler** (1280×720, 30 kare/sn, 8 sn kusursuz döngü, her biri tamamen kareden hesaplanır): `Monolith` (yavaşça dönen cam monolit; "mimari" kartı), `Estate` (gün batımında cam cepheli villa), `Clinic` (soluk klinik koridoru), `Law` (tek ışıklı kapıya doğru uzanan karanlık sütunlu koridor; hukuk kartı), `Logistics` (yüksek açıdan yük koridoru: paralel şeritler, kapılar, akan koliler; bir kapı sessizleşince şampanya ışıklı yedek şerit devralır; lojistik kartı). **Konsept render'dır**, gerçek müşteri işi değildir; kartlarda öyle yazar. Sahnelerde okunabilir metin yoktur: altyazı HTML'dir, tek render her dile yeter.
+- **Çıktı:** `public/media/clips/<ad>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (yedek) ve WebP poster. Toplam 15 dosya, yaklaşık 2,8 MB.
 - **Oynatma** (`components/media/SceneVideo.tsx`): HTML'de yalnızca poster gelir, video `preload="none"`. Ince işaretçide, görünürken (mimari kartı) ya da kartın üstüne gelince/odaklanınca (vitrin) oynar; **dokunmatikte, azaltılmış hareket ve Save-Data'da otomatik oynamaz** ve hiçbir şey indirilmez; ziyaretçi düğmeye basınca yüklenir. Ekran dışına çıkınca ve sekme gizlenince durur. Her videoda görünür bir oynat/duraklat düğmesi vardır (WCAG 2.2.2). Çerçeve oranı sabittir (CLS 0).
 - **Lisans:** Remotion yalnızca ≤ 3 kişilik kâr amaçlı şirketlerde/bireylerde ücretsizdir; **4+ kişilik şirketler için ücretli Company License gerekir** (remotion.pro). Render almak da lisans kapsamındadır.
 
 ```bash
-npm run film:render                       # dört sahne × (MP4 + WebM + poster), ~10 dk
+npm run film:render                       # beş sahne × (MP4 + WebM + poster), ~10 dk
 npm run film:render -- --posters          # yalnızca posterler (hızlı)
 npm run film:render -- --only=estate      # tek sahne
 npm run remotion:studio                   # sahneleri tarayıcıda düzenle
@@ -199,7 +199,7 @@ Sahne değişince komutu çalıştırıp çıkan dosyaları commit'leyin. Remoti
 
 ## 7. Strategic Briefing ve e-posta teslimatı
 
-Ana sayfada, ziyaretçiyi 4 ekrandan geçiren cam bir panel (`#briefing`): (1) **yatırım**, yalnızca pazarın para biriminde üç basamak (ABD'de $25.000–$50.000, $50.000–$100.000, $100.000 +; **daha düşük bir seçenek yok**, soru asgari tutarı söyler; tutarlar `lib/pricing.ts`'ten gelir), (2) proje türü, (3) zamanlama, (4) iletişim (ad soyad, şirket ve unvan, iş e-postası, tek cümle proje, karar yetkisi, **işaretsiz** rıza kutusu). Ekran başına tek soru, klavye ile tamamlanır (Boşluk seçer, Enter devam eder), her adımda odak yeni başlığa taşınır, ilerleme çizgisi 4 parçadır, geçiş `clip-path` açılmasıdır. Tarayıcıda hiçbir şey saklanmaz (çerez ve depolama yok).
+Ana sayfada, ziyaretçiyi 4 ekrandan geçiren cam bir panel (`#briefing`): (1) **yatırım**, yalnızca pazarın para biriminde üç basamak (ABD'de $50.000–$100.000, $100.000–$250.000, $250.000 +; **daha düşük bir seçenek yok**, soru asgari tutarı söyler; tutarlar `lib/pricing.ts`'ten gelir), (2) proje türü, (3) zamanlama, (4) iletişim (ad soyad, şirket ve unvan, iş e-postası, tek cümle proje, karar yetkisi, **işaretsiz** rıza kutusu). Ekran başına tek soru, klavye ile tamamlanır (Boşluk seçer, Enter devam eder), her adımda odak yeni başlığa taşınır, ilerleme çizgisi 4 parçadır, geçiş `clip-path` açılmasıdır. Tarayıcıda hiçbir şey saklanmaz (çerez ve depolama yok).
 
 - **Başarı ekranı:** Blueprint metni ("24 saat içinde kurucu ekibimiz size kişisel olarak yazacak"). **Bu söz yalnızca gerçekse yayınlanmalıdır** (CLAUDE.md kapasite kuralı); sahibi korunmasını istedi.
 - **Teslimat:** form → `/api/briefing` (Turnstile + zod + DOMPurify + hız sınırı) → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. n8n akışının adımları, HMAC doğrulama kodu ve deneme komutları: [docs/n8n-briefing.md](docs/n8n-briefing.md).
@@ -268,7 +268,7 @@ Ayrıntı: [docs/perf/cinema.md](docs/perf/cinema.md), karar: [ADR 0014](docs/ad
 |---|---|
 | `npm run check` | çeviri eşitliği (7 dil), `tsc` ve ESLint temiz |
 | `node faz2-denetim.mjs --build` | **0 hata**, 130 geçti, 1 bilinçli uyarı. WebGL motoru ilk yükte değil, ayrı lazy parça (6,7 KB gzip). İlk koşuda çıkan 2 hata denetimin eski yerlere bakmasındandı (kod değil) ve denetim düzeltildi |
-| `npm run smoke` | **189/189** (üretim derlemesi, yedi dil `en,tr,ar,de,fr,es,zh`, sahte webhook alıcısı; yedi kartlı kapı ve bağlantıları, her dilin kapısı ve briefing'in kendi sayı biçimiyle asgari tutarı, `/ar` sağdan sola, `/zh` `zh-Hans`, bot baypası, çerezsizlik, başvuruda yedi `market` değeri dahil). Tarayıcı akışı (Chrome 154, başsız, 1440×900 ve 390×844; betik depoda yok): **17/17** (kart → dil çipi → Giriş, Esc, üst bar seçicisi ve `?m=` korunumu) |
+| `npm run smoke` | **195/195** (üretim derlemesi, yedi dil `en,tr,ar,de,fr,es,zh`, sahte webhook alıcısı; yedi kartlı kapı ve bağlantıları, her dilin kapısı ve briefing'in kendi sayı biçimiyle asgari tutarı, `/ar` sağdan sola, `/zh` `zh-Hans`, bot baypası, çerezsizlik, başvuruda yedi `market` değeri, dört vitrin kartı, iki kurumsal sütun, USD 50.000 tabanı ve yeni basamaklar dahil). Tarayıcı akışı (Chrome 154, başsız, 1440×900 ve 390×844; betik depoda yok): **23/23** (kart → dil çipi → Giriş, Esc, üst bar seçicisi ve `?m=` korunumu; dördüncü kartta gerçek klip oynatma) |
 | Lighthouse mobil (motor kapıyı geçmez) | `/` **94** (LCP 3,15 sn, TBT 55 ms), `/tr` **86** (76–90; LCP 3,27 sn, TBT 336 ms); JS 157 KB |
 | Lighthouse masaüstü, A/B | motor kapalı **100** (TBT 0–2 ms), motor açık **89–96** (TBT 135–236 ms); LCP ≈ 0,7 sn ve CLS 0 aynı; JS 171 KB |
 
@@ -286,7 +286,7 @@ Ayrıntı: [docs/perf/cinema.md](docs/perf/cinema.md), karar: [ADR 0014](docs/ad
 | Tarayıcı testi (Chrome 154, `puppeteer-core`; betik depoda yok) | **60/60**: Blueprint bölümleri, imleç ışığı, manyetik düğme, Border Beam ve ekran dışında durma, halkalar, video politikası, yatay şerit (scroll-jacking yok), küre, klavye ile briefing, kopyalama, telefon, azaltılmış hareket, JS kapalı, Arapça RTL, yedi dilli dil seçici; CSP ihlali 0, konsol hatası 0 |
 | `npm run audit:secrets` | Kanarya değerli derlemede 29 tarayıcı dosyasında 5 sır adı + 3 sır değeri (**`TURNSTILE_SECRET_KEY` dahil**) **yok**; bilerek bir sızıntı yerleştirince denetim başarısız oldu (çıkış 1) |
 | Lighthouse, kare ritmi | [docs/perf/faz4.md](docs/perf/faz4.md) |
-| `npm run film:render` | 12 dosya, ≈ 1,9 MB (§6) |
+| `npm run film:render` | 15 dosya, ≈ 2,8 MB (§6) |
 
 **Doğrulanmayanlar (dürüstçe):** gerçek bir e-posta teslimi (n8n ve Gmail verilmedi; sahte alıcıyla denendi) · gerçek Turnstile widget'ı (Cloudflare'in her zaman geçen test gizli anahtarıyla sunucu doğrulaması denendi, widget için site anahtarı yok) · yerel konuşur çeviri kalitesi ve hukuk incelemesi (beş dil taslak) · AR/JA'da özel yazı tipi · canlı alan adında PageSpeed/CrUX · Vercel dağıtımı · Upstash ile paylaşımlı hız sınırı · Safari/Firefox (yalnızca Chrome) · gerçek telefon ve 120 Hz ekran · ekran okuyucu ile elle deneme.
 

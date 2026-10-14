@@ -43,7 +43,7 @@
     "eyebrow": "Studio für digitale Architektur — seit 2026",
     "title1": "Im Dunkeln gebaut.",
     "title2": "Fließt wie Flüssigkeit.",
-    "subtitle": "Digitale Architektur für Persönlichkeiten, deren Name das Unternehmen ist. Auf enge Toleranzen gefertigt, in Stille vollendet, gemessen statt versprochen.",
+    "subtitle": "Digitale Architektur im Enterprise-Maßstab für Persönlichkeiten, deren Name das Unternehmen ist: sichere Workflow-Automatisierung, auf enge Toleranzen gefertigt, in Stille vollendet, gemessen statt versprochen.",
     "ctaPrimary": "Strategisches Briefing",
     "ctaSecondary": "Showcase",
     "scroll": "Scrollen",
@@ -72,7 +72,7 @@
   "Architecture": {
     "label": "01 — Architektur",
     "title": "Ingenieurskunst, keine Dekoration.",
-    "intro": "Jedes Pixel ist eine Toleranz, jedes Bild eine Verpflichtung. Drei Spalten dazu, warum sich eine hier gebaute Website nicht nur schnell, sondern kalibriert anfühlt.",
+    "intro": "Jedes Pixel ist eine Toleranz, jedes Bild eine Verpflichtung. Renditestarke digitale Ökosysteme entstehen hier in zwei Schichten: einem Frontend, das sich kalibriert anfühlt statt nur schnell, und einer Enterprise-Automatisierung, die ausfallsicher gebaut ist.",
     "c1Index": "I",
     "c1Title": "Video statt Code. Kino im Browser.",
     "c1Text": "Schwere Render-Engines und stockende Animationsebenen haben wir hinter uns gelassen. Ihre Hero- und Showcase-Streams werden als natives MP4/WebM-Video ausgeliefert und von der Videohardware des Geräts dekodiert – der Prozessor wird kaum belastet.",
@@ -97,11 +97,25 @@
     "c3BestPractices": "Best Practices",
     "c3Seo": "SEO",
     "c3Detail": "Desktop: CLS {cls}, LCP {lcp}, TBT {tbt}. Mobil (simuliertes langsames 4G, 4× CPU-Drosselung): Performance {mobile}.",
-    "c3Caption": "{tool}, {profile}, {date}."
+    "c3Caption": "{tool}, {profile}, {date}.",
+    "c4Index": "IV",
+    "c4Name": "Ausfallsichere Enterprise-Automatisierung",
+    "c4Title": "Gebaut für den Tag, an dem etwas ausfällt.",
+    "c4Text": "Im Enterprise-Maßstab fällt immer etwas aus. Deshalb ist die Automatisierung um diese Tatsache herum gebaut: Redundante Queue-Architekturen halten Ereignisse in Bewegung, wenn ein Pfad verstummt, und Webhooks werden signiert und geprüft, bevor ihnen irgendetwas vertraut.",
+    "c4Tags": "Redundante Queues · Signierte Webhooks · Idempotente Zustellung · Begrenzte Wiederholungen",
+    "c4DiagramAlt": "Schema einer Hauptspur mit einem unterbrochenen Knoten und einer Ersatzspur, die die Last um ihn herum trägt",
+    "c4Caption": "Schema des Musters, keine Messung.",
+    "c5Index": "V",
+    "c5Name": "Tiefe Enterprise-Integrationen",
+    "c5Title": "Verbunden mit den Systemen, die Sie ohnehin betreiben.",
+    "c5Text": "Salesforce, SAP, HubSpot und Oracle sind vom ersten Entwurf an Teil der Architektur, damit Leads, Bestellungen und Datensätze zwischen der Website und den Systemen fließen können, auf denen Ihr Unternehmen ohnehin läuft.",
+    "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
+    "c5DiagramAlt": "Schema eines zentralen Knotens, der mit vier Systemen verbunden ist",
+    "c5Note": "Produktnamen gehören ihren Inhabern. Eine Partnerschaft oder Zertifizierung wird nicht impliziert."
   },
   "Showcase": {
     "label": "02 — Showcase",
-    "title": "Drei Branchen.\nEin Standard der Stille.",
+    "title": "Vier Branchen.\nEin Standard der Stille.",
     "subtitle": "Zurückhaltung ist die Veredelung. Jede Branche spricht in ihrem eigenen Register; der Standard ändert sich nie.",
     "stripLabel": "Branchen-Showcase, seitlich scrollen",
     "prev": "Vorheriges Projekt",
@@ -131,6 +145,13 @@
       "text": "Für Kanzleien, Beratungspraxen und Private-Equity-Häuser: ein zurückhaltender, präziser Auftritt. Tätigkeits- und Partnerseiten, eine vertrauliche Anfrage und eine Struktur, in der jedes Wort von Ihnen freigegeben wird – denn die Anwendung der Werbe- und Kommunikationsregeln Ihres Berufsstands liegt in Ihrer Verantwortung.",
       "overlay": "Vertrauliche Anfrage",
       "videoLabel": "Eine dunkle Kolonnade, die auf eine beleuchtete Tür zuläuft, die Kamera fährt langsam vor"
+    },
+    "logistics": {
+      "tag": "Globale Logistik und B2B-Lieferkettenarchitektur",
+      "title": "Nichts wartet. Nichts geht verloren.",
+      "text": "Für Logistikunternehmen und B2B-Lieferketten: redundante Queue-Architekturen, die Daten in Bewegung halten, wenn eine Spur verstummt, ein ununterbrochener Datenfluss von der Bestellung über die Rampe bis zur Rechnung und eine Automatisierung, die Routineentscheidungen übernimmt, damit Ihre Leute die außergewöhnlichen treffen können.",
+      "overlay": "Enterprise-Anfrage",
+      "videoLabel": "Pakete in einem dunklen Korridor aus parallelen Spuren; verstummt eine Spur, leuchtet eine Ersatzspur auf und der Fluss reißt nicht ab"
     }
   },
   "Briefing": {
@@ -149,9 +170,9 @@
     "budget": {
       "title": "Investition",
       "lead": "Unser Studio übernimmt Projekte ab {floor}. Wo liegt Ihres?",
-      "t1Desc": "Ein fokussiertes Flaggschiff: eine Geschichte, präzise erzählt",
-      "t2Desc": "Eine mehrteilige Architektur mit Tiefe",
-      "t3Desc": "Ein vollständiger digitaler Besitz über Marken und Regionen hinweg",
+      "t1Desc": "Kernarchitektur & Workflow-Automatisierung",
+      "t2Desc": "Enterprise-Infrastruktur & Multi-Region-Ökosystem",
+      "t3Desc": "Maßgeschneiderte globale Ökosysteme",
       "micro": "Beträge werden in der Währung Ihres Marktes angezeigt. Sie helfen uns lediglich, das richtige Team und den richtigen Umfang zusammenzustellen."
     },
     "project": {
@@ -245,6 +266,7 @@
     "realEstate": "Luxusimmobilien",
     "clinics": "Private Kliniken",
     "law": "Wirtschaftsrecht & Beratung",
+    "logistics": "Globale Logistik und B2B-Lieferkette",
     "languages": "Sprachen",
     "legal": "Rechtliches",
     "privacy": "Datenschutz",

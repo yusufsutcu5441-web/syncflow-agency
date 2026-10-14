@@ -12,9 +12,10 @@ const RING_RADIUS = 38;
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
 
 /**
- * Blueprint section 2: "Engineering, not decoration". A sticky headline on the left, three cards on the right, each
- * circled by a Border Beam. Every number on the cards is read from lib/metrics.ts (measured, dated, with its profile);
- * a metric that has not been measured shows "to be measured" instead of a figure.
+ * Blueprint section 2: "Engineering, not decoration". A sticky headline on the left, five cards on the right: the front end (I to III,
+ * each circled by a Border Beam) and, since docs/adr/0019, the enterprise layer (IV and V, the same shell without a beam: the page
+ * keeps at most three). Every number on the cards is read from lib/metrics.ts (measured, dated, with its profile); a metric that has not
+ * been measured shows "to be measured" instead of a figure. Cards IV and V carry capability statements and still schematics, no figures.
  */
 export async function Architecture() {
   const [t, locale, format] = await Promise.all([getTranslations('Architecture'), getLocale() as Promise<AppLocale>, getFormatter()]);
@@ -115,6 +116,40 @@ export async function Architecture() {
               </div>
             </div>
           </article>
+
+          {/* IV: fail-safe enterprise automation. The same card shell as I to III but without the Border Beam: the page keeps at most three. */}
+          <article className="beam-card" data-maskframe="">
+            <div className="beam-body p-6 md:p-8">
+              <p className="label">
+                {t('c4Index')} — {t('c4Name')}
+              </p>
+              <h3 className="text-title mt-4">{t('c4Title')}</h3>
+              <p className="body-muted mt-4">{t('c4Text')}</p>
+              <p className="label mt-5">{t('c4Tags')}</p>
+
+              <div className="mt-7 rounded-[14px] border border-hairline p-5">
+                <FailoverSchematic alt={t('c4DiagramAlt')} />
+                <p className="mt-3 text-xs text-faint">{t('c4Caption')}</p>
+              </div>
+            </div>
+          </article>
+
+          {/* V: deep enterprise integrations. Named systems are examples of integration targets, never a partner list. */}
+          <article className="beam-card" data-maskframe="">
+            <div className="beam-body p-6 md:p-8">
+              <p className="label">
+                {t('c5Index')} — {t('c5Name')}
+              </p>
+              <h3 className="text-title mt-4">{t('c5Title')}</h3>
+              <p className="body-muted mt-4">{t('c5Text')}</p>
+              <p className="label mt-5">{t('c5Tags')}</p>
+
+              <div className="mt-7 rounded-[14px] border border-hairline p-5">
+                <HubSchematic alt={t('c5DiagramAlt')} />
+                <p className="mt-3 text-xs text-faint">{t('c5Note')}</p>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -145,6 +180,62 @@ function Ring({ label, value, delay, pending, format }: { label: string; value: 
       </div>
       <p className="mt-3 text-xs text-muted">{label}</p>
     </div>
+  );
+}
+
+/**
+ * The failover pattern as a still schematic (no motion, no numbers): a primary lane with one interrupted node and the standby lane that
+ * carries the load around it. Platin on the card's own layer colour only, like the frame-time graph; it describes a pattern, it measures
+ * nothing, and the caption under it says so.
+ */
+function FailoverSchematic({ alt }: { alt: string }) {
+  const lane = 'rgb(226 226 230 / 0.3)';
+  const parcel = (x: number, y: number, key: string) => <rect key={key} x={x - 7} y={y - 3.5} width="14" height="7" rx="2" fill="#E2E2E6" fillOpacity="0.9" />;
+  return (
+    <svg viewBox="0 0 560 124" className="h-auto w-full" role="img" aria-label={alt} fill="none">
+      {/* the primary lane, with a gap where the node went quiet; the standby lane below, dashed until it takes over */}
+      <path d="M16 38 H238 M322 38 H544" stroke={lane} strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
+      <path d="M16 90 H544" stroke="rgb(226 226 230 / 0.16)" strokeWidth="1.25" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
+      {/* the detour, the one bright line */}
+      <path d="M206 38 C 244 38 246 90 280 90 C 314 90 316 38 354 38" stroke="#E2E2E6" strokeWidth="1.6" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      {/* healthy nodes, and the interrupted one (a broken ring, dim) */}
+      {[84, 154, 406, 476].map((x) => (
+        <circle key={x} cx={x} cy="38" r="4.5" fill="#141416" stroke="#E2E2E6" strokeOpacity="0.8" strokeWidth="1.25" />
+      ))}
+      <circle cx="280" cy="38" r="9" fill="#141416" stroke="#E2E2E6" strokeOpacity="0.3" strokeWidth="1.25" strokeDasharray="4 5" />
+      {/* parcels: two upstream, one on the standby lane, two downstream */}
+      {parcel(46, 38, 'p1')}
+      {parcel(120, 38, 'p2')}
+      {parcel(280, 90, 'p3')}
+      {parcel(442, 38, 'p4')}
+      {parcel(516, 38, 'p5')}
+    </svg>
+  );
+}
+
+/** A central hub joined to four systems, still and unlabeled (the names are in the card's text): the shape of an integration, not a partner list. */
+function HubSchematic({ alt }: { alt: string }) {
+  const satellites = [
+    [96, 30],
+    [464, 30],
+    [96, 110],
+    [464, 110],
+  ] as const;
+  return (
+    <svg viewBox="0 0 560 140" className="h-auto w-full" role="img" aria-label={alt} fill="none">
+      {satellites.map(([x, y]) => (
+        <path key={`l-${x}-${y}`} d={`M280 70 L${x} ${y}`} stroke="rgb(226 226 230 / 0.3)" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
+      ))}
+      {satellites.map(([x, y]) => (
+        <g key={`n-${x}-${y}`}>
+          <circle cx={(280 + x) / 2} cy={(70 + y) / 2} r="2.5" fill="#E2E2E6" fillOpacity="0.9" />
+          <circle cx={x} cy={y} r="9" fill="#141416" stroke="#E2E2E6" strokeOpacity="0.75" strokeWidth="1.25" />
+          <circle cx={x} cy={y} r="2.5" fill="#E2E2E6" fillOpacity="0.85" />
+        </g>
+      ))}
+      <circle cx="280" cy="70" r="17" fill="#141416" stroke="#E2E2E6" strokeWidth="1.5" />
+      <circle cx="280" cy="70" r="4.5" fill="#E2E2E6" />
+    </svg>
   );
 }
 

@@ -43,7 +43,7 @@
     "eyebrow": "Studio d’architecture numérique — depuis 2026",
     "title1": "Bâti dans l’ombre.",
     "title2": "Glisse comme un liquide.",
-    "subtitle": "L’architecture numérique des dirigeants dont le nom est l’entreprise. Usinée à de faibles tolérances, achevée dans le silence, mesurée plutôt que promise.",
+    "subtitle": "L’architecture numérique à l’échelle des grandes entreprises, pour les dirigeants dont le nom est l’entreprise : automatisation sécurisée des flux de travail, usinée à de faibles tolérances, achevée dans le silence, mesurée plutôt que promise.",
     "ctaPrimary": "Briefing stratégique",
     "ctaSecondary": "Vitrine",
     "scroll": "Défiler",
@@ -72,7 +72,7 @@
   "Architecture": {
     "label": "01 — Architecture",
     "title": "De l’ingénierie, pas de la décoration.",
-    "intro": "Chaque pixel est une tolérance, chaque image un engagement. Trois colonnes pour expliquer pourquoi un site bâti ici paraît calibré, et pas seulement rapide.",
+    "intro": "Chaque pixel est une tolérance, chaque image un engagement. Les écosystèmes numériques à fort ROI se construisent ici en deux couches : un front-end qui paraît calibré, et pas seulement rapide, et une automatisation d’entreprise à sécurité intégrée.",
     "c1Index": "I",
     "c1Title": "De la vidéo, pas du code. Le cinéma dans le navigateur.",
     "c1Text": "Nous avons laissé derrière nous les moteurs de rendu lourds et les couches d’animation saccadées. Vos flux de hero et de vitrine sont servis en vidéo MP4/WebM native, décodée par le matériel vidéo de l’appareil : le processeur est à peine sollicité.",
@@ -97,11 +97,25 @@
     "c3BestPractices": "Bonnes pratiques",
     "c3Seo": "SEO",
     "c3Detail": "Bureau : CLS {cls}, LCP {lcp}, TBT {tbt}. Mobile (4G lente simulée, processeur ralenti 4×) : performance {mobile}.",
-    "c3Caption": "{tool}, {profile}, {date}."
+    "c3Caption": "{tool}, {profile}, {date}.",
+    "c4Index": "IV",
+    "c4Name": "Automatisation d’entreprise à sécurité intégrée",
+    "c4Title": "Construite pour le jour où quelque chose cède.",
+    "c4Text": "À l’échelle d’une grande entreprise, quelque chose finit toujours par céder. L’automatisation est donc bâtie autour de ce fait : des architectures de files d’attente redondantes gardent les événements en mouvement quand un chemin se tait, et les webhooks sont signés et vérifiés avant que rien ne leur fasse confiance.",
+    "c4Tags": "Files d’attente redondantes · Webhooks signés · Livraison idempotente · Reprises bornées",
+    "c4DiagramAlt": "Schéma d’une voie principale dont un nœud est interrompu et d’une voie de secours qui porte la charge autour de lui",
+    "c4Caption": "Schéma du principe, pas une mesure.",
+    "c5Index": "V",
+    "c5Name": "Intégrations d’entreprise approfondies",
+    "c5Title": "Reliée aux systèmes que vous faites déjà tourner.",
+    "c5Text": "Salesforce, SAP, HubSpot et Oracle font partie de l’architecture dès la première esquisse, afin que prospects, commandes et enregistrements puissent circuler entre le site et les systèmes sur lesquels votre entreprise tourne déjà.",
+    "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
+    "c5DiagramAlt": "Schéma d’un nœud central relié à quatre systèmes",
+    "c5Note": "Les noms de produits appartiennent à leurs propriétaires. Aucun partenariat ni aucune certification n’est sous-entendu."
   },
   "Showcase": {
     "label": "02 — Vitrine",
-    "title": "Trois secteurs.\nUn seul standard de silence.",
+    "title": "Quatre secteurs.\nUn seul standard de silence.",
     "subtitle": "La retenue est la finition. Chaque secteur parle dans son propre registre ; le standard ne change jamais.",
     "stripLabel": "Vitrine des secteurs, faire défiler latéralement",
     "prev": "Projet précédent",
@@ -131,6 +145,13 @@
       "text": "Pour les cabinets d’avocats, les cabinets de conseil et les maisons de capital-investissement : une présence retenue et exacte. Pages de domaines d’activité et d’associés, demande confidentielle, et une structure où chaque mot est validé par vous, car l’application des règles de publicité et de communication de votre profession relève de votre responsabilité.",
       "overlay": "Demande confidentielle",
       "videoLabel": "Une colonnade sombre qui s’éloigne vers une porte éclairée, la caméra avance lentement"
+    },
+    "logistics": {
+      "tag": "Logistique mondiale et architecture de chaîne d’approvisionnement B2B",
+      "title": "Rien n’attend. Rien ne se perd.",
+      "text": "Pour les opérateurs logistiques et les chaînes d’approvisionnement B2B : des architectures de files d’attente redondantes qui gardent les données en mouvement quand une voie se tait, un flux de données ininterrompu de la commande au quai puis à la facture, et une automatisation qui prend les décisions de routine pour que vos équipes prennent les décisions exceptionnelles.",
+      "overlay": "Demande entreprise",
+      "videoLabel": "Des colis traversent un couloir sombre de voies parallèles ; quand une voie se tait, une voie de secours s’allume et le flux ne s’interrompt pas"
     }
   },
   "Briefing": {
@@ -149,9 +170,9 @@
     "budget": {
       "title": "Investissement",
       "lead": "Notre studio accepte les projets à partir de {floor}. Où se situe le vôtre ?",
-      "t1Desc": "Un vaisseau amiral ciblé : une histoire, racontée avec précision",
-      "t2Desc": "Une architecture à plusieurs sections, tout en profondeur",
-      "t3Desc": "Un patrimoine numérique complet, à travers marques et régions",
+      "t1Desc": "Architecture centrale et automatisation des flux de travail",
+      "t2Desc": "Infrastructure d’entreprise et écosystème multirégional",
+      "t3Desc": "Écosystèmes mondiaux sur mesure",
       "micro": "Les montants sont affichés dans la devise de votre marché. Ils nous aident seulement à réunir la bonne équipe et le bon périmètre."
     },
     "project": {
@@ -245,6 +266,7 @@
     "realEstate": "Immobilier de luxe",
     "clinics": "Cliniques privées",
     "law": "Droit des affaires et conseil",
+    "logistics": "Logistique mondiale et chaîne d’approvisionnement B2B",
     "languages": "Langues",
     "legal": "Informations légales",
     "privacy": "Confidentialité",

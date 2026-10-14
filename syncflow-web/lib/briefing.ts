@@ -10,7 +10,7 @@
 
 export const PROJECT_TYPES = ['showcase', 'platform', 'law', 'unsure'] as const;
 /**
- * The budget bands above the minimum (lib/pricing.ts: t1 = 1x to 2x the minimum, t2 = 2x to 4x, t3 = 4x and above), in the currency of the
+ * The budget bands above the minimum (lib/pricing.ts: t1 = 1x to 2x the minimum, t2 = 2x to 5x, t3 = 5x and above), in the currency of the
  * visitor's market. There is deliberately no code for "below the minimum" and no "let's talk first": a request under the minimum is declined
  * in the browser before anything is sent, and the server refuses any other value (docs/adr/0016-qualification-and-markets.md).
  */

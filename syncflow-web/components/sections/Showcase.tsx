@@ -13,10 +13,11 @@ const CARDS = [
   { key: 'estate', id: 'show-estate', overlay: 'start-4 top-4' },
   { key: 'clinic', id: 'show-clinic', overlay: 'start-4 bottom-4' },
   { key: 'law', id: 'show-law', overlay: 'start-4 bottom-4' },
+  { key: 'logistics', id: 'show-logistics', overlay: 'start-4 bottom-4' },
 ] as const;
 
 /**
- * Blueprint section 3, "Sectoral showcase": three wide cards in a native scroll-snap strip. A cursor-following light
+ * Blueprint section 3, "Sectoral showcase": four wide cards (real estate, clinics, corporate law, and, since docs/adr/0019, logistics) in a native scroll-snap strip. A cursor-following light
  * appears inside the card under the pointer and its video plays; leaving pauses it. The videos are concept renders
  * (rendered ahead of time by npm run film:render), and the cards say so; no client results are claimed.
  */

@@ -43,7 +43,7 @@
     "eyebrow": "Digital architecture studio — est. 2026",
     "title1": "Built in the dark.",
     "title2": "Moves like liquid.",
-    "subtitle": "Digital architecture for principals whose name is the business. Machined to tight tolerances, finished in silence, and measured rather than promised.",
+    "subtitle": "Digital architecture at enterprise scale for principals whose name is the business: secure workflow automation, machined to tight tolerances, finished in silence, and measured rather than promised.",
     "ctaPrimary": "Strategic Briefing",
     "ctaSecondary": "Showcase",
     "scroll": "Scroll",
@@ -72,7 +72,7 @@
   "Architecture": {
     "label": "01 — Architecture",
     "title": "Engineering, not decoration.",
-    "intro": "Every pixel is a tolerance, every frame a commitment. Three columns on why a site built here feels calibrated, not merely quick.",
+    "intro": "Every pixel is a tolerance, every frame a commitment. High-ROI digital ecosystems are built here in two layers: a front end that feels calibrated, not merely quick, and enterprise automation engineered to fail safely.",
     "c1Index": "I",
     "c1Title": "Video, not code. Cinema, in the browser.",
     "c1Text": "We left heavy render engines and stuttering animation layers behind. Your hero and showcase streams are served as native MP4/WebM video, decoded by the device’s own video hardware, so the stream costs the processor little.",
@@ -97,11 +97,25 @@
     "c3BestPractices": "Best practices",
     "c3Seo": "SEO",
     "c3Detail": "Desktop: CLS {cls}, LCP {lcp}, TBT {tbt}. Mobile (simulated slow 4G, 4× CPU slowdown): performance {mobile}.",
-    "c3Caption": "{tool}, {profile}, {date}."
+    "c3Caption": "{tool}, {profile}, {date}.",
+    "c4Index": "IV",
+    "c4Name": "Fail-Safe Enterprise Automation",
+    "c4Title": "Built for the day something fails.",
+    "c4Text": "At enterprise scale, something always fails. So the automation is built around that fact: redundant queue architectures keep events moving when one path goes quiet, and webhooks are signed and verified before anything trusts them.",
+    "c4Tags": "Redundant queues · Signed webhooks · Idempotent delivery · Bounded retries",
+    "c4DiagramAlt": "A schematic of a primary lane with one interrupted node, and a standby lane carrying the load around it",
+    "c4Caption": "A schematic of the pattern, not a measurement.",
+    "c5Index": "V",
+    "c5Name": "Deep Enterprise Integrations",
+    "c5Title": "Joined to the systems you already run.",
+    "c5Text": "Salesforce, SAP, HubSpot and Oracle are part of the architecture from the first sketch, so leads, orders and records can move between the site and the systems your business already runs on.",
+    "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
+    "c5DiagramAlt": "A schematic of a central hub joined to four systems",
+    "c5Note": "Product names belong to their owners. No partnership or certification is implied."
   },
   "Showcase": {
     "label": "02 — Showcase",
-    "title": "Three industries.\nOne standard of silence.",
+    "title": "Four industries.\nOne standard of silence.",
     "subtitle": "Restraint is the finish. Each industry speaks in its own register; the standard never changes.",
     "stripLabel": "Industry showcase, scroll sideways",
     "prev": "Previous project",
@@ -131,6 +145,13 @@
       "text": "For law firms, advisory practices and private equity houses: a restrained, exact presence. Practice and partner pages, a confidential enquiry, and a structure in which every word is yours to approve, because applying the advertising and communications rules of your profession is your responsibility.",
       "overlay": "Confidential enquiry",
       "videoLabel": "A dark colonnade receding towards a lit doorway, the camera moving slowly forward"
+    },
+    "logistics": {
+      "tag": "Global logistics & B2B supply chain architecture",
+      "title": "Nothing waits. Nothing is lost.",
+      "text": "For logistics operators and B2B supply chains: redundant queue architectures that keep data moving when a lane goes quiet, an uninterrupted flow of data from order to dock to invoice, and automation that takes the routine decisions so your people can take the exceptional ones.",
+      "overlay": "Enterprise enquiry",
+      "videoLabel": "Parcels crossing a dark corridor of parallel lanes; when one lane goes quiet, a standby lane lights up and the flow does not stop"
     }
   },
   "Briefing": {
@@ -149,9 +170,9 @@
     "budget": {
       "title": "Investment",
       "lead": "Our studio takes on projects from {floor}. Where does yours sit?",
-      "t1Desc": "A focused flagship: one story, told with precision",
-      "t2Desc": "A multi-section architecture with depth",
-      "t3Desc": "A complete digital estate across brands and regions",
+      "t1Desc": "Core Architecture & Workflow Automation",
+      "t2Desc": "Enterprise Infrastructure & Multi-Region Ecosystem",
+      "t3Desc": "Custom Global Ecosystems",
       "micro": "Figures are shown in your market’s currency. They only help us assemble the right team and the right scope."
     },
     "project": {
@@ -245,6 +266,7 @@
     "realEstate": "Luxury real estate",
     "clinics": "Private clinics",
     "law": "Corporate law & advisory",
+    "logistics": "Global logistics & B2B supply chain",
     "languages": "Languages",
     "legal": "Legal",
     "privacy": "Privacy",

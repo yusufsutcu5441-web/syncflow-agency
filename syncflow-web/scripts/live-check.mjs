@@ -92,6 +92,23 @@ for (const [path, lang, dir] of [['/', 'en', 'ltr'], ['/tr', 'tr', 'ltr'], ['/ar
 for (const p of ['/privacy', '/imprint', '/robots.txt', '/sitemap.xml', '/.well-known/security.txt']) await expect(p, p, 200);
 await expect('ja is dormant', '/ja', 404);
 await expect('sitemap lists the seven languages', '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === 7, detail: `${n} URLs` }; });
+
+// The enterprise tier (docs/adr/0019): four showcase cards, the USD 50,000 floor with the three new bands and no USD 25,000 left, the two
+// enterprise columns, and the new clip served as a real video. Read-only: plain GETs (the clip with a one-byte Range request).
+{
+  const res = await get('/?m=us');
+  const html = res.status === 200 ? await res.text() : '';
+  const text = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
+  const cards = [...html.matchAll(/<article[^>]*\bid="(show-[a-z]+)"/g)].map((m) => m[1]);
+  say(cards.join(',') === 'show-estate,show-clinic,show-law,show-logistics' ? 'PASS' : 'FAIL', 'the showcase has the four cards (estate, clinic, law, logistics)', cards.join(', ') || `-> ${res.status || res.error}`);
+  const floorOk = text.includes('$50,000 – $100,000') && text.includes('$100,000 – $250,000') && text.includes('$250,000 +') && !text.includes('$25,000');
+  say(floorOk ? 'PASS' : 'FAIL', 'the briefing opens at $50,000 with the three new bands and no $25,000 left');
+  say(/Fail-Safe Enterprise Automation/.test(text) && /Deep Enterprise Integrations/.test(text) ? 'PASS' : 'FAIL', 'the architecture section carries the two enterprise columns');
+  for (const [ext, type] of [['mp4', 'video/mp4'], ['webm', 'video/webm'], ['webp', 'image/webp']]) {
+    const clip = await get(`/media/clips/logistics.${ext}`, { headers: { range: 'bytes=0-0' } });
+    say([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/logistics.${ext} is served as ${type}`, `-> ${clip.status || clip.error} ${clip.headers.get('content-type') ?? ''}`);
+  }
+}
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });
 const home = await get('/tr');
 const h = (n) => home.headers.get(n);
