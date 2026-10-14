@@ -25,22 +25,24 @@ const FRAME_PROFILE = '1280x800, headless Chrome, 60 Hz, no CPU throttling';
 const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 build)';
 
 // The numbers below are the medians of three Lighthouse runs against the LIVE site (https://syncflow.agency, the deployment of
-// 91c009a with the cinema layer, the entry gate, the four markets and the qualification step), taken on 14.10.2026. Raw runs and the
-// spread: docs/perf/live-2026-10-14.md. They are what was measured, not what was hoped for: the desktop score ranged 84-100 (median 95)
-// and TBT 36-368 ms (median 177 ms). Re-measure after every visual change and put the new medians here.
-const LIVE = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency, docs/perf/live-2026-10-14.md';
+// 55190ec: the seven capital-centre languages and the enterprise tier on top of the cinema layer, the entry gate and the qualification
+// step), taken on 14.10.2026. Raw runs and the spread: docs/perf/live-2026-10-14-enterprise.md. They are what was measured, not what was
+// hoped for: the desktop score was 97-99 (median 97, no run reached 100), TBT 103-148 ms (median 145 ms), CLS 0 in every run; the mobile
+// score was 83-97 (median 96). The measurement before the seven languages and the enterprise tier (91c009a) is docs/perf/live-2026-10-14.md.
+// Re-measure after every visual change and put the new medians here.
+const LIVE = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency, docs/perf/live-2026-10-14-enterprise.md';
 const LIVE_DESKTOP = 'desktop preset, live production (syncflow.agency), median of 3 runs';
 const LIVE_MOBILE = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 3 runs';
 
 export const METRICS = {
-  lighthousePerformance: { value: 95, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  lighthousePerformance: { value: 97, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
   lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
   lighthouseBestPractices: { value: 100, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
   lighthouseSeo: { value: 100, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
-  lighthousePerformanceMobile: { value: 93, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_MOBILE, source: LIVE },
+  lighthousePerformanceMobile: { value: 96, unit: 'score', measuredAt: '2026-10-14', profile: LIVE_MOBILE, source: LIVE },
   cls: { value: 0, unit: 'cls', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
-  lcpDesktop: { value: 580, unit: 'ms', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
-  tbtDesktop: { value: 177, unit: 'ms', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  lcpDesktop: { value: 570, unit: 'ms', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
+  tbtDesktop: { value: 145, unit: 'ms', measuredAt: '2026-10-14', profile: LIVE_DESKTOP, source: LIVE },
   frameMedian: { value: 16.7, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
   frameP99: { value: 16.9, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
 } as const satisfies Record<string, Metric>;

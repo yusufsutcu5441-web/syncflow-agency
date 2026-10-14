@@ -48,7 +48,7 @@ Hero alt başlığı ("Digital architecture at **enterprise scale** for principa
 - **"Global" sözcüğü** (vitrin etiketi ve üçüncü basamak "Custom Global Ecosystems") bir sektör ve hizmet adıdır, erişim iddiası değildir; "küresel erişim" ya da "Worldwide" pazarlama iddiası yine yasaktır (CLAUDE.md, denetim). Bu ayrım sahibin onayına bağlıdır.
 - **Üçüncü taraf adları** yalnızca "entegrasyon hedefi" olarak anılır; ilgili şirketlerin marka kullanım koşullarına uygunluk doğrulanmadı.
 - **Briefing'in "proje türü" adımı** (ürün sitesi, platform, hukuk/danışmanlık, kararsız) lojistik ya da kurumsal otomasyon alıcısı için doğrudan bir seçenek sunmaz. Sahibi "sadece şu dört nokta" dediği için eklenmedi; öneri olarak durur (sunucu şeması ve n8n alanı da değişirdi).
-- **Lighthouse yeniden ölçülmedi.** Yayındaki mühürlü metrikler (14.10.2026) canlı sürüme aittir; bu dal canlıya alınınca ölçüm yenilenmelidir (Mimari iki kart ve iki SVG kazandı; yeni klip yalnızca üzerine gelinince iner).
+- **Lighthouse canlıda yeniden ölçüldü ve mühürlendi** (docs/perf/live-2026-10-14-enterprise.md): masaüstü performans 97, mobil 96, CLS 0, masaüstü LCP 0,57 sn, TBT 145 ms. Sahibi 100/100 doğrulaması istemişti; **hiçbir koşuda 100 çıkmadı** (yayında 97 ve 96 durur) ve mobil LCP medyanı 2,55 sn yazılı hedefin (≤ 2,5 sn) 51 ms üstündedir. Önceki ölçümle fark gürültü sınırındadır: yeni içerik ilk yük JS'ini büyütmedi (170 ve 184 KB), ama iyileşme de iddia edilmez.
 - Depoya ~0,9 MB ikili dosya girer (yeni klip). Çevirilerin (ar, de, fr, es, zh) yeni metinleri de araç yazımıdır; yerel konuşur incelemesi yoktur (ADR 0018'deki borç büyür).
 - Fiyat karşılıkları yeni kurla yeniden alındı; EUR adımı değişti (yukarıda). İsviçre hâlâ EUR ile gösterilir.
 
@@ -58,4 +58,4 @@ Hero alt başlığı ("Digital architecture at **enterprise scale** for principa
 
 **Canlıda** (`main` `55190ec`; yayın birkaç dakikada tamamlandı): `npm run live` **35 geçti, 0 hata, 1 uyarı** (`www` kaydı yok, bilinen eksik). Betik bu işle genişledi ve artık dört vitrin kartını, $50.000 tabanını ve üç yeni basamağı ($25.000'in kalmadığını), iki kurumsal sütunu ve yeni klibin üç dosyasını (mp4, webm, webp) doğru içerik türüyle sınar; yedi dilin sayfaları, `/ja` 404, sitemap yedi adres ve briefing savunmaları yerinde. Aynı tarayıcı akışı canlı sitede de **23/23** (gerçek klip oynatma, şeridin dördüncü kartta bitmesi, Mimari'de beş kart ve üç ışın, briefing'in $50.000 ile açılması). Duman testi canlıya karşı **çalıştırılmaz** (gerçek başvuru gönderir).
 
-**Doğrulanmayan:** gerçek GPU, Safari, Firefox ve ekran okuyucu; canlıda Lighthouse (yeniden ölçülmedi); yeni metinlerin yerel konuşur okuması; üçüncü taraf adlarının hukuki kullanımı.
+**Doğrulanmayan:** gerçek GPU, Safari, Firefox ve ekran okuyucu; gerçek cihazda ve `/` dışındaki sayfalarda Lighthouse; yeni metinlerin yerel konuşur okuması; üçüncü taraf adlarının hukuki kullanımı.
