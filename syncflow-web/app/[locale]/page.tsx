@@ -8,6 +8,7 @@ import { Closing } from '@/components/sections/Closing';
 import { Film } from '@/components/sections/Film';
 import { Hero } from '@/components/sections/Hero';
 import { Showcase } from '@/components/sections/Showcase';
+import { Studio } from '@/components/sections/Studio';
 import { isOpenLocale } from '@/i18n/launch';
 import { buildJsonLd, jsonLdString } from '@/lib/jsonld';
 import { isCrawler } from '@/lib/crawlers';
@@ -41,6 +42,7 @@ export default async function HomePage({ params, searchParams }: Props) {
         <Film />
         <Architecture />
         <Showcase />
+        <Studio />
         <BriefingSection />
         <Closing />
       </main>

@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react';
 import { useClientI18n } from '@/components/i18n/ClientI18n';
+import { Flag } from '@/components/ui/Flag';
 import { Logo } from '@/components/ui/Logo';
 import { OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
@@ -200,8 +201,9 @@ export function EntryGate({ entered, market }: { entered: boolean; market: Marke
                   aria-current={picked === code ? 'true' : undefined}
                   onClick={(event) => choose(event, code)}
                 >
-                  {/* Laid out as a grid (index and currency on the first row), read in this order: language, region, currency. */}
+                  {/* Laid out as a grid (flag, index and currency on the first row), read in this order: language, region, currency. */}
                   <span className="gate-market-index" aria-hidden="true">
+                    <Flag code={card.flag} />
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <span className="gate-market-name" lang={card.hreflang} dir={card.dir}>
@@ -226,8 +228,10 @@ export function EntryGate({ entered, market }: { entered: boolean; market: Marke
           </p>
           <div className="gate-langs">
             {OPEN_LOCALES.map((code) => (
-              <button key={code} type="button" className="gate-lang" lang={LOCALE_LABELS[code].hreflang} dir={LOCALE_LABELS[code].dir} aria-pressed={lang === code} onClick={() => setLang(code)}>
-                {LOCALE_LABELS[code].native}
+              <button key={code} type="button" className="gate-lang" lang={LOCALE_LABELS[code].hreflang} aria-pressed={lang === code} onClick={() => setLang(code)}>
+                <Flag code={LOCALE_LABELS[code].flag} />
+                {/* The direction belongs to the name only, so every chip reads flag first, name second. */}
+                <span dir={LOCALE_LABELS[code].dir}>{LOCALE_LABELS[code].native}</span>
               </button>
             ))}
           </div>

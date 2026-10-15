@@ -1,9 +1,10 @@
 'use client';
 
-import { Check, ChevronDown, Globe } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState, useTransition, type KeyboardEvent } from 'react';
 import { useClientI18n } from '@/components/i18n/ClientI18n';
+import { Flag } from '@/components/ui/Flag';
 import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { stripLocale, withLocale } from '@/lib/i18n-paths';
@@ -188,7 +189,7 @@ export function LanguageSwitcher() {
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onTriggerKeyDown}
       >
-        <Globe size={15} strokeWidth={1.75} aria-hidden="true" />
+        <Flag code={current.flag} />
         <span aria-hidden="true">{current.code}</span>
         <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
@@ -200,7 +201,8 @@ export function LanguageSwitcher() {
           return (
             <button key={code} type="button" lang={label.hreflang} className="lang-item" aria-current={selected ? 'true' : undefined} onClick={() => choose(code)}>
               <span className="flex items-center gap-2.5">
-                {/* The direction belongs to the name only: the row (name left, code right) reads the same in every item, Arabic included. */}
+                <Flag code={label.flag} />
+                {/* The direction belongs to the name only: the row (flag, name, then the code at the far end) reads the same in every item, Arabic included. */}
                 <span dir={label.dir}>{label.native}</span>
                 {selected ? <Check size={14} strokeWidth={2} aria-hidden="true" /> : null}
               </span>

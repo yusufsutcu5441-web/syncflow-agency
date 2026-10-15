@@ -7,7 +7,7 @@ Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith
 |---|---|
 | Diller ve pazarlar | **Yedi sermaye merkezi, yedi dil, yedi pazar** ([ADR 0018](docs/adr/0018-seven-capital-centres.md)): English (`/`, ABD ve küresel, USD), Türkçe (`/tr`, Türkiye, TRY), العربية (`/ar`, Orta Doğu ve Dubai, AED, sağdan sola), Deutsch (`/de`, DACH ve İsviçre, EUR), Français (`/fr`, Monako ve Fransa, EUR), Español (`/es`, küresel servet, USD), 中文 (`/zh`, Basitleştirilmiş Çince, Asya merkezleri, USD). Her ortamda yalnızca `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr,ar,de,fr,es,zh`) yayınlanır, geliştirme sunucusu dahil; `ja` **uykuda taslak** (yalnızca `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile okunur). **Beş yeni dilin çevirileri araç yazımıdır; yerel konuşur ve hukuk incelemesinden geçmedi** (sahibi bunu bilerek canlıya aldı). Sitede "yedi dil" ya da "küresel erişim" pazarlama iddiası yoktur |
 | Satış akışı | Başvuru bazlı: ana sayfadaki 4 adımlı **Strategic Briefing** → `/api/briefing` → imzalı webhook → n8n → Gmail → `contact@syncflow.agency`. İlk adım nitelik eşiğidir: stüdyo asgari USD 50.000'lik projelere çalışır (Avro bölgesi €45.000, Orta Doğu AED 184.000, Türkiye ₺2.475.000; [ADR 0016](docs/adr/0016-qualification-and-markets.md), [0019](docs/adr/0019-enterprise-tier.md)), altı kabul edilmez. Ödeme ve fiyat listesi yok |
-| Bölümler | Hero · Film (kaydırmayla oynayan 4 bölümlük sinema, [ADR 0014](docs/adr/0014-cinematic-layer.md)) · Mimari (5 kart: ön yüzün 3 Border Beam'li kartı ve kurumsal katmanın 2 kartı, [ADR 0019](docs/adr/0019-enterprise-tier.md)) · Vitrin (kilitli dört sektör: Lüks Gayrimenkul, Özel Klinik, Kurumsal Hukuk ve Danışmanlık, Lojistik ve B2B tedarik zinciri; 4 "Architectural Specimen" videosu, yani stüdyonun kendi numuneleri, müşteri işi değil; yatay `scroll-snap` şerit) · Briefing · Kapanış ve footer |
+| Bölümler | Hero · Film (kaydırmayla oynayan 4 bölümlük sinema, [ADR 0014](docs/adr/0014-cinematic-layer.md)) · Mimari (6 kart: ön yüzün 3 Border Beam'li kartı, kurumsal katmanın 2 kartı ve Zero-Trust güvenlik akışı kartı; IV ve VI'da iki etkileşimli **model**: kuyruk simülatörü ve gerçek Web Crypto'yla güvenlik akışı, [ADR 0019](docs/adr/0019-enterprise-tier.md), [0020](docs/adr/0020-case-study-layer.md)) · Vitrin (kilitli dört sektör: Lüks Gayrimenkul, Özel Klinik, Kurumsal Hukuk ve Danışmanlık, Lojistik ve B2B tedarik zinciri; 4 "Architectural Specimen" videosu, yani stüdyonun kendi numuneleri, müşteri işi değil; yatay `scroll-snap` şerit; her kart **Architectural breakdown**'a açılır: `/showcase/<sektör>` sayfası ve ana sayfada diyalog, müşteri vakası değil, numunenin incelemesi) · Stüdyo (03: üç ilke ve "How we built it" mühendislik notları) · Briefing · Kapanış ve footer |
 | Güvenlik | HSTS, CSP (nonce + strict-dynamic, **report-only**; üçüncü taraf yalnızca Cloudflare Turnstile), XFO, nosniff, Referrer/Permissions-Policy, hız sınırı, zod + DOMPurify, honeypot, sunucuya özel sırlar |
 
 > **Bu proje OneDrive / Masaüstü dışında durmalı.** `node_modules` ve `.next` on binlerce dosya içerir; OneDrive senkronu, Türkçe karakterli/boşluklu yollar ve Windows'un 260 karakter sınırı kurulumu ve Remotion'u bozar. Şu an `C:\Users\YAKUP\syncflow-agency\syncflow-web` altında.
@@ -52,9 +52,11 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 ```
 app/
   [locale]/layout.tsx      <html lang dir>, metadata (hreflang yalnızca yayındaki dillere), CSP nonce, dil kapısı (kapalı dil 404)
-  [locale]/page.tsx        ana sayfa: Hero · Architecture · Showcase · BriefingSection · Closing
+  [locale]/page.tsx        ana sayfa: Hero · Film · Architecture · Showcase · Studio · BriefingSection · Closing
+  [locale]/showcase/[slug] Mimari İnceleme sayfası (ADR 0020: dört sektör × yedi dil, indekslenir); /showcase bölüme yönlendirir
   [locale]/privacy|imprint yasal sayfa taslakları (noindex; EN/TR dışında İngilizce metin + uyarı)
   api/briefing/route.ts    Strategic Briefing API'si (Node runtime)
+  api/breakdown/route.ts   bir incelemenin JSON'u (diyalog okur; sektör ve yayındaki dil beyaz listeli, no-store)
   api/csp-report/route.ts  CSP ihlal raporları alıcısı (204; sunucu günlüğüne rapor başına tek satır JSON)
   og/route.tsx             paylaşım görseli (GET /og?locale=tr; AR ve JA kartları İngilizce metinle)
   globals.css              @font-face, belirteçler (@theme), taban katman, bileşen sınıfları (Border Beam, cam yüzey, briefing ...)
@@ -63,14 +65,16 @@ components/
   layout/    Header · Footer · StickyCta · LanguageSwitcher(client; sahneli dil geçişi)
   cinema/    CinemaStage(client): yetenek kapısından sonra WebGL2 motorunu yükler, CSS yedeğini çizer
   gate/      EntryGate(client): tam ekran pazar ve dil kapısı (sunucuda açık, gerçek bağlantılarla; çerezsiz, ?m=)
-  sections/  Hero · Film · Architecture · Showcase + ShowcaseStrip(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
+  sections/  Hero · Film · Architecture · Showcase + ShowcaseStrip(client) · Studio · BreakdownView (sayfa ve diyalog aynı bileşen) + BreakdownDialog + BreakdownHost(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
+  sim/       QueueView · SecurityView (saf görünüm, sunucuda boşta çizilir) · FailSafeSim · SecurityFlowSim (client, tembel parça, gerçek Web Crypto) · LazySims · types
   media/     SceneVideo(client): poster + önceden render edilmiş video, ekran dışında durur
-  i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead
+  i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead, Flag (SVG mikro bayrak)
 lib/
   market.ts        pazar (us, eu, me, tr): beyaz listeli ?m= parametresi, önerilen dil, tab belleği   crawlers.ts  kapıyı atlayan arama motoru ve önizleme botları (ADR 0015)
   pricing.ts       asgari tutar ve basamaklar, pazar başına para birimi (USD 50.000 ve kur karşılıkları), Intl biçimi: fiyatın TEK kaynağı (ADR 0016)
   briefing.ts      seçenekler, sınırlar, zod'suz tarayıcı doğrulayıcı, sınıflandırma (tarayıcı + sunucu)
   metrics.ts       sitede yayınlanan TÜM performans sayıları (değer, tarih, profil, kaynak)
+  breakdown.ts     inceleme sektörleri ve veri tipi (ADR 0020)   server/breakdown.ts  incelemenin yükleyicisi (dil + sayılar lib/metrics.ts'ten)
   schemas/briefing.ts (zod, strict)    server/ deliver.ts · turnstile.ts · sanitize.ts (server-only)    security/ csp.ts · rate-limit.ts
   enhance/  ui-state (üstbilgi, mobil yapışkan CTA, ekran dışında durdurma) · spotlight · magnetic · rings · reveal (Motion) · smooth-scroll (Lenis) · film (kaydırma → `--p` ve sinema durumu) · hero (kaydırma → `--hp`, amblem derinliği) · mask-frame (medya çerçevesi maskesi, `--mf`)
   cinema/   engine (ham WebGL2) · shaders (GLSL) · state · capable (yetenek kapısı)
@@ -78,11 +82,11 @@ lib/
 messages/   en tr ar de fr es zh ja (.json; ja uykuda)
 i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/       adr/ (mimari kararlar 0001–0014) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+docs/       adr/ (mimari kararlar 0001–0020) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
 public/     fonts/ Instrument Sans, Instrument Serif, Syne alt kümeleri (OFL; Cabinet Grotesk git'te yok, derlemede iner)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
 assets/     og-instrument-sans-600.ttf (paylaşım kartı yazı tipi)
-remotion/   Render kaynağı, siteye girmez: config.ts, fonts.ts, Root.tsx, scenes/ (Monolith, Estate, Clinic, Law)
+remotion/   Render kaynağı, siteye girmez: config.ts, fonts.ts, Root.tsx, scenes/ (Monolith, Estate, Clinic, Law, Logistics, fx: ortak bitiriş)
 scripts/    check-messages · check-fonts · build-fonts · build-brand · smoke · audit-secrets · render-film · render-posters · fetch-fonts · lighthouse · dev-inbox
 ```
 
@@ -182,15 +186,16 @@ Atmosfer katmanıdır; içerik ve erişilebilirlik onsuz da eksiksizdir.
 
 Sitede **Remotion çalışma zamanı yok**: videolar önceden render edilmiş dosyalardır ([ADR 0003](docs/adr/0003-showcase-film-static-render.md)). `remotion` yalnızca geliştirme bağımlılığıdır; `remotion/scenes/` altındaki sahneleri `scripts/render-film.mjs` ile render etmek içindir.
 
-- **Sahneler** (1280×720, 30 kare/sn, 8 sn kusursuz döngü, her biri tamamen kareden hesaplanır): `Monolith` (yavaşça dönen cam monolit; "mimari" kartı), `Estate` (gün batımında cam cepheli villa), `Clinic` (soluk klinik koridoru), `Law` (tek ışıklı kapıya doğru uzanan karanlık sütunlu koridor; hukuk kartı), `Logistics` (yüksek açıdan yük koridoru: paralel şeritler, kapılar, akan koliler; bir kapı sessizleşince şampanya ışıklı yedek şerit devralır; lojistik kartı). **Konsept render'dır**, gerçek müşteri işi değildir; kartlarda öyle yazar. Sahnelerde okunabilir metin yoktur: altyazı HTML'dir, tek render her dile yeter.
-- **Çıktı:** `public/media/clips/<ad>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (yedek) ve WebP poster. Toplam 15 dosya, yaklaşık 2,8 MB.
-- **Oynatma** (`components/media/SceneVideo.tsx`): HTML'de yalnızca poster gelir, video `preload="none"`. Ince işaretçide, görünürken (mimari kartı) ya da kartın üstüne gelince/odaklanınca (vitrin) oynar; **dokunmatikte, azaltılmış hareket ve Save-Data'da otomatik oynamaz** ve hiçbir şey indirilmez; ziyaretçi düğmeye basınca yüklenir. Ekran dışına çıkınca ve sekme gizlenince durur. Her videoda görünür bir oynat/duraklat düğmesi vardır (WCAG 2.2.2). Çerçeve oranı sabittir (CLS 0).
+- **Sahneler** (1280×720 tuvalde çizilir, 30 kare/sn, 8 sn kusursuz döngü, her biri tamamen kareden hesaplanır; dört sektör sahnesi `--scale=1.5` ile **1920×1080** işlenir, monolit 1280×720 kalır, [ADR 0020](docs/adr/0020-case-study-layer.md)): `Monolith` (yavaşça dönen cam monolit; "mimari" kartı), `Estate` (gün batımında cam cepheli villa), `Clinic` (soluk klinik koridoru), `Law` (tek ışıklı kapıya doğru uzanan karanlık sütunlu koridor; hukuk kartı), `Logistics` (yüksek açıdan yük koridoru: paralel şeritler, kapılar, akan koliler; bir kapı sessizleşince şampanya ışıklı yedek şerit devralır; lojistik kartı). **Konsept render'dır**, gerçek müşteri işi değildir; kartlarda öyle yazar. Sahnelerde okunabilir metin yoktur: altyazı HTML'dir, tek render her dile yeter.
+- **Çıktı:** `public/media/clips/<ad>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (yedek) ve WebP poster. Toplam 15 dosya, yaklaşık 5,8 MB (sektör klipleri 0,4–1,1 MB, posterler 14–40 KB).
+- **Oynatma** (`components/media/SceneVideo.tsx`): Poster, kartın içindeki **tembel `<img>`**'dir (`<video poster>` değil: poster sayfa yüklenirken iner, 1080p posterler ilk yüke binerdi); video `preload="none"`. Ince işaretçide, görünürken (mimari kartı) ya da kartın üstüne gelince/odaklanınca (vitrin) oynar; **dokunmatikte, azaltılmış hareket ve Save-Data'da otomatik oynamaz** ve hiçbir şey indirilmez; ziyaretçi düğmeye basınca yüklenir. Ekran dışına çıkınca ve sekme gizlenince durur. Her videoda görünür bir oynat/duraklat düğmesi vardır (WCAG 2.2.2). Çerçeve oranı sabittir (CLS 0).
 - **Lisans:** Remotion yalnızca ≤ 3 kişilik kâr amaçlı şirketlerde/bireylerde ücretsizdir; **4+ kişilik şirketler için ücretli Company License gerekir** (remotion.pro). Render almak da lisans kapsamındadır.
 
 ```bash
 npm run film:render                       # beş sahne × (MP4 + WebM + poster), ~10 dk
 npm run film:render -- --posters          # yalnızca posterler (hızlı)
 npm run film:render -- --only=estate      # tek sahne
+npm run film:render -- --formats=mp4       # yalnızca bazı biçimler (boyutu hızlı görmek için)
 npm run remotion:studio                   # sahneleri tarayıcıda düzenle
 ```
 Sahne değişince komutu çalıştırıp çıkan dosyaları commit'leyin. Remotion CLI her seferinde `npx` ile, kurulu `remotion` sürümüyle getirilir (projeye eklenmez); "zod sürüm uyuşmazlığı" uyarısı zararsızdır.
@@ -259,6 +264,19 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 ## 11. Doğrulama sonuçları
 
 Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
+
+### Vaka incelemesi katmanı, Stüdyo, simülatörler, bayraklar, 1080p klipler (15.10.2026, dal `feat/case-studies`, yerel)
+
+Karar: [ADR 0020](docs/adr/0020-case-study-layer.md); ölçüm: [docs/perf/local-2026-10-15-case-studies.md](docs/perf/local-2026-10-15-case-studies.md). **Canlıya alınmadı**: canlı doğrulama, canlı Lighthouse ölçümü ve `lib/metrics.ts` mührü push'tan sonra yapılır.
+
+| Denetim | Sonuç |
+|---|---|
+| `npm run check` | `check:messages` (yedi yayın dilinde **491 anahtar**, uyarı yok), `tsc` ve ESLint temiz |
+| `node faz2-denetim.mjs --build` | **188 geçti, 0 hata**, 1 eski uyarı (`generateStaticParams`). Yeni bölüm 11: dört sektör × 14 metin × yedi dil, dört başlık sırası, rakam ve yüzde yokluğu, yasak iddialar (zero latency, fotogerçekçi, SLA, sertifika), toleransların koddaki sabitlerle eşleşmesi, gerçek Web Crypto, simülatör ve diyalog kodunun ilk yükte olmaması, bayrak emojisi yokluğu, klip çözünürlüğü (MP4/WebP başlıklarından 1920×1080) |
+| `npm run smoke` | **213/213** (üretim derlemesi, sahte webhook alıcısı): 28 inceleme sayfası ve API'si, site haritası 35 adres, bilinmeyen sektör/kapalı dil 404, ana sayfada Stüdyo ve simülatörler, SVG bayraklar, tembel klip görüntüleri, yayınlanan sayıların sayfada görünmesi |
+| `npm run live` (yerel kopyada, DNS/TLS hariç) | 37 geçti, 0 hata: yeni bloklar 28 sayfa, API, 1080p klip boyutları |
+| Tarayıcı akışı (Chrome 154, 1440×900 ve 390×844; betik depoda yok) | önceki akış **23/23**; yeni akış **42/42**: kapıda ve menüde 7 bayrak, Stüdyo, **simülatörler gerçek Web Crypto ile** (imza `sha256=…`, tek karakter değişince ret, aynı ileti mükerrer), kuyrukta tıkama → bekleme → sırayla boşalma, **CLS 0,00**, kartın çerçevesine tıklayınca diyalog, adres değişimi, Esc ve Geri kapatır, odak döner, diyalogdaki çağrı Briefing'e kaydırır, Arapça sağdan sola, Çince, telefonda yatay kaydırma yok |
+| Lighthouse (yerel, ana dal ile aralıklı A/B) | masaüstü **92 / 92**, mobil **83–86 / 85–91** (gürültü içinde; aynı derlemenin TBT'si 55–669 ms arasında oynadı), LCP yeni derlemede ~250–300 ms **daha iyi**, CLS 0, JS +3 KB (174 / 171). Ayrıntı ve sınırlar perf belgesinde; **canlı ölçüm yapılmadı** |
 
 ### Sinematik katman, giriş kapısı ve Hero (12.10.2026, `7cf5b50`, canlıda)
 

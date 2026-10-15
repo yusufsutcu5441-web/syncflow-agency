@@ -25,5 +25,6 @@ export const LEGAL_UPDATED = '2026-10-08';
 export const SECTION_IDS = {
   architecture: 'architecture',
   showcase: 'showcase',
+  studio: 'studio',
   briefing: 'briefing',
 } as const;

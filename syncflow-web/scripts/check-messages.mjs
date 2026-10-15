@@ -55,6 +55,7 @@ const SAME_OK = new Set([
   'III',
   'IV',
   'V',
+  'VI',
   '7',
   '⌘K',
   'hreflang · RTL-native · CJK typography · Locale-aware formatting',
@@ -67,6 +68,10 @@ const SAME_OK = new Set([
   '$20k +',
   '{tool}, {profile}, {date}.',
   // Cognates and brand terms that are the same in more than one language.
+  '03 — Studio',
+  'Client',
+  'Signature',
+  'mobile',
   'Showcase',
   '02 — Showcase',
   'Strategic Briefing',

@@ -4,6 +4,7 @@ import { getLocale, getNow, getTranslations } from 'next-intl/server';
 import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
+import { Flag } from '@/components/ui/Flag';
 import { Logo } from '@/components/ui/Logo';
 import { SECTION_IDS } from '@/lib/site';
 
@@ -38,6 +39,11 @@ export async function Footer() {
               <li>
                 <Link href={here(SECTION_IDS.architecture)} prefetch={false} className={linkClass}>
                   {t('performance')}
+                </Link>
+              </li>
+              <li>
+                <Link href={here('how-we-built-it')} prefetch={false} className={linkClass}>
+                  {t('how')}
                 </Link>
               </li>
               <li>
@@ -83,12 +89,13 @@ export async function Footer() {
                   <a
                     href={withLocale('/', code)}
                     lang={LOCALE_LABELS[code].hreflang}
-                    dir={LOCALE_LABELS[code].dir}
                     hrefLang={LOCALE_LABELS[code].hreflang}
-                    className={linkClass}
+                    className={`${linkClass} inline-flex items-center gap-2.5`}
                     aria-current={code === locale ? 'true' : undefined}
                   >
-                    {LOCALE_LABELS[code].native}
+                    <Flag code={LOCALE_LABELS[code].flag} />
+                    {/* The direction belongs to the name only, so every row reads flag first, name second. */}
+                    <span dir={LOCALE_LABELS[code].dir}>{LOCALE_LABELS[code].native}</span>
                   </a>
                 </li>
               ))}

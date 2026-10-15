@@ -30,14 +30,21 @@ export type AppLocale = (typeof routing.locales)[number];
  */
 export const LOCALE_LABELS: Record<
   AppLocale,
-  { native: string; code: string; hreflang: string; ogLocale: string; dir: 'ltr' | 'rtl'; intl: string }
+  { native: string; code: string; hreflang: string; ogLocale: string; dir: 'ltr' | 'rtl'; intl: string; flag: FlagCode }
 > = {
-  en: { native: 'English', code: 'EN', hreflang: 'en', ogLocale: 'en_US', dir: 'ltr', intl: 'en-US' },
-  tr: { native: 'Türkçe', code: 'TR', hreflang: 'tr', ogLocale: 'tr_TR', dir: 'ltr', intl: 'tr-TR' },
-  ar: { native: 'العربية', code: 'AR', hreflang: 'ar', ogLocale: 'ar_AE', dir: 'rtl', intl: 'ar-AE-u-nu-latn' },
-  de: { native: 'Deutsch', code: 'DE', hreflang: 'de', ogLocale: 'de_DE', dir: 'ltr', intl: 'de-DE' },
-  fr: { native: 'Français', code: 'FR', hreflang: 'fr', ogLocale: 'fr_FR', dir: 'ltr', intl: 'fr-FR' },
-  es: { native: 'Español', code: 'ES', hreflang: 'es', ogLocale: 'es_ES', dir: 'ltr', intl: 'es-US' },
-  zh: { native: '中文', code: 'ZH', hreflang: 'zh-Hans', ogLocale: 'zh_CN', dir: 'ltr', intl: 'zh-CN' },
-  ja: { native: '日本語', code: 'JA', hreflang: 'ja', ogLocale: 'ja_JP', dir: 'ltr', intl: 'ja-JP' },
+  en: { native: 'English', code: 'EN', hreflang: 'en', ogLocale: 'en_US', dir: 'ltr', intl: 'en-US', flag: 'us' },
+  tr: { native: 'Türkçe', code: 'TR', hreflang: 'tr', ogLocale: 'tr_TR', dir: 'ltr', intl: 'tr-TR', flag: 'tr' },
+  ar: { native: 'العربية', code: 'AR', hreflang: 'ar', ogLocale: 'ar_AE', dir: 'rtl', intl: 'ar-AE-u-nu-latn', flag: 'ae' },
+  de: { native: 'Deutsch', code: 'DE', hreflang: 'de', ogLocale: 'de_DE', dir: 'ltr', intl: 'de-DE', flag: 'de' },
+  fr: { native: 'Français', code: 'FR', hreflang: 'fr', ogLocale: 'fr_FR', dir: 'ltr', intl: 'fr-FR', flag: 'fr' },
+  es: { native: 'Español', code: 'ES', hreflang: 'es', ogLocale: 'es_ES', dir: 'ltr', intl: 'es-US', flag: 'es' },
+  zh: { native: '中文', code: 'ZH', hreflang: 'zh-Hans', ogLocale: 'zh_CN', dir: 'ltr', intl: 'zh-CN', flag: 'cn' },
+  ja: { native: '日本語', code: 'JA', hreflang: 'ja', ogLocale: 'ja_JP', dir: 'ltr', intl: 'ja-JP', flag: 'jp' },
 };
+
+/**
+ * The micro flag of a language's capital centre (components/ui/Flag.tsx draws them as SVG: flag emoji do not render on Windows). The
+ * flag marks the market the language suggests (lib/market.ts): English the United States, Arabic the Emirates, Spanish Spain, Chinese
+ * China. It is a visual cue only; the language and the region are always named in text beside it.
+ */
+export type FlagCode = 'us' | 'tr' | 'ae' | 'de' | 'fr' | 'es' | 'cn' | 'jp';

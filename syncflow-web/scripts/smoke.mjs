@@ -310,7 +310,10 @@ section('security.txt (RFC 9116)');
 
 section('Metadata routes and error pages');
 const sitemap = await (await get('/sitemap.xml')).text();
-check(`sitemap lists ${OPEN.length} locale URLs with alternates (and no closed language)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)));
+const SLUGS = ['estate', 'clinic', 'law', 'logistics'];
+const breakdownPath = (locale, slug) => (locale === 'en' ? `/showcase/${slug}` : `/${locale}/showcase/${slug}`);
+check(`sitemap lists ${OPEN.length} locale URLs and ${OPEN.length * SLUGS.length} breakdown URLs with alternates (and no closed language)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length) && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
+check('every public language and every specimen has its breakdown URL in the sitemap', OPEN.every((l) => SLUGS.every((slug) => sitemap.includes(`${breakdownPath(l, slug)}</loc>`))));
 const robots = await (await get('/robots.txt')).text();
 check('robots.txt disallows /api/ and links the sitemap', /Disallow: \/api\//.test(robots) && /Sitemap:/.test(robots));
 check('manifest + icon served', (await get('/manifest.webmanifest')).status === 200 && (await get('/icon.svg')).status === 200);
@@ -506,6 +509,76 @@ await ranged.arrayBuffer();
 const cached = (await get('/media/clips/estate.webp')).headers.get('cache-control') ?? '';
 check('scene files are cacheable for a week with background revalidation', /max-age=604800/.test(cached) && /stale-while-revalidate/.test(cached), cached);
 check('the old architecture film is gone (404)', (await get('/media/showcase/architecture-en-wide.mp4')).status === 404);
+
+/* ── Architectural breakdowns, Studio, simulators, flags (docs/adr/0020) ───────────────────────────────────────────────────── */
+section('Case studies, Studio, simulators and flags (docs/adr/0020)');
+const metricsSource = (await import('node:fs')).readFileSync(new URL('../lib/metrics.ts', import.meta.url), 'utf8');
+const metric = (name) => Number(new RegExp(`${name}: \\{ value: ([0-9.]+)`).exec(metricsSource)?.[1]);
+const perfDesktop = metric('lighthousePerformance');
+const perfMobile = metric('lighthousePerformanceMobile');
+const lcpSeconds = (metric('lcpDesktop') / 1000).toFixed(1);
+const stripTags = (markup) => markup.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
+const FORBIDDEN_IN_BREAKDOWN = /zero[- ]latency|sıfır gecikme|photo-?real|fotogerçek|SOC ?2|ISO ?27001|certified partner|sertifikalı ortak|\b99\.\d+ ?%|\b(?:uptime|SLA)\s*(?:of|:)\s*\d/i;
+let breakdownFailures = [];
+for (const locale of OPEN) {
+  for (const slug of SLUGS) {
+    const res = await get(breakdownPath(locale, slug));
+    const body = await res.text();
+    const text = normalise(stripTags(body));
+    const ids = ['challenge', 'solution', 'integration', 'impact'].map((id) => body.includes(`id="bd-${id}"`));
+    const canonical = new RegExp(`<link rel="canonical" href="[^"]*${breakdownPath(locale, slug).replace(/\//g, '\\/')}"`).test(body);
+    const hreflangs = (body.match(/<link rel="alternate" hrefLang="/g) ?? body.match(/<link rel="alternate" hreflang="/g) ?? []).length;
+    const ok = res.status === 200 && /<h1\b/.test(body) && ids.every(Boolean) && canonical && hreflangs >= OPEN.length + 1 && /noindex/.test(body) === false && !FORBIDDEN_IN_BREAKDOWN.test(text) && text.includes(`${perfDesktop} · ${perfMobile}`) && new RegExp(`${lcpSeconds.replace('.', '[.,]')}\\s?s\\b`).test(text) && /0[.,]00/.test(text);
+    if (!ok) breakdownFailures.push(`${locale}/${slug}: status ${res.status}, parts ${ids.join('')}, canonical ${canonical}, hreflang ${hreflangs}`);
+  }
+}
+check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, hreflang, indexable, the published numbers and none of the forbidden claims`, breakdownFailures.length === 0, breakdownFailures.slice(0, 3).join(' | '));
+const enBreakdown = await (await get('/showcase/law')).text();
+check('the English law breakdown names its four headings in the required order', /Challenge[\s\S]*Architectural solution[\s\S]*Integration &amp; security[\s\S]*Measured impact &amp; ROI/.test(enBreakdown));
+check('every breakdown says it is a specimen, not client work', (await Promise.all(SLUGS.map(async (slug) => (await (await get(breakdownPath('en', slug))).text()).includes('not client work')))).every(Boolean));
+const clinicEn = normalise(stripTags(await (await get('/showcase/clinic')).text()));
+check('the clinic breakdown keeps to the health-advertising rules (no price, no testimonial, no results gallery offered; it says so)', /no prices, discounts, galleries of results or patient testimonials/.test(clinicEn) && !/(?:from|only|starting at) [$€£]\s?\d/.test(clinicEn));
+const lawEn = normalise(stripTags(await (await get('/showcase/law')).text()));
+check('the law breakdown keeps to the advertising rules (it says no client is solicited; nothing is published without partner approval)', /no client is solicited/.test(lawEn) && /until a partner has approved/.test(lawEn));
+check('the integration part names Salesforce, SAP and Oracle as examples, with the no-partnership note', /Salesforce[\s\S]*SAP[\s\S]*Oracle/.test(lawEn) && /no partnership or certification is implied/.test(lawEn));
+
+const showcaseRedirect = await get('/showcase');
+check('/showcase has no page of its own: it leads to the section (307 to /#showcase)', showcaseRedirect.status === 307 && /\/#showcase$/.test(showcaseRedirect.headers.get('location') ?? ''), `${showcaseRedirect.status} ${showcaseRedirect.headers.get('location')}`);
+check('an unknown specimen is a 404', (await get('/showcase/saas')).status === 404);
+for (const closed of CLOSED) check(`${closed}: a breakdown in a closed language is a 404`, (await get(`/${closed}/showcase/estate`)).status === 404);
+
+const getFresh = (path) => get(path, { headers: { 'x-forwarded-for': uniqueIp() } });
+let apiFailures = [];
+for (const locale of OPEN) {
+  for (const slug of SLUGS) {
+    const res = await getFresh(`/api/breakdown?slug=${slug}&locale=${locale}`);
+    const json = await res.json().catch(() => null);
+    const good = res.status === 200 && json?.ok === true && json.data?.slug === slug && json.data?.locale === locale && json.data?.parts?.length === 3 && json.data?.impact?.tiles?.length === 4 && res.headers.get('cache-control') === 'no-store';
+    if (!good) apiFailures.push(`${locale}/${slug}: ${res.status}`);
+  }
+}
+check(`/api/breakdown answers JSON for all ${OPEN.length * SLUGS.length} specimens and languages (3 parts, 4 measured tiles, no-store)`, apiFailures.length === 0, apiFailures.slice(0, 3).join(' | '));
+check('/api/breakdown whitelists both parameters (unknown slug, unknown or closed language, nothing: 404; nothing is echoed)', (await getFresh('/api/breakdown?slug=saas&locale=en')).status === 404 && (await getFresh('/api/breakdown?slug=law&locale=xx')).status === 404 && (await getFresh('/api/breakdown?slug=law&locale=ja')).status === 404 && (await getFresh('/api/breakdown')).status === 404 && !(await (await getFresh('/api/breakdown?slug=<script>&locale=en')).text()).includes('<script>'));
+check('the breakdown API carries a locked-down CSP (default-src none)', (await getFresh('/api/breakdown?slug=law&locale=en')).headers.get('content-security-policy')?.includes("default-src 'none'") === true);
+
+let homeFailures = [];
+for (const locale of OPEN) {
+  const page = (await pageAs(locale === 'en' ? '/?m=us' : `/${locale}?m=${{ tr: 'tr', ar: 'me', de: 'dach', fr: 'fr', es: 'wealth', zh: 'asia' }[locale]}`)).page.replace(/<script[\s\S]*?<\/script>/g, '');
+  const nav = (page.match(/<nav[^>]*class="[^"]*lg:flex[^"]*"[\s\S]*?<\/nav>/) ?? [''])[0];
+  const ok =
+    page.includes('id="studio"') && page.includes('id="how-we-built-it"') && (page.match(/<details class="note"/g) ?? []).length === 3 &&
+    page.includes('data-sim="queue"') && page.includes('data-sim="security"') && (page.match(/data-breakdown-link/g) ?? []).length === 8 &&
+    nav.includes('#studio') && (page.match(/data-flag=/g) ?? []).length >= 8 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(page) &&
+    !/\sposter="/.test(page) && (page.match(/<img[^>]+media\/clips[^>]+loading="lazy"/g) ?? []).length >= 5 &&
+    !FORBIDDEN_IN_BREAKDOWN.test(normalise(stripTags(page)));
+  if (!ok) homeFailures.push(locale);
+}
+check(`the home page, in every language: Studio with its three notes, both simulators drawn idle, 4 breakdown pills + 4 card hit areas, SVG flags (no emoji), a fourth nav link, lazy stills and no video poster attribute`, homeFailures.length === 0, `failing: ${homeFailures.join(', ')}`);
+const enHome = normalise(stripTags((await pageAs('/?m=us')).page));
+check('the Studio text states zero defects as a method, never as a guarantee; the NDA is "can be signed", not a certification', /Zero defects, as a method/.test(enHome) && /never a promise we could sign/.test(enHome) && /mutual NDA can be signed/.test(enHome) && !/guarantee/i.test(enHome.slice(enHome.indexOf('Exact by habit'), enHome.indexOf('Exact by habit') + 6000)));
+check('the Studio engineering notes state the real tolerances (pixel ratio 1.25, 24 ms, 1.2 s, 88 px, 16.7 ms)', ['1.25', '24 ms', '1.2 s', '88 px', '16.7 ms'].every((t) => enHome.includes(t)));
+check('the old still failover schematic is gone: the card holds the live simulator instead', !enHome.includes('A schematic of the pattern, not a measurement') && enHome.includes('A model of the pattern, not a measurement of a real system'));
+check('the security simulator says it uses throwaway keys, names no certification and no partnership', /throwaway keys/.test(enHome) && /no partnership with the products named is implied/.test(enHome));
 
 section('CSP report endpoint');
 const violation = {
