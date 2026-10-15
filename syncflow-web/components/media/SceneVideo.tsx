@@ -8,7 +8,9 @@ import { useClientI18n } from '@/components/i18n/ClientI18n';
  * A looping, silent, native video of a scene that was rendered ahead of time (public/media/clips, npm run film:render;
  * docs/adr/0003 and 0006). No animation engine runs in the browser: the file is decoded by the device's own video hardware.
  *
- *  - The poster (a WebP still) is in the HTML. The video itself is `preload="none"`: it is fetched only when it is going
+ *  - The still (a WebP) is a lazy <img> under the video, not the video's `poster`: a poster is fetched at page load whatever its
+ *    distance from the screen, a lazy image only when its card is near (docs/adr/0020: the stills are 1920 x 1080 now, so
+ *    four of them must not weigh on the first load). The video itself is `preload="none"`: it is fetched only when it is going
  *    to play, so a visitor who never looks at it never downloads it. MP4 (H.264) first, WebM (VP9) as the fallback.
  *  - mode "visible": plays while at least 30 % of it is on screen. mode "hover": plays while the pointer is over (or
  *    keyboard focus is inside) its card [data-video-host]. Autoplay needs a fine pointer; touch devices show the poster
@@ -21,6 +23,8 @@ type Mode = 'visible' | 'hover';
 export function SceneVideo({ name, label, mode }: { name: 'monolith' | 'estate' | 'clinic' | 'law' | 'logistics'; label: string; mode: Mode }) {
   const { messages } = useClientI18n();
   const t = messages.Showcase;
+  // The four sector scenes are rendered at 1920 x 1080, the architecture monolith at 1280 x 720 (scripts/render-film.mjs).
+  const [width, height] = name === 'monolith' ? [1280, 720] : [1920, 1080];
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
@@ -112,13 +116,15 @@ export function SceneVideo({ name, label, mode }: { name: 'monolith' | 'estate' 
 
   return (
     <>
+      {/* A plain lazy <img>, not next/image: a decorative still from public/, already a WebP at its display size (docs/adr/0020). */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/media/clips/${name}.webp`} alt="" width={width} height={height} loading="lazy" decoding="async" />
       <video
         ref={video}
         muted
         loop
         playsInline
         preload="none"
-        poster={`/media/clips/${name}.webp`}
         aria-label={label}
         className="pointer-events-none"
         onPlay={() => setPlaying(true)}

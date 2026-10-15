@@ -12,6 +12,7 @@
  *   npm run film:render                    everything
  *   npm run film:render -- --posters       posters only (fast)
  *   npm run film:render -- --only=estate   one scene
+ *   npm run film:render -- --formats=mp4   only some formats (mp4, webm), e.g. to check a file size quickly
  *   npm run remotion:studio                open Remotion Studio to edit the scenes
  *
  * The Remotion CLI is fetched on demand with npx at the version of the installed `remotion` package, so nothing extra
@@ -30,17 +31,22 @@ const { version } = JSON.parse(readFileSync(join(root, 'node_modules', 'remotion
 // Mirrors remotion/config.ts (kept in plain JS here so this script needs no TypeScript runtime).
 const CLIPS = ['monolith', 'estate', 'clinic', 'law', 'logistics'];
 const POSTER_FRAME = { monolith: 36, estate: 120, clinic: 70, law: 90, logistics: 70 };
+// The compositions are drawn at 1280 x 720; --scale renders them larger without touching a coordinate. The four sector scenes of the
+// showcase are rendered at 1.5 (1920 x 1080), the architecture monolith stays at 1 (docs/adr/0020-case-study-layer.md).
+const SCALE = { monolith: 1, estate: 1.5, clinic: 1.5, law: 1.5, logistics: 1.5 };
 
 /** Frames go through PNG, not the default JPEG, so thin lines and small text reach the encoder undamaged. */
 const COMMON = ['--muted', '--overwrite', '--image-format=png', '--log=error'];
-const FORMATS = [
-  { ext: 'mp4', args: ['--codec=h264', '--crf=23', '--x264-preset=slow', '--pixel-format=yuv420p'] },
-  { ext: 'webm', args: ['--codec=vp9', '--crf=32', '--pixel-format=yuv420p'] },
+/** Larger frames cost more bytes, so their constant-quality targets sit a little higher (a lower quality number per pixel is the same picture). */
+const formats = (large) => [
+  { ext: 'mp4', args: ['--codec=h264', `--crf=${large ? 26 : 23}`, '--x264-preset=slow', '--pixel-format=yuv420p'] },
+  { ext: 'webm', args: ['--codec=vp9', `--crf=${large ? 35 : 32}`, '--pixel-format=yuv420p'] },
 ];
 
 const args = process.argv.slice(2);
 const only = args.find((a) => a.startsWith('--only='))?.slice('--only='.length);
 const postersOnly = args.includes('--posters');
+const only_formats = args.find((a) => a.startsWith('--formats='))?.slice('--formats='.length).split(',');
 
 const cli = (parts, { quiet = true } = {}) => {
   const command = ['npx', '--yes', '-p', `@remotion/cli@${version}`, 'remotion', ...parts].join(' ');
@@ -66,9 +72,14 @@ const started = Date.now();
 for (const name of targets) {
   const id = `Clip-${name}`;
   const base = join(outDir, name);
+  const scale = `--scale=${SCALE[name]}`;
   const jobs = [
-    { label: 'poster', file: `${base}.webp`, parts: ['still', 'remotion/index.ts', id, `"${base}.webp"`, `--frame=${POSTER_FRAME[name]}`, '--overwrite', '--log=error'] },
-    ...(postersOnly ? [] : FORMATS.map(({ ext, args: encoder }) => ({ label: ext, file: `${base}.${ext}`, parts: ['render', 'remotion/index.ts', id, `"${base}.${ext}"`, ...encoder, ...COMMON] }))),
+    { label: 'poster', file: `${base}.webp`, parts: ['still', 'remotion/index.ts', id, `"${base}.webp"`, `--frame=${POSTER_FRAME[name]}`, scale, '--overwrite', '--log=error'] },
+    ...(postersOnly
+      ? []
+      : formats(SCALE[name] > 1)
+          .filter(({ ext }) => !only_formats || only_formats.includes(ext))
+          .map(({ ext, args: encoder }) => ({ label: ext, file: `${base}.${ext}`, parts: ['render', 'remotion/index.ts', id, `"${base}.${ext}"`, ...encoder, scale, ...COMMON] }))),
   ];
   for (const job of jobs) {
     const t0 = Date.now();
