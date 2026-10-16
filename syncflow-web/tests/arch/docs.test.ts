@@ -6,7 +6,8 @@ import { computeExamples, mappingTables, scenarioTable, withBlock } from './exam
 
 const root = process.env.ARCH_ROOT ?? process.cwd();
 const docs = join(root, 'docs', 'architecture');
-const read = (path: string) => readFileSync(join(docs, path), 'utf8');
+// Line endings are not content: a Windows checkout with core.autocrlf turns the documents into CRLF, the generated tables are LF.
+const read = (path: string) => readFileSync(join(docs, path), 'utf8').replace(/\r\n/g, '\n');
 
 describe('documentation: the evidence in docs/architecture/ is what the code does today', () => {
   it('every example file equals what the code computes (npm run arch:examples rewrites them)', async () => {

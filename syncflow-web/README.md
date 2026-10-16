@@ -278,15 +278,16 @@ Karar ve tüm ölçümler: [ADR 0022](docs/adr/0022-single-text-face-and-mobile-
 |---|---|
 | Yazı tipi | Instrument Sans, Instrument Serif ve Cabinet Grotesk yerine **tek yüz Inter Display** (OFL, 300–500): ilk görünümdeki yazı tipi baytı **71,3 KB → 26,4 KB (−%63)**; Cabinet'in lisans sorusu kapandı, derleme ağdan yazı tipi çekmez |
 | `npm run check` · `check:fonts` · `arch:verify` · `smoke` | temiz (503 anahtar × 7 dil) · temiz · **65/65** · **180/180** |
-| `npm run qa:browser` (yeni `type` ve `casestudy` grupları dahil) | **114 kontrolün 113'ü**; Arapça masaüstü kaydırma CLS'i bir kez 0,083 (yüklü makine), izole üç koşuda 0,00: kararlı sayılmaz |
+| `npm run qa:browser --parity` (yeni `type` ve `casestudy` grupları dahil) | **119/119** (makine boşta); tam koşuların ikisinde Arapça masaüstü kaydırma CLS'i 0,083 verdi (yüklü makine), boşta 14 koşunun hepsinde 0,00: aralıklı, garanti edilemez (ADR 0022 §8) |
 | Mobil Lighthouse `/` (sakin makine, n=5, `ef72636` ile araya girerek) | eski **94** → yeni **96**; LCP 3.070 → **2.755 ms**; indirilen 387 → **334 KB**; TBT ≈ 28 ms (iki yapıda eşit) |
 | Mobil Lighthouse `/` (yüklü makine, n=5) | eski 92 → yeni **94**; LCP 3.139 → **2.841 ms**; TBT 91 → 145 ms (yük gürültüsü, ayrıştırılmadı) |
+| Temiz `main` build'i, son ölçüm (n=5) | mobil eski 91 → yeni **92** (LCP 3.147 → **2.843 ms**, makine %14–30 yükte); masaüstü eski 100 ×5 → yeni **100 ×5** (LCP 730 → **606 ms**) |
 | Masaüstü Lighthouse `/` (iki set) | sakin n=5: eski 95 → yeni **98** (94–100); yüklü n=6: eski 99 → yeni **100** (altısı da), LCP 752 → **624 ms** |
 | `perf:gate` | **yeşil değil**: mutlak bütçeler sessiz makine için, bu makinede taban dahil aşıldı; bütçeler gevşetilmedi. Göreli: betik −%34, görev −%9, TBT tahmini −%30 |
 
 ### Üretim performansı ve kurumsal kanıt (16.10.2026, dal `perf/enterprise-proof`, yerel)
 
-Karar: [ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md); ölçüm: [docs/perf/local-2026-10-16-production-optimization.md](docs/perf/local-2026-10-16-production-optimization.md). **Canlıya alınmadı**; `main`'e birleştirilmedi. **"Lighthouse 100/100" bir vaat değil, ölçülmüş sonuçtur:** aşağıdaki sayılar yerel, tek makine, başsız Chrome 155 ve eski yapıyla araya girerek alındı; `lib/metrics.ts` mührü değişmedi, canlı ölçüm birleştirme ve yayından sonra yapılır.
+Karar: [ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md); ölçüm: [docs/perf/local-2026-10-16-production-optimization.md](docs/perf/local-2026-10-16-production-optimization.md). **Yerel `main`'e birleştirildi, push edilmedi, canlıya alınmadı.** **"Lighthouse 100/100" bir vaat değil, ölçülmüş sonuçtur:** aşağıdaki sayılar yerel, tek makine, başsız Chrome 155 ve eski yapıyla araya girerek alındı; `lib/metrics.ts` mührü değişmedi, canlı ölçüm birleştirme ve yayından sonra yapılır.
 
 | Denetim | Sonuç |
 |---|---|
