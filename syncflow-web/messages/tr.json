@@ -26,17 +26,17 @@
   },
   "Gate": {
     "eyebrow": "Dijital mimari stüdyosu",
-    "title": "Sermaye merkezinizi seçin.",
+    "title": "Finans merkezinizi seçin.",
     "lead": "Pazarınız dili önerir ve briefing’in para birimini belirler. Seçiminiz sayfa adresinde durur; çerez bırakmaz, tarayıcı depolaması kullanmayız.",
-    "marketLabel": "Sermaye merkezi",
+    "marketLabel": "Finans merkezi",
     "languageLabel": "Dil",
     "us": "Amerika Birleşik Devletleri ve küresel",
     "tr": "Türkiye",
     "me": "Orta Doğu, Dubai",
     "dach": "DACH ve İsviçre",
     "fr": "Monako ve Fransa",
-    "wealth": "Küresel servet",
-    "asia": "Asya merkezleri",
+    "wealth": "Küresel servet yönetimi",
+    "asia": "Asya finans merkezleri",
     "enter": "Giriş",
     "skip": "Seçmeden devam et"
   },
@@ -109,8 +109,6 @@
     "c5Title": "Zaten kullandığınız sistemlere bağlı.",
     "c5Text": "Salesforce, SAP, HubSpot ve Oracle ilk taslaktan itibaren mimarinin parçasıdır; böylece potansiyel müşteriler, siparişler ve kayıtlar site ile işinizin zaten üzerinde çalıştığı sistemler arasında akabilir.",
     "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
-    "c5DiagramAlt": "Dört sisteme bağlı merkezi bir düğümün şeması",
-    "c5Note": "Ürün adları sahiplerine aittir. Ortaklık ya da sertifika ima edilmez.",
     "c6Index": "VI",
     "c6Name": "Sıfır Güven Güvenlik Akışı",
     "c6Title": "Doğrulanana kadar hiçbir şeye güvenilmez.",
@@ -139,22 +137,22 @@
     "clinic": {
       "tag": "Özel klinikler",
       "title": "Güven, ilk saniyede kurulur.",
-      "text": "Estetik, diş ve longevity klinikleri için: satış reyonu değil, derli toplu bir dijital karşılama. Hekim profilleri ve ürkütmeden yönlendiren, hastanın başlattığı bir randevu.",
+      "text": "Estetik, diş ve longevity klinikleri için: satış reyonu değil, sakin bir dijital karşılama. Hekim profilleri ve ürkütmeden yönlendiren, hastanın başlattığı bir randevu.",
       "overlay": "Özel görüşme planlayın",
       "videoLabel": "Yavaş çekimde soluk bir klinik koridoru, tavanda gezinen yumuşak ışık"
     },
     "law": {
       "tag": "Kurumsal hukuk ve danışmanlık",
-      "title": "Müvekkilin ilk okuduğu şey, ölçülülüktür.",
-      "text": "Hukuk büroları, danışmanlık yapıları ve özel sermaye (private equity) kuruluşları için: ölçülü, kesin bir varlık. Çalışma alanı ve ortak sayfaları, gizli bir başvuru ve her kelimesini sizin onayladığınız bir yapı; çünkü mesleğinizi düzenleyen reklam ve iletişim kurallarını uygulamak sizin sorumluluğunuzdadır.",
-      "overlay": "Gizli başvuru",
+      "title": "Müvekkilin ilk okuduğu şey ketumluktur.",
+      "text": "Hukuk büroları, danışmanlık yapıları ve özel sermaye (private equity) kuruluşları için: ölçülü, kesin bir varlık. Çalışma alanı ve ortak sayfaları, gizli bir talep ve her kelimesini sizin onayladığınız bir yapı; çünkü mesleğinizi düzenleyen reklam ve iletişim kurallarını uygulamak sizin sorumluluğunuzdadır.",
+      "overlay": "Gizli talep",
       "videoLabel": "Aydınlık bir kapıya uzanan karanlık bir sütunlu koridor, kamera yavaşça ilerliyor"
     },
     "logistics": {
       "tag": "Küresel lojistik ve B2B tedarik zinciri mimarisi",
       "title": "Hiçbir şey beklemez. Hiçbir şey kaybolmaz.",
       "text": "Lojistik operatörleri ve B2B tedarik zincirleri için: bir şerit sustuğunda veriyi akıtmayı sürdüren yedekli kuyruk mimarileri, siparişten rampaya ve faturaya kesintisiz bir veri akışı ve rutin kararları üstlenerek ekibinize istisnai olanları bırakan otomasyon.",
-      "overlay": "Kurumsal başvuru",
+      "overlay": "Kurumsal talep",
       "videoLabel": "Paralel şeritlerden oluşan karanlık bir koridoru geçen koliler; bir şerit sustuğunda yedek şerit yanar ve akış durmaz"
     },
     "breakdown": "Mimari inceleme",
@@ -449,6 +447,26 @@
       "outDuplicate": "Onaylandı, iki kez işlenmedi: idempotency anahtarı daha önce görülmüştü.",
       "outUnavailable": "Web Crypto bu tarayıcı bağlamında kullanılamıyor; bu yüzden canlı hesaplama çalışamıyor.",
       "caption": "Tarayıcınızda, tek kullanımlık anahtarlarla çalışır; hiçbir veri bu sayfadan çıkmaz. Bir deseni gösterir; hiçbir üretim sistemini anlatmaz, ölçmez ya da belgelemez ve adı geçen ürünlerle bir ortaklık ima edilmez. İmzalama adımı, bu sitenin kendi briefing’lerini teslim etmek için kullandığı desenin aynısıdır."
+    },
+    "integration": {
+      "title": "Tek olay, dört sistem",
+      "lead": "Bir sistem seçin. Aynı olay, o sistemin beklediği biçime eşlenir; her çizgi hangi alanın hangisini beslediğini gösterir.",
+      "tabsLabel": "Hedef sistem",
+      "canonical": "Kanonik olay",
+      "payloadLabel": "Gönderilen yük",
+      "kind": {
+        "salesforce": "Potansiyel müşteri",
+        "hubspot": "Kişi",
+        "sap": "Satış siparişi",
+        "oracle": "Alacak faturası"
+      },
+      "event": {
+        "lead": "Briefing’den gelen bir talep",
+        "order": "Bir müşteri siparişi",
+        "invoice": "Kesilmiş bir fatura"
+      },
+      "status": "Eşlenen alan sayısı: {count}. Kayıt: {object}. Olay kimliği {field} alanında taşınır; bu yüzden yeniden deneme ikinci bir kayıt oluşturamaz.",
+      "caption": "Açıklayıcı biçimlerdir; her üreticinin herkese açık adlandırmasından esinlenilmiştir. Bir üretici sisteminden üretilmemiş ve onunla doğrulanmamıştır; gerçek her bağlayıcı müşterinin kendi sistemine karşı kurulur ve sınanır. Ürün adları sahiplerine aittir; ortaklık, sertifika ya da uyumluluk ima edilmez."
     }
   },
   "Breakdown": {

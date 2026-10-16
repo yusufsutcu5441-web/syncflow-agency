@@ -1,11 +1,11 @@
 {
   "Meta": {
     "title": "syncflow.agency | Studio für digitale Architektur",
-    "description": "Ein Studio für digitale Architektur für Inhaber, Partner und Geschäftsführer, deren Name das Unternehmen ist. Jedes Mandat beginnt mit einem Strategischen Briefing.",
-    "ogTitle": "Im Dunkeln gebaut. Fließt wie Flüssigkeit.",
+    "description": "Ein Studio für digitale Architektur für Inhaber, Partner und Geschäftsführer, deren Name das Unternehmen ist. Jede Zusammenarbeit beginnt mit einem Strategischen Briefing.",
+    "ogTitle": "Im Dunkeln gebaut. Bewegt sich wie Flüssigkeit.",
     "ogSubtitle": "Digitale Architektur für Persönlichkeiten, deren Name das Unternehmen ist.",
     "siteName": "syncflow.agency",
-    "ogAlt": "syncflow.agency: Im Dunkeln gebaut. Fließt wie Flüssigkeit.",
+    "ogAlt": "syncflow.agency: Im Dunkeln gebaut. Bewegt sich wie Flüssigkeit.",
     "organizationDescription": "syncflow.agency ist ein Studio für digitale Architektur, das filmische, hochperformante Websites für Inhaber, Partner und Geschäftsführer baut, deren Name das Unternehmen ist."
   },
   "A11y": {
@@ -35,15 +35,15 @@
     "me": "Naher Osten, Dubai",
     "dach": "DACH und Schweiz",
     "fr": "Monaco und Frankreich",
-    "wealth": "Globales Vermögen",
-    "asia": "Asiatische Drehkreuze",
+    "wealth": "Private Wealth, global",
+    "asia": "Finanzplätze in Asien",
     "enter": "Eintreten",
     "skip": "Ohne Auswahl fortfahren"
   },
   "Hero": {
     "eyebrow": "Studio für digitale Architektur — seit 2026",
     "title1": "Im Dunkeln gebaut.",
-    "title2": "Fließt wie Flüssigkeit.",
+    "title2": "Bewegt sich wie Flüssigkeit.",
     "subtitle": "Digitale Architektur im Enterprise-Maßstab für Persönlichkeiten, deren Name das Unternehmen ist: sichere Workflow-Automatisierung, auf enge Toleranzen gefertigt, in Stille vollendet, gemessen statt versprochen.",
     "ctaPrimary": "Strategisches Briefing",
     "ctaSecondary": "Showcase",
@@ -109,8 +109,6 @@
     "c5Title": "Verbunden mit den Systemen, die Sie ohnehin betreiben.",
     "c5Text": "Salesforce, SAP, HubSpot und Oracle sind vom ersten Entwurf an Teil der Architektur, damit Leads, Bestellungen und Datensätze zwischen der Website und den Systemen fließen können, auf denen Ihr Unternehmen ohnehin läuft.",
     "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
-    "c5DiagramAlt": "Schema eines zentralen Knotens, der mit vier Systemen verbunden ist",
-    "c5Note": "Produktnamen gehören ihren Inhabern. Eine Partnerschaft oder Zertifizierung wird nicht impliziert.",
     "c6Index": "VI",
     "c6Name": "Zero-Trust-Sicherheitsfluss",
     "c6Title": "Nichts gilt als vertrauenswürdig, bevor es geprüft ist.",
@@ -346,7 +344,7 @@
     "title": "Präzise aus Gewohnheit.\nStill aus Prinzip.",
     "lead": "Wir sind ein Studio für digitale Architektur für Inhaber, Partner und Geschäftsführer, deren Name das Unternehmen ist. Wir arbeiten wie ein guter Architekt: nach Zeichnung, nach Toleranz und mit Diskretion.",
     "p1Title": "Null Fehler als Methode.",
-    "p1Text": "Ein Fehler wird herausgeplant, nicht entschuldigt. Jede Änderung wird geprüft, per Smoke-Test getestet und auf der Live-Seite kontrolliert, bevor wir sie für erledigt erklären; und was wir über Performance veröffentlichen, ist gemessen, datiert und belegt. Null Fehler ist der Maßstab, an dem wir arbeiten, nie ein Versprechen, das wir für Sie unterschreiben könnten.",
+    "p1Text": "Einen Fehler schließt man durch Konstruktion aus, man entschuldigt ihn nicht. Jede Änderung wird geprüft, per Smoke-Test getestet und auf der Live-Seite kontrolliert, bevor wir sie für erledigt erklären; und was wir über Performance veröffentlichen, ist gemessen, datiert und belegt. Null Fehler ist der Maßstab, nach dem wir arbeiten, nie ein Versprechen, das wir für Sie unterschreiben könnten.",
     "p1Link": "Die Messwerte ansehen",
     "p2Title": "Vertraulich von Anfang an.",
     "p2Text": "Vor unserer ersten Arbeitssitzung kann eine gegenseitige NDA unterzeichnet werden. Kundenarbeiten werden nie ohne schriftliche Zustimmung gezeigt, weshalb der Showcase nur Exemplare des Studios enthält. Diese Seite setzt keine Cookies, betreibt keine Analyse, und jedes Briefing liest ein Mensch.",
@@ -449,6 +447,26 @@
       "outDuplicate": "Quittiert, nicht doppelt verarbeitet: Der Idempotenzschlüssel war bereits bekannt.",
       "outUnavailable": "Web Crypto ist in diesem Browserkontext nicht verfügbar, daher kann die Live-Berechnung nicht laufen.",
       "caption": "Läuft in Ihrem Browser mit Wegwerfschlüsseln; nichts verlässt diese Seite. Es zeigt das Muster; es beschreibt, misst oder zertifiziert kein Produktionssystem, und eine Partnerschaft mit den genannten Produkten wird nicht impliziert. Der Signierschritt ist dasselbe Muster, mit dem diese Seite ihre eigenen Briefings zustellt."
+    },
+    "integration": {
+      "title": "Ein Ereignis, vier Systeme",
+      "lead": "Wählen Sie ein System. Dasselbe Ereignis wird in die Form übersetzt, die dieses System erwartet; jede Linie zeigt, welches Feld welches speist.",
+      "tabsLabel": "Zielsystem",
+      "canonical": "Kanonisches Ereignis",
+      "payloadLabel": "Nutzdaten, wie gesendet",
+      "kind": {
+        "salesforce": "Lead",
+        "hubspot": "Kontakt",
+        "sap": "Kundenauftrag",
+        "oracle": "Debitorenrechnung"
+      },
+      "event": {
+        "lead": "Eine Anfrage aus dem Briefing",
+        "order": "Ein Kundenauftrag",
+        "invoice": "Eine ausgestellte Rechnung"
+      },
+      "status": "Zugeordnete Felder: {count}. Datensatz: {object}. Die Ereignis-ID reist in {field}; eine Wiederholung kann deshalb keinen zweiten Datensatz erzeugen.",
+      "caption": "Veranschaulichende Strukturen, angelehnt an die öffentliche Benennung der jeweiligen Hersteller. Sie wurden weder aus einem Herstellersystem erzeugt noch dagegen validiert; jeder reale Konnektor wird gegen das System des Kunden gebaut und geprüft. Produktnamen gehören ihren Inhabern; eine Partnerschaft, Zertifizierung oder Konformität wird nicht impliziert."
     }
   },
   "Breakdown": {

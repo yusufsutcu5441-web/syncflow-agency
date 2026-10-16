@@ -29,7 +29,7 @@ export async function Showcase() {
   const [t, locale] = await Promise.all([getTranslations('Showcase'), getLocale() as Promise<AppLocale>]);
 
   return (
-    <section id={SECTION_IDS.showcase} className="section" aria-labelledby="showcase-title">
+    <section id={SECTION_IDS.showcase} className="section cv cv-showcase" aria-labelledby="showcase-title">
       <div className="container-x">
         <SectionHead id="showcase-title" label={t('label')} title={t('title')} subtitle={t('subtitle')} />
       </div>

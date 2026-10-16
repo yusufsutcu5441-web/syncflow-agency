@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "syncflow_event_id": "3f2a9c1e-7b4d-4e0a-9d51-6c8b2a7e1f40",
+    "email": "alex.morgan@example.com",
+    "firstname": "Alex",
+    "lastname": "Morgan",
+    "company": "Example Holdings",
+    "jobtitle": "principal",
+    "message": "Group-wide order portal, integrated with our ERP.",
+    "syncflow_market": "us",
+    "lifecyclestage": "lead",
+    "hs_lead_status": "NEW"
+  }
+}

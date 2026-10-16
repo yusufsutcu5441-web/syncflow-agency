@@ -1,10 +1,11 @@
 import type { CSSProperties } from 'react';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { SceneVideo } from '@/components/media/SceneVideo';
-import { LazyQueueSim, LazySecuritySim } from '@/components/sim/LazySims';
+import { IntegrationView } from '@/components/sim/IntegrationView';
+import { LazyIntegrationSim, LazyQueueSim, LazySecuritySim } from '@/components/sim/LazySims';
 import { QueueView } from '@/components/sim/QueueView';
 import { SecurityView } from '@/components/sim/SecurityView';
-import { IDLE_QUEUE, IDLE_SECURITY, type QueueLabels, type SecurityLabels } from '@/components/sim/types';
+import { IDLE_QUEUE, IDLE_SECURITY, type IntegrationLabels, type QueueLabels, type SecurityLabels } from '@/components/sim/types';
 import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
 import { formatMeasuredAt, FRAME_SERIES, METRICS } from '@/lib/metrics';
@@ -21,7 +22,9 @@ const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
  * keeps at most three). Every number on the cards is read from lib/metrics.ts (measured, dated, with its profile); a metric that has not
  * been measured shows "to be measured" instead of a figure. Cards IV and V carry capability statements, no figures. Since
  * docs/adr/0020 card IV holds the fail-safe queue simulator and card VI (the Zero-Trust Security Flow) the enterprise security flow:
- * two interactive MODELS of a pattern, drawn idle here on the server and brought to life in the browser by a lazily loaded chunk.
+ * two interactive MODELS of a pattern, drawn idle here on the server and brought to life in the browser by a lazily loaded chunk. Since
+ * docs/adr/0021 card V holds the third: one canonical event mapped into the shape of four systems (lib/arch/mappers.ts), whose evidence is
+ * in docs/architecture/.
  */
 export async function Architecture() {
   const [t, locale, format] = await Promise.all([getTranslations('Architecture'), getLocale() as Promise<AppLocale>, getFormatter()]);
@@ -87,6 +90,20 @@ export async function Architecture() {
     caption: sim('security.caption'),
   };
 
+  const integrationLabels: IntegrationLabels = {
+    interactive: sim('interactive'),
+    title: sim('integration.title'),
+    lead: sim('integration.lead'),
+    tabsLabel: sim('integration.tabsLabel'),
+    canonical: sim('integration.canonical'),
+    payloadLabel: sim('integration.payloadLabel'),
+    kind: { salesforce: sim('integration.kind.salesforce'), hubspot: sim('integration.kind.hubspot'), sap: sim('integration.kind.sap'), oracle: sim('integration.kind.oracle') },
+    event: { lead: sim('integration.event.lead'), order: sim('integration.event.order'), invoice: sim('integration.event.invoice') },
+    // Keeps its {placeholders}: the view fills them for each system.
+    status: sim.raw('integration.status') as string,
+    caption: sim('integration.caption'),
+  };
+
   const number = (n: number | null, digits = 0) => (n === null ? h('pending') : format.number(n, { minimumFractionDigits: digits, maximumFractionDigits: digits }));
   const date = (iso: string) => formatMeasuredAt(iso, locale);
 
@@ -98,7 +115,7 @@ export async function Architecture() {
   ] as const;
 
   return (
-    <section id={SECTION_IDS.architecture} className="section" aria-labelledby="architecture-title">
+    <section id={SECTION_IDS.architecture} className="section cv cv-architecture" aria-labelledby="architecture-title">
       <div className="container-x grid gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
         <div className="lg:sticky lg:top-32 lg:self-start">
           <SectionHead id="architecture-title" label={t('label')} title={t('title')} subtitle={t('intro')} />
@@ -201,7 +218,7 @@ export async function Architecture() {
             </div>
           </article>
 
-          {/* V: deep enterprise integrations. Named systems are examples of integration targets, never a partner list. */}
+          {/* V: deep enterprise integrations, as a live model. Named systems are examples of integration targets, never a partner list. */}
           <article className="beam-card" data-maskframe="">
             <div className="beam-body p-6 md:p-8">
               <p className="label">
@@ -211,9 +228,10 @@ export async function Architecture() {
               <p className="body-muted mt-4">{t('c5Text')}</p>
               <p className="label mt-5">{t('c5Tags')}</p>
 
-              <div className="mt-7 rounded-[14px] border border-hairline p-5">
-                <HubSchematic alt={t('c5DiagramAlt')} />
-                <p className="mt-3 text-xs text-faint">{t('c5Note')}</p>
+              <div className="mt-7 rounded-[14px] border border-hairline p-5 md:p-6">
+                <LazyIntegrationSim labels={integrationLabels}>
+                  <IntegrationView labels={integrationLabels} system="salesforce" />
+                </LazyIntegrationSim>
               </div>
             </div>
           </article>
@@ -265,32 +283,6 @@ function Ring({ label, value, delay, pending, format }: { label: string; value: 
       </div>
       <p className="mt-3 text-xs text-muted">{label}</p>
     </div>
-  );
-}
-
-/** A central hub joined to four systems, still and unlabeled (the names are in the card's text): the shape of an integration, not a partner list. */
-function HubSchematic({ alt }: { alt: string }) {
-  const satellites = [
-    [96, 30],
-    [464, 30],
-    [96, 110],
-    [464, 110],
-  ] as const;
-  return (
-    <svg viewBox="0 0 560 140" className="h-auto w-full" role="img" aria-label={alt} fill="none">
-      {satellites.map(([x, y]) => (
-        <path key={`l-${x}-${y}`} d={`M280 70 L${x} ${y}`} stroke="rgb(226 226 230 / 0.3)" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />
-      ))}
-      {satellites.map(([x, y]) => (
-        <g key={`n-${x}-${y}`}>
-          <circle cx={(280 + x) / 2} cy={(70 + y) / 2} r="2.5" fill="#E2E2E6" fillOpacity="0.9" />
-          <circle cx={x} cy={y} r="9" fill="#141416" stroke="#E2E2E6" strokeOpacity="0.75" strokeWidth="1.25" />
-          <circle cx={x} cy={y} r="2.5" fill="#E2E2E6" fillOpacity="0.85" />
-        </g>
-      ))}
-      <circle cx="280" cy="70" r="17" fill="#141416" stroke="#E2E2E6" strokeWidth="1.5" />
-      <circle cx="280" cy="70" r="4.5" fill="#E2E2E6" />
-    </svg>
   );
 }
 

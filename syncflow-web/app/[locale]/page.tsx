@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EntryGate } from '@/components/gate/EntryGate';
+import { AnchorPrime } from '@/components/sections/AnchorPrime';
 import { Architecture } from '@/components/sections/Architecture';
 import { BriefingSection } from '@/components/sections/BriefingSection';
 import { Closing } from '@/components/sections/Closing';
@@ -36,6 +37,7 @@ export default async function HomePage({ params, searchParams }: Props) {
   return (
     <>
       <EntryGate entered={market !== null || crawler} market={market} />
+      <AnchorPrime />
 
       <main id="main">
         <Hero />

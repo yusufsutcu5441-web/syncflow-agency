@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
-import type { QueueLabels, SecurityLabels } from './types';
+import type { IntegrationLabels, QueueLabels, SecurityLabels } from './types';
 
 /**
  * Mounts a simulator only when its card is near the screen. Until then the server-drawn idle version (the children) stands in, and the live
@@ -53,6 +53,15 @@ export function LazySecuritySim({ labels, children }: { labels: SecurityLabels; 
   const [host, Live] = useNearScreen<{ labels: SecurityLabels }>(() => import('./SecurityFlowSim'));
   return (
     <div ref={host} className="sim" data-sim="security" data-live={Live ? '' : undefined}>
+      {Live ? <Live labels={labels} /> : children}
+    </div>
+  );
+}
+
+export function LazyIntegrationSim({ labels, children }: { labels: IntegrationLabels; children: ReactNode }) {
+  const [host, Live] = useNearScreen<{ labels: IntegrationLabels }>(() => import('./IntegrationSim'));
+  return (
+    <div ref={host} className="sim" data-sim="integration" data-live={Live ? '' : undefined}>
       {Live ? <Live labels={labels} /> : children}
     </div>
   );

@@ -38,6 +38,10 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `node faz2-denetim.mjs --build` | **Aşama kapısı**: bağımlılıklar, tasarım belirteçleri, i18n, güvenlik, sahne videoları, hareket, doğrulanmamış iddia yasağı, ardından `npm run build` ve ilk yük paket denetimi |
 | `npm run smoke` | **Çalışan** sunucuya karşı HTTP güvenlik/işlev kontrolleri (aşağıda). Ortam değişkenleri `scripts/smoke.mjs` başlığında: `EXPECT_LOCALES`, `TURNSTILE_MODE`, `MOCK_WEBHOOK_PORT`, `WEBHOOK_SECRET`, `EXPECT_CSP_MODE` |
 | `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
+| `npm run arch:verify` · `arch:examples` | Kurumsal kanıtın **65 sözleşme testi** (`tests/arch/`, Node'un kendi test koşucusu, bağımlılık yok): yedekli kuyruk (kayıp 0, çift uygulama 0), HMAC-SHA256/AES-256-GCM zarfı, Salesforce/HubSpot/SAP/Oracle örnek eşleyicileri, belgelerin koddan üretilmiş olması. `arch:examples` `docs/architecture/examples/` dosyalarını koddan yeniden yazar ([ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md) §5) |
+| `npm run qa:browser` · `qa:browser:quick` | **Çalışan** üretim sunucusuna karşı gerçek Chrome (`puppeteer-core`, tarayıcı indirmez): kapı ve bayraklar, çapalar (masaüstü ve telefon), kaydırmada CLS (Arapça dahil), simülatör boyları ve davranışı, entegrasyon modeli, sinema katmanı (worker yolu, ana iş parçacığı yedeği, piksel eşdeğerliği). `--only=<grup>`, `--parity` (görsel eşdeğerlik), `--full` (her dil ve genişlik) |
+| `npm run perf:gate` | Mobil profilde (4× CPU, yavaş 4G) belirleyici sayaçlar (DOM, yerleşim, stil, görev, TBT tahmini, CLS) ve bütçe (`scripts/perf-budget.json`); `--baseline=<url>` eski yapıyla araya girerek A/B. **Mutlak bütçeler sessiz makine içindir**; yük altında göreli farka bakın |
+| `npm run flags:build` · `flags:check` | Bayrakları (`app/flags.css`, bayrak başına tek boş öğe) üreticiden yeniden yazar / CSS'in üreticiyle aynı olduğunu doğrular (denetim çalıştırır) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
 | `npm run film:render` | Beş sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
@@ -66,9 +70,9 @@ components/
   cinema/    CinemaStage(client): yetenek kapısından sonra WebGL2 motorunu yükler, CSS yedeğini çizer
   gate/      EntryGate(client): tam ekran pazar ve dil kapısı (sunucuda açık, gerçek bağlantılarla; çerezsiz, ?m=)
   sections/  Hero · Film · Architecture · Showcase + ShowcaseStrip(client) · Studio · BreakdownView (sayfa ve diyalog aynı bileşen) + BreakdownDialog + BreakdownHost(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
-  sim/       QueueView · SecurityView (saf görünüm, sunucuda boşta çizilir) · FailSafeSim · SecurityFlowSim (client, tembel parça, gerçek Web Crypto) · LazySims · types
+  sim/       QueueView · SecurityView · IntegrationView (saf görünüm, sunucuda boşta çizilir) · FailSafeSim · SecurityFlowSim · IntegrationSim (client, tembel parça; kripto ve eşleme `lib/arch/` modüllerini çağırır) · Reserve (boştaki ve canlı sürüm aynı boyda) · LazySims · types
   media/     SceneVideo(client): poster + önceden render edilmiş video, ekran dışında durur
-  i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead, Flag (SVG mikro bayrak)
+  i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead, Flag (tek boş öğe, resim `app/flags.css`'te)
 lib/
   market.ts        pazar (us, eu, me, tr): beyaz listeli ?m= parametresi, önerilen dil, tab belleği   crawlers.ts  kapıyı atlayan arama motoru ve önizleme botları (ADR 0015)
   pricing.ts       asgari tutar ve basamaklar, pazar başına para birimi (USD 50.000 ve kur karşılıkları), Intl biçimi: fiyatın TEK kaynağı (ADR 0016)
@@ -77,12 +81,14 @@ lib/
   breakdown.ts     inceleme sektörleri ve veri tipi (ADR 0020)   server/breakdown.ts  incelemenin yükleyicisi (dil + sayılar lib/metrics.ts'ten)
   schemas/briefing.ts (zod, strict)    server/ deliver.ts · turnstile.ts · sanitize.ts (server-only)    security/ csp.ts · rate-limit.ts
   enhance/  ui-state (üstbilgi, mobil yapışkan CTA, ekran dışında durdurma) · spotlight · magnetic · rings · reveal (Motion) · smooth-scroll (Lenis) · film (kaydırma → `--p` ve sinema durumu) · hero (kaydırma → `--hp`, amblem derinliği) · mask-frame (medya çerçevesi maskesi, `--mf`)
-  cinema/   engine (ham WebGL2) · shaders (GLSL) · state · capable (yetenek kapısı)
+  cinema/   engine (sayfa tarafı: tuval, olaylar, worker ya da ana iş parçacığı) · core (ham WebGL2 motoru, sayfayı bilmez) · worker (OffscreenCanvas) · protocol · shaders (GLSL) · state · capable (yetenek kapısı)
+  arch/     kurumsal kanıtın referans uygulaması (bağımlılıksız): olay şeması ve doğrulayıcı · envelope (HMAC-SHA256, AES-256-GCM) · queue (yedekli kuyruk durum makinesi) · mappers · benzetim   cv.ts  atlanan bölümler için çapa hazırlığı
   motion/   tokens · ease      merge-messages.ts (taslak dillerde eksik metin İngilizceden)    i18n-paths.ts
 messages/   en tr ar de fr es zh ja (.json; ja uykuda)
 i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/       adr/ (mimari kararlar 0001–0020) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+docs/       adr/ (mimari kararlar 0001–0021) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+tests/      arch/ (65 sözleşme testi)
 public/     fonts/ Instrument Sans, Instrument Serif, Syne alt kümeleri (OFL; Cabinet Grotesk git'te yok, derlemede iner)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
 assets/     og-instrument-sans-600.ttf (paylaşım kartı yazı tipi)
@@ -162,7 +168,7 @@ Hareket bir **katmandır**: içerik sunucuda render edilir ve JS yokken tamamen 
 
 Atmosfer katmanıdır; içerik ve erişilebilirlik onsuz da eksiksizdir.
 
-- **Tuval:** `lib/cinema/engine.ts` ham WebGL2 ile tek sabit tuval çizer (three.js yok). Dört sahne (kozmik madde, biyo-mekanik omurga, obsidiyen monolit, sıvı metal) kesirli çözünürlükte çizilir; ikinci geçiş renk sapması, bloom, mercek parıltısı, vinyet, 35 mm gren ve dil geçişi glitch'ini ekler ve çıktıyı obsidian–platin aralığına kıstırır (saf siyah ve beyaz üretemez).
+- **Tuval:** `lib/cinema/core.ts` ham WebGL2 ile tek sabit tuval çizer (three.js yok); varsayılan olarak bir **Web Worker'da, `OffscreenCanvas` üzerinde** çalışır (`worker.ts`; context yaratma, shader derlemesi ve çizim ana iş parçacığında değildir, [ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md) §2), worker yoksa ya da başlamazsa aynı çekirdek ana iş parçacığında çalışır (`engine.ts`; `?cinema-worker=off` zorlar). Resim iki yolda piksel piksel aynıdır. Dört sahne (kozmik madde, biyo-mekanik omurga, obsidiyen monolit, sıvı metal) kesirli çözünürlükte çizilir; ikinci geçiş renk sapması, bloom, mercek parıltısı, vinyet, 35 mm gren ve dil geçişi glitch'ini ekler ve çıktıyı obsidian–platin aralığına kıstırır (saf siyah ve beyaz üretemez).
 - **Yalnızca yetenekli cihazda:** ince işaretçi, azaltılmış hareket yok, veri tasarrufu yok, ≥ 900 px, ≥ 4 iş parçacığı (`lib/cinema/capable.ts`). Motor ayrı lazy parçadır (shader dahil 6,7 KB gzip, 12.10.2026), ilk boyama ve boşta kalma sonrası indirilir; telefonda hiç istenmez. Adrese `?cinema=off` eklemek kapatır, `?cinema-force` kapıyı atlar, `?cinema-debug` test kancasını açar.
 - **Film bölümü** (`components/sections/Film.tsx`, `lib/enhance/film.ts`): yüksek bölümde sticky sahne; yerel kaydırma, konum `--p` CSS değişkeniyle bölümlere dönüşür. Motor çalışmayan cihazlarda aynı dört sahne `public/film/` posterleridir (toplam ≈ 93 KB, film 3 ekran yaklaşınca indirilir).
 - **Dil geçişi** (`LanguageSwitcher.tsx`): kararma, metin dilimlerinin kayması, yeni dilin karanlıktan gelmesi; azaltılmış harekette düz solma.
@@ -264,6 +270,24 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 ## 11. Doğrulama sonuçları
 
 Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
+
+### Üretim performansı ve kurumsal kanıt (16.10.2026, dal `perf/enterprise-proof`, yerel)
+
+Karar: [ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md); ölçüm: [docs/perf/local-2026-10-16-production-optimization.md](docs/perf/local-2026-10-16-production-optimization.md). **Canlıya alınmadı**; `main`'e birleştirilmedi. **"Lighthouse 100/100" bir vaat değil, ölçülmüş sonuçtur:** aşağıdaki sayılar yerel, tek makine, başsız Chrome 155 ve eski yapıyla araya girerek alındı; `lib/metrics.ts` mührü değişmedi, canlı ölçüm birleştirme ve yayından sonra yapılır.
+
+| Denetim | Sonuç |
+|---|---|
+| `npm run check` | `check:messages` (yedi yayın dilinde **503 anahtar**), `tsc` ve ESLint temiz |
+| `node faz2-denetim.mjs --build` | **212 geçti, 0 hata**, 1 eski uyarı (`generateStaticParams`). Yeni bölüm 12 (atlama, bayraklar, yerleşim, kurumsal kanıt, QA araçları) ve sinema worker kontrolleri |
+| `npm run arch:verify` | **65 test** geçti (kuyruk senaryolarında kayıp 0, çift uygulama 0, sıra korunur; RFC 4231 vektörü; belgeler kodla aynı) |
+| `npm run smoke` | **180/180** (üretim derlemesi, sahte webhook alıcısı) |
+| `npm run qa:browser` | **80/80** (kapı, çapalar, derin bağlantı, CLS en/ar/de, simülatörler, entegrasyon, sinema) ve `--only=parity` **5/5** (içerik görünürlüğü açıkken ve kapalıyken sayfalar piksel eşit) |
+| Lighthouse masaüstü `/` (n=6, araya girerek) | eski **98** (96–99), TBT 110 ms → yeni **100** (99–100), TBT **0 ms**; erişilebilirlik, en iyi uygulamalar, SEO 100 |
+| Lighthouse mobil `/` (n=5, araya girerek) | eski **81** (80–86), TBT 526 ms → yeni **92** (86–93), TBT 149 ms; **LCP ≈3,1 sn her iki yapıda** (çerçeve ve yazı tipi baytları, tavan) |
+| Ana iş parçacığında WebGL (masaüstü, 3 yükleme) | eski `getContext` 44–118 ms + shader sorguları 98–237 ms → yeni **0 ms** |
+| DOM düğümü (mobil) | 1.035 → **986** |
+
+Sınırlar: makine ölçüm sırasında ≈%40 başka yük altındaydı (kullanıcının kendi uygulamaları), Chrome ölçümler arasında 154'ten 155'e güncellendi; gerçek GPU, Safari, Firefox ve canlı ortam **ölçülmedi**; `perf:gate`'in mutlak bütçeleri bu yük altında aşıldı (iki yapı da), göreli fark korunuyor. Mobil 100/100 bu mimaride bu ölçümle mümkün görünmüyor (LCP ≈3,1 sn).
 
 ### Vaka incelemesi katmanı, Stüdyo, simülatörler, bayraklar, 1080p klipler (15.10.2026, dal `feat/case-studies`, yerel)
 

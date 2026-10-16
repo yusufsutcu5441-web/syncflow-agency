@@ -8,6 +8,7 @@ import { Flag } from '@/components/ui/Flag';
 import { Logo } from '@/components/ui/Logo';
 import { OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
+import { holdLayoutBefore, releaseAfterScroll } from '@/lib/cv';
 import { withLocale } from '@/lib/i18n-paths';
 import { MARKET_DEFAULT_LOCALE, MARKETS, rememberMarket, withMarket, type Market } from '@/lib/market';
 import { PRICING } from '@/lib/pricing';
@@ -92,7 +93,12 @@ export function EntryGate({ entered, market }: { entered: boolean; market: Marke
     if (phase !== 'closing') return;
     // A link that arrived with a section anchor ("/#briefing") could not scroll while the page was locked: go there now, behind the curtain.
     const id = decodeURIComponent(window.location.hash.slice(1));
-    document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    const anchor = document.getElementById(id);
+    if (anchor) {
+      // The sections above the anchor must be real before it is measured (lib/cv.ts, content-visibility: auto).
+      releaseAfterScroll(holdLayoutBefore(anchor), 900);
+      anchor.scrollIntoView({ block: 'start', behavior: 'instant' });
+    }
     const timer = window.setTimeout(() => setPhase('closed'), CLOSE_MS + 120);
     return () => window.clearTimeout(timer);
   }, [phase]);
@@ -174,12 +180,12 @@ export function EntryGate({ entered, market }: { entered: boolean; market: Marke
         <p className="label gate-rise" style={{ '--g': 0 } as CSSProperties}>
           {t.eyebrow}
         </p>
-        <h2 id="gate-title" ref={titleRef} tabIndex={-1} className="gate-title gate-rise" style={{ '--g': 1 } as CSSProperties}>
+        {/* The headline and the lead only slide (no fade, no delay): they are the largest text on the first screen, so they are what the
+            browser measures as the largest contentful paint, and they are there from the first frame (ADR 0021). */}
+        <h2 id="gate-title" ref={titleRef} tabIndex={-1} className="gate-title gate-slide">
           {t.title}
         </h2>
-        <p className="lead gate-rise" style={{ '--g': 2 } as CSSProperties}>
-          {t.lead}
-        </p>
+        <p className="lead gate-slide">{t.lead}</p>
 
         <div className="gate-group gate-rise" role="group" aria-labelledby="gate-market-label" style={{ '--g': 3 } as CSSProperties}>
           <p id="gate-market-label" className="label">

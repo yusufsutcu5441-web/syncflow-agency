@@ -3,6 +3,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import type { BreakdownData, BreakdownSlug } from '@/lib/breakdown';
+import { holdLayoutBefore, releaseAfterScroll } from '@/lib/cv';
 import { MARKET_PARAM } from '@/lib/market';
 import { BreakdownView } from './BreakdownView';
 
@@ -125,8 +126,12 @@ export default function BreakdownDialog({ request, locale, labels, onClose }: Di
   const goTo = (hash: string) => {
     close();
     window.setTimeout(() => {
+      const target = document.getElementById(hash);
+      if (!target) return;
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      document.getElementById(hash)?.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
+      // The sections above the target must be real before the browser works out where it is (lib/cv.ts, content-visibility: auto).
+      releaseAfterScroll(holdLayoutBefore(target));
+      target.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
     }, 60);
   };
 

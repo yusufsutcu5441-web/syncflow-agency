@@ -1,0 +1,499 @@
+#!/usr/bin/env node
+/**
+ * Browser checks against a RUNNING production server (docs/adr/0021-production-performance-and-enterprise-proof.md §6). `npm run smoke` reads
+ * the pages over HTTP; this drives a real Chrome (puppeteer-core, a dev dependency that downloads no browser) through what a visitor does and
+ * measures what only a browser can show: where an anchor lands, whether anything shifts while scrolling, whether a simulator ever changes
+ * height, whether the right-to-left page behaves, whether skipped sections look the same as drawn ones.
+ *
+ *   npm run build && npm start                       (or: npx next start -p 3100)
+ *   npm run qa:browser                               the default set, about four minutes
+ *   npm run qa:browser -- http://localhost:3100      another server
+ *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, cinema, parity
+ *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
+ *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
+ *
+ * Read-only: it only reads pages and clicks controls (the briefing form is never submitted). Chrome: CHROME_PATH or a common install path.
+ * Exit code 1 when any check fails.
+ */
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import puppeteer from 'puppeteer-core';
+
+const argv = process.argv.slice(2);
+const flag = (name) => argv.includes(`--${name}`);
+const option = (name) => argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
+const BASE = (argv.find((a) => /^https?:/.test(a)) ?? process.env.BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+const QUICK = flag('quick');
+const FULL = flag('full');
+const OUT = option('out') ?? join(process.cwd(), 'perf-out', 'browser-flow');
+const ONLY = option('only')?.split(',');
+const want = (group) => (ONLY ? ONLY.includes(group) : group === 'parity' ? flag('parity') : true);
+
+const chrome =
+  process.env.CHROME_PATH ??
+  [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
+  ].find((candidate) => existsSync(candidate));
+if (!chrome) {
+  console.error('Chrome not found. Set CHROME_PATH to the browser executable.');
+  process.exit(1);
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const results = [];
+const check = (name, ok, detail = '') => {
+  results.push(ok);
+  console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? `\n          ${detail}` : ''}`);
+};
+const group = (title) => console.log(`\n${title}`);
+
+const DESKTOP = { width: 1440, height: 900, deviceScaleFactor: 1 };
+const PHONE = { width: 412, height: 823, deviceScaleFactor: 1.75, isMobile: true, hasTouch: true };
+const MARKET = { en: 'us', tr: 'tr', ar: 'me', de: 'dach', fr: 'fr', es: 'wealth', zh: 'asia' };
+const url = (lang, path = '') => `${BASE}${lang === 'en' ? '' : `/${lang}`}${path || '/'}${path.includes('?') ? '&' : '?'}m=${MARKET[lang]}`.replace('//?', '/?');
+
+const browser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--no-sandbox'] });
+
+/** Opens a page with a layout-shift recorder; `noCv` switches content-visibility off for the reference run. */
+async function open(path, { viewport = DESKTOP, noCv = false, reduced = false } = {}) {
+  const page = await browser.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+  page.on('console', (m) => m.type() === 'error' && !/CSP|Content Security|csp-report|Failed to load resource.*(404|429)/.test(m.text()) && errors.push(`console: ${m.text()}`));
+  if (reduced) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  await page.setViewport(viewport);
+  await page.evaluateOnNewDocument(() => {
+    window.__cls = 0;
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
+    }).observe({ type: 'layout-shift', buffered: true });
+  });
+  if (noCv) {
+    await page.evaluateOnNewDocument(() => {
+      document.addEventListener('DOMContentLoaded', () => {
+        const style = document.createElement('style');
+        style.textContent = '.cv{content-visibility:visible !important}';
+        document.head.appendChild(style);
+      });
+    });
+  }
+  await page.goto(path.startsWith('http') ? path : BASE + path, { waitUntil: 'networkidle2', timeout: 60000 });
+  await sleep(1500);
+  return { page, errors };
+}
+
+const settle = async (page) => {
+  await sleep(300);
+  for (let i = 0; i < 40; i++) {
+    const a = await page.evaluate(() => scrollY);
+    await sleep(120);
+    if (a === (await page.evaluate(() => scrollY))) break;
+  }
+  await sleep(250);
+};
+const topOf = (page, selector) => page.evaluate((s) => Math.round(document.querySelector(s).getBoundingClientRect().top), selector);
+const SCROLL_PADDING = 88; // html { scroll-padding-top } in app/globals.css
+
+// ── gate, flags, the language menu ──────────────────────────────────────────────────────────────────────────────────────────────
+if (want('gate')) {
+  group('The gate, the flags and the language menu');
+  const { page, errors } = await open('/');
+  await page.waitForSelector('.gate[data-ready]', { timeout: 15000 });
+  const gate = await page.evaluate(() => ({
+    cards: document.querySelectorAll('.gate-market .flag[data-flag]').length,
+    chips: document.querySelectorAll('.gate-lang .flag[data-flag]').length,
+    codes: [...document.querySelectorAll('.gate-market .flag[data-flag]')].map((s) => s.dataset.flag).join(','),
+    flagsAreSvg: document.querySelectorAll('svg[data-flag]').length,
+    emoji: /[\u{1F1E6}-\u{1F1FF}]/u.test(document.body.innerText),
+  }));
+  check('seven market cards and seven language chips carry a flag, in order, none is an inline SVG or an emoji', gate.cards === 7 && gate.chips === 7 && gate.codes === 'us,tr,ae,de,fr,es,cn' && gate.flagsAreSvg === 0 && !gate.emoji, JSON.stringify(gate));
+  const slide = await page.evaluate(() => ({ title: document.querySelector('#gate-title')?.classList.contains('gate-slide'), lead: document.querySelector('.gate-body .lead')?.classList.contains('gate-slide'), leadOpacity: getComputedStyle(document.querySelector('.gate-body .lead')).opacity }));
+  check('the gate headline and lead are visible from the first frame (they slide, they do not fade in)', slide.title && slide.lead && slide.leadOpacity === '1', JSON.stringify(slide));
+  await page.keyboard.press('Escape');
+  await sleep(1500);
+  const before = await page.evaluate(() => document.querySelectorAll('.lang-menu').length);
+  await page.hover('.lang-trigger');
+  await sleep(300);
+  const built = await page.evaluate(() => document.querySelectorAll('.lang-menu .lang-item .flag[data-flag]').length);
+  check('the header language menu is not in the page until the visitor shows interest, then it lists seven flags', before === 0 && built === 7, `before ${before}, after ${built}`);
+  await page.click('.lang-trigger');
+  await sleep(500);
+  const open_ = await page.evaluate(() => ({ expanded: document.querySelector('.lang-trigger')?.getAttribute('aria-expanded'), controls: document.querySelector('.lang-trigger')?.getAttribute('aria-controls') === document.querySelector('.lang-menu')?.id, current: document.querySelector('.lang-trigger .flag')?.dataset.flag }));
+  check('it opens, names its menu for assistive technology, and the trigger shows the current flag', open_.expanded === 'true' && open_.controls && open_.current === 'us', JSON.stringify(open_));
+  check('no page or console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await page.close();
+}
+
+// ── anchors with content-visibility ──────────────────────────────────────────────────────────────────────────────────────────────
+if (want('anchors')) {
+  group('Links to a section land on it, with sections below the film skipped until near (docs/adr/0021 §1)');
+  const profiles = QUICK ? [['desktop', DESKTOP]] : [['desktop', DESKTOP], ['phone', PHONE]];
+  for (const [label, viewport] of profiles) {
+    for (const target of QUICK ? ['studio', 'briefing'] : ['architecture', 'showcase', 'studio', 'briefing']) {
+      const { page } = await open('/?m=us', { viewport });
+      // Any link to the section, wherever it is (the header on a desktop, the footer or the call to action on a phone): it is scrolled to first, which
+      // draws a skipped section, then clicked in the page (a click event, which is what the handlers listen for).
+      const found = await page.evaluate((t) => {
+        const links = [...document.querySelectorAll(`a[href$="#${t}"]`)];
+        const pick = links.find((a) => a.closest('header') && a.getClientRects().length > 0) ?? links.find((a) => a.closest('#hero-cta, .sticky-cta') && a.getClientRects().length > 0) ?? links.find((a) => a.closest('footer')) ?? links[0];
+        if (!pick) return false;
+        pick.setAttribute('data-qa-link', '');
+        pick.scrollIntoView({ block: 'center', behavior: 'instant' });
+        return true;
+      }, target);
+      if (!found) {
+        check(`${label}: a link to #${target} exists`, false);
+        await page.close();
+        continue;
+      }
+      await sleep(500);
+      await page.evaluate(() => document.querySelector('[data-qa-link]').click());
+      await settle(page);
+      const top = await topOf(page, `#${target}`);
+      const held = await page.evaluate(() => document.querySelectorAll('.cv[data-cv-prime]').length);
+      check(`${label}: the link to #${target} lands at the top of the section (scroll-padding ${SCROLL_PADDING} px), and lets go of the sections it held`, Math.abs(top - SCROLL_PADDING) <= 3 && held === 0, `top ${top}px, still held ${held}`);
+      await page.close();
+    }
+  }
+}
+
+if (want('deeplink')) {
+  group('A page opened on an address with a section (a deep link), and a soft navigation to one');
+  for (const [label, viewport] of QUICK ? [['desktop', DESKTOP]] : [['desktop', DESKTOP], ['phone', PHONE]]) {
+    for (const target of ['studio', 'briefing']) {
+      const { page } = await open(`/?m=us#${target}`, { viewport });
+      await settle(page);
+      const top = await topOf(page, `#${target}`);
+      const ready = await page.evaluate(() => document.documentElement.hasAttribute('data-cv-ready'));
+      check(`${label}: opening /?m=us#${target} lands on the section and the page then marks itself ready`, Math.abs(top - SCROLL_PADDING) <= 3 && ready, `top ${top}px, ready ${ready}`);
+      await page.close();
+    }
+  }
+  const { page } = await open('/privacy?m=us');
+  const has = await page.evaluate(() => {
+    const link = [...document.querySelectorAll('footer a')].find((a) => (a.getAttribute('href') ?? '').endsWith('#briefing'));
+    link?.setAttribute('data-qa-link', '');
+    link?.scrollIntoView({ block: 'center', behavior: 'instant' });
+    return !!link;
+  });
+  if (has) {
+    await sleep(400);
+    await page.evaluate(() => document.querySelector('[data-qa-link]').click());
+    await sleep(2500);
+    await settle(page);
+    const top = await page.evaluate(() => (document.querySelector('#briefing') ? Math.round(document.querySelector('#briefing').getBoundingClientRect().top) : null));
+    check('a footer link on the privacy page (a soft navigation) lands on the briefing', top !== null && Math.abs(top - SCROLL_PADDING) <= 3, `top ${top}px`);
+  } else check('the privacy page has a footer link to #briefing', false);
+  await page.close();
+}
+
+// ── layout shift while scrolling ─────────────────────────────────────────────────────────────────────────────────────────────────
+if (want('cls')) {
+  group('Nothing shifts while the page is scrolled top to bottom and back (including right to left)');
+  const runs = QUICK
+    ? [['ar', 'phone', PHONE]]
+    : [['en', 'desktop', DESKTOP], ['en', 'phone', PHONE], ['ar', 'desktop', DESKTOP], ['ar', 'phone', PHONE], ['de', 'phone', PHONE]];
+  for (const [lang, label, viewport] of runs) {
+    const scrollThrough = async (noCv) => {
+      const { page } = await open(url(lang), { viewport, noCv });
+      const before = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < before + 2500; y += viewport.isMobile ? 360 : 500) {
+        await page.evaluate((v) => window.scrollTo({ top: v, behavior: 'instant' }), y);
+        await sleep(110);
+      }
+      await sleep(700);
+      const after = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = after; y > 0; y -= viewport.isMobile ? 700 : 900) {
+        await page.evaluate((v) => window.scrollTo({ top: v, behavior: 'instant' }), y);
+        await sleep(90);
+      }
+      await sleep(500);
+      const cls = await page.evaluate(() => window.__cls);
+      const finalHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+      await page.close();
+      return { cls, before, finalHeight };
+    };
+    const on = await scrollThrough(false);
+    const off = await scrollThrough(true);
+    check(`${lang} ${label}: layout shift while scrolling is 0.00`, on.cls < 0.005, `CLS ${on.cls.toFixed(4)} (without content-visibility ${off.cls.toFixed(4)})`);
+    check(`${lang} ${label}: after the scroll the page is as long as the fully drawn page, and the placeholders were within 15 %`, Math.abs(on.finalHeight - off.finalHeight) <= 4 && Math.abs(on.before - off.finalHeight) / off.finalHeight < 0.15, `before ${on.before}px, after ${on.finalHeight}px, fully drawn ${off.finalHeight}px`);
+  }
+}
+
+// ── the simulators: height, behaviour, right to left ─────────────────────────────────────────────────────────────────────────────
+if (want('sims')) {
+  group('The simulators keep one height through every state, and do what they say (docs/adr/0021 §4)');
+  const combos = FULL
+    ? ['en', 'tr', 'ar', 'de', 'fr', 'es', 'zh'].flatMap((lang) => [360, 412, 600, 820, 1024, 1440].map((width) => [lang, width]))
+    : QUICK
+      ? [['ar', 412]]
+      : [['en', 412], ['ar', 412], ['de', 360], ['en', 1440], ['ar', 820]];
+  for (const [lang, width] of combos) {
+    const mobile = width < 700;
+    const { page, errors } = await open(url(lang), { viewport: { width, height: mobile ? 800 : 900, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile } });
+    const heights = { queue: [], security: [] };
+    const sample = async () => {
+      const h = await page.evaluate(() => ({ queue: document.querySelector('.sim[data-sim="queue"]').getBoundingClientRect().height, security: document.querySelector('.sim[data-sim="security"]').getBoundingClientRect().height }));
+      heights.queue.push(h.queue);
+      heights.security.push(h.security);
+    };
+    const watch = async (ms) => {
+      const t0 = Date.now();
+      while (Date.now() - t0 < ms) {
+        await sample();
+        await sleep(70);
+      }
+    };
+    await sample();
+    // A press scrolls the control to the middle of the screen and clicks it in the page: on a phone the sticky call to action covers the bottom edge,
+    // where an automatic scroll would leave the button, and this checks the simulator, not where a finger lands.
+    const press = (kind, index) =>
+      page.evaluate(
+        (k, i) => {
+          const el = document.querySelectorAll(`.sim[data-sim="${k}"] .sim-controls button`)[i];
+          el.scrollIntoView({ block: 'center', behavior: 'instant' });
+          el.click();
+        },
+        kind,
+        index,
+      );
+    await page.evaluate(() => document.querySelector('.sim[data-sim="queue"]').scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await watch(1500);
+    await press('queue', 0);
+    await watch(1800);
+    await press('queue', 1);
+    await watch(2800);
+    const blocked = await page.evaluate(() => ({ parked: document.querySelectorAll('.sim[data-sim="queue"] .q-parcel[data-phase="standby"]').length, flag: document.querySelector('.sim[data-sim="queue"] .q-stage').hasAttribute('data-blocked'), status: document.querySelector('.sim[data-sim="queue"] .sim-status p').textContent }));
+    await press('queue', 1);
+    // The drain takes about five seconds; wait for it rather than for a fixed time (a busy machine is slower), and keep measuring the height.
+    for (let t0 = Date.now(); Date.now() - t0 < 14000; ) {
+      await watch(400);
+      if ((await page.evaluate(() => Number(document.querySelectorAll('.sim[data-sim="queue"] .q-stats dd')[1]?.textContent))) === 5) break;
+    }
+    await watch(500);
+    const done = await page.evaluate(() => [...document.querySelectorAll('.sim[data-sim="queue"] .q-stats dd')].map((d) => Number(d.textContent)));
+    await page.evaluate(() => document.querySelector('.sim[data-sim="security"]').scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await watch(1500);
+    await press('security', 0);
+    await watch(3800);
+    const sent = await page.evaluate(() => ({ rows: [...document.querySelectorAll('.sim[data-sim="security"] .s-readout dd > :first-child')].map((d) => d.textContent), nodes: [...document.querySelectorAll('.sim[data-sim="security"] .s-node')].map((n) => n.dataset.state).join(',') }));
+    await press('security', 1);
+    await watch(2800);
+    const replay = await page.evaluate(() => ({ sig: document.querySelectorAll('.sim[data-sim="security"] .s-readout dd > :first-child')[1].textContent, nodes: [...document.querySelectorAll('.sim[data-sim="security"] .s-node')].map((n) => n.dataset.state).join(',') }));
+    await page.evaluate(() => document.querySelector('.sim[data-sim="security"] .sim-switch').click());
+    await press('security', 0);
+    await watch(3200);
+    const tampered = await page.evaluate(() => ({ cipher: document.querySelectorAll('.sim[data-sim="security"] .s-readout dd > :first-child')[3].textContent, nodes: [...document.querySelectorAll('.sim[data-sim="security"] .s-node')].map((n) => n.dataset.state).join(',') }));
+    const cls = await page.evaluate(() => window.__cls);
+    const spread = (list) => Math.round((Math.max(...list) - Math.min(...list)) * 10) / 10;
+    const tag = `${lang} ${width}px`;
+    check(`${tag}: queue and security simulators keep the same height from idle through every state (${spread(heights.queue)} and ${spread(heights.security)} px)`, spread(heights.queue) <= 1 && spread(heights.security) <= 1, `queue ${Math.round(heights.queue[0])}px, security ${Math.round(heights.security[0])}px`);
+    check(`${tag}: no layout shift during the whole run`, cls < 0.005, `CLS ${cls.toFixed(4)}`);
+    check(`${tag}: blocking the channel parks events in the standby queue; restoring it delivers all five once, none lost`, blocked.flag && blocked.parked >= 1 && done[0] === 5 && done[1] === 5 && done[2] === 0 && done[3] === 0, JSON.stringify({ blocked, done }));
+    check(`${tag}: a message is signed, verified, sealed and delivered; a replay stops at the zero-trust step with the same signature; one altered character is rejected and never sealed`, /^sha256=[0-9a-f]{16}…[0-9a-f]{8}$/.test(sent.rows[1]) && sent.nodes === 'done,done,done,done,done' && replay.sig === sent.rows[1] && replay.nodes.startsWith('done,done,stopped') && tampered.cipher === '—' && tampered.nodes === 'done,done,stopped,skipped,skipped', JSON.stringify({ sent, replay, tampered }));
+    check(`${tag}: no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
+    await page.close();
+  }
+}
+
+// ── the integration model ────────────────────────────────────────────────────────────────────────────────────────────────────────
+if (want('integration')) {
+  group('The integration model: four systems, the payload the reference mappers produce, one height (docs/architecture/integrations.md)');
+  const EXPECT = { Salesforce: ['fields', 'SyncflowEventId__c', 'LastName'], HubSpot: ['properties', 'syncflow_event_id', 'lastname'], SAP: ['YY1_SyncflowEventId_SDH', 'SoldToParty'], Oracle: ['attribute1', 'InvoiceNumber'] };
+  for (const [lang, width] of QUICK ? [['en', 1440]] : [['en', 1440], ['ar', 820], ['de', 412]]) {
+    const mobile = width < 700;
+    const { page, errors } = await open(url(lang), { viewport: { width, height: mobile ? 823 : 900, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile } });
+    const idle = await page.evaluate(() => {
+      const el = document.querySelector('.sim[data-sim="integration"]');
+      return { live: el.hasAttribute('data-live'), tabs: el.querySelectorAll('.map-tabs button').length, inert: el.querySelector('.map-tabs').hasAttribute('inert'), lines: el.querySelectorAll('.map-line').length };
+    });
+    check(`${lang} ${width}px: drawn on the server for the first system, tabs reserved but inert`, !idle.live && idle.tabs === 4 && idle.inert && idle.lines >= 8, JSON.stringify(idle));
+    await page.evaluate(() => document.querySelector('.sim[data-sim="integration"]').scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await sleep(1800);
+    const heights = [];
+    const sample = async () => heights.push(await page.evaluate(() => document.querySelector('.sim[data-sim="integration"]').getBoundingClientRect().height));
+    await sample();
+    for (const name of Object.keys(EXPECT)) {
+      await page.evaluate((n) => [...document.querySelectorAll('.sim[data-sim="integration"] .map-tabs button')].find((x) => x.textContent === n).click(), name);
+      for (let i = 0; i < 8; i++) {
+        await sleep(80);
+        await sample();
+      }
+      const shown = await page.evaluate(() => {
+        const sim = document.querySelector('.sim[data-sim="integration"]');
+        return { json: sim.querySelector('.map-code pre').textContent, status: sim.querySelector('.sim-status p').textContent, pressed: [...sim.querySelectorAll('.map-tabs button[aria-pressed="true"]')].map((x) => x.textContent) };
+      });
+      let parsed = null;
+      try {
+        parsed = JSON.parse(shown.json);
+      } catch {
+        /* reported below */
+      }
+      check(`${lang} ${width}px: ${name} shows a valid payload carrying the event id in ${EXPECT[name].at(-2) ?? EXPECT[name][0]}, the tab is marked, the sentence has no placeholder left`, parsed !== null && EXPECT[name].every((key) => shown.json.includes(key)) && shown.pressed.length === 1 && shown.pressed[0] === name && !/[{}]/.test(shown.status), JSON.stringify(shown).slice(0, 300));
+    }
+    const spread = Math.max(...heights) - Math.min(...heights);
+    const cls = await page.evaluate(() => window.__cls);
+    check(`${lang} ${width}px: the card keeps exactly one height idle, live and on every tab, and nothing shifts`, spread <= 0.5 && cls < 0.005, `spread ${spread.toFixed(1)} px, CLS ${cls.toFixed(4)}`);
+    check(`${lang} ${width}px: no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
+    await page.close();
+  }
+}
+
+// ── skipped sections look the same as drawn ones ─────────────────────────────────────────────────────────────────────────────────
+if (want('parity')) {
+  group('Pages look the same with and without content-visibility (every viewport step, one CSS pixel of tolerance)');
+  mkdirSync(OUT, { recursive: true });
+  const diffPage = await browser.newPage();
+  const configs = [['en', DESKTOP], ['en', PHONE], ['ar', DESKTOP], ['de', { width: 820, height: 1180, deviceScaleFactor: 1 }], ['zh', PHONE]];
+  for (const [lang, viewport] of configs) {
+    const walk = async (noCv) => {
+      const { page } = await open(url(lang), { viewport, noCv, reduced: true });
+      const total = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < total; y += Math.round(viewport.height * 0.8)) {
+        await page.evaluate((v) => window.scrollTo({ top: v, behavior: 'instant' }), y);
+        await sleep(150);
+      }
+      const max = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+      const shots = [];
+      for (let y = 0; y <= max + viewport.height; y += viewport.height) {
+        const at = Math.min(y, max);
+        await page.evaluate((v) => window.scrollTo({ top: v, behavior: 'instant' }), at);
+        await sleep(450);
+        shots.push({ y: at, png: await page.screenshot({ type: 'png' }) });
+        if (at === max) break;
+      }
+      await page.close();
+      return shots;
+    };
+    const on = await walk(false);
+    const off = await walk(true);
+    let bad = 0;
+    let worst = 0;
+    for (let i = 0; i < Math.min(on.length, off.length); i++) {
+      const pct = await diffPage.evaluate(
+        async (a, b, radius) => {
+          const load = (src) => new Promise((resolve) => { const img = new Image(); img.onload = () => resolve(img); img.src = `data:image/png;base64,${src}`; });
+          const [ia, ib] = await Promise.all([load(a), load(b)]);
+          const w = Math.min(ia.width, ib.width);
+          const h = Math.min(ia.height, ib.height);
+          const grab = (img) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(img, 0, 0); return ctx.getImageData(0, 0, w, h).data; };
+          const da = grab(ia);
+          const db = grab(ib);
+          let diff = 0;
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const k = (y * w + x) * 4;
+              let best = 1e9;
+              for (let dy = -radius; dy <= radius && best > 60; dy++) for (let dx = -radius; dx <= radius; dx++) { const m = ((y + dy) * w + x + dx) * 4; const d = Math.abs(da[k] - db[m]) + Math.abs(da[k + 1] - db[m + 1]) + Math.abs(da[k + 2] - db[m + 2]); if (d < best) best = d; }
+              if (best > 60) diff++;
+            }
+          }
+          return (diff / (w * h)) * 100;
+        },
+        on[i].png.toString('base64'),
+        off[i].png.toString('base64'),
+        // One CSS pixel of rounding is Math.ceil(device pixel ratio) device pixels: a phone at 1.75x snaps a text line by up to two.
+        Math.ceil(viewport.deviceScaleFactor),
+      );
+      worst = Math.max(worst, pct);
+      // A missing, clipped or moved block is several percent of a screen; text lines that snap to another device pixel are a few hundredths.
+      if (pct > 0.3) {
+        bad++;
+        writeFileSync(join(OUT, `${lang}-${viewport.width}-${on[i].y}-on.png`), on[i].png);
+        writeFileSync(join(OUT, `${lang}-${viewport.width}-${on[i].y}-off.png`), off[i].png);
+      }
+    }
+    check(`${lang} ${viewport.width}px: ${on.length} viewport steps, none differs beyond rounding (the largest difference is ${worst.toFixed(3)} % of a screen)${bad ? `; ${bad} differ, saved in ${OUT}` : ''}`, bad === 0 && on.length === off.length);
+  }
+  await diffPage.close();
+}
+
+// ── the cinema layer: off the main thread, same picture, a fallback that works ──────────────────────────────────────────────────
+if (want('cinema')) {
+  group('The cinema layer runs in a worker (WebGL stays off the main thread), draws the same picture, and falls back to the main thread');
+  const still = async (query, { blockWorker = false } = {}) => {
+    const page = await browser.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+    page.on('console', (m) => m.type() === 'error' && !/CSP|Content Security|csp-report|Failed to load resource.*(404|429)/.test(m.text()) && errors.push(`console: ${m.text()}`));
+    await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+    await page.evaluateOnNewDocument((block) => {
+      // A browser whose workers cannot start: constructing one throws, the engine must carry on on the main thread.
+      if (block) window.Worker = class { constructor() { throw new Error('workers are not available'); } };
+      // How often the page's own thread asked for a WebGL context: with the worker this must stay at zero.
+      window.__webglOnMain = 0;
+      const original = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (type, ...rest) {
+        if (type === 'webgl2' || type === 'webgl') window.__webglOnMain++;
+        return original.call(this, type, ...rest);
+      };
+    }, blockWorker);
+    await page.goto(`${BASE}/?m=us&cinema-force&cinema-debug${query}`, { waitUntil: 'load', timeout: 60000 });
+    const live = await page.waitForSelector('.cinema-canvas[data-live]', { timeout: 30000 }).then(() => true, () => false);
+    // The canvas fades in over 1.4 s: wait it out so no frame is captured mid-fade.
+    await sleep(1800);
+    let png = null;
+    let stats = null;
+    if (live) {
+      // Through the CSSOM, not a <style> tag: an enforcing CSP blocks injected style elements, and this must work against either mode.
+      await page.evaluate(() => {
+        for (const el of document.querySelectorAll('#site-root,.skip-link,.cinema-fallback')) el.style.setProperty('visibility', 'hidden', 'important');
+        document.body.style.setProperty('background', 'transparent', 'important');
+      });
+      await page.evaluate(() => {
+        window.__cinema.set({ scene: 2, amb: 0, local: 0.5, gain: 1, heroGain: 0, time: 2.5, grain: 0, freeze: false });
+        window.__cinema.snap();
+      });
+      await sleep(700);
+      await page.evaluate(() => window.__cinema.set({ freeze: true }));
+      await sleep(900);
+      png = await page.screenshot({ type: 'png' });
+      stats = await page.evaluate(() => window.__cinema.stats());
+    }
+    const facts = await page.evaluate(() => ({ worker: !!window.__cinemaWorker, webglOnMain: window.__webglOnMain }));
+    await page.close();
+    return { live, png, stats, errors, ...facts };
+  };
+  const viaWorker = await still('');
+  const viaMain = await still('&cinema-worker=off');
+  const noWorker = await still('', { blockWorker: true });
+  check('default: the canvas goes live, drawn by the worker, and the page thread never created a WebGL context', viaWorker.live && viaWorker.worker && viaWorker.webglOnMain === 0, JSON.stringify({ live: viaWorker.live, worker: viaWorker.worker, webglOnMain: viaWorker.webglOnMain }));
+  check('the worker reports frames and a scene scale from its side', !!viaWorker.stats && viaWorker.stats.frames > 0 && viaWorker.stats.sceneScale > 0 && viaWorker.stats.width > 2, JSON.stringify(viaWorker.stats));
+  check('?cinema-worker=off: the same engine runs on the main thread and goes live', viaMain.live && !viaMain.worker && viaMain.webglOnMain === 1, JSON.stringify({ live: viaMain.live, worker: viaMain.worker, webglOnMain: viaMain.webglOnMain }));
+  check('workers unavailable (constructing one throws): the engine still goes live, on the main thread, without errors', noWorker.live && !noWorker.worker && noWorker.webglOnMain === 1 && noWorker.errors.length === 0, JSON.stringify({ live: noWorker.live, worker: noWorker.worker, webglOnMain: noWorker.webglOnMain, errors: noWorker.errors.slice(0, 2) }));
+  if (viaWorker.png && viaMain.png) {
+    const diffPage = await browser.newPage();
+    const result = await diffPage.evaluate(
+      async (a, b) => {
+        const load = (src) => new Promise((resolve) => { const img = new Image(); img.onload = () => resolve(img); img.src = `data:image/png;base64,${src}`; });
+        const [ia, ib] = await Promise.all([load(a), load(b)]);
+        const w = Math.min(ia.width, ib.width);
+        const h = Math.min(ia.height, ib.height);
+        const grab = (img) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(img, 0, 0); return ctx.getImageData(0, 0, w, h).data; };
+        const da = grab(ia);
+        const db = grab(ib);
+        let diff = 0;
+        let light = 0;
+        for (let i = 0; i < da.length; i += 4) {
+          if (Math.abs(da[i] - db[i]) + Math.abs(da[i + 1] - db[i + 1]) + Math.abs(da[i + 2] - db[i + 2]) > 6) diff++;
+          light += da[i] + da[i + 1] + da[i + 2];
+        }
+        return { pct: (diff / (w * h)) * 100, brightness: light / (w * h * 3) };
+      },
+      viaWorker.png.toString('base64'),
+      viaMain.png.toString('base64'),
+    );
+    await diffPage.close();
+    check(`a fixed monolith frame from the worker and from the main thread differ in ${result.pct.toFixed(3)} % of pixels (limit 0.05 %) and are not blank (mean brightness ${result.brightness.toFixed(1)} / 255)`, result.pct <= 0.05 && result.brightness > 8, JSON.stringify({ ...result, sceneScale: [viaWorker.stats?.sceneScale, viaMain.stats?.sceneScale] }));
+  } else check('both modes produced a frame to compare', false, JSON.stringify({ worker: !!viaWorker.png, main: !!viaMain.png }));
+  check('no page or console errors in either mode', viaWorker.errors.length === 0 && viaMain.errors.length === 0, [...viaWorker.errors, ...viaMain.errors].slice(0, 3).join(' | '));
+}
+
+await browser.close();
+console.log(`\n${results.filter(Boolean).length}/${results.length} browser checks passed${results.every(Boolean) ? '' : `, ${results.filter((r) => !r).length} FAILED`}`);
+process.exit(results.every(Boolean) ? 0 : 1);

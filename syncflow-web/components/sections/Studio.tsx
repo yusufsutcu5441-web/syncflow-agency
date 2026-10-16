@@ -76,7 +76,7 @@ export async function Studio() {
   ];
 
   return (
-    <section id={SECTION_IDS.studio} className="section" aria-labelledby="studio-title">
+    <section id={SECTION_IDS.studio} className="section cv cv-studio" aria-labelledby="studio-title">
       <div className="container-x">
         <SectionHead id="studio-title" label={t('label')} title={t('title')} subtitle={t('lead')} />
 

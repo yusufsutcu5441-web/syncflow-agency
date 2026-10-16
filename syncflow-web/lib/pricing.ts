@@ -58,9 +58,18 @@ export function ladder(market: Market): Band[] {
  * "$50,000" (en, es, zh), "₺2.475.000" (tr), "45.000 €" (de), "45 000 €" (fr). Arabic writes the ISO code ("184,000 AED", Latin
  * digits): the Arabic abbreviation of the dirham ends in a full stop, which doubles at the end of a sentence.
  */
+/** Building an Intl.NumberFormat is the slow part of formatting a price, and the briefing formats seven on every render: one per language and currency. */
+const moneyFormats = new Map<string, Intl.NumberFormat>();
+
 export function formatMoney(amount: number, currency: Currency, locale: AppLocale): string {
-  const currencyDisplay = LOCALE_LABELS[locale].dir === 'rtl' ? 'code' : 'narrowSymbol';
-  return new Intl.NumberFormat(LOCALE_LABELS[locale].intl, { style: 'currency', currency, currencyDisplay, maximumFractionDigits: 0 }).format(amount);
+  const key = `${locale}|${currency}`;
+  let format = moneyFormats.get(key);
+  if (!format) {
+    const currencyDisplay = LOCALE_LABELS[locale].dir === 'rtl' ? 'code' : 'narrowSymbol';
+    format = new Intl.NumberFormat(LOCALE_LABELS[locale].intl, { style: 'currency', currency, currencyDisplay, maximumFractionDigits: 0 });
+    moneyFormats.set(key, format);
+  }
+  return format.format(amount);
 }
 
 /** "$50,000 – $100,000" for a closed band, "$250,000 +" for the open one. */

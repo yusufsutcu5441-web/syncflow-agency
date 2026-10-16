@@ -36,7 +36,7 @@
     "dach": "DACH y Suiza",
     "fr": "Mónaco y Francia",
     "wealth": "Patrimonio global",
-    "asia": "Centros de Asia",
+    "asia": "Plazas financieras de Asia",
     "enter": "Entrar",
     "skip": "Continuar sin elegir"
   },
@@ -109,11 +109,9 @@
     "c5Title": "Conectada a los sistemas que ya hacen funcionar su empresa.",
     "c5Text": "Salesforce, SAP, HubSpot y Oracle forman parte de la arquitectura desde el primer boceto, para que clientes potenciales, pedidos y registros puedan circular entre el sitio y los sistemas sobre los que ya funciona su empresa.",
     "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
-    "c5DiagramAlt": "Esquema de un nodo central conectado a cuatro sistemas",
-    "c5Note": "Los nombres de producto pertenecen a sus propietarios. No se insinúa ninguna alianza ni certificación.",
     "c6Index": "VI",
     "c6Name": "Flujo de seguridad de confianza cero",
-    "c6Title": "Nada es de fiar hasta que se verifica.",
+    "c6Title": "Nada merece confianza hasta que se verifica.",
     "c6Text": "Cada mensaje que cruza una frontera se firma, lo verifica el receptor y se sella antes de seguir su camino. Los pasos de abajo se ejecutan en vivo en su navegador: puede romper uno y ver exactamente dónde se detiene el mensaje.",
     "c6Tags": "HMAC-SHA256 · Verificación de confianza cero · AES-256-GCM · Claves de idempotencia"
   },
@@ -130,7 +128,7 @@
     "play": "Reproducir vídeo",
     "pause": "Pausar vídeo",
     "estate": {
-      "tag": "Inmobiliaria de lujo",
+      "tag": "Inmuebles de lujo",
       "title": "No es una propiedad. Es un escenario para vivir.",
       "text": "Una residencia sobre el Bósforo no se compra desde una pantalla: se siente. Una llegada lenta y cinematográfica, la luz del día estudiada a lo largo de la planta y una consulta que llega directamente a sus directivos.",
       "overlay": "Precio bajo consulta",
@@ -449,6 +447,26 @@
       "outDuplicate": "Confirmado, no procesado dos veces: la clave de idempotencia ya se había visto.",
       "outUnavailable": "Web Crypto no está disponible en este contexto de navegador, así que el cálculo en vivo no puede ejecutarse.",
       "caption": "Se ejecuta en su navegador con claves desechables; nada sale de esta página. Demuestra el patrón; no describe, mide ni certifica ningún sistema de producción, y no se insinúa ninguna alianza con los productos mencionados. El paso de firma es el mismo patrón que este sitio usa para entregar sus propios briefings."
+    },
+    "integration": {
+      "title": "Un evento, cuatro sistemas",
+      "lead": "Elija un sistema. El mismo evento se traduce a la forma que ese sistema espera, y cada línea muestra qué campo alimenta a cuál.",
+      "tabsLabel": "Sistema de destino",
+      "canonical": "Evento canónico",
+      "payloadLabel": "Carga útil tal como se envía",
+      "kind": {
+        "salesforce": "Lead (contacto potencial)",
+        "hubspot": "Contacto",
+        "sap": "Pedido de venta",
+        "oracle": "Factura de cuentas por cobrar"
+      },
+      "event": {
+        "lead": "Una consulta del briefing",
+        "order": "Un pedido de cliente",
+        "invoice": "Una factura emitida"
+      },
+      "status": "Campos asignados: {count}. Registro: {object}. El identificador del evento viaja en {field}, de modo que un reintento no puede crear un segundo registro.",
+      "caption": "Estructuras ilustrativas, inspiradas en la nomenclatura pública de cada fabricante. No se generaron a partir de un sistema del fabricante ni se validaron contra él; cada conector real se construye y se comprueba contra el sistema del cliente. Los nombres de producto pertenecen a sus propietarios; no se insinúa ninguna alianza, certificación ni conformidad."
     }
   },
   "Breakdown": {

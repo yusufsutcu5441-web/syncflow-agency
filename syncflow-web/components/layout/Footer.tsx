@@ -25,7 +25,7 @@ export async function Footer() {
   const here = (id: string) => withLocale(`/#${id}`, locale);
 
   return (
-    <footer className="relative overflow-hidden pt-20 max-md:pb-20 md:pt-28">
+    <footer className="cv cv-footer relative overflow-hidden pt-20 max-md:pb-20 md:pt-28">
       <div className="container-x">
         <nav aria-label={a11y('footerNav')} className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
           <div>

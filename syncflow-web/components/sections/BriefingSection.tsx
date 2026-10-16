@@ -15,7 +15,7 @@ export async function BriefingSection() {
   const [beforeEmail = '', afterEmail = ''] = t.raw('noscript').split('{email}');
 
   return (
-    <section id={SECTION_IDS.briefing} className="section" aria-labelledby="briefing-title" data-sticky-guard="">
+    <section id={SECTION_IDS.briefing} className="section cv cv-briefing" aria-labelledby="briefing-title" data-sticky-guard="">
       <div className="container-x">
         <SectionHead id="briefing-title" label={t('label')} title={t('title')} subtitle={t('subtitle')} center />
         <noscript>

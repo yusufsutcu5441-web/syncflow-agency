@@ -1,4 +1,5 @@
 import type Lenis from 'lenis';
+import { holdLayoutBefore } from '@/lib/cv';
 import { cubicBezier } from '@/lib/motion/ease';
 import { EASE_LUX, LENIS } from '@/lib/motion/tokens';
 
@@ -61,7 +62,16 @@ export function initSmoothScroll(): () => void {
       // passed: Lenis already subtracts the target's scroll-margin-top and the page's scroll-padding-top (the header).
       event.preventDefault();
       event.stopPropagation();
-      lenis.scrollTo(target, { duration: LENIS.duration, easing, onComplete: () => focusSection(target) });
+      // The sections above the target must be real before Lenis measures it (lib/cv.ts, content-visibility: auto).
+      const release = holdLayoutBefore(target);
+      lenis.scrollTo(target, {
+        duration: LENIS.duration,
+        easing,
+        onComplete: () => {
+          release();
+          focusSection(target);
+        },
+      });
       if (window.location.hash !== url.hash) window.history.pushState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
     };
 

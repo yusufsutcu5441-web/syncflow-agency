@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './flags.css';
 
 /* Class names are scanned from the source; prose in docs and CLAUDE.md must not generate utilities. */
 @source not '../docs';
@@ -332,6 +333,103 @@ html[lang='ar'] ::after {
     padding-block: var(--space-section);
   }
 
+  /* ── Skipped until near (docs/adr/0021 §1) ────────────────────────────────────────────────────────────────────
+     Everything below the film is skipped by the renderer until it is within about half a screen of the viewport
+     (content-visibility: auto), so the first style and layout pass covers the gate, the hero and the film only. That pass is what decided
+     TBT on a throttled phone (about 1,470 layout objects, 600 to 900 ms at 4x CPU; about 540 and half the time with this rule). The text stays
+     in the HTML, in the accessibility tree and findable (Ctrl+F opens the section), and the links work.
+     --cv is the size the placeholder holds until the section has been drawn once (measured per breakpoint, in English); `auto` then makes
+     the browser keep the REAL size, so a skipped section never changes the page length and CLS stays 0.
+     Not on #top or #film (sticky stages measured by script) and not on the header. Paint containment clips at the section's own box, so
+     nothing in these sections may bleed past it (the visual-parity check in scripts/browser-flow.mjs compares screenshots). */
+  .cv {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto calc(var(--cv, 1200px) - var(--cv-pad, 0px));
+  }
+  /* --cv is the section's height as measured (border box); the placeholder is the CONTENT box, so the section's own padding comes off. */
+  .cv-architecture,
+  .cv-showcase,
+  .cv-studio,
+  .cv-briefing {
+    --cv-pad: calc(2 * var(--space-section));
+  }
+  .cv-closing {
+    --cv-pad: calc(var(--space-section) + 6rem);
+  }
+  .cv-footer {
+    --cv-pad: 10rem;
+  }
+  .cv-architecture {
+    --cv: 7240px;
+  }
+  .cv-showcase {
+    --cv: 1220px;
+  }
+  .cv-studio {
+    --cv: 3670px;
+  }
+  .cv-briefing {
+    --cv: 1200px;
+  }
+  .cv-closing {
+    --cv: 730px;
+  }
+  .cv-footer {
+    --cv: 1340px;
+  }
+  @media (min-width: 48rem) {
+    .cv-closing {
+      --cv-pad: calc(var(--space-section) + 8rem);
+    }
+    .cv-footer {
+      --cv-pad: 7rem;
+    }
+    .cv-architecture {
+      --cv: 5600px;
+    }
+    .cv-showcase {
+      --cv: 1260px;
+    }
+    .cv-studio {
+      --cv: 2820px;
+    }
+    .cv-briefing {
+      --cv: 1100px;
+    }
+    .cv-closing {
+      --cv: 820px;
+    }
+    .cv-footer {
+      --cv: 910px;
+    }
+  }
+  @media (min-width: 64rem) {
+    .cv-architecture {
+      --cv: 5530px;
+    }
+    .cv-showcase {
+      --cv: 1590px;
+    }
+    .cv-studio {
+      --cv: 2350px;
+    }
+    .cv-briefing {
+      --cv: 1330px;
+    }
+    .cv-closing {
+      --cv: 1020px;
+    }
+    .cv-footer {
+      --cv: 750px;
+    }
+  }
+  /* A jump to an anchor needs the real height of everything above its target. lib/cv.ts sets data-cv-prime on those sections for the length
+     of the scroll; a page opened on a deep link (/#studio) is laid out in full from the first paint until the script marks it ready. */
+  .cv[data-cv-prime],
+  html:not([data-cv-ready]):has(:target) .cv {
+    content-visibility: visible;
+  }
+
   /* ── Mono label: the ONE recipe for every small caption, chip, badge and code ──────────────────────────────────
      11 px mono, capitals, wide tracking. Each part below only adds its own colour, box and position, never its own type.
      Arabic and Japanese drop the capitals and the tracking through the :lang rules at the top of this file. */
@@ -640,14 +738,16 @@ html[lang='ar'] ::after {
   .lang-item .code {
     color: var(--color-faint);
   }
-  /* Micro flags (components/ui/Flag.tsx, docs/adr/0020): inline SVG, 20 x 14, a hairline ring in platin so a dark stripe never melts into
-     the page. The shape is symmetric, so it needs no mirroring in right-to-left; its place in a row comes from the row's own direction. */
+  /* Micro flags (components/ui/Flag.tsx, docs/adr/0020): one empty element, the art is a background image from app/flags.css (generated;
+     docs/adr/0021 §3), 20 x 14, a hairline ring in platin so a dark stripe never melts into the page. The shape is symmetric, so it needs no
+     mirroring in right-to-left; its place in a row comes from the row's own direction. */
   .flag {
     flex: none;
     display: block;
     width: 1.25rem;
     height: 0.875rem;
     border-radius: 3px;
+    background: center / 100% 100% no-repeat;
     outline: 1px solid rgb(226 226 230 / 0.26);
     outline-offset: -1px;
   }
@@ -791,6 +891,7 @@ html[lang='ar'] ::after {
     padding: 2px;
     border-radius: var(--radius-card);
     overflow: hidden;
+    overflow: clip;
     background: transparent;
   }
   .beam-card .beam {
@@ -817,11 +918,15 @@ html[lang='ar'] ::after {
     }
   }
 
+  /* overflow: clip, not hidden, on the media frame and the two cards that hold it (docs/adr/0021 §4): hidden makes a scroll container, and in a
+     right-to-left page Chrome counted the zoom of the picture inside it (scale, driven by --mf while the frame opens) as a layout shift
+     (CLS 0.03 on /ar, none on the same page in English). clip clips the same way without being a scroll container. hidden stays as the fallback. */
   /* ── Media frame (video) ───────────────────────────────────────────────────── */
   .frame {
     position: relative;
     aspect-ratio: 16 / 9;
     overflow: hidden;
+    overflow: clip;
     border-radius: 14px;
     background: var(--color-obsidian);
     border: 1px solid var(--color-hairline);
@@ -916,6 +1021,7 @@ html[lang='ar'] ::after {
     border: 1px solid var(--color-hairline);
     background: var(--color-layer-1);
     overflow: hidden;
+    overflow: clip;
     transition: border-color 0.4s ease;
   }
   @media (min-width: 48rem) {
@@ -1627,6 +1733,12 @@ html.lenis body {
     animation: gate-rise 1.1s var(--ease-lux) backwards;
     animation-delay: calc(0.3s + var(--g, 0) * 0.09s);
   }
+  /* The headline and the lead are the largest text on the first screen, so they are the LCP candidate. A fade that starts at opacity 0 after a
+     delay would be measured as "the moment the fade begins"; these two are in place from the first paint and only slide (a composited
+     transform, no layout), and the eyebrow and the market cards keep the fade (ADR 0021 §2). */
+  .gate-slide {
+    animation: gate-slide 0.9s var(--ease-lux) backwards;
+  }
   .gate-group {
     display: grid;
     gap: 0.65rem;
@@ -1936,6 +2048,16 @@ html:has(.gate[data-state='open']) .hero-monogram {
     translate: 0 18px;
   }
 }
+@keyframes map-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes gate-slide {
+  from {
+    translate: 0 18px;
+  }
+}
 
 @keyframes film-gate {
   0% {
@@ -2185,15 +2307,24 @@ html:has(.gate[data-state='open']) .hero-monogram {
   }
   .sim-status {
     margin-top: 1rem;
-    min-height: calc(1.55em * 3);
     font-size: 0.875rem;
     line-height: 1.55;
     color: var(--color-ink);
   }
-  @media (min-width: 40rem) {
-    .sim-status {
-      min-height: calc(1.55em * 2);
-    }
+  /* A live line that keeps the room of its longest alternative (components/sim/Reserve.tsx, docs/adr/0021 §4): the live text and its
+     invisible alternatives share one grid cell, so the box is as tall as the tallest of them at this width and in this language. */
+  .reserve {
+    display: grid;
+  }
+  .reserve > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+    margin: 0;
+  }
+  .reserve-ghost {
+    visibility: hidden;
+    pointer-events: none;
+    user-select: none;
   }
   .sim-controls {
     display: flex;
@@ -2202,6 +2333,10 @@ html:has(.gate[data-state='open']) .hero-monogram {
     gap: 0.6rem 0.9rem;
     margin-top: 1rem;
     min-height: 2.5rem;
+  }
+  /* Before the browser chunk arrives the row is only a reservation: same buttons, same wrapping, inert and invisible. */
+  .sim-controls[data-idle] {
+    visibility: hidden;
   }
   .sim-caption {
     margin-top: 1rem;
@@ -2537,7 +2672,6 @@ html:has(.gate[data-state='open']) .hero-monogram {
   }
   .s-text {
     margin-top: 1rem;
-    min-height: calc(1.6em * 3);
     font-size: 0.875rem;
     line-height: 1.6;
   }
@@ -2561,16 +2695,185 @@ html:has(.gate[data-state='open']) .hero-monogram {
     line-height: 1.6;
     overflow-wrap: anywhere;
   }
-  .s-readout > div:first-child dd {
-    min-height: 4.8em;
-  }
-  .s-readout > div:nth-child(3) dd {
-    min-height: 3.2em;
-  }
   @media (max-width: 39.99rem) {
     .s-readout > div {
       grid-template-columns: minmax(0, 1fr);
     }
+  }
+
+  /* Integration model (docs/adr/0021 §5, components/sim/IntegrationView.tsx): the canonical event on the left, the shape one system receives on
+     the right, a line for every mapped field. Rows have a fixed height, so a line is just a curve between two row centres in a viewBox of 100 x
+     (rows x 100), and the stage keeps the same height for every system. The curves are mirrored in right-to-left, where the event is on the right. */
+  .map-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.1rem;
+    min-height: 2.5rem;
+  }
+  .map-tabs[data-idle] {
+    visibility: hidden;
+  }
+  .map-tabs .btn[aria-pressed='true'] {
+    border-color: var(--color-ink);
+    background: rgb(226 226 230 / 0.05);
+  }
+  .map-tabs .btn[aria-pressed='false'] {
+    color: var(--color-muted);
+  }
+  .map-head,
+  .map-stage {
+    --map-cols: minmax(0, 1fr) clamp(2.25rem, 12%, 4.5rem) minmax(0, 1fr);
+    display: grid;
+    grid-template-columns: var(--map-cols);
+  }
+  .map-head {
+    align-items: start;
+    margin-top: 1.25rem;
+  }
+  .map-head > div {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+  .map-sub {
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--color-faint);
+  }
+  .map-sub.metric-value {
+    font-size: 0.6875rem;
+    color: var(--color-muted);
+  }
+  .map-stage {
+    --map-row: 2rem;
+    margin-top: 0.6rem;
+    min-height: calc(var(--map-rows) * var(--map-row));
+  }
+  .map-col {
+    display: grid;
+    grid-auto-rows: var(--map-row);
+    align-content: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+  }
+  .map-chip {
+    display: block;
+    min-width: 0;
+    height: calc(var(--map-row) - 0.4rem);
+    margin-block: 0.2rem;
+    padding-inline: 0.6rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 8px;
+    font-size: 0.6875rem;
+    line-height: calc(var(--map-row) - 0.4rem - 2px);
+    color: var(--color-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: start;
+    transition:
+      border-color 0.25s ease,
+      color 0.25s ease;
+  }
+  .map-chip[data-constant] {
+    border-style: dashed;
+    color: var(--color-faint);
+  }
+  /* The curves fill the middle cell but take no room of their own: an SVG with a viewBox has an intrinsic height, and the rows are what sets the height. */
+  .map-mid {
+    position: relative;
+    min-width: 0;
+  }
+  .map-lines {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  [dir='rtl'] .map-lines {
+    transform: scaleX(-1);
+  }
+  .map-line {
+    stroke: rgb(226 226 230 / 0.3);
+    stroke-width: 1.25;
+    vector-effect: non-scaling-stroke;
+    transition:
+      stroke 0.25s ease,
+      stroke-width 0.25s ease;
+  }
+  /* The line a visitor points at, and the two fields it joins (the chips share the line's index). Pointer devices only; nothing here is needed to read the model. */
+  @media (hover: hover) {
+    .map-stage:has(.map-chip:hover) .map-line {
+      stroke: rgb(226 226 230 / 0.12);
+    }
+    .map-stage:has(.map-chip[data-i~='0']:hover) .map-line[data-i='0'],
+    .map-stage:has(.map-chip[data-i~='1']:hover) .map-line[data-i='1'],
+    .map-stage:has(.map-chip[data-i~='2']:hover) .map-line[data-i='2'],
+    .map-stage:has(.map-chip[data-i~='3']:hover) .map-line[data-i='3'],
+    .map-stage:has(.map-chip[data-i~='4']:hover) .map-line[data-i='4'],
+    .map-stage:has(.map-chip[data-i~='5']:hover) .map-line[data-i='5'],
+    .map-stage:has(.map-chip[data-i~='6']:hover) .map-line[data-i='6'],
+    .map-stage:has(.map-chip[data-i~='7']:hover) .map-line[data-i='7'],
+    .map-stage:has(.map-chip[data-i~='8']:hover) .map-line[data-i='8'],
+    .map-stage:has(.map-chip[data-i~='9']:hover) .map-line[data-i='9'],
+    .map-stage:has(.map-chip[data-i~='10']:hover) .map-line[data-i='10'] {
+      stroke: var(--color-ink);
+      stroke-width: 1.75;
+    }
+    .map-chip:hover {
+      border-color: var(--color-hairline-strong);
+      color: var(--color-ink);
+    }
+  }
+  /* The lines arrive when a system is chosen (a fade, only after the model is live, so the page at rest is still). */
+  @media (prefers-reduced-motion: no-preference) {
+    .sim[data-live] .map-line {
+      animation: map-fade 0.7s var(--ease-lux) backwards;
+    }
+  }
+  /* A phone is too narrow for 28-character field names on one line: the rows get taller and the names may wrap, so none is cut off. */
+  @media (max-width: 39.99rem) {
+    .map-stage {
+      --map-row: 2.75rem;
+    }
+    .map-chip {
+      display: flex;
+      align-items: center;
+      padding-inline: 0.45rem;
+      font-size: 0.625rem;
+      line-height: 1.25;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+  .map-code pre {
+    margin: 0;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: 10px;
+    background: rgb(226 226 230 / 0.03);
+    font-size: 0.6875rem;
+    line-height: 1.6;
+    letter-spacing: 0;
+    color: var(--color-muted);
+    overflow-x: auto;
+    text-align: left;
+    tab-size: 2;
+  }
+  .map-code .reserve-ghost {
+    white-space: pre;
+    overflow: hidden;
+    padding: 0.9rem 1rem;
+    border: 1px solid transparent;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.6;
+    letter-spacing: 0;
   }
 
   /* Architectural breakdown: a page of its own, and the same markup inside the dialog ------------------------------------------ */

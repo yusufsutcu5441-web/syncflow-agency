@@ -92,6 +92,9 @@ export function LanguageSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // The list is built the first time the visitor shows interest in it (pointer, focus, touch). Closed it is inert and invisible, and its names
+  // (Arabic, Chinese, Turkish) cost the first layout a font lookup each for nothing; the same names are plain links in the footer and in the head.
+  const [built, setBuilt] = useState(false);
   const [, startTransition] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -128,6 +131,7 @@ export function LanguageSwitcher() {
   const items = () => Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? []);
 
   const openMenu = (focus: 'current' | 'first' | 'last' = 'current') => {
+    setBuilt(true);
     setOpen(true);
     // The menu is inert while closed, so focus can only move once React has re-rendered it as open.
     requestAnimationFrame(() => {
@@ -176,13 +180,13 @@ export function LanguageSwitcher() {
   const current = LOCALE_LABELS[locale];
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className="relative" onPointerEnter={() => setBuilt(true)} onPointerDown={() => setBuilt(true)} onFocus={() => setBuilt(true)}>
       <button
         ref={triggerRef}
         type="button"
         className="lang-trigger"
         aria-expanded={open}
-        aria-controls={menuId}
+        aria-controls={built ? menuId : undefined}
         // WCAG 2.5.3 "Label in Name": the accessible name starts with the visible text (EN).
         aria-label={`${current.code}, ${t.label}: ${current.native}`}
         title={current.native}
@@ -194,26 +198,28 @@ export function LanguageSwitcher() {
         <ChevronDown size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
 
-      <div ref={menuRef} id={menuId} role="group" aria-label={t.label} className="lang-menu" data-open={open} inert={!open} onKeyDown={onMenuKeyDown}>
-        {OPEN_LOCALES.map((code) => {
-          const label = LOCALE_LABELS[code];
-          const selected = code === locale;
-          return (
-            <button key={code} type="button" lang={label.hreflang} className="lang-item" aria-current={selected ? 'true' : undefined} onClick={() => choose(code)}>
-              <span className="flex items-center gap-2.5">
-                <Flag code={label.flag} />
-                {/* The direction belongs to the name only: the row (flag, name, then the code at the far end) reads the same in every item, Arabic included. */}
-                <span dir={label.dir}>{label.native}</span>
-                {selected ? <Check size={14} strokeWidth={2} aria-hidden="true" /> : null}
-              </span>
-              <span className="code">
-                {label.code}
-                {isDraftLocale(code) ? ` · ${t.draft}` : ''}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {built ? (
+        <div ref={menuRef} id={menuId} role="group" aria-label={t.label} className="lang-menu" data-open={open} inert={!open} onKeyDown={onMenuKeyDown}>
+          {OPEN_LOCALES.map((code) => {
+            const label = LOCALE_LABELS[code];
+            const selected = code === locale;
+            return (
+              <button key={code} type="button" lang={label.hreflang} className="lang-item" aria-current={selected ? 'true' : undefined} onClick={() => choose(code)}>
+                <span className="flex items-center gap-2.5">
+                  <Flag code={label.flag} />
+                  {/* The direction belongs to the name only: the row (flag, name, then the code at the far end) reads the same in every item, Arabic included. */}
+                  <span dir={label.dir}>{label.native}</span>
+                  {selected ? <Check size={14} strokeWidth={2} aria-hidden="true" /> : null}
+                </span>
+                <span className="code">
+                  {label.code}
+                  {isDraftLocale(code) ? ` · ${t.draft}` : ''}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }

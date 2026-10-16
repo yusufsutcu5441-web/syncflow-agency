@@ -35,8 +35,8 @@
     "me": "Moyen-Orient, Dubaï",
     "dach": "DACH et Suisse",
     "fr": "Monaco et France",
-    "wealth": "Fortunes mondiales",
-    "asia": "Pôles asiatiques",
+    "wealth": "Gestion de fortune mondiale",
+    "asia": "Places financières d’Asie",
     "enter": "Entrer",
     "skip": "Continuer sans choisir"
   },
@@ -44,7 +44,7 @@
     "eyebrow": "Studio d’architecture numérique — depuis 2026",
     "title1": "Bâti dans l’ombre.",
     "title2": "Glisse comme un liquide.",
-    "subtitle": "L’architecture numérique à l’échelle des grandes entreprises, pour les dirigeants dont le nom est l’entreprise : automatisation sécurisée des flux de travail, usinée à de faibles tolérances, achevée dans le silence, mesurée plutôt que promise.",
+    "subtitle": "L’architecture numérique à l’échelle des grandes entreprises, pour les dirigeants dont le nom est l’entreprise : automatisation sécurisée des flux de travail, usinée selon des tolérances serrées, achevée dans le silence, mesurée plutôt que promise.",
     "ctaPrimary": "Briefing stratégique",
     "ctaSecondary": "Vitrine",
     "scroll": "Défiler",
@@ -73,7 +73,7 @@
   "Architecture": {
     "label": "01 — Architecture",
     "title": "De l’ingénierie, pas de la décoration.",
-    "intro": "Chaque pixel est une tolérance, chaque image un engagement. Les écosystèmes numériques à fort ROI se construisent ici en deux couches : un front-end qui paraît calibré, et pas seulement rapide, et une automatisation d’entreprise à sécurité intégrée.",
+    "intro": "Chaque pixel est une tolérance, chaque image un engagement. Les écosystèmes numériques à fort ROI se construisent ici en deux couches : un front-end qui paraît calibré, et pas seulement rapide, et une automatisation d’entreprise conçue pour résister aux pannes.",
     "c1Index": "I",
     "c1Title": "De la vidéo, pas du code. Le cinéma dans le navigateur.",
     "c1Text": "Nous avons laissé derrière nous les moteurs de rendu lourds et les couches d’animation saccadées. Vos flux de hero et de vitrine sont servis en vidéo MP4/WebM native, décodée par le matériel vidéo de l’appareil : le processeur est à peine sollicité.",
@@ -100,7 +100,7 @@
     "c3Detail": "Bureau : CLS {cls}, LCP {lcp}, TBT {tbt}. Mobile (4G lente simulée, processeur ralenti 4×) : performance {mobile}.",
     "c3Caption": "{tool}, {profile}, {date}.",
     "c4Index": "IV",
-    "c4Name": "Automatisation d’entreprise à sécurité intégrée",
+    "c4Name": "Automatisation d’entreprise tolérante aux pannes",
     "c4Title": "Construite pour le jour où quelque chose cède.",
     "c4Text": "À l’échelle d’une grande entreprise, quelque chose finit toujours par céder. L’automatisation est donc bâtie autour de ce fait : des architectures de files d’attente redondantes gardent les événements en mouvement quand un chemin se tait, et les webhooks sont signés et vérifiés avant que rien ne leur fasse confiance.",
     "c4Tags": "Files d’attente redondantes · Webhooks signés · Livraison idempotente · Reprises bornées",
@@ -109,11 +109,9 @@
     "c5Title": "Reliée aux systèmes que vous faites déjà tourner.",
     "c5Text": "Salesforce, SAP, HubSpot et Oracle font partie de l’architecture dès la première esquisse, afin que prospects, commandes et enregistrements puissent circuler entre le site et les systèmes sur lesquels votre entreprise tourne déjà.",
     "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
-    "c5DiagramAlt": "Schéma d’un nœud central relié à quatre systèmes",
-    "c5Note": "Les noms de produits appartiennent à leurs propriétaires. Aucun partenariat ni aucune certification n’est sous-entendu.",
     "c6Index": "VI",
     "c6Name": "Flux de sécurité Zero Trust",
-    "c6Title": "Rien n’est cru avant d’être vérifié.",
+    "c6Title": "Rien n’est digne de confiance tant qu’il n’est pas vérifié.",
     "c6Text": "Chaque message qui franchit une frontière est signé, vérifié par le destinataire et scellé avant de poursuivre sa route. Les étapes ci-dessous s’exécutent en direct dans votre navigateur : vous pouvez en casser une et voir exactement où le message s’arrête.",
     "c6Tags": "HMAC-SHA256 · Vérification Zero Trust · AES-256-GCM · Clés d’idempotence"
   },
@@ -154,7 +152,7 @@
       "tag": "Logistique mondiale et architecture de chaîne d’approvisionnement B2B",
       "title": "Rien n’attend. Rien ne se perd.",
       "text": "Pour les opérateurs logistiques et les chaînes d’approvisionnement B2B : des architectures de files d’attente redondantes qui gardent les données en mouvement quand une voie se tait, un flux de données ininterrompu de la commande au quai puis à la facture, et une automatisation qui prend les décisions de routine pour que vos équipes prennent les décisions exceptionnelles.",
-      "overlay": "Demande entreprise",
+      "overlay": "Demande grand compte",
       "videoLabel": "Des colis traversent un couloir sombre de voies parallèles ; quand une voie se tait, une voie de secours s’allume et le flux ne s’interrompt pas"
     },
     "breakdown": "Analyse architecturale",
@@ -346,7 +344,7 @@
     "title": "Exact par habitude.\nSilencieux par défaut.",
     "lead": "Nous sommes un studio d’architecture numérique pour les propriétaires, associés et dirigeants dont le nom est l’entreprise. Nous travaillons comme un bon architecte : au dessin, à la tolérance et dans la discrétion.",
     "p1Title": "Zéro défaut, comme méthode.",
-    "p1Text": "Un défaut se conçoit hors du produit, il ne s’excuse pas. Chaque modification est auditée, passée au test de fumée et vérifiée sur le site en ligne avant que nous la disions terminée, et ce que nous publions sur la performance est mesuré, daté et sourcé. Le zéro défaut est la norme à laquelle nous travaillons, jamais une promesse que nous pourrions signer pour vous.",
+    "p1Text": "Un défaut s’écarte dès la conception ; il ne s’excuse pas. Chaque modification est auditée, passée au test de fumée et vérifiée sur le site en ligne avant que nous la disions terminée, et ce que nous publions sur la performance est mesuré, daté et sourcé. Le zéro défaut est l’exigence que nous nous fixons, jamais une promesse que nous pourrions signer pour vous.",
     "p1Link": "Voir les mesures",
     "p2Title": "Confidentiel par défaut.",
     "p2Text": "Un accord de confidentialité mutuel peut être signé avant notre première séance de travail. Un travail de client n’est jamais montré sans accord écrit, ce qui explique que la vitrine ne présente que des spécimens du studio. Ce site ne dépose aucun cookie, n’exécute aucune analyse, et chaque briefing est lu par une personne.",
@@ -449,6 +447,26 @@
       "outDuplicate": "Accusé de réception, non traité deux fois : la clé d’idempotence avait déjà été vue.",
       "outUnavailable": "Web Crypto n’est pas disponible dans ce contexte de navigateur, le calcul en direct ne peut donc pas s’exécuter.",
       "caption": "S’exécute dans votre navigateur avec des clés jetables ; rien ne quitte cette page. Il montre le schéma ; il ne décrit, ne mesure ni ne certifie aucun système de production, et aucun partenariat avec les produits cités n’est sous-entendu. L’étape de signature est le même schéma que celui que ce site utilise pour livrer ses propres briefings."
+    },
+    "integration": {
+      "title": "Un événement, quatre systèmes",
+      "lead": "Choisissez un système. Le même événement est traduit dans la forme que ce système attend ; chaque ligne montre quel champ alimente lequel.",
+      "tabsLabel": "Système cible",
+      "canonical": "Événement canonique",
+      "payloadLabel": "Charge utile telle qu’envoyée",
+      "kind": {
+        "salesforce": "Prospect (lead)",
+        "hubspot": "Contact",
+        "sap": "Commande client",
+        "oracle": "Facture client"
+      },
+      "event": {
+        "lead": "Une demande issue du briefing",
+        "order": "Une commande client",
+        "invoice": "Une facture émise"
+      },
+      "status": "Champs associés : {count}. Enregistrement : {object}. L’identifiant de l’événement voyage dans {field} ; une nouvelle tentative ne peut donc pas créer un second enregistrement.",
+      "caption": "Structures illustratives, inspirées de la nomenclature publique de chaque éditeur. Elles n’ont été ni générées à partir d’un système éditeur ni validées auprès de lui ; chaque connecteur réel est construit et vérifié sur le système du client. Les noms de produits appartiennent à leurs propriétaires ; aucun partenariat, aucune certification ni aucune conformité n’est sous-entendu."
     }
   },
   "Breakdown": {

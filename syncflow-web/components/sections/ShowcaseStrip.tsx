@@ -20,16 +20,30 @@ export function ShowcaseStrip({ children }: { children: ReactNode }) {
     if (!element) return;
     const max = element.scrollWidth - element.clientWidth;
     const position = Math.abs(element.scrollLeft);
-    setEdge({ start: position < 4, end: position > max - 4 });
+    const start = position < 4;
+    const end = position > max - 4;
+    // The scroll event fires many times a second and almost always reports the same edges: an equal state must not render again.
+    setEdge((previous) => (previous.start === start && previous.end === end ? previous : { start, end }));
   }, []);
 
   useEffect(() => {
     const element = strip.current;
     if (!element) return;
-    update();
+    // The first measurement waits until the strip is near the screen. It sits in a block the renderer skips until then (content-visibility:
+    // auto, docs/adr/0021 §1), and reading its width during hydration would make the browser lay that whole block out.
+    const near = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        near.disconnect();
+        update();
+      },
+      { rootMargin: '300px 0px' },
+    );
+    near.observe(element);
     element.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
     return () => {
+      near.disconnect();
       element.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
     };

@@ -1,0 +1,25 @@
+{
+  "measuredOn": "development workstation, Windows 11, headless Chrome 154, 2026-10-16: medians of five runs after a warm-up, the build of docs/adr/0021 against the build before it (the same page, interleaved). Absolute numbers depend on the machine; each budget sits between the new build and the old one so that losing content-visibility, the CSS flags or the yielded start trips it. On another machine measure first (npm run perf:gate) and adjust, or compare two builds with --baseline.",
+  "mobile": {
+    "dom": 1000,
+    "layoutMs": 400,
+    "styleMs": 220,
+    "scriptMs": 300,
+    "taskMs": 1500,
+    "tbtMs": 200,
+    "longTasks": 1,
+    "cls": 0.005,
+    "fcpMs": 1400
+  },
+  "desktop": {
+    "dom": 1000,
+    "layoutMs": 110,
+    "styleMs": 130,
+    "scriptMs": 120,
+    "taskMs": 700,
+    "tbtMs": 50,
+    "longTasks": 0,
+    "cls": 0.005,
+    "fcpMs": 400
+  }
+}

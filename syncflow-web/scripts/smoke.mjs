@@ -145,7 +145,7 @@ check('the showcase has exactly the four sectors (real estate, clinics, corporat
 // The words of a heading may sit in separate masked spans, so phrases are compared against the page's text with the tags removed.
 const pageText = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
 check('the showcase headline counts four industries and the footer links the logistics card', pageText.includes('Four industries.') && html.includes('href="/#show-logistics"'));
-check('the architecture section carries the two enterprise columns (fail-safe automation, deep integrations) and the note that implies no partnership', pageText.includes('Fail-Safe Enterprise Automation') && pageText.includes('Deep Enterprise Integrations') && pageText.includes('Salesforce') && pageText.includes('SAP') && pageText.includes('HubSpot') && pageText.includes('Oracle') && pageText.includes('No partnership or certification is implied.'));
+check('the architecture section carries the two enterprise columns (fail-safe automation, deep integrations) and the note that implies no partnership', pageText.includes('Fail-Safe Enterprise Automation') && pageText.includes('Deep Enterprise Integrations') && pageText.includes('Salesforce') && pageText.includes('SAP') && pageText.includes('HubSpot') && pageText.includes('Oracle') && pageText.includes('no partnership, certification or conformance is implied'));
 check('the hero and the architecture intro carry the owner\u2019s three phrases (enterprise scale, secure workflow automation, high-ROI digital ecosystems)', /enterprise scale/i.test(pageText) && /secure workflow automation/i.test(pageText) && /high-ROI digital ecosystems/i.test(pageText));
 check('no invented enterprise credential in the page (no SLA, SOC 2, ISO 27001, uptime percentage or partner badge)', !/\bSLA\b|SOC ?2|ISO ?27001|99\.9+ ?%|uptime|certified partner/i.test(pageText));
 check('the page makes no multi-language claim', !/seven languages|7 languages|every language|yedi dil|her dilde/i.test(html));
@@ -212,7 +212,7 @@ const markup = unknown.page.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
 const injected = await pageAs('/?m=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E');
 check('an unknown market is ignored (the gate shows) and never reaches the document markup', hasGate(unknown.page) && !markup.includes('ZZtopmarket') && !injected.page.includes('<img src=x onerror'));
 const trGate = await pageAs('/tr');
-check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Sermaye merkezinizi seçin.'));
+check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Finans merkezinizi seçin.'));
 check('/tr: the briefing names the minimum in lira and offers the lira bands', trGate.page.includes('₺2.475.000') && trGate.page.includes('₺4.950.000') && trGate.page.includes('₺12.375.000 +'));
 for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
   const bot = await pageAs('/', ua);
@@ -231,12 +231,12 @@ const normalise = (text) => text.replace(/[\s\u00a0\u202f]+/g, ' ');
 const CENTRES = [
   // [language, path, gate title, the briefing's floor as that page formats it, a word of the briefing in that language]
   ['en', '/', 'Choose your capital center.', '$50,000', 'Investment'],
-  ['tr', '/tr', 'Sermaye merkezinizi seçin.', '₺2.475.000', 'Yatırım'],
+  ['tr', '/tr', 'Finans merkezinizi seçin.', '₺2.475.000', 'Yatırım'],
   ['ar', '/ar', 'اختر مركزك المالي.', '184,000', 'الاستثمار'],
   ['de', '/de', 'Wählen Sie Ihren Finanzplatz.', '45.000 €', 'Investition'],
   ['fr', '/fr', 'Choisissez votre place financière.', '45 000 €', 'Investissement'],
   ['es', '/es', 'Elija su plaza financiera.', '$50,000', 'Inversión'],
-  ['zh', '/zh', '选择您的资本中心。', '$50,000', '投资'],
+  ['zh', '/zh', '选择您的金融中心。', '$50,000', '投资'],
 ];
 for (const [code, path, title, floor, word] of CENTRES) {
   if (!OPEN.includes(code)) continue;
@@ -261,7 +261,7 @@ section('Locales');
 const MARKERS = {
   tr: ['Karanlıkta inşa edilir.', 'Briefing Başlat'],
   ar: ['بُني في العتمة.', 'ينساب كالسائل.'],
-  de: ['Im Dunkeln gebaut.', 'Fließt wie Flüssigkeit.'],
+  de: ['Im Dunkeln gebaut.', 'Bewegt sich wie Flüssigkeit.'],
   fr: ['Bâti dans l’ombre.', 'Glisse comme un liquide.'],
   es: ['Construido en la oscuridad.', 'Fluye como un líquido.'],
   zh: ['筑于暗处。', '流动如液。'],
@@ -579,6 +579,50 @@ check('the Studio text states zero defects as a method, never as a guarantee; th
 check('the Studio engineering notes state the real tolerances (pixel ratio 1.25, 24 ms, 1.2 s, 88 px, 16.7 ms)', ['1.25', '24 ms', '1.2 s', '88 px', '16.7 ms'].every((t) => enHome.includes(t)));
 check('the old still failover schematic is gone: the card holds the live simulator instead', !enHome.includes('A schematic of the pattern, not a measurement') && enHome.includes('A model of the pattern, not a measurement of a real system'));
 check('the security simulator says it uses throwaway keys, names no certification and no partnership', /throwaway keys/.test(enHome) && /no partnership with the products named is implied/.test(enHome));
+
+section('Production performance and enterprise proof (docs/adr/0021)');
+{
+  const MARKET_OF = { en: 'us', tr: 'tr', ar: 'me', de: 'dach', fr: 'fr', es: 'wealth', zh: 'asia' };
+  const INTEGRATION_TITLE = { en: 'One event, four systems', tr: 'Tek olay, dört sistem', ar: 'حدث واحد، أربعة أنظمة', de: 'Ein Ereignis, vier Systeme', fr: 'Un événement, quatre systèmes', es: 'Un evento, cuatro sistemas', zh: '一个事件，四个系统' };
+  const SECTIONS = ['architecture', 'showcase', 'studio', 'briefing', 'closing', 'footer'];
+  const bad = { skipped: [], complete: [], flags: [], integration: [], menu: [], ghosts: [] };
+  for (const locale of OPEN) {
+    const raw = (await pageAs(locale === 'en' ? '/?m=us' : `/${locale}?m=${MARKET_OF[locale]}`)).page;
+    const cv = raw.match(/class="[^"]*\bcv\b[^"]*"/g) ?? [];
+    // The six blocks below the film are skipped until near; the hero and the film are not (they are measured by script).
+    if (!(cv.length === 6 && SECTIONS.every((name) => raw.includes(`cv-${name}`)) && !/id="(top|film)"[^>]*\bcv\b/.test(raw))) bad.skipped.push(locale);
+    // Nothing needs script to be visible: no section is streamed into a hidden block that a script reveals later.
+    if (/<template id="B:|<div hidden id="S:|\$RC\(/.test(raw)) bad.complete.push(locale);
+    // Flags: one empty element each, never an inline SVG.
+    if (!((raw.match(/<span class="flag" data-flag="/g) ?? []).length >= 8 && !/<svg[^>]*data-flag/.test(raw))) bad.flags.push(locale);
+    // The integration model: drawn for the first system on the server, in the page's language, with the first event id in its payload.
+    if (!(raw.includes('data-sim="integration"') && raw.includes(INTEGRATION_TITLE[locale]) && raw.includes('SyncflowEventId__c') && raw.includes('3f2a9c1e-7b4d-4e0a-9d51-6c8b2a7e1f40') && (locale === 'en' || !raw.includes('One event, four systems')))) bad.integration.push(locale);
+    // The language menu is built on first interest, so it is not in the server's page, and the trigger names no menu that does not exist yet.
+    if (raw.includes('class="lang-menu"') || /class="lang-trigger"[^>]*aria-controls/.test(raw)) bad.menu.push(locale);
+    // Every simulator line that changes keeps the room of its longest alternative: the invisible alternatives are out of the accessibility tree.
+    const ghosts = raw.match(/<span class="reserve-ghost"[^>]*>/g) ?? [];
+    if (!(ghosts.length >= 30 && ghosts.every((g) => g.includes('aria-hidden="true"')))) bad.ghosts.push(locale);
+  }
+  const all = (list) => (list.length === 0 ? '' : `failed in: ${list.join(', ')}`);
+  check('every language: the hero and the film are drawn at once, the six blocks below them (Architecture, Showcase, Studio, Briefing, Closing, footer) are skipped until near', bad.skipped.length === 0, all(bad.skipped));
+  check('every language: the page is complete in the first response (no section streamed into a hidden block that a script reveals)', bad.complete.length === 0, all(bad.complete));
+  check('every language: flags are one empty element each with a data-flag, none is an inline SVG', bad.flags.length === 0, all(bad.flags));
+  check('every language: the integration model is drawn on the server for the first system, in that language, carrying the event id', bad.integration.length === 0, all(bad.integration));
+  check('every language: the header language menu is not in the server page (built on first interest) and its trigger points at nothing yet', bad.menu.length === 0, all(bad.menu));
+  check('every language: the simulators reserve the room of their longest line with invisible alternatives hidden from assistive technology', bad.ghosts.length === 0, all(bad.ghosts));
+
+  const gate = (await pageAs('/')).page;
+  check('the entry gate headline and lead only slide (no delay, no fade): they are the largest text of the first screen', /class="gate-title gate-slide"/.test(gate) && /class="lead gate-slide"/.test(gate) && !/class="gate-title gate-rise"/.test(gate));
+
+  const home = (await pageAs('/?m=us')).page;
+  const href = (home.match(/<link rel="stylesheet" href="([^"]+\.css)"/) ?? [])[1];
+  const css = href ? await (await get(href)).text() : '';
+  check('the stylesheet skips below-fold blocks (content-visibility: auto with a remembered size), lets anchors and deep links draw what they pass, and carries the eight flags', /content-visibility:auto/.test(css) && /contain-intrinsic-block-size:auto/.test(css) && /\.cv\[data-cv-prime\]/.test(css) && /:has\(:target\)/.test(css) && (css.match(/\.flag\[data-flag=/g) ?? []).length === 8, `stylesheet ${href}`);
+  check('the media frame and the cards that hold it clip with overflow: clip (a scroll container counted its zoom as layout shift on right-to-left pages)', /\.frame\{[^}]*overflow:clip/.test(css) && /\.beam-card\{[^}]*overflow:clip/.test(css));
+  const enHomeText = normalise(stripTags(home));
+  check('the integration model says what it is: illustrative shapes, not generated from or validated against a vendor system, no partnership, certification or conformance', /Illustrative shapes/.test(enHomeText) && /not generated from, or validated against, a vendor system/.test(enHomeText) && /no partnership, certification or conformance is implied/.test(enHomeText));
+  check('the integration model draws the first system: Salesforce lead, id carried in SyncflowEventId__c, the other three systems named in its tabs', /Salesforce/.test(enHomeText) && /HubSpot/.test(enHomeText) && /Receivables invoice/.test(enHomeText) && /Fields mapped: 10/.test(enHomeText));
+}
 
 section('CSP report endpoint');
 const violation = {

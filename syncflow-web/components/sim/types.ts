@@ -5,6 +5,8 @@
  * the live version is a separate chunk that replaces it when the card comes near the screen, with exactly the same layout.
  */
 
+import type { TargetSystem } from '@/lib/arch/mappers';
+
 export type QueueLabels = {
   interactive: string;
   title: string;
@@ -88,6 +90,21 @@ export type SecurityLabels = {
   caption: string;
 };
 
+/** The integration model (docs/adr/0021 §5): one canonical event mapped into the shape each of four systems receives. */
+export type IntegrationLabels = {
+  interactive: string;
+  title: string;
+  lead: string;
+  tabsLabel: string;
+  canonical: string;
+  payloadLabel: string;
+  kind: Record<TargetSystem, string>;
+  event: { lead: string; order: string; invoice: string };
+  /** Keeps its {count}, {object} and {field} placeholders. */
+  status: string;
+  caption: string;
+};
+
 export type SecurityOutcome = 'delivered' | 'rejected' | 'duplicate' | 'unavailable' | null;
 
 export type SecurityState = {
@@ -121,6 +138,10 @@ export const IDLE_SECURITY: Omit<SecurityState, 'status'> = {
   cipher: '—',
   tamper: false,
 };
+
+/** The payload row shows the start of the signed bytes, not all of them (a canonical event is about 400 characters): the live model and the idle drawing's reservation cut it the same way. */
+export const PAYLOAD_PREVIEW = 96;
+export const previewPayload = (body: string): string => (body.length > PAYLOAD_PREVIEW ? `${body.slice(0, PAYLOAD_PREVIEW)}…` : body);
 
 /** The two technical identifiers that are language-neutral, drawn from code and not from the messages (like a currency code). */
 export const SECURITY_TAGS = ['', 'HMAC-SHA256', 'Zero-trust', 'AES-256-GCM', 'Salesforce · SAP · Oracle'] as const;

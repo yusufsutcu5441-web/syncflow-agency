@@ -109,8 +109,6 @@
     "c5Title": "Joined to the systems you already run.",
     "c5Text": "Salesforce, SAP, HubSpot and Oracle are part of the architecture from the first sketch, so leads, orders and records can move between the site and the systems your business already runs on.",
     "c5Tags": "Salesforce · SAP · HubSpot · Oracle",
-    "c5DiagramAlt": "A schematic of a central hub joined to four systems",
-    "c5Note": "Product names belong to their owners. No partnership or certification is implied.",
     "c6Index": "VI",
     "c6Name": "Zero-Trust Security Flow",
     "c6Title": "Nothing is trusted until it is verified.",
@@ -449,6 +447,26 @@
       "outDuplicate": "Acknowledged, not processed twice: the idempotency key had already been seen.",
       "outUnavailable": "Web Crypto is not available in this browser context, so the live computation cannot run.",
       "caption": "Runs in your browser with throwaway keys; nothing leaves this page. It demonstrates the pattern; it does not describe, measure or certify any production system, and no partnership with the products named is implied. The signing step is the same pattern this site uses to deliver its own briefings."
+    },
+    "integration": {
+      "title": "One event, four systems",
+      "lead": "Choose a system. The same event is mapped into the shape that system expects, and each line shows which field feeds which.",
+      "tabsLabel": "Target system",
+      "canonical": "Canonical event",
+      "payloadLabel": "Payload as sent",
+      "kind": {
+        "salesforce": "Lead",
+        "hubspot": "Contact",
+        "sap": "Sales order",
+        "oracle": "Receivables invoice"
+      },
+      "event": {
+        "lead": "An enquiry from the briefing",
+        "order": "A customer order",
+        "invoice": "An issued invoice"
+      },
+      "status": "Fields mapped: {count}. Record: {object}. The event id travels in {field}, so a retry cannot create a second record.",
+      "caption": "Illustrative shapes, drawn from each vendor’s public naming. They were not generated from, or validated against, a vendor system; every real connector is built and checked against the client’s own system. Product names belong to their owners, and no partnership, certification or conformance is implied."
     }
   },
   "Breakdown": {

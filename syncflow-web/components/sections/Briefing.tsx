@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, LoaderCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode, type RefObject } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode, type RefObject } from 'react';
 import { fill, useClientI18n } from '@/components/i18n/ClientI18n';
 import {
   BUDGETS,
@@ -121,14 +121,16 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
     () => defaultMarket(locale),
   );
   const { currency, floor } = PRICING[market];
-  const floorText = formatMoney(floor, currency, locale);
-  const bands = ladder(market);
-  const bandText = (id: Budget) => formatBand(bands.find((band) => band.id === id) ?? bands[0]!, currency, locale);
+  // Derived from the market and the language only: typing in a field renders this component on every keystroke, and none of this changes then.
+  const floorText = useMemo(() => formatMoney(floor, currency, locale), [floor, currency, locale]);
+  const bands = useMemo(() => ladder(market), [market]);
+  const bandText = useCallback((id: Budget) => formatBand(bands.find((band) => band.id === id) ?? bands[0]!, currency, locale), [bands, currency, locale]);
 
-  const setField = <K extends keyof ContactValues>(key: K, value: ContactValues[K]) => {
+  // Stable between renders (it only uses functional updates), and a field without an error leaves the errors object itself untouched.
+  const setField = useCallback(<K extends keyof ContactValues>(key: K, value: ContactValues[K]) => {
     setValues((current) => ({ ...current, [key]: value }));
-    if (key in errors) setErrors((current) => ({ ...current, [key]: undefined }));
-  };
+    setErrors((current) => (key in current ? { ...current, [key]: undefined } : current));
+  }, []);
 
   // After a step change (and on the success view) the heading takes focus, so keyboard and screen-reader users land on
   // the new question. A failed send does not move focus: the error message is announced where the visitor is.
