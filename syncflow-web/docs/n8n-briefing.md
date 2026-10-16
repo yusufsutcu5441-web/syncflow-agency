@@ -4,6 +4,17 @@ Site tarafı hazırdır: form, Turnstile doğrulaması, imzalı webhook (`lib/se
 
 Gmail kimlik bilgisi Next uygulamasında hiçbir yerde tutulmaz (CLAUDE.md "Güvenlik"): site yalnızca imzalı bir HTTPS isteği atar, e-postayı n8n'deki Gmail düğümü gönderir.
 
+## Hızlı yol (16.10.2026)
+
+**Canlı durum:** `https://syncflow.agency/api/briefing` sahte bir Turnstile belirteciyle yoklandığında `503 unavailable` döndü: üretimde `TURNSTILE_SECRET_KEY` (ve büyük olasılıkla `CONTACT_WEBHOOK_*`) tanımlı değil, yani **form şu an başvuru kabul etmiyor**; ziyaretçi hazır `mailto:` taslağına düşüyor, başvuru kaybolmuyor ama Gmail'e akış yok. Bunu yalnızca hesabın sahibi kapatabilir (Cloudflare, n8n, Vercel panelleri):
+
+1. **n8n:** [`docs/n8n/syncflow-briefing.workflow.json`](n8n/syncflow-briefing.workflow.json) dosyasını içe aktarın (Workflows → Import from file). Akış, aşağıdaki §3'ün aynısıdır: webhook (ham gövde) → imza → HMAC doğrulama → tekrar ayıklama → Gmail. İçeride iki yer doldurulur: **Verify the HMAC-SHA256 signature** düğümündeki sır (aşağıda 2. adımdaki değer) ve **Send to Gmail** düğümündeki Gmail OAuth2 hesabı. Akışı **Active** yapın, Webhook'un **Production URL**'sini kopyalayın. (Dosya bu depoda yazıldı, canlı bir n8n'de **denenmedi**: bir parametre eksik görünürse §3'e göre elle girin.)
+2. **Sır:** `openssl rand -hex 32` ya da PowerShell'de `-join ((1..32) | ForEach-Object { '{0:x2}' -f (Get-Random -Maximum 256) })` ile 64 karakterlik bir dize üretin. Aynı değer hem n8n düğümünde hem Vercel'de `CONTACT_WEBHOOK_SECRET` olur.
+3. **n8n'i kanıtlayın** (siteye dokunmadan): `node scripts/n8n-test.mjs <Production URL> <sır>` (bir e-posta düşmeli), `--twice` (aynı `id`, yine tek e-posta), `--bad-signature` (e-posta düşmemeli).
+4. **Cloudflare Turnstile:** dashboard.cloudflare.com → Turnstile → Add widget, alan adı `syncflow.agency`; **site anahtarı** ve **gizli anahtar** gelir.
+5. **Vercel** (Project `syncflow-web` → Settings → Environment Variables, Production): `CONTACT_WEBHOOK_URL`, `CONTACT_WEBHOOK_SECRET`, `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`; sonra **Redeploy** (`NEXT_PUBLIC_*` derlemeye gömülür).
+6. **Doğrulama:** sitede briefing'i gerçekten gönderin; `contact@syncflow.agency` kutusuna `[Briefing][...]` konulu e-posta düşmeli. `503` gitmiş olmalı.
+
 ## 1. Site tarafındaki ortam değişkenleri
 
 | Değişken | Açıklama |

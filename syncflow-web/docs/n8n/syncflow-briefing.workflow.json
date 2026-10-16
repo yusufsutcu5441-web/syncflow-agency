@@ -1,0 +1,142 @@
+{
+  "name": "SyncFlow Strategic Briefing to Gmail",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## SyncFlow Strategic Briefing -> Gmail\n\nImport this file, then do three things:\n1. In **Verify the HMAC-SHA256 signature** replace PASTE_THE_SAME_SECRET_AS_CONTACT_WEBHOOK_SECRET with the value you set as CONTACT_WEBHOOK_SECRET on the site.\n2. In **Send to Gmail** choose your Gmail OAuth2 credential (the sending account).\n3. Activate the workflow and copy the **Production URL** of the Webhook into CONTACT_WEBHOOK_URL on the site.\n\nA request with a wrong signature stops at **Signature is valid** and sends nothing. The same `id` sent twice becomes one e-mail (**Remove duplicates**).\n\nNot tested against a live n8n by the author: the node versions below are the stable ones, but if n8n shows a parameter as missing after import, set it as docs/n8n-briefing.md describes. Test with: node scripts/n8n-test.mjs <production-url> <secret>",
+        "height": 380,
+        "width": 560
+      },
+      "id": "5a0f0a10-0000-4000-8000-000000000001",
+      "name": "Read me",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-200, -120]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "syncflow-briefing",
+        "authentication": "none",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "5a0f0a10-0000-4000-8000-000000000002",
+      "name": "Briefing webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [440, 300],
+      "webhookId": "5a0f0a10-0000-4000-8000-0000000000a1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// The webhook keeps the exact bytes the site signed (Options -> Raw Body), so the signature is checked on those bytes.\nconst item = $input.first();\nconst raw = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst text = raw.toString('utf8');\nconst signature = String((item.json.headers || {})['x-syncflow-signature'] || '');\nlet body;\ntry {\n  body = JSON.parse(text);\n} catch (error) {\n  throw new Error('the body is not JSON');\n}\nreturn [{ json: { ...body, _raw: text, _signature: signature } }];"
+      },
+      "id": "5a0f0a10-0000-4000-8000-000000000003",
+      "name": "Read the signed body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ $json._raw }}",
+        "dataPropertyName": "_expected",
+        "secret": "PASTE_THE_SAME_SECRET_AS_CONTACT_WEBHOOK_SECRET",
+        "encoding": "hex"
+      },
+      "id": "5a0f0a10-0000-4000-8000-000000000004",
+      "name": "Verify the HMAC-SHA256 signature",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "5a0f0a10-0000-4000-8000-0000000000b1",
+              "leftValue": "={{ 'sha256=' + $json._expected }}",
+              "rightValue": "={{ $json._signature }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5a0f0a10-0000-4000-8000-000000000005",
+      "name": "Signature is valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "logic": "removeItemsWithAlreadySeenKeyValues",
+        "dedupeValue": "={{ $json.id }}",
+        "options": {}
+      },
+      "id": "5a0f0a10-0000-4000-8000-000000000006",
+      "name": "Remove duplicates",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [1320, 280]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "contact@syncflow.agency",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "=Sınıf: {{ $json.tier }}\nProje: {{ $json.projectType }}\nYatırım: {{ $json.budget }}\nZamanlama: {{ $json.timeline }}\nRol: {{ $json.role }}\n\nAd Soyad: {{ $json.name }}\nŞirket ve unvan: {{ $json.company }}\nE-posta: {{ $json.email }}\nDil: {{ $json.locale }}\nPazar: {{ $json.market }}\n\nProje: {{ $json.message }}",
+        "options": {
+          "appendAttribution": false,
+          "replyTo": "={{ $json.email }}"
+        }
+      },
+      "id": "5a0f0a10-0000-4000-8000-000000000007",
+      "name": "Send to Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1540, 280]
+    }
+  ],
+  "connections": {
+    "Briefing webhook": {
+      "main": [[{ "node": "Read the signed body", "type": "main", "index": 0 }]]
+    },
+    "Read the signed body": {
+      "main": [[{ "node": "Verify the HMAC-SHA256 signature", "type": "main", "index": 0 }]]
+    },
+    "Verify the HMAC-SHA256 signature": {
+      "main": [[{ "node": "Signature is valid", "type": "main", "index": 0 }]]
+    },
+    "Signature is valid": {
+      "main": [[{ "node": "Remove duplicates", "type": "main", "index": 0 }], []]
+    },
+    "Remove duplicates": {
+      "main": [[{ "node": "Send to Gmail", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
