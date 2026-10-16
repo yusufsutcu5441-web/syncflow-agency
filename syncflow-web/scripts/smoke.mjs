@@ -250,7 +250,7 @@ if (OPEN.includes('ar')) {
 }
 if (OPEN.includes('zh')) {
   const zh = await pageAs('/zh');
-  check('/zh is Simplified Chinese (lang zh-Hans) and the page names no web font it does not ship', /<html[^>]*\blang="zh-Hans"/.test(zh.page) && !/instrument-sans-latin/.test(zh.page.replace(/<script[\s\S]*?<\/script>/g, '')) );
+  check('/zh is Simplified Chinese (lang zh-Hans) and the page names no web font it does not ship', /<html[^>]*\blang="zh-Hans"/.test(zh.page) && !/inter-display-latin/.test(zh.page.replace(/<script[\s\S]*?<\/script>/g, '')) );
 }
 const crossed = await pageAs('/de?m=wealth');
 check('the market and the language are independent: /de?m=wealth is German and the gate is passed', crossed.res.status === 200 && !hasGate(crossed.page) && /<html[^>]*\blang="de"/.test(crossed.page));

@@ -7,10 +7,7 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "fonts:fetch": "node scripts/fetch-fonts.mjs",
-    "predev": "node scripts/fetch-fonts.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/fetch-fonts.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -47,7 +44,6 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
-    "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

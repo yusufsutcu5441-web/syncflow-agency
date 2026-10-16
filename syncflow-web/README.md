@@ -1,6 +1,6 @@
 # syncflow.agency
 
-Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)) üzerinde B1/v2 marka sistemi ([ADR 0007](docs/adr/0007-tokens-and-brand.md)): obsidian zemin, platin metin, Instrument Sans, çizili logo. Üstüne **sinematik katman** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): tek WebGL2 tuvali, kaydırmayla oynayan dört bölümlük film ve sahneli dil geçişi.
+Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)) üzerinde B1/v2 marka sistemi ([ADR 0007](docs/adr/0007-tokens-and-brand.md)): obsidian zemin, platin metin, Inter Display, çizili logo. Üstüne **sinematik katman** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): tek WebGL2 tuvali, kaydırmayla oynayan dört bölümlük film ve sahneli dil geçişi.
 **Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (yedi dil yayında: EN, TR, AR, DE, FR, ES, ZH; JA uykuda) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · Remotion ile önceden render edilmiş sahne videoları · ham WebGL2 sinema katmanı (yalnızca yetenekli masaüstünde, lazy) · nonce tabanlı CSP (şimdilik report-only)**
 
 | | |
@@ -34,19 +34,18 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run check` | Çeviri eşitliği + TypeScript + ESLint |
 | `npm run check:messages` | `en` ve `tr` anahtar/yer tutucu/etiket eşitliği; uykudaki taslak diller geride kalabilir (sayılır), fazlalık anahtar ya da bozuk yer tutucu hata (`--strict`: yasal sayfalardaki `[YER TUTUCU]`'lar da hata) |
 | `npm run brand:build` / `brand:check` | `brand/*.svg` marka paketinden `lib/brand-paths.ts`, `app/icon.svg`, `app/apple-icon.png`, `public/brand/logo-512.png` üretir; `brand:check` eskimiş dosya varsa hata verir (denetim de çalıştırır) |
-| `npm run check:fonts` | Latin yazılı dillerdeki (en tr de fr es) her karakter Instrument Sans dosyalarında var mı (başlık, film sözcüğü ve düğme metinleri de kendi yüzlerinde: Instrument Serif, Syne, Cabinet Grotesk) (Python + `pip install fonttools brotli`; AR ve JA kasıtlı sistem yazı tipidir, `⌘ ✓` simgeleri açık istisnadır). Dosyaları yeniden üretmek: `python scripts/build-fonts.py "InstrumentSans[wdth,wght].ttf"` |
+| `npm run check:fonts` | Latin yazılı dillerdeki (en tr de fr es) her karakter Inter Display dosyalarında var mı, büyük harfli film sözcükleri Syne'de var mı (Python + `pip install fonttools brotli`; AR, ZH ve JA kasıtlı sistem yazı tipidir, `⌘` açık istisnadır). Dosyaları yeniden üretmek: `python scripts/build-fonts.py InterVariable.woff2` ([ADR 0022](docs/adr/0022-single-text-face-and-mobile-ceiling.md)) |
 | `node faz2-denetim.mjs --build` | **Aşama kapısı**: bağımlılıklar, tasarım belirteçleri, i18n, güvenlik, sahne videoları, hareket, doğrulanmamış iddia yasağı, ardından `npm run build` ve ilk yük paket denetimi |
 | `npm run smoke` | **Çalışan** sunucuya karşı HTTP güvenlik/işlev kontrolleri (aşağıda). Ortam değişkenleri `scripts/smoke.mjs` başlığında: `EXPECT_LOCALES`, `TURNSTILE_MODE`, `MOCK_WEBHOOK_PORT`, `WEBHOOK_SECRET`, `EXPECT_CSP_MODE` |
 | `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
 | `npm run arch:verify` · `arch:examples` | Kurumsal kanıtın **65 sözleşme testi** (`tests/arch/`, Node'un kendi test koşucusu, bağımlılık yok): yedekli kuyruk (kayıp 0, çift uygulama 0), HMAC-SHA256/AES-256-GCM zarfı, Salesforce/HubSpot/SAP/Oracle örnek eşleyicileri, belgelerin koddan üretilmiş olması. `arch:examples` `docs/architecture/examples/` dosyalarını koddan yeniden yazar ([ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md) §5) |
-| `npm run qa:browser` · `qa:browser:quick` | **Çalışan** üretim sunucusuna karşı gerçek Chrome (`puppeteer-core`, tarayıcı indirmez): kapı ve bayraklar, çapalar (masaüstü ve telefon), kaydırmada CLS (Arapça dahil), simülatör boyları ve davranışı, entegrasyon modeli, sinema katmanı (worker yolu, ana iş parçacığı yedeği, piksel eşdeğerliği). `--only=<grup>`, `--parity` (görsel eşdeğerlik), `--full` (her dil ve genişlik) |
+| `npm run qa:browser` · `qa:browser:quick` | **Çalışan** üretim sunucusuna karşı gerçek Chrome (`puppeteer-core`, tarayıcı indirmez): kapı ve bayraklar, çapalar (masaüstü ve telefon), kaydırmada CLS (Arapça dahil), simülatör boyları ve davranışı, entegrasyon modeli, sinema katmanı (worker yolu, ana iş parçacığı yedeği, piksel eşdeğerliği), tipografi (taşma yok, hero iki satır, tek metin yüzü), vaka incelemeleri (kart → diyalog, bağımsız sayfa, Esc ve odak). `--only=<grup>`, `--parity` (görsel eşdeğerlik), `--full` (her dil ve genişlik) |
 | `npm run perf:gate` | Mobil profilde (4× CPU, yavaş 4G) belirleyici sayaçlar (DOM, yerleşim, stil, görev, TBT tahmini, CLS) ve bütçe (`scripts/perf-budget.json`); `--baseline=<url>` eski yapıyla araya girerek A/B. **Mutlak bütçeler sessiz makine içindir**; yük altında göreli farka bakın |
 | `npm run flags:build` · `flags:check` | Bayrakları (`app/flags.css`, bayrak başına tek boş öğe) üreticiden yeniden yazar / CSS'in üreticiyle aynı olduğunu doğrular (denetim çalıştırır) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
 | `npm run film:render` | Beş sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
 | `npm run remotion:studio` | Sahneleri Remotion Studio'da açar |
-| `npm run fonts:fetch` | Cabinet Grotesk'i (ITF FFL, depoda tutulamaz) resmi kaynaktan `public/fonts/` altına indirir; `dev` ve `build` öncesi kendiliğinden çalışır. İndirme başarısız olursa derlemeyi düşürmez, arayüz Instrument Sans'a düşer ([ADR 0014](docs/adr/0014-cinematic-layer.md)) |
 | `node scripts/render-posters.mjs` | Filmin yedek posterlerini (`public/film/`, yatay ve dikey) canlı motorun shader'larından render eder; Chrome ve Node ≥ 22.18 ister (başlığa bakın). Shader değişince yeniden çalıştırıp çıkan dosyaları commit'leyin |
 
 ---
@@ -89,11 +88,11 @@ i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
 docs/       adr/ (mimari kararlar 0001–0021) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
 tests/      arch/ (65 sözleşme testi)
-public/     fonts/ Instrument Sans, Instrument Serif, Syne alt kümeleri (OFL; Cabinet Grotesk git'te yok, derlemede iner)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
+public/     fonts/ Inter Display (Latin + Türkçe) ve Syne alt kümeleri (OFL)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
 assets/     og-instrument-sans-600.ttf (paylaşım kartı yazı tipi)
 remotion/   Render kaynağı, siteye girmez: config.ts, fonts.ts, Root.tsx, scenes/ (Monolith, Estate, Clinic, Law, Logistics, fx: ortak bitiriş)
-scripts/    check-messages · check-fonts · build-fonts · build-brand · smoke · audit-secrets · render-film · render-posters · fetch-fonts · lighthouse · dev-inbox
+scripts/    check-messages · check-fonts · build-fonts · build-brand · smoke · audit-secrets · render-film · render-posters · lighthouse · dev-inbox
 ```
 
 ### Tasarım sistemi ("Dark Monolith & Fluid Precision")
@@ -104,7 +103,7 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 |---|---|
 | Renk | `obsidian` #0D0D0E (zemin) · `layer-1` #141416 (kart) · `layer-2` #1A1A1E (menü) · `ink` platin #E2E2E6 (15,0:1) · `muted` platin %70 (≥ 6,5:1) · `faint` platin %60 (≥ 5,2:1) · `champagne` #D4C5A9 (yalnızca birincil düğme ve tekil vurgu; obsidian metinle 11,4:1). **Saf siyah ve saf beyaz yok** (denetim FAIL sayar) |
 | Çizgi | `hairline` #ffffff1a (cam kenarlık) · `hairline-strong` #ffffff40 (hover) |
-| Tipografi | Metin: Instrument Sans 400/500 (OFL, Latin 30 KB + Türkçe 2 KB; ailede 300 yok) · başlıklar: Instrument Serif 400 (OFL) · film bölüm sözcükleri: Syne 700–800, büyük harf (OFL) · düğme ve gezinti: Cabinet Grotesk 500 (ITF FFL, derlemede iner; yedek Instrument Sans) · etiketler tek tarifle sistem mono yığını, 11 px, geniş harf aralığı, büyük harf · `text-hero` `text-headline` `text-title` `text-lead` · AR ve JA sistem yazı tipi yığınları, Arapçada harf aralığı sıfır |
+| Tipografi | **Tek metin yüzü Inter Display** (OFL, opsz 32, ağırlık 300–500; Latin 26 KB + Türkçe 3 KB): başlıklar 300 ve iz −0,035 em, metin 400, düğme ve gezinti 500 · film bölüm sözcükleri: Syne 700–800, büyük harf (OFL, film yaklaşınca iner) · etiketler tek tarifle sistem mono yığını, 11 px, geniş harf aralığı, büyük harf · `text-hero` `text-headline` `text-title` `text-lead` · hero her dilde 820 px'ten itibaren iki satır · AR, ZH ve JA sistem yazı tipi yığınları, Arapçada harf aralığı sıfır |
 | Şekil | kartlar 20 px, panel 28 px, **tüm düğmeler hap (999 px)**: `.btn` 52 px, `.btn-sm` 40 px, birincil şampanya, ikincil cam · gölge yok (ışık içeridedir) |
 | Logo | `components/ui/Logo.tsx`: `lockupHorizontal` header'da 28 px (asgari 24), `wordmark` footer'da %6, tek renk platin (`currentColor`), oran bozulmaz, koruma alanı 2u (`brand/README.md`) |
 | Hareket | `--ease-lux` cubic-bezier(.16, 1, .3, 1) · maske süresi 1,1 sn, satır gecikmesi 80 ms |
@@ -146,7 +145,7 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 - **Hangi diller yayında:** tek kaynak `i18n/launch.ts`. Her ortamda `NEXT_PUBLIC_LAUNCHED_LOCALES` (varsayılan `en,tr,ar,de,fr,es,zh`) dışındaki dil 404 verir (geliştirme sunucusu dahil); uykudaki `ja` yalnızca `NEXT_PUBLIC_PREVIEW_LOCALES=1` ile açılır. `hreflang` (`zh-Hans` dahil), `x-default`, `og:locale` + `alternateLocale`, sitemap, JSON-LD (`inLanguage`), dil seçici, footer'ın dil sütunu ve **giriş kapısındaki yedi kart** yalnızca bu listeden türer (denetim ve duman testi kapalı dilin sızmadığını doğrular). Geri alma: host'ta `NEXT_PUBLIC_LAUNCHED_LOCALES=en,tr` + yeniden derleme (kapıda yalnızca `us` ve `tr` kartı kalır; üretim derlemesiyle sınandı).
 - **Çeviriler:** yedi yayın dili eksiksizdir (263 anahtar, hukuk sayfaları dahil; `check:messages` eksiği hata sayar). Uykudaki `ja` İngilizce'den geride kalabilir; eksik anahtar İngilizceden tamamlanır (`lib/merge-messages.ts`) ve hukuk sayfasında bunu söyleyen bir satır çıkar. `ar de fr es zh` çevirileri bu oturumda yazılmış **araç taslağıdır**; yerel konuşur ve avukat onayı yoktur (sağlık ve hukuk ifadeleri ülkeye göre değişir, örn. Almanya'da HWG; Almanya'da *Impressum*, Fransa'da *mentions légales* yükümlülükleri; anakara Çin'de PIPL). Arapça ve Çince sistem yazı tipi yığınlarıyla kurulur (Latin web yazı tipleri bu sayfalarda önyüklenmez).
 - **Arapça (RTL):** `<html lang="ar" dir="rtl">`; tüm yerleşim mantıksal özelliklerle aynalanır (üstbilgi, düğme okları, şerit sırası, ilerleme çizgisi, odak ve menü yönü); yönlü oklar `.icon-dir` ile aynalanır; harf aralığı sıfırlanır (bitişik harfler kopmasın); maske payı Arapça ve Japonca için büyütülür; Latin adlar (`syncflow.agency`, e-posta) `dir="ltr"` taşır; çerçevesiz honeypot `start-[-9999px]` ile konur (RTL'de `left:-9999px` 9999 px'lik yatay kaydırma doğururdu).
-- **Yazı tipleri:** Latin ve Türkçe Instrument Sans (OFL, `scripts/build-fonts.py`). Almanca, Fransızca, İspanyolca Latin-1 kapsamında. **Arapça ve Japonca sistem yazı tipi yığınlarıyla** (Segoe UI/Tahoma/Geeza Pro; Yu Gothic/Hiragino/Noto): sıfır bayt maliyeti, ama marka tutarlılığı sistemin yazı tipine bağlıdır. Bu diller yayına alınırken özel bir OFL yığını seçilmelidir (CLAUDE.md). `/og` paylaşım kartı AR ve JA'da İngilizce metinle çizilir (yazı tipinde glif yok); `og:title` ve `og:description` kendi dillerindedir.
+- **Yazı tipleri:** Latin ve Türkçe Inter Display (OFL, `scripts/build-fonts.py`). Almanca, Fransızca, İspanyolca Latin-1 kapsamında. **Arapça ve Japonca sistem yazı tipi yığınlarıyla** (Segoe UI/Tahoma/Geeza Pro; Yu Gothic/Hiragino/Noto): sıfır bayt maliyeti, ama marka tutarlılığı sistemin yazı tipine bağlıdır. Bu diller yayına alınırken özel bir OFL yığını seçilmelidir (CLAUDE.md). `/og` paylaşım kartı AR ve JA'da İngilizce metinle çizilir (yazı tipinde glif yok); `og:title` ve `og:description` kendi dillerindedir.
 - **Para birimi/tarih:** fiyat yayınlanmaz; tarihler `Intl.DateTimeFormat`, sayılar `Intl.NumberFormat` ile sunucuda dilin kuralına göre biçimlenir.
 - Çeviriler **sunucuda** yapılır; tarayıcıya yalnızca birkaç düz metin gider (`components/i18n/ClientI18n.tsx`), next-intl'in ICU motoru tarayıcıya gitmez.
 
@@ -271,6 +270,20 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 
 Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
 
+### Tek metin yüzü, medya etkileri ve mobil ölçüm tavanı (16.10.2026, dal `perf/luxury-type-mobile`, yerel)
+
+Karar ve tüm ölçümler: [ADR 0022](docs/adr/0022-single-text-face-and-mobile-ceiling.md). **Canlıya alınmadı** (push yapılmadı). **Mobil 100/100 ve LCP < 0,8 sn sağlanmadı ve bu mimaride sağlanamaz:** simüle LCP, gözlenen LCP'den önce biten her isteğin bayt toplamıdır (HTML 43 KB + CSS + yazı tipi + 165 KB JS; React ve Next çalışma zamanı tek başına 116 KB), FCP bile ≈ 0,91 sn'dir. En iyi ölçülen yerel mobil 96 (sakin makine, LCP ≈ 2,75 sn); ilk boyamadan sonraya çerçeve ertelemek ayrı bir mimari karardır ve sahibe sorulur.
+
+| Denetim | Sonuç |
+|---|---|
+| Yazı tipi | Instrument Sans, Instrument Serif ve Cabinet Grotesk yerine **tek yüz Inter Display** (OFL, 300–500): ilk görünümdeki yazı tipi baytı **71,3 KB → 26,4 KB (−%63)**; Cabinet'in lisans sorusu kapandı, derleme ağdan yazı tipi çekmez |
+| `npm run check` · `check:fonts` · `arch:verify` · `smoke` | temiz (503 anahtar × 7 dil) · temiz · **65/65** · **180/180** |
+| `npm run qa:browser` (yeni `type` ve `casestudy` grupları dahil) | **114 kontrolün 113'ü**; Arapça masaüstü kaydırma CLS'i bir kez 0,083 (yüklü makine), izole üç koşuda 0,00: kararlı sayılmaz |
+| Mobil Lighthouse `/` (sakin makine, n=5, `ef72636` ile araya girerek) | eski **94** → yeni **96**; LCP 3.070 → **2.755 ms**; indirilen 387 → **334 KB**; TBT ≈ 28 ms (iki yapıda eşit) |
+| Mobil Lighthouse `/` (yüklü makine, n=5) | eski 92 → yeni **94**; LCP 3.139 → **2.841 ms**; TBT 91 → 145 ms (yük gürültüsü, ayrıştırılmadı) |
+| Masaüstü Lighthouse `/` (iki set) | sakin n=5: eski 95 → yeni **98** (94–100); yüklü n=6: eski 99 → yeni **100** (altısı da), LCP 752 → **624 ms** |
+| `perf:gate` | **yeşil değil**: mutlak bütçeler sessiz makine için, bu makinede taban dahil aşıldı; bütçeler gevşetilmedi. Göreli: betik −%34, görev −%9, TBT tahmini −%30 |
+
 ### Üretim performansı ve kurumsal kanıt (16.10.2026, dal `perf/enterprise-proof`, yerel)
 
 Karar: [ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md); ölçüm: [docs/perf/local-2026-10-16-production-optimization.md](docs/perf/local-2026-10-16-production-optimization.md). **Canlıya alınmadı**; `main`'e birleştirilmedi. **"Lighthouse 100/100" bir vaat değil, ölçülmüş sonuçtur:** aşağıdaki sayılar yerel, tek makine, başsız Chrome 155 ve eski yapıyla araya girerek alındı; `lib/metrics.ts` mührü değişmedi, canlı ölçüm birleştirme ve yayından sonra yapılır.
@@ -389,4 +402,4 @@ Ayrıntı: [docs/perf/faz2b4.md](docs/perf/faz2b4.md), karar: [ADR 0011](docs/ad
 
 ## 12. Üçüncü taraf lisanslar
 
-Instrument Sans (SIL OFL 1.1, `public/fonts/OFL.txt`) · Instrument Serif (SIL OFL 1.1, `public/fonts/OFL-instrument-serif.txt`) · Syne (SIL OFL 1.1, `public/fonts/OFL-syne.txt`) · Cabinet Grotesk (Indian Type Foundry, ITF Free Font License v2.0; depoda tutulmaz, derlemede resmi kaynaktan indirilir, bkz. [ADR 0014](docs/adr/0014-cinematic-layer.md)) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS, Lenis, Motion (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca render için, özel lisans, §6) · Cloudflare Turnstile (yalnızca briefing'in son adımında yüklenir).
+Inter Display (Inter Project Authors, SIL OFL 1.1, `public/fonts/OFL-inter.txt`) · Syne (SIL OFL 1.1, `public/fonts/OFL-syne.txt`) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS, Lenis, Motion (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca render için, özel lisans, §6) · Cloudflare Turnstile (yalnızca briefing'in son adımında yüklenir).

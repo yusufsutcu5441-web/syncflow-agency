@@ -1,20 +1,11 @@
 import { clsx, type ClassValue } from 'clsx';
-import { extendTailwindMerge } from 'tailwind-merge';
 
 /**
- * tailwind-merge only knows Tailwind's stock names. It reads an unknown `text-headline` as a text COLOUR and would
- * drop it when it meets `text-platin`, so the type-scale utilities are declared here.
- * Keep this list in step with the `@utility text-*` type scale in app/globals.css (the single source of the tokens).
+ * Conditional class names. It used to run the result through tailwind-merge (conflicts resolved, last one wins), which cost 8.6 KB gzip
+ * in the first-load JavaScript for two callers that never put two conflicting utilities on one element (Logo, SectionHead): measured
+ * with `next experimental-analyze`, docs/adr/0022. Pass classes that do not overlap; when a component really needs an override,
+ * give it its own CSS class instead of fighting utilities.
  */
-const twMerge = extendTailwindMerge({
-  extend: {
-    classGroups: {
-      'font-size': [{ text: ['display', 'headline', 'title', 'lead', 'spec-value', 'spec-label', 'micro'] }],
-    },
-  },
-});
-
-/** Conditional class names, with Tailwind conflicts resolved (last one wins). */
 export function cn(...inputs: ClassValue[]): string {
-  return twMerge(clsx(inputs));
+  return clsx(inputs);
 }

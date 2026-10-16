@@ -11,7 +11,7 @@
  * 14.10.2026 (docs/adr/0019): kurumsal katman: asgari tutar USD 50.000 (basamaklar 1×/2×/5×), vitrin dört sektör (lojistik eklendi), Mimari bölümünde iki kurumsal sütun (animasyonlu Border Beam sayısı yine en çok 3).
  * 14.10.2026 (docs/adr/0018): yedi sermaye merkezi = yedi dil (en tr ar de fr es zh) ve yedi pazar, Japonca uykuda. "Yedi dil iddiası yok" kuralı pazarlama metni içindir; seçici bir iddia değildir.
  * 2B-2 (docs/adr/0009): TR/EN odak, yedi dil iddiası yok, vitrin kilitli üç sektör (emlak, klinik, kurumsal hukuk), SaaS ve "Reach" bölümü yok.
- * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo.
+ * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, tek metin yüzü Inter Display (docs/adr/0022), tek hap ve etiket tarifi, B1/v2 logo.
  * Kullanım (proje kökünden):   node faz2-denetim.mjs [--root yol] [--build] [--json]
  *   --build  `npm run build` çalıştırır (production build)    --json  faz2-denetim.json yazar
  * Hiçbir dosyayı değiştirmez; yalnızca okur ve raporlar. Çıkış kodu: FAIL varsa 1.
@@ -106,13 +106,13 @@ else {
   for (const [hex, name] of Object.entries(req)) low.includes(hex) ? add(G2, "PASS", `${hex} ${name}`) : add(G2, "FAIL", `${hex} ${name} tanımlı değil`);
   /#ffffff1a/i.test(c) ? add(G2, "PASS", "cam kenarlık #ffffff1a (%10)") : add(G2, "FAIL", "cam kenarlık #ffffff1a tanımlı değil");
   /#ffffff40/i.test(c) ? add(G2, "PASS", "hover kenarlığı #ffffff40 (%25)") : add(G2, "FAIL", "hover kenarlığı #ffffff40 tanımlı değil");
-  /-0?\.02em/.test(c) ? add(G2, "PASS", "display tracking -0.02em") : add(G2, "FAIL", "-0.02em tracking tanımı yok");
+  /--tracking-display:\s*-0\.035em/.test(c) ? add(G2, "PASS", "display tracking -0.035em (Inter Display 300, docs/adr/0022)") : add(G2, "FAIL", "--tracking-display -0.035em değil");
   /\[lang=['"]?ar['"]?\][^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c) || /:lang\(ar\)[^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c)
     ? add(G2, "PASS", "Arapçada harf aralığı sıfırlanıyor (bitişik yazı bozulmaz)") : add(G2, "FAIL", "Arapça için harf aralığı sıfırlaması yok (letter-spacing bitişik harfleri koparır)");
   const bad = [
-    [/-0?\.045em|-0?\.04em/g, "eski sıkı tracking (-0.04/-0.045em); display için -0.02em olmalı", "FAIL"],
-    // Yüklü yüzler: Instrument Sans 400-600, Instrument Serif 400, Syne 400-800, Cabinet Grotesk 500. 100/200/300/900 hiçbirinde yok.
-    [/font-weight\s*:\s*(?:100|200|300|900)\b/g, "hiçbir yüklü yazı tipinde olmayan ağırlık (300 sessizce 400 çizilir)", "FAIL"],
+    [/-0?\.0(?:4|45|5)em/g, "çok sıkı tracking (-0.04em ve altı): Inter Display başlıkta -0.035em, daha sıkısı harfleri birbirine değdirir", "FAIL"],
+    // Yüklü yüzler: Inter Display 300-500, Syne 400-800. 100/200/600/900 hiçbirinde yok (600 yalnızca OG kartının statik dosyasında).
+    [/font-weight\s*:\s*(?:100|200|600|900)\b/g, "hiçbir yüklü yazı tipinde olmayan ağırlık (sessizce en yakınına düşer)", "FAIL"],
     [/font-style\s*:\s*italic/g, "italik yasak", "WARN"],
     [/\b(?:turquoise|aqua|cyan|teal|navy)\b|#(?:00ffff|40e0d0|2dd4bf|14b8a6|06b6d4)\b/gi, "turkuaz/lacivert tonu (palet tek renklidir)", "FAIL"],
   ];
@@ -130,37 +130,53 @@ else {
   pureHits.length ? add(G2, "FAIL", `saf siyah/beyaz kaldı (${pureHits.length}); obsidian #0D0D0E ve platin #E2E2E6 kullanın: ${[...new Set(pureHits)].slice(0, 5).join(" | ")}`)
     : add(G2, "PASS", "saf siyah ve saf beyaz yok (CSS, bileşenler, OG kartı, Remotion sahneleri)");
 
-  // Yazı tipi: Instrument Sans (OFL), kendi sunucumuzdan; Inter kalmadı.
-  /@font-face\s*\{[^}]*font-family:\s*['"]Instrument Sans['"][^}]*font-weight:\s*400\s+600/.test(c)
-    ? add(G2, "PASS", "@font-face 'Instrument Sans' (400-600) tanımlı") : add(G2, "FAIL", "@font-face 'Instrument Sans' font-weight 400 600 ile tanımlı değil");
-  /--font-sans:\s*['"]Instrument Sans['"]/.test(c) ? add(G2, "PASS", "--font-sans Instrument Sans ile başlıyor") : add(G2, "FAIL", "--font-sans Instrument Sans ile başlamıyor");
-  const fontFiles = ["public/fonts/instrument-sans-latin-v1.woff2", "public/fonts/instrument-sans-turkish-v1.woff2", "assets/og-instrument-sans-600.ttf"];
+  // Yazı tipi (docs/adr/0022): tek metin yüzü Inter Display (OFL, 300-500), kendi sunucumuzdan; Instrument Sans/Serif ve Cabinet Grotesk kalmadı.
+  /@font-face\s*\{[^}]*font-family:\s*['"]Inter Display['"][^}]*font-weight:\s*300\s+500/.test(c)
+    ? add(G2, "PASS", "@font-face 'Inter Display' (300-500) tanımlı") : add(G2, "FAIL", "@font-face 'Inter Display' font-weight 300 500 ile tanımlı değil");
+  /--font-sans:\s*['"]Inter Display['"]/.test(c) && /--font-display:\s*var\(--font-sans\)/.test(c) && /--font-ui:\s*var\(--font-sans\)/.test(c)
+    ? add(G2, "PASS", "--font-sans Inter Display; başlık (--font-display) ve arayüz (--font-ui) aynı yüz: tek metin yüzü") : add(G2, "FAIL", "--font-sans/--font-display/--font-ui tek yüze (Inter Display) bağlı değil");
+  /@font-face\s*\{[^}]*font-family:\s*['"]Inter Display Fallback['"][^}]*size-adjust/.test(c) && /@font-face\s*\{[^}]*font-family:\s*['"]Inter Display['"][^}]*font-display:\s*swap/.test(c)
+    ? add(G2, "PASS", "Inter Display: font-display swap + ölçüsü eşlenmiş yedek yüz (swap sayfayı kaydırmaz)") : add(G2, "FAIL", "Inter Display için swap ya da ölçü eşlemeli yedek yüz yok");
+  const fontFiles = ["public/fonts/inter-display-latin-v1.woff2", "public/fonts/inter-display-turkish-v1.woff2", "assets/og-inter-display-600.ttf"];
   const lostFonts = fontFiles.filter((f) => !exists(f));
-  lostFonts.length ? add(G2, "FAIL", `yazı tipi dosyası yok: ${lostFonts.join(", ")} (scripts/build-fonts.py üretir)`) : add(G2, "PASS", "Instrument Sans dosyaları (Latin, Türkçe, OG kartı) var");
-  exists("public/fonts/OFL.txt") && /Instrument Sans/.test(read("public/fonts/OFL.txt")) ? add(G2, "PASS", "public/fonts/OFL.txt Instrument Sans lisansı") : add(G2, "FAIL", "public/fonts/OFL.txt Instrument Sans lisansını taşımıyor");
-  const oldInter = [...walk(abs("app"), [".tsx", ".ts", ".css"]), ...walk(abs("components"), [".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])].filter((f) => /['"]Inter['"]|inter-(?:latin|turkish)|og-inter/.test(fs.readFileSync(f, "utf8"))).map(rel)
-    .concat(exists("public/fonts") ? fs.readdirSync(abs("public/fonts")).filter((n) => /^inter-/i.test(n)).map((n) => `public/fonts/${n}`) : []);
-  oldInter.length ? add(G2, "FAIL", `eski Inter izi: ${oldInter.slice(0, 4).join(", ")}`) : add(G2, "PASS", "Inter izi kalmadı");
-
-  // Sinematik tipografi (docs/adr/0014): Instrument Serif (başlık), Syne (bölüm sözcükleri), Cabinet Grotesk (düğme ve gezinti).
-  for (const [family, file, weights] of [["Instrument Serif", "public/fonts/instrument-serif-latin-v1.woff2", /font-weight:\s*400\s*;/], ["Syne", "public/fonts/syne-latin-v1.woff2", /font-weight:\s*400\s+800/]]) {
-    const face = new RegExp(`@font-face\\s*\\{[^}]*font-family:\\s*['"]${family}['"][^}]*\\}`).exec(c)?.[0] ?? "";
-    face && weights.test(face) && exists(file) ? add(G2, "PASS", `@font-face '${family}' tanımlı ve dosyası (${file.split("/").pop()}) var`) : add(G2, "FAIL", `'${family}' için @font-face ya da ${file} eksik`);
+  lostFonts.length ? add(G2, "FAIL", `yazı tipi dosyası yok: ${lostFonts.join(", ")} (scripts/build-fonts.py üretir)`) : add(G2, "PASS", "Inter Display dosyaları (Latin, Türkçe, OG kartı) var");
+  {
+    const bytes = (f) => fs.statSync(abs(f)).size;
+    const critical = exists(fontFiles[0]) ? bytes(fontFiles[0]) : 1e9;
+    // Önceki üç yüz (Instrument Sans 30,0 + Serif 21,0 + Cabinet 20,3 = 71,3 KB) ilk görünümde yüklenirdi; hedef en az %60 küçültmek (<= 28,5 KB).
+    critical <= 28500 ? add(G2, "PASS", `ilk görünümdeki kritik yazı tipi ${(critical / 1024).toFixed(1)} KB (önceki üç yüz 71,3 KB: %${Math.round((1 - critical / 73000) * 100)} küçük)`) : add(G2, "FAIL", `inter-display-latin ${(critical / 1024).toFixed(1)} KB: 28,5 KB'ı aşıyor (hedef: üç yüze göre en az %60 küçük)`);
   }
-  ["OFL-instrument-serif.txt", "OFL-syne.txt"].every((f) => exists(`public/fonts/${f}`) && /SIL OPEN FONT LICENSE/i.test(read(`public/fonts/${f}`)))
-    ? add(G2, "PASS", "Instrument Serif ve Syne OFL metinleri public/fonts altında") : add(G2, "FAIL", "OFL-instrument-serif.txt / OFL-syne.txt yok ya da OFL metni içermiyor");
-  // Cabinet Grotesk (ITF FFL v2.0): lisans dosyanın herkese açık depoda dağıtılmasını ve budanmasını yasaklar. Derlemede indirilir.
+  exists("public/fonts/OFL-inter.txt") && /SIL OPEN FONT LICENSE/i.test(read("public/fonts/OFL-inter.txt")) && /Inter Project Authors/.test(read("public/fonts/OFL-inter.txt"))
+    ? add(G2, "PASS", "public/fonts/OFL-inter.txt Inter lisansı (SIL OFL 1.1)") : add(G2, "FAIL", "public/fonts/OFL-inter.txt yok ya da Inter OFL metnini taşımıyor");
+  {
+    const oldFaces = [...walk(abs("app"), [".tsx", ".ts", ".css"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])]
+      .filter((f) => /Instrument (?:Sans|Serif)|Cabinet Grotesk|instrument-s(?:ans|erif)|cabinet-grotesk/.test(stripComments(fs.readFileSync(f, "utf8")))).map(rel)
+      .concat(exists("public/fonts") ? fs.readdirSync(abs("public/fonts")).filter((n) => /^(?:instrument|cabinet)/i.test(n)).map((n) => `public/fonts/${n}`) : []);
+    oldFaces.length ? add(G2, "FAIL", `eski yazı tipi izi (docs/adr/0022: tek yüz Inter Display): ${oldFaces.slice(0, 4).join(", ")}`) : add(G2, "PASS", "Instrument Sans, Instrument Serif ve Cabinet Grotesk izi kalmadı (kod, CSS, Remotion, public/fonts)");
+  }
+
+  // Syne (docs/adr/0014): yalnızca film bölüm sözcükleri, büyük harf, 400-800.
+  {
+    const face = /@font-face\s*\{[^}]*font-family:\s*['"]Syne['"][^}]*\}/.exec(c)?.[0] ?? "";
+    face && /font-weight:\s*400\s+800/.test(face) && exists("public/fonts/syne-latin-v1.woff2") ? add(G2, "PASS", "@font-face 'Syne' tanımlı ve dosyası (syne-latin-v1.woff2) var") : add(G2, "FAIL", "'Syne' için @font-face ya da syne-latin-v1.woff2 eksik");
+  }
+  exists("public/fonts/OFL-syne.txt") && /SIL OPEN FONT LICENSE/i.test(read("public/fonts/OFL-syne.txt"))
+    ? add(G2, "PASS", "Syne OFL metni public/fonts altında") : add(G2, "FAIL", "OFL-syne.txt yok ya da OFL metni içermiyor");
+  // Cabinet Grotesk (ITF FFL v2.0) artık kullanılmıyor: dosyası git'te izlenmemeli (lisans herkese açık depoyu yasaklar), indirme betiği ve derleme kancaları gitmiş olmalı.
   {
     const tracked = spawnSync("git", ["ls-files", "--", "public/fonts"], { cwd: ROOT, encoding: "utf8" });
     const trackedCabinet = tracked.status === 0 ? tracked.stdout.split("\n").filter((l) => /cabinet/i.test(l)) : [];
+    const scripts = JSON.stringify(readJSON("package.json").scripts);
     trackedCabinet.length ? add(G2, "FAIL", `Cabinet Grotesk dosyası git'te izleniyor (ITF FFL §02 herkese açık depoyu yasaklar): ${trackedCabinet.join(", ")}`)
-      : /cabinet-grotesk/.test(read(".gitignore")) ? add(G2, "PASS", "Cabinet Grotesk git'te değil ve .gitignore'da (ITF FFL §02)") : add(G2, "FAIL", ".gitignore Cabinet Grotesk dosyalarını dışlamıyor");
-    const fetcher = exists("scripts/fetch-fonts.mjs") ? read("scripts/fetch-fonts.mjs") : "";
-    const pkgJson = readJSON("package.json");
-    fetcher && /process\.exit\(0\)/.test(fetcher) && !/process\.exit\(1\)/.test(fetcher) && /prebuild/.test(JSON.stringify(pkgJson.scripts))
-      ? add(G2, "PASS", "scripts/fetch-fonts.mjs derlemeden önce çalışır, hata verse bile derlemeyi bozmaz (yedek: Instrument Sans)") : add(G2, "FAIL", "fetch-fonts.mjs yok ya da prebuild'e bağlı değil ya da hata ile çıkıyor");
-    /--font-ui:\s*['"]Cabinet Grotesk['"],\s*['"]Instrument Sans['"]/.test(c) ? add(G2, "PASS", "--font-ui Cabinet Grotesk ile başlıyor, yedek Instrument Sans") : add(G2, "FAIL", "--font-ui yedeği Instrument Sans olmayan bir yığın");
-    /@font-face\s*\{[^}]*font-family:\s*['"]Cabinet Grotesk['"][^}]*font-display:\s*optional/.test(c) ? add(G2, "PASS", "Cabinet Grotesk font-display: optional (sayfa kayması yok)") : add(G2, "FAIL", "Cabinet Grotesk font-display: optional değil (yüklenince düzeni kaydırır)");
+      : !exists("scripts/fetch-fonts.mjs") && !/fetch-fonts|fonts:fetch/.test(scripts) && /cabinet-grotesk/.test(read(".gitignore"))
+        ? add(G2, "PASS", "Cabinet Grotesk yok: dosya git'te değil, indirme betiği ve prebuild/predev kancaları kalktı (derleme artık ağdan yazı tipi çekmez), .gitignore kuralı bir kaza koruması olarak duruyor")
+        : add(G2, "FAIL", "Cabinet Grotesk kalıntısı: scripts/fetch-fonts.mjs, fonts:fetch/prebuild/predev kancası ya da .gitignore kuralı eksik");
+  }
+  // Ön yükleme: yalnızca metin yüzü (Latin; Türkçede Türkçe dosya da). Syne ön yüklenmez.
+  {
+    const layout = read("app/[locale]/layout.tsx");
+    /preload\('\/fonts\/inter-display-latin-v1\.woff2'/.test(layout) && /preload\('\/fonts\/inter-display-turkish-v1\.woff2'/.test(layout) && !/preload\('\/fonts\/syne/.test(layout) && (layout.match(/preload\('\/fonts\//g) ?? []).length === 2
+      ? add(G2, "PASS", "ilk görünümde tek metin yüzü ön yüklenir (Latin; Türkçede +Türkçe dosya), Syne ön yüklenmez") : add(G2, "FAIL", "layout.tsx ön yüklemesi Inter Display Latin (+ Türkçe) dışında dosya içeriyor ya da eksik");
   }
   // Bold ağırlıklar yalnızca Syne kuralında (Syne 400-800); başka ailede sentezlenir ya da 600'e düşer.
   {
@@ -271,7 +287,7 @@ if (tr && en) {
 // koda gömülü Türkçe metin ve yasaklı sınıf taraması
 const srcFiles = walk(abs(base === "." ? "app" : "src"), [".tsx", ".ts"]).concat(walk(abs("components"), [".tsx"]));
 const hard = [], banned = {};
-const BAN = { "italik": /\bitalic\b/, "ağırlık (Instrument Sans 400-600; yalnız font-normal ve font-medium)": /\bfont-(?:extralight|thin|light|semibold|bold|extrabold|black)\b/,
+const BAN = { "italik": /\bitalic\b/, "ağırlık (Inter Display 300-500; yalnız font-light, font-normal ve font-medium)": /\bfont-(?:extralight|thin|semibold|bold|extrabold|black)\b/,
   "saf siyah/beyaz sınıfı (obsidian ve ink kullanın)": /\b(?:bg|text|border|decoration|ring|fill|stroke|from|to|via|outline|divide)-(?:white|black)(?:\/\d+)?\b/,
   "gölge": /\bshadow-(?:md|lg|xl|2xl)\b/, "tracking-tighter": /\btracking-tighter\b/,
   "fiziksel yön (RTL'de bozulur; start/end kullanın)": /(?<![\w-])(?:ml|mr|pl|pr)-(?!auto\b)[\w.[\]]+|(?<![\w-])(?:left|right)-(?:\d|\[|px|full|1\/2)|\btext-(?:left|right)\b|\brounded-[lr]-|\bborder-[lr](?:-|\b)|\bfloat-(?:left|right)\b|\borigin-(?:left|right)\b/,

@@ -129,6 +129,10 @@ export function SceneVideo({ name, label, mode }: { name: 'monolith' | 'estate' 
         className="pointer-events-none"
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
+        // The first decoded frame fades the film in over the still (opacity only, on the compositor). Set on the element itself: no re-render.
+        onPlaying={(event) => {
+          event.currentTarget.dataset.on = '';
+        }}
       >
         <source src={`/media/clips/${name}.mp4`} type="video/mp4" />
         <source src={`/media/clips/${name}.webm`} type="video/webm" />

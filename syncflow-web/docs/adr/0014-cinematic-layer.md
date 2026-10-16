@@ -1,6 +1,7 @@
 # ADR 0014: Sinematik katman (WebGL2 tuvali, Film bölümü, sahneli dil geçişi, sinematik tipografi)
 
 - **Durum:** Kabul edildi, 12.10.2026. **Uygulama bu ADR'den önce yazılmıştı** ve başlangıçta `main` dalında commit edilmemiş çalışma ağacındaydı; 12.10.2026'da `4bc5799` ile commit edildi, `7cf5b50` ile `main`'e birleşti ve canlıya alındı (başlangıçta 17 değişen dosya, yeni `lib/cinema/`, `components/cinema/`, `Film.tsx`, `public/film/`, iki yazı tipi ailesi). Kodda bu ADR'ye yapılan atıflar (`globals.css`, `engine.ts`, `Film.tsx` vb.) dosya yokken duruyordu; bu belge kodu **geriye dönük** kayda geçirir, CLAUDE.md ve denetim betiği ona göre güncellendi.
+- **Güncelleme (16.10.2026, [ADR 0022](0022-single-text-face-and-mobile-ceiling.md)):** §7 ve tipografi tablosu (Instrument Sans, Instrument Serif, Cabinet Grotesk) **yerini tek metin yüzüne bıraktı**: Inter Display. Syne (film sözcükleri) aynen kalır. Cabinet Grotesk'in web izni sorusu bununla kapandı. Aşağıdaki §7 tarihsel kayıttır.
 - **Karar:** proje sahibi, 12.10.2026: "Sinema katmanı ve gelişmiş motion özellikleri onaylıdır." Yönlendirme: lüks, akışkan, sinematik atmosfer (Porsche sakinliği, Lamborghini gerilimi).
 - **Değiştirdiği kurallar:** CLAUDE.md'nin önceki "WebGL yok" ve "ağırlık yalnızca 400/500, tek yazı tipi ailesi (Instrument Sans)" maddeleri ([ADR 0007](0007-tokens-and-brand.md) tipografisi). Tamamlar: [ADR 0004](0004-motion-and-smooth-scroll.md) (hareket ve kaydırma). Dokunmadığı: renk paleti, hukuk ve sağlık dili, güvenlik, i18n.
 - **Ölçüm:** [docs/perf/cinema.md](../perf/cinema.md).

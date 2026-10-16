@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *
@@ -411,6 +411,102 @@ if (want('parity')) {
     check(`${lang} ${viewport.width}px: ${on.length} viewport steps, none differs beyond rounding (the largest difference is ${worst.toFixed(3)} % of a screen)${bad ? `; ${bad} differ, saved in ${OUT}` : ''}`, bad === 0 && on.length === off.length);
   }
   await diffPage.close();
+}
+
+// ── typography: one face, nothing runs off the screen, the hero stays on two lines, only the fonts the page needs are fetched ─────────
+if (want('type')) {
+  group('Typography: one text face (Inter Display), headlines on their lines in every language, nothing wider than the screen (docs/adr/0022)');
+  const widths = [412, 820, 1440];
+  for (const lang of ['en', 'tr', 'de', 'fr', 'es', 'ar', 'zh']) {
+    const latin = !['ar', 'zh'].includes(lang);
+    const problems = [];
+    let fonts = null;
+    for (const width of widths) {
+      const viewport = width < 700 ? PHONE : { width, height: 900, deviceScaleFactor: 1 };
+      const { page } = await open(url(lang), { viewport: width < 700 ? { ...PHONE, width } : viewport });
+      const r = await page.evaluate(() => {
+        const vw = innerWidth;
+        const hero = document.querySelector('.text-hero');
+        const lh = hero ? parseFloat(getComputedStyle(hero).lineHeight) : 0;
+        const wide = [...document.querySelectorAll('h1,h2,.text-hero,.text-headline,.gate-title,.chapter-line,.how-title,.bd-title')].filter((el) => {
+          const b = el.getBoundingClientRect();
+          return b.width > 0 && (b.right > vw + 1 || b.left < -1 || el.scrollWidth > el.clientWidth + 1);
+        }).map((el) => (el.textContent || '').trim().slice(0, 30));
+        const resources = performance.getEntriesByType('resource').filter((e) => /\.woff2/.test(e.name)).map((e) => ({ file: e.name.split('/').pop(), kb: Math.round(e.transferSize / 1024) }));
+        return {
+          sideways: document.documentElement.scrollWidth > vw,
+          heroLines: hero && lh ? Math.round(hero.getBoundingClientRect().height / lh) : 0,
+          wide,
+          cls: window.__cls,
+          resources,
+          loaded: [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family.replace(/"/g, '')),
+          family: getComputedStyle(hero ?? document.body).fontFamily.split(',')[0].replace(/"/g, ''),
+        };
+      });
+      fonts = r;
+      if (r.sideways) problems.push(`${width}px scrolls sideways`);
+      if (r.wide.length) problems.push(`${width}px: ${r.wide.slice(0, 2).join(' | ')} runs past the screen`);
+      if (width >= 820 && r.heroLines > 2) problems.push(`${width}px: the hero takes ${r.heroLines} lines`);
+      if (r.cls >= 0.005) problems.push(`${width}px: layout shift ${r.cls.toFixed(4)}`);
+      await page.close();
+    }
+    check(`${lang}: no headline runs past the screen at 412, 820 and 1440 px, the hero is two lines from 820 px up, no layout shift`, problems.length === 0, problems.join(' ; '));
+    if (latin) {
+      const want_ = lang === 'tr' ? ['inter-display-latin-v1.woff2', 'inter-display-turkish-v1.woff2'] : ['inter-display-latin-v1.woff2'];
+      // Syne (the film's chapter words) is fetched later, when the film is near: not text, not on the critical path.
+      const got = fonts.resources.map((x) => x.file).filter((f) => !f.startsWith('syne-')).sort();
+      check(`${lang}: the text face is exactly ${want_.join(' + ')} (no second text face) and the page is set in Inter Display`, JSON.stringify(got) === JSON.stringify([...want_].sort()) && fonts.family === 'Inter Display' && fonts.loaded.includes('Inter Display'), JSON.stringify({ got, family: fonts.family, loaded: fonts.loaded }));
+    } else {
+      check(`${lang}: system font stack, no web font is fetched`, fonts.resources.length === 0 && fonts.family !== 'Inter Display', JSON.stringify({ resources: fonts.resources, family: fonts.family }));
+    }
+  }
+}
+
+// ── the case studies: reachable from the showcase cards, in a dialog and as pages, in the languages that read differently ─────────────
+if (want('casestudy')) {
+  group('The case studies open from the showcase cards (dialog), stand alone as pages, and keep their four headings (docs/adr/0020)');
+  for (const lang of ['en', 'tr', 'ar']) {
+    const { page, errors } = await open(url(lang));
+    await page.evaluate(() => document.querySelector('#showcase')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await sleep(1200);
+    const home = new URL(page.url()).pathname;
+    const slugs = await page.$$eval('a[data-breakdown-link].btn', (links) => links.map((a) => a.dataset.slug));
+    check(`${lang}: four showcase cards, each with a breakdown link`, slugs.length === 4 && new Set(slugs).size === 4, JSON.stringify(slugs));
+    // A visitor's click focuses the link first; a scripted click() does not, and the dialog returns focus to what had it.
+    await page.evaluate(() => {
+      const link = document.querySelector('a[data-breakdown-link].btn');
+      link?.focus();
+      link?.click();
+    });
+    // The content arrives from /api/breakdown after the dialog opens (it shows "Loading..." with the same title id until then).
+    const opened = await page.waitForFunction(() => document.querySelectorAll('dialog[open] .bd-h').length >= 4, { timeout: 15000 }).then(() => true, () => false);
+    const dialog = await page.evaluate(() => ({
+      title: document.querySelector('dialog[open] #bd-title')?.textContent?.trim() ?? '',
+      headings: document.querySelectorAll('dialog[open] .bd-h').length,
+      path: location.pathname,
+      overflow: document.documentElement.scrollWidth > innerWidth,
+    }));
+    check(`${lang}: a click opens the breakdown in a dialog over the page, with a title, four headings and its own address`, opened && dialog.title.length > 4 && dialog.headings >= 4 && /\/showcase\/[a-z]+$/.test(dialog.path) && !dialog.overflow, JSON.stringify(dialog));
+    await page.keyboard.press('Escape');
+    const closed = await page.waitForFunction(() => !document.querySelector('dialog[open]'), { timeout: 5000 }).then(() => true, () => false);
+    await sleep(400);
+    const back = await page.evaluate(() => ({ path: location.pathname, focus: document.activeElement?.matches?.('a[data-breakdown-link]') ?? false }));
+    check(`${lang}: Escape closes it, the address returns to the page and focus goes back to the card's link`, closed && back.path === home && back.focus, JSON.stringify({ closed, home, ...back }));
+    check(`${lang}: no page or console errors on the home page`, errors.length === 0, errors.slice(0, 3).join(' | '));
+    await page.close();
+  }
+  for (const [lang, slug] of [['en', 'estate'], ['tr', 'clinic'], ['de', 'law'], ['ar', 'logistics']]) {
+    const { page, errors } = await open(url(lang, `/showcase/${slug}`));
+    const view = await page.evaluate(() => ({
+      title: document.querySelector('#bd-title')?.textContent?.trim() ?? '',
+      headings: document.querySelectorAll('.bd-h').length,
+      overflow: document.documentElement.scrollWidth > innerWidth,
+      cls: window.__cls,
+    }));
+    check(`${lang} /showcase/${slug}: the page stands alone with a title and four headings, no sideways scroll, no layout shift`, view.title.length > 4 && view.headings >= 4 && !view.overflow && view.cls < 0.005, JSON.stringify(view));
+    check(`${lang} /showcase/${slug}: no page or console errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
+    await page.close();
+  }
 }
 
 // ── the cinema layer: off the main thread, same picture, a fallback that works ──────────────────────────────────────────────────
