@@ -110,6 +110,22 @@ const csp = home.headers.get(cspHeader) ?? '';
 const nonce = /'nonce-([^']+)'/.exec(csp)?.[1];
 
 check('GET / returns 200 HTML', home.status === 200 && (home.headers.get('content-type') ?? '').includes('text/html'), `status ${home.status}`);
+// docs/adr/0023: the document asks for ONE small loader and no framework script; React and Next start after the first contentful paint.
+{
+  const tags = [...html.matchAll(/<script\b[^>]*\bsrc="(\/_next\/static\/chunks\/[^"]+)"[^>]*>/g)].map((m) => ({ src: m[1], tag: m[0] }));
+  const eager = tags.filter((t) => !/noModule/i.test(t.tag));
+  const boot = eager.filter((t) => /\/sf-boot\.[0-9a-f]{12}\.js$/.test(t.src));
+  check('the document asks for ONE script, the framework loader, and no React or Next chunk (docs/adr/0023)', boot.length === 1 && eager.length === 1, `${JSON.stringify(eager.map((t) => t.src))} (${tags.length} chunk tags, ${(html.match(/<script/g) ?? []).length} script tags, ${html.length} bytes)`);
+  if (boot[0]) {
+    const loader = await get(boot[0].src);
+    const text = await loader.text();
+    const named = [...new Set(text.match(/static\/chunks\/[\w.-]+\.js/g) ?? [])];
+    check('the loader is immutable JavaScript, waits for the first contentful paint and names the scripts it starts', loader.status === 200 && /javascript/.test(loader.headers.get('content-type') ?? '') && /immutable/.test(loader.headers.get('cache-control') ?? '') && /first-contentful-paint/.test(text) && named.length >= 6, `${loader.status} ${named.length} scripts`);
+    const missing = [];
+    for (const name of named) if ((await get(`/_next/${name}`)).status !== 200) missing.push(name);
+    check('every script the loader starts exists', missing.length === 0, missing.join(', '));
+  }
+}
 check('Strict-Transport-Security (2 years, subdomains, preload)', home.headers.get('strict-transport-security') === 'max-age=63072000; includeSubDomains; preload', home.headers.get('strict-transport-security'));
 check('X-Frame-Options SAMEORIGIN', home.headers.get('x-frame-options') === 'SAMEORIGIN');
 check('X-Content-Type-Options nosniff', home.headers.get('x-content-type-options') === 'nosniff');

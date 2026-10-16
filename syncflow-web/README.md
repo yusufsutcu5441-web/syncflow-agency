@@ -25,6 +25,7 @@ npm install
 npm run dev                 # http://localhost:3000  (geliştirme, Turbopack; yalnızca TR ve EN)
 
 npm run build && npm start  # üretim derlemesi + sunucu (önizleme için bunu kullanın; yedi dil yayında)
+                            # build = next build + scripts/defer-framework.mjs (ADR 0023); dönüşümsüz derleme: npm run build:eager
 ```
 
 Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zorunlu değildir (Turnstile ve webhook olmadan form geliştirme kipinde "yerel kabul" yanıtı verir ve bunu söyler); `.env.local` oluşturup gerekenleri doldurun (git'e girmez).
@@ -37,6 +38,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run check:fonts` | Latin yazılı dillerdeki (en tr de fr es) her karakter Inter Display dosyalarında var mı, büyük harfli film sözcükleri Syne'de var mı (Python + `pip install fonttools brotli`; AR, ZH ve JA kasıtlı sistem yazı tipidir, `⌘` açık istisnadır). Dosyaları yeniden üretmek: `python scripts/build-fonts.py InterVariable.woff2` ([ADR 0022](docs/adr/0022-single-text-face-and-mobile-ceiling.md)) |
 | `node faz2-denetim.mjs --build` | **Aşama kapısı**: bağımlılıklar, tasarım belirteçleri, i18n, güvenlik, sahne videoları, hareket, doğrulanmamış iddia yasağı, ardından `npm run build` ve ilk yük paket denetimi |
 | `npm run smoke` | **Çalışan** sunucuya karşı HTTP güvenlik/işlev kontrolleri (aşağıda). Ortam değişkenleri `scripts/smoke.mjs` başlığında: `EXPECT_LOCALES`, `TURNSTILE_MODE`, `MOCK_WEBHOOK_PORT`, `WEBHOOK_SECRET`, `EXPECT_CSP_MODE` |
+| `node scripts/defer-framework.mjs --check` | **Derleme sonrası** dönüşümün uygulandığını doğrular (`build` onu zaten çalıştırır): belge tek `sf-boot` yükleyicisi ister, React ve Next betikleri ilk boyamadan sonra gelir ([ADR 0023](docs/adr/0023-framework-after-first-paint.md)). `DEFER_FRAMEWORK=off` dönüşümü atlar |
 | `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
 | `npm run arch:verify` · `arch:examples` | Kurumsal kanıtın **65 sözleşme testi** (`tests/arch/`, Node'un kendi test koşucusu, bağımlılık yok): yedekli kuyruk (kayıp 0, çift uygulama 0), HMAC-SHA256/AES-256-GCM zarfı, Salesforce/HubSpot/SAP/Oracle örnek eşleyicileri, belgelerin koddan üretilmiş olması. `arch:examples` `docs/architecture/examples/` dosyalarını koddan yeniden yazar ([ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md) §5) |
 | `npm run qa:browser` · `qa:browser:quick` | **Çalışan** üretim sunucusuna karşı gerçek Chrome (`puppeteer-core`, tarayıcı indirmez): kapı ve bayraklar, çapalar (masaüstü ve telefon), kaydırmada CLS (Arapça dahil), simülatör boyları ve davranışı, entegrasyon modeli, sinema katmanı (worker yolu, ana iş parçacığı yedeği, piksel eşdeğerliği), tipografi (taşma yok, hero iki satır, tek metin yüzü), vaka incelemeleri (kart → diyalog, bağımsız sayfa, Esc ve odak). `--only=<grup>`, `--parity` (görsel eşdeğerlik), `--full` (her dil ve genişlik) |
@@ -270,9 +272,20 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 
 Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
 
+### React ve Next ilk boyamadan sonra: mobil 96 → 99–100 (17.10.2026, yerel; canlı sonuç aşağıda eklenir)
+
+Karar ve ölçümler: [ADR 0023](docs/adr/0023-framework-after-first-paint.md). Derleme sonrası `scripts/defer-framework.mjs`, Next'in koduna dokunmadan yalnızca manifestleri düzenler: belge tek bir 1 KB'lık yükleyici ister, çerçeve betikleri ilk contentful paint'ten sonra (ya da ilk girdide) gelir. Bu, ADR 0022'de "bu mimaride sağlanamaz" yazan mobil tavanı aşar: tavan çerçevenin ilk boyamadan önce yüklenmesindendi, mimarinin kendisinden değil.
+
+| Denetim | Sonuç |
+|---|---|
+| Mobil Lighthouse `/` (yerel, 12 koşu) | önce **96** → şimdi **100 ×6, 99 ×5, 98 ×1**; LCP 2.755 → **1.51–1.59 sn**; TBT 28–159 ms (React DOM değerlendirmesi artık TBT penceresine girer) |
+| Masaüstü Lighthouse `/` (6 koşu) | **100 ×6**, TBT 0, LCP ≈ 0,38 sn (önce ≈ 0,60 sn) |
+| Ödünleşim (yavaş 4G, 4× CPU, 3 koşu medyan) | ilk boyama **1,13 sn** (önce 1,64) · etkileşime hazır **2,63 sn** (önce 2,07) |
+| `qa:browser --parity` (yeni `framework` grubu dahil) · `smoke` · `faz2-denetim.mjs --build` | **124/124** · **184/184** · **207 geçti, 0 hata** |
+
 ### Tek metin yüzü, medya etkileri ve mobil ölçüm tavanı (16.10.2026, dal `perf/luxury-type-mobile`, yerel)
 
-Karar ve tüm ölçümler: [ADR 0022](docs/adr/0022-single-text-face-and-mobile-ceiling.md). **Canlıya alınmadı** (push yapılmadı). **Mobil 100/100 ve LCP < 0,8 sn sağlanmadı ve bu mimaride sağlanamaz:** simüle LCP, gözlenen LCP'den önce biten her isteğin bayt toplamıdır (HTML 43 KB + CSS + yazı tipi + 165 KB JS; React ve Next çalışma zamanı tek başına 116 KB), FCP bile ≈ 0,91 sn'dir. En iyi ölçülen yerel mobil 96 (sakin makine, LCP ≈ 2,75 sn); ilk boyamadan sonraya çerçeve ertelemek ayrı bir mimari karardır ve sahibe sorulur.
+Karar ve tüm ölçümler: [ADR 0022](docs/adr/0022-single-text-face-and-mobile-ceiling.md). Sonradan canlıya alındı ([docs/perf/live-2026-10-16.md](docs/perf/live-2026-10-16.md)); mobil tavan yargısı ADR 0023 ile aşıldı. Yazıldığı günkü hâli: **Mobil 100/100 ve LCP < 0,8 sn sağlanmadı ve bu mimaride sağlanamaz:** simüle LCP, gözlenen LCP'den önce biten her isteğin bayt toplamıdır (HTML 43 KB + CSS + yazı tipi + 165 KB JS; React ve Next çalışma zamanı tek başına 116 KB), FCP bile ≈ 0,91 sn'dir. En iyi ölçülen yerel mobil 96 (sakin makine, LCP ≈ 2,75 sn); ilk boyamadan sonraya çerçeve ertelemek ayrı bir mimari karardır ve sahibe sorulur.
 
 | Denetim | Sonuç |
 |---|---|

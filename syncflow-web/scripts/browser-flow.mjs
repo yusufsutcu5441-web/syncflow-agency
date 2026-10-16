@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *
@@ -516,6 +516,80 @@ if (want('casestudy')) {
     }));
     check(`${lang} /showcase/${slug}: the page stands alone with a title and four headings, no sideways scroll, no layout shift`, view.title.length > 4 && view.headings >= 4 && !view.overflow && view.cls < 0.005, JSON.stringify(view));
     check(`${lang} /showcase/${slug}: no page or console errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
+    await page.close();
+  }
+}
+
+// ── the framework starts after the first paint (docs/adr/0023) ────────────────────────────────────────────────────────────────────
+if (want('framework')) {
+  group('React and Next start after the first contentful paint, at the first touch or key, or after 3.5 s, and the page still comes alive');
+  const chunkScripts = () =>
+    performance
+      .getEntriesByType('resource')
+      .filter((e) => e.initiatorType === 'script' || e.initiatorType === 'other' || /\/_next\/static\/chunks\/.+\.js/.test(e.name))
+      .filter((e) => /\/_next\/static\/chunks\/[^/]+\.js/.test(e.name) && !/sf-boot\./.test(e.name))
+      .map((e) => ({ name: e.name.split('/').pop(), start: e.startTime }));
+  const fresh = async (neuterPaint) => {
+    const page = await browser.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+    await page.setViewport(DESKTOP);
+    if (neuterPaint) {
+      // The first-paint path is switched off, so only the early-interaction and the timeout paths can start the framework.
+      await page.evaluateOnNewDocument(() => {
+        const Original = window.PerformanceObserver;
+        window.PerformanceObserver = class extends Original {
+          observe(options) {
+            if (options && options.type === 'paint') return undefined;
+            return super.observe(options);
+          }
+        };
+      });
+    }
+    return { page, errors };
+  };
+
+  // 1. The normal path: nothing before the first contentful paint, everything right after, and the gate (a client component) wakes up.
+  {
+    const { page, errors } = await fresh(false);
+    await page.goto(`${BASE}/`, { waitUntil: 'load', timeout: 60000 });
+    const awake = await page.waitForSelector('.gate[data-ready]', { timeout: 15000 }).then(() => true, () => false);
+    const timing = await page.evaluate(() => {
+      const fcp = performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? -1;
+      const scripts = performance
+        .getEntriesByType('resource')
+        .filter((e) => /\/_next\/static\/chunks\/[^/]+\.js/.test(e.name) && !/sf-boot\./.test(e.name))
+        .map((e) => e.startTime);
+      return { fcp, count: scripts.length, earliest: scripts.length ? Math.min(...scripts) : -1 };
+    });
+    check(`no framework script is requested before the first contentful paint (paint at ${timing.fcp.toFixed(0)} ms, first request at ${timing.earliest.toFixed(0)} ms)`, timing.fcp > 0 && timing.count >= 8 && timing.earliest >= timing.fcp - 1, JSON.stringify(timing));
+    check('and the page wakes up: the entry gate (a client component) is hydrated and ready', awake);
+    check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
+    await page.close();
+  }
+
+  // 2. The first touch or key press starts it at once, even if the paint path never fires.
+  {
+    const { page } = await fresh(true);
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await sleep(900);
+    const before = await page.evaluate(chunkScripts);
+    await page.keyboard.press('Tab');
+    await sleep(1500);
+    const after = await page.evaluate(chunkScripts);
+    check('before any input (and with the paint path off) no framework script is requested; one key press starts all of them', before.length === 0 && after.length >= 8, JSON.stringify({ before: before.length, after: after.length }));
+    await page.close();
+  }
+
+  // 3. With no input and no paint path, the 3.5 s timer starts it.
+  {
+    const { page } = await fresh(true);
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await sleep(2500);
+    const early = await page.evaluate(chunkScripts);
+    await sleep(2500);
+    const late = await page.evaluate(chunkScripts);
+    check('with no input at all the framework still starts, on the 3.5 s timer (nothing at 2.5 s, everything by 5 s)', early.length === 0 && late.length >= 8, JSON.stringify({ at25: early.length, at5: late.length }));
     await page.close();
   }
 }

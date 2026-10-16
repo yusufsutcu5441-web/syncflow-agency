@@ -110,7 +110,7 @@ else {
   /\[lang=['"]?ar['"]?\][^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c) || /:lang\(ar\)[^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c)
     ? add(G2, "PASS", "Arapçada harf aralığı sıfırlanıyor (bitişik yazı bozulmaz)") : add(G2, "FAIL", "Arapça için harf aralığı sıfırlaması yok (letter-spacing bitişik harfleri koparır)");
   const bad = [
-    [/-0?\.0(?:4|45|5)em/g, "çok sıkı tracking (-0.04em ve altı): Inter Display başlıkta -0.035em, daha sıkısı harfleri birbirine değdirir", "FAIL"],
+    [/-0?\.0(?:4|45|5)em\b/g, "çok sıkı tracking (-0.04em ve altı): Inter Display başlıkta -0.035em, daha sıkısı harfleri birbirine değdirir", "FAIL"],
     // Yüklü yüzler: Inter Display 300-500, Syne 400-800. 100/200/600/900 hiçbirinde yok (600 yalnızca OG kartının statik dosyasında).
     [/font-weight\s*:\s*(?:100|200|600|900)\b/g, "hiçbir yüklü yazı tipinde olmayan ağırlık (sessizce en yakınına düşer)", "FAIL"],
     [/font-style\s*:\s*italic/g, "italik yasak", "WARN"],
@@ -489,6 +489,9 @@ function bundleGate() {
   const initial = new Set();
   try { for (const list of Object.values(JSON.parse(entry[1]))) for (const f of list) initial.add(f); }
   catch { return add(G6, "WARN", "entryJSFiles ayrıştırılamadı"); }
+  // docs/adr/0023: derleme sonrası betik giriş listelerini boşaltıp tek bir yükleyiciye taşır; ilk yük, yükleyicinin ilk boyamadan sonra başlattığı betiklerdir.
+  const deferred = exists(".next/sf-defer.json") ? JSON.parse(read(".next/sf-defer.json")) : null;
+  if (deferred) for (const f of deferred.loaded) initial.add(f);
   const dir = abs(".next/static/chunks");
   const chunks = fs.readdirSync(dir).filter((f) => f.endsWith(".js")).map((f) => {
     const buf = fs.readFileSync(path.join(dir, f));
@@ -879,12 +882,25 @@ const G12 = "12. Üretim performansı ve kurumsal kanıt";
   }
 }
 
+// Çerçeve ilk boyamadan sonra başlar (docs/adr/0023): derleme sonrası betik ve derlemeye bağlantısı.
+{
+  const scripts = readJSON("package.json").scripts ?? {};
+  const script = exists("scripts/defer-framework.mjs") ? read("scripts/defer-framework.mjs") : "";
+  /defer-framework\.mjs/.test(scripts.build ?? "") && /first-contentful-paint/.test(script) && /DEFER_FRAMEWORK/.test(script) && /process\.exit\(1\)/.test(script) && /--check/.test(script)
+    ? add(G12, "PASS", "npm run build derlemeden sonra scripts/defer-framework.mjs'i çalıştırır: React ve Next ilk boyamadan sonra başlar (ilk dokunuş/tuş ya da 3,5 sn ile de), beklenmedik manifestte sesli düşer, DEFER_FRAMEWORK=off atlar")
+    : add(G12, "FAIL", "build betiği defer-framework.mjs'i çalıştırmıyor ya da betik eksik (docs/adr/0023)");
+}
+
 /* ───────── 7) Build (isteğe bağlı) ───────── */
 if (DO_BUILD) {
   const r = spawnSync("npm", ["run", "build"], { cwd: ROOT, shell: true, encoding: "utf8", maxBuffer: 1 << 26 });
   const tail = ((r.stdout || "") + (r.stderr || "")).trim().split("\n").slice(-12).join("\n");
   add("7. Build", r.status === 0 ? "PASS" : "FAIL", r.status === 0 ? "npm run build başarılı" : "npm run build başarısız", tail);
-  if (r.status === 0) bundleGate();
+  if (r.status === 0) {
+    bundleGate();
+    const check = spawnSync("node", ["scripts/defer-framework.mjs", "--check"], { cwd: ROOT, encoding: "utf8" });
+    add(G12, check.status === 0 ? "PASS" : "FAIL", check.status === 0 ? "derleme çıktısı dönüştürülmüş: belge tek yükleyici ister, rotalar istemci parçası önyüklemez" : "derleme çıktısı dönüştürülmemiş (defer-framework --check düştü)", (check.stdout + check.stderr).trim());
+  }
 } else add("7. Build", "INFO", "build çalıştırılmadı (--build ile)");
 
 /* ───────── Rapor ───────── */
