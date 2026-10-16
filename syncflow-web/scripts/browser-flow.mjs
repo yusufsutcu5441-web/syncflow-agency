@@ -526,8 +526,8 @@ if (want('framework')) {
   const chunkScripts = () =>
     performance
       .getEntriesByType('resource')
-      .filter((e) => e.initiatorType === 'script' || e.initiatorType === 'other' || /\/_next\/static\/chunks\/.+\.js/.test(e.name))
-      .filter((e) => /\/_next\/static\/chunks\/[^/]+\.js/.test(e.name) && !/sf-boot\./.test(e.name))
+      .filter((e) => e.initiatorType === 'script' || e.initiatorType === 'other' || /\/_next\/static\/(?:immutable\/)?chunks\/.+\.js/.test(e.name))
+      .filter((e) => /\/_next\/static\/(?:immutable\/)?chunks\/[^/]+\.js/.test(e.name) && !/sf-boot\./.test(e.name))
       .map((e) => ({ name: e.name.split('/').pop(), start: e.startTime }));
   const fresh = async (neuterPaint) => {
     const page = await browser.newPage();
@@ -558,7 +558,7 @@ if (want('framework')) {
       const fcp = performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? -1;
       const scripts = performance
         .getEntriesByType('resource')
-        .filter((e) => /\/_next\/static\/chunks\/[^/]+\.js/.test(e.name) && !/sf-boot\./.test(e.name))
+        .filter((e) => /\/_next\/static\/(?:immutable\/)?chunks\/[^/]+\.js/.test(e.name) && !/sf-boot\./.test(e.name))
         .map((e) => e.startTime);
       return { fcp, count: scripts.length, earliest: scripts.length ? Math.min(...scripts) : -1 };
     });

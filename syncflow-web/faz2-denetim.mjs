@@ -884,16 +884,22 @@ const G12 = "12. Üretim performansı ve kurumsal kanıt";
 
 // Çerçeve ilk boyamadan sonra başlar (docs/adr/0023): derleme sonrası betik ve derlemeye bağlantısı.
 {
-  const scripts = readJSON("package.json").scripts ?? {};
   const script = exists("scripts/defer-framework.mjs") ? read("scripts/defer-framework.mjs") : "";
-  /defer-framework\.mjs/.test(scripts.build ?? "") && /first-contentful-paint/.test(script) && /DEFER_FRAMEWORK/.test(script) && /process\.exit\(1\)/.test(script) && /--check/.test(script)
-    ? add(G12, "PASS", "npm run build derlemeden sonra scripts/defer-framework.mjs'i çalıştırır: React ve Next ilk boyamadan sonra başlar (ilk dokunuş/tuş ya da 3,5 sn ile de), beklenmedik manifestte sesli düşer, DEFER_FRAMEWORK=off atlar")
-    : add(G12, "FAIL", "build betiği defer-framework.mjs'i çalıştırmıyor ya da betik eksik (docs/adr/0023)");
+  const adapter = exists("scripts/sf-adapter.mjs") ? read("scripts/sf-adapter.mjs") : "";
+  const config = read("next.config.mjs");
+  // Vercel paketi `next build` İÇİNDE (dosya özetleri, statik kopya) yapar: dönüşüm bundan önce, adaptör kancasından çalışmalı, derleme sonrası betikten değil.
+  /adapterPath\s*:[^\n]*sf-adapter\.mjs/.test(config) && /get onBuildComplete\s*\(/.test(adapter) && /NEXT_ADAPTER_PATH/.test(adapter) && /deferFramework\(/.test(adapter) && /DEFER_FRAMEWORK/.test(adapter)
+    ? add(G12, "PASS", "next.config.mjs adapterPath ile scripts/sf-adapter.mjs'i bağlar: dönüşüm `next build` içinde, Vercel'in kendi adaptörü dosya özetlerini çıkarmadan ÖNCE çalışır, sonra Vercel adaptörüne (NEXT_ADAPTER_PATH) devredilir (docs/adr/0023 §4)")
+    : add(G12, "FAIL", "next.config.mjs adapterPath sf-adapter.mjs'i göstermiyor ya da adaptör onBuildComplete alıcısı/devri eksik: derleme sonrası betik Vercel'de etkisizdir");
+  /first-contentful-paint/.test(script) && /\(\?:immutable\\?\/\)\?chunks/.test(script) && /traceHashes/.test(script) && /class LayoutError/.test(script) && /--check/.test(script)
+    ? add(G12, "PASS", "scripts/defer-framework.mjs: ilk boyamadan sonra başlatan yükleyici, düz ve Vercel (static/immutable) yerleşimi, düzenlenen bildirimin eski dosya özeti temizlenir, bilinmeyen düzende hiçbir şey yazılmaz (LayoutError)")
+    : add(G12, "FAIL", "defer-framework.mjs yükleyici, immutable yerleşim, iz özeti temizliği ya da LayoutError eksik");
 }
 
 /* ───────── 7) Build (isteğe bağlı) ───────── */
 if (DO_BUILD) {
-  const r = spawnSync("npm", ["run", "build"], { cwd: ROOT, shell: true, encoding: "utf8", maxBuffer: 1 << 26 });
+  // strict: a build that could not move the framework scripts behind the loader fails here (on Vercel it only warns and ships them eagerly).
+  const r = spawnSync("npm", ["run", "build"], { cwd: ROOT, shell: true, encoding: "utf8", maxBuffer: 1 << 26, env: { ...process.env, DEFER_FRAMEWORK: "strict" } });
   const tail = ((r.stdout || "") + (r.stderr || "")).trim().split("\n").slice(-12).join("\n");
   add("7. Build", r.status === 0 ? "PASS" : "FAIL", r.status === 0 ? "npm run build başarılı" : "npm run build başarısız", tail);
   if (r.status === 0) {

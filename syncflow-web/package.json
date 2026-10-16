@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node scripts/defer-framework.mjs",
-    "build:eager": "next build",
+    "build": "next build",
+    "build:eager": "node scripts/build-eager.mjs",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

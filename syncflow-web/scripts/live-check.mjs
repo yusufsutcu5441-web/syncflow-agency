@@ -89,6 +89,27 @@ for (const [path, lang, dir] of [['/', 'en', 'ltr'], ['/tr', 'tr', 'ltr'], ['/ar
     return { ok: new RegExp(`<html[^>]*\\blang="${lang}"`).test(html) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(html) && cards === 7, detail: `${cards} cards` };
   });
 }
+// docs/adr/0023: React and Next start behind one small loader after the first paint. A document that still names the framework scripts itself is
+// slower (mobile Lighthouse about 96, not 100), not broken: WARN. A loader, or a script it names, that does not exist would leave the page
+// without JavaScript: FAIL.
+{
+  const res = await get('/?m=us');
+  const html = res.status === 200 ? await res.text() : '';
+  const srcs = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*>/g)].filter((m) => !/\bnomodule\b/i.test(m[0])).map((m) => m[1]);
+  const loader = srcs.find((s) => /\/sf-boot\.[0-9a-f]{12}\.js(\?|$)/.test(s));
+  if (!loader) {
+    say('WARN', '/ asks for the framework scripts itself, not through the sf-boot loader', `${srcs.length} scripts in the document (mobile Lighthouse about 96 instead of about 100; docs/adr/0023)`);
+  } else {
+    const loaderResponse = await get(loader);
+    const source = loaderResponse.status === 200 ? await loaderResponse.text() : '';
+    const named = [...source.matchAll(/"(static\/[^"]+\.js)"/g)].map((m) => m[1]);
+    const prefix = loader.slice(0, loader.indexOf('/_next/') + 7);
+    const query = loader.includes('?') ? loader.slice(loader.indexOf('?')) : '';
+    const statuses = await Promise.all(named.map(async (file) => (await get(prefix + file + query)).status));
+    const missing = named.filter((_, i) => statuses[i] !== 200);
+    say(srcs.length === 1 && named.length >= 6 && missing.length === 0 ? 'PASS' : 'FAIL', 'the document asks for one script, the sf-boot loader, and every script it names exists', `${srcs.length} in the document, ${named.length} behind the loader${missing.length ? `, MISSING ${missing.join(', ')}` : ''}`);
+  }
+}
 for (const p of ['/privacy', '/imprint', '/robots.txt', '/sitemap.xml', '/.well-known/security.txt']) await expect(p, p, 200);
 await expect('ja is dormant', '/ja', 404);
 // Seven home pages and, since docs/adr/0020, four architectural breakdowns in each language: 7 + 28.

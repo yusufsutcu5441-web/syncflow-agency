@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
@@ -44,6 +45,9 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
+  // React and Next start after the first paint (docs/adr/0023): the adapter moves their scripts behind one small loader INSIDE `next build`, before
+  // Vercel's own adapter (NEXT_ADAPTER_PATH, which this one hands over to) hashes and packs the output. Next resolves the path, so it is absolute.
+  adapterPath: fileURLToPath(new URL('./scripts/sf-adapter.mjs', import.meta.url)),
   // `www` joins the apex permanently (308, path and query kept). The domain itself is added in Vercel (Project -> Settings -> Domains) and
   // the DNS record is `CNAME www cname.vercel-dns.com` at the registrar (docs/vercel-next-site.md section 10): this rule is what happens
   // once a visitor arrives, so adding the domain in Vercel as a plain domain is enough, no redirect has to be set in the dashboard.

@@ -1,7 +1,7 @@
 # ADR 0023: React ve Next ilk boyamadan sonra başlar (mobil Lighthouse 96 → 99–100)
 
-- **Durum:** Uygulandı ve yerelde doğrulandı, 17.10.2026 (`main` üzerine, `scripts/defer-framework.mjs`). Canlıya alma ve canlı ölçüm bu belgenin sonunda ("Canlıda") eklenir.
-- **Karar:** proje sahibi, 17.10.2026: "mobil 100 istiyorum, gerekeni yap"; tam yetki. [ADR 0022](0022-single-text-face-and-mobile-ceiling.md) §5 bunu "ulaşılabilir tek büyük kaldıraç, ayrı bir mimari karar" diye yazmıştı; bu ADR o kaldıracı **kod yaması olmadan, derleme sonrası bir betikle** uygular.
+- **Durum:** Uygulandı, yerelde ve Vercel adaptörünün yerel benzetiminde doğrulandı, 17.10.2026. Canlı doğrulama bu belgenin sonundaki "Canlıda" bölümüne eklenir.
+- **Karar:** proje sahibi, 17.10.2026: "mobil 100 istiyorum, gerekeni yap"; tam yetki. [ADR 0022](0022-single-text-face-and-mobile-ceiling.md) §5 bunu "ulaşılabilir tek büyük kaldıraç, ayrı bir mimari karar" diye yazmıştı; bu ADR o kaldıracı **Next'in koduna dokunmadan**, derleme sırasında manifest dosyalarını düzenleyen bir adaptörle uygular.
 - **Tamamlar:** [ADR 0004](0004-motion-and-smooth-scroll.md) (geliştirmeler ilk boyamadan sonra başlar), [ADR 0021](0021-production-performance-and-enterprise-proof.md), [ADR 0022](0022-single-text-face-and-mobile-ceiling.md).
 
 ## 1. Bağlam: neyin ölçüldüğü
@@ -20,28 +20,42 @@ Next'in HTML'indeki betik etiketlerini çıkarıp ilk boyamadan sonra ekleyen bi
 
 Betikler ilk boyamadan sonra başladığı için artık TBT penceresinin **içinde** çalışırlar; makine gürültüsü (aykırı koşu) eskiden boyamadan önce çalışan betiklerde görünmezdi.
 
-## 3. Mekanizma: `scripts/defer-framework.mjs` (derleme sonrası)
+## 3. Mekanizma: ne düzenlenir
 
-`npm run build` = `next build && node scripts/defer-framework.mjs`. Betik Next'in koduna dokunmaz; yalnızca sayfayı çizerken okuduğu **veri dosyalarını** düzenler:
+`scripts/defer-framework.mjs` Next'in koduna dokunmaz; yalnızca sayfayı çizerken okuduğu **veri dosyalarını** düzenler:
 
 1. `build-manifest.json` (genel ve sayfa başına): `rootMainFiles`, Next'in `<head>`'e yazdığı betikler (React DOM, Next istemcisi, Turbopack çalışma zamanı; ilki önyükleme). Tek bir küçük `sf-boot.<özet>.js` dosyasına indirilir.
 2. `page_client-reference-manifest.js` (sayfa başına): `entryJSFiles` (uygulamanın layout ve sayfa istemci parçaları, Next bunları da `<head>`'e yazar) boşaltılır; `moduleLoading` `null` olur (React'in sunucu çizicisi her istemci parçası için `<script async>` önyüklemesi yazmaz).
-3. `sf-boot` yükleyicisi (≈1 KB, her derlemede içerik özetiyle adlanır, `immutable`): orijinal betikleri aynı sırayla **ilk contentful paint'ten sonra** ekler. Ayrıca ilk dokunuş, tuş, tekerlek ya da `pointerdown` ile hemen, 3,5 sn sonra zamanlayıcıyla, gizli sekmede anında başlar. Her adresi, yükleyicinin kendi **`src` özniteliğinden** (göreli `/_next/...`, `?dpl=` ve nonce dahil) kurar.
+3. `sf-boot` yükleyicisi (≈1 KB, her derlemede içerik özetiyle adlanır): orijinal betikleri aynı sırayla **ilk contentful paint'ten sonra** ekler. Ayrıca ilk dokunuş, tuş, tekerlek ya da `pointerdown` ile hemen, 3,5 sn sonra zamanlayıcıyla, gizli sekmede anında başlar. Her adresi, yükleyicinin kendi **`src` özniteliğinden** (göreli `/_next/...`, varsa `?dpl=` ve nonce dahil) kurar.
 4. `.next/sf-defer.json`: özgün listeler (denetim okur).
 
-Betik idempotenttir, yaptığını geri okuyup doğrular, beklenmedik bir manifest düzeninde (örneğin bir Next yükseltmesinden sonra) **sesli düşer**: derleme başarısız olur ve Vercel önceki dağıtımı korur. `--check` yalnızca doğrular; `DEFER_FRAMEWORK=off` (ortam değişkeni) dönüşümü atlar.
+Her şey yazmadan **önce** doğrulanır: düzen bilinmiyorsa (`LayoutError`) hiçbir şey yazılmaz. Betik idempotenttir ve yazdığını geri okuyup doğrular. İki yerleşimi bilir: düz derleme `static/chunks/`, Vercel adaptörü `static/immutable/chunks/` (yükleyici çerçevenin kendi parçalarının yanına konur).
 
-**Bulunan hata (testin değeri):** ilk sürüm adresleri `script.src` (mutlak) ile kurdu. Turbopack çalışma zamanı bir parçanın kimliğini `src` özniteliğinden çıkarır ve `/_next/` ile başlayan göreli yolu bekler; mutlak adres eşleşmedi, sayfa **hidrate olmadı**: tüm betikler 200 ile yüklendi, konsolda hata yoktu, Lighthouse yine 100 gösterdi (hiç JavaScript çalışmıyordu). Yeni `framework` tarayıcı grubu (`.gate[data-ready]` bekler) bunu yakaladı.
+**Bulunan hata 1 (testin değeri):** ilk sürüm adresleri `script.src` (mutlak) ile kurdu. Turbopack çalışma zamanı bir parçanın kimliğini `src` özniteliğinden çıkarır ve `/_next/` ile başlayan göreli yolu bekler; mutlak adres eşleşmedi, sayfa **hidrate olmadı**: tüm betikler 200 ile yüklendi, konsolda hata yoktu, Lighthouse yine 100 gösterdi (hiç JavaScript çalışmıyordu). Yeni `framework` tarayıcı grubu (`.gate[data-ready]` bekler) bunu yakaladı.
 
-## 4. Reddedilen yollar
+## 4. Ne zaman çalışır: neden adaptör (ilk canlı denemenin dersi)
 
-- **HTML'i vekille yeniden yazmak** (`proxy.ts` içinde kendine `fetch`): her sayfa isteği iki işlev çağrısı; gerçek istemci adresi `x-forwarded-for`'dan geçmez (hız sınırı), iç isteği ayırt etmek için sır gerekir (Vercel ortam değişkenini ben giremem); akışı tamponlamak gerekir. Veri dosyasını düzenlemek bunların hiçbirini gerektirmez.
+İlk sürüm `npm run build` = `next build && node scripts/defer-framework.mjs` idi. **Vercel'de derleme başarısız oldu** (commit `753ea53`, dağıtım `dpl_A24GbaHUQMcj52iQWM4iAgXcDiX1`, bir dakika içinde; önceki dağıtım canlı kaldı, ziyaretçi etkilenmedi: betik beklenmedik düzende sesli düşecek biçimde yazılmıştı). Günlüğe erişimim yok; nedeni Vercel'in `@vercel/next` 23.0.2 paketini (`dist/adapter/index.js`) okuyarak ve gerçek adaptörü yerelde çalıştırarak buldum:
+
+- Vercel, Next ≥ 16.2'de platform adaptörünü açar (`NEXT_ENABLE_ADAPTER=1`, `NEXT_ADAPTER_PATH`). Adaptör `supportsImmutableAssets` açar: parçalar `.next/static/immutable/chunks/` altına ve HTML'e `/_next/static/immutable/chunks/…` olarak çıkar. Betiğin `static/chunks/` varsayımı Vercel'de yoktu.
+- Daha önemlisi: adaptör paketlemeyi **`next build`'in içinde** (`onBuildComplete`) yapar: her fonksiyonun dosyalarının içerik özetini çıkarır (`.vc-config.json` `fileHashes`), `.next/static`'i `.next/output/static`'e **kopyalar**, her fonksiyon için `.next` içindeki dosyalara işaret eden bir `filePathMap` yazar. `next build`'den **sonra** düzenlenen bir manifestin özeti eskidir (yükleme yinelenmesi önceki dağıtımdaki özdeş görünen dosyayı kullanabilir), yeni yükleyici dosyası da kimsenin listesinde olmaz: HTML var olmayan bir betiği isterdi, sayfa betiksiz kalırdı. Derleme sonrası betik Vercel'de **işe yaramaz ve tehlikelidir**; başarısız olması şans eseri iyi bir sonuçtu.
+
+Çözüm: `next.config.mjs` `adapterPath` ile **`scripts/sf-adapter.mjs`**'i bağlar. Next, adaptörün `onBuildComplete` alanını **hiçbir özet ya da liste hesaplamadan önce** (ve tüm manifestler yazıldıktan sonra) bir kez `typeof … === 'function'` diye okur; bu alan bir `get`'tir: okunduğu an dönüşüm uygulanır (eşzamanlı, idempotent; Next onu çağırmak için ikinci kez okur). Sonra Vercel'de `NEXT_ADAPTER_PATH`'teki platform adaptörü yüklenir ve kancaları (`modifyConfig`, `onBuildComplete`) olduğu gibi çalıştırılır: paketleme eskisi gibi, yalnızca dönüştürülmüş dosyalardan yapılır. Yerelde platform adaptörü yoktur, `get` `undefined` döner, Next adaptör adımını (her çıktıyı izleyip listelemeyi) tümden atlar.
+
+İki ayrıntı, ancak gerçek adaptör yerelde çalıştırılınca görüldü: (a) Next'in `<sayfa>.js.nft.json` dosyaları, her izlenen dosya için paketleyicinin yazdığı **özet** taşır; düzenlediğimiz `page_client-reference-manifest.js`'in özeti artık yanlıştır: dönüşüm onu boş bırakır ("kayıtlı değil", platform kendisi hesaplar), `--check` bunu da doğrular; (b) genel `build-manifest.json`'un özetini Next dönüşümden sonra hesaplar, doğrudur (benzetimde dosya özetiyle eşleşti).
+
+**Tavizsiz olmayan davranış:** düzen bilinmiyorsa (bir Next yükseltmesi) adaptör yüksek sesle **uyarır ve betikleri belgede bırakır** (sayfa çalışır, mobil ≈ 96); dağıtımı düşürmez. `DEFER_FRAMEWORK=strict` düşürür (denetimin `--build` adımı bunu kullanır), `DEFER_FRAMEWORK=off` atlar (`npm run build:eager`). `node scripts/defer-framework.mjs --check`, `smoke` ve canlı kontrol dönüşmemiş çıktıyı yakalar.
+
+## 5. Reddedilen yollar
+
+- **Derleme sonrası betik** (ilk sürüm): §4, Vercel'de işe yaramaz.
+- **HTML'i vekille yeniden yazmak** (`proxy.ts` içinde kendine `fetch`): her sayfa isteği iki işlev çağrısı; gerçek istemci adresi `x-forwarded-for`'dan geçmez (hız sınırı), iç isteği ayırt etmek için sır gerekir (Vercel ortam değişkenini ben giremem); akışı tamponlamak gerekir.
 - **Next'in çalışma zamanını yamamak:** üretimde çalışan kod `app-page.runtime.prod.js` (700 KB, küçültülmüş); her Next sürümünde kırılır.
 - **Sayfaları statik üretmek:** CSP nonce'ı (istek başına) ve kapının `?m=` kararı sayfayı dinamik yapar; statik için CSP modeli ve kapı yeniden yazılmalı.
 - **Boş bağlantı yuvası hipotezi** (ADR 0022 §5, ölçüldü, işe yaramadı) ve **`font-display: optional`** (ADR 0022 §2).
 - **İlk boyamayı beklemeden önce 5 sn gecikme** (Lighthouse'un gözlem penceresinin dışına itmek): ölçüm oyunudur ve gerçek ziyaretçiyi bekletir; yapılmadı. 3,5 sn yalnızca boyama hiç gelmezse bir güvencedir.
 
-## 5. Ölçümler (yerel, Chrome 155, `/` kapı açık)
+## 6. Ölçümler (yerel, Chrome 155, `/` kapı açık)
 
 | | Önce (betikler belgede) | Şimdi (ilk boyamadan sonra) |
 |---|---|---|
@@ -56,25 +70,29 @@ Betik idempotenttir, yaptığını geri okuyup doğrular, beklenmedik bir manife
 
 **Ödünleşim (ölçüldü, yavaş 4G + 4× CPU, DevTools kısıtlaması, 3 koşu medyan):** ilk boyama **1,13 sn** (canlı eager: 1,64 sn): **≈ 0,5 sn erken**; sayfa etkileşime hazır (giriş kapısı hidrate) **2,63 sn** (canlı eager: 2,07 sn): **≈ 0,5 sn geç**. Karşılaştırma ayrı iki sunucuyla (yerel ve canlı) yapıldı, yön güvenilir, büyüklük yaklaşıktır. Hızlı ağda fark ≈ 100–200 ms. Etkileşim yoluyla (dokunma, tuş, kaydırma) bekleme olmadan başlar; kapıdaki pazar ve dil seçenekleri gerçek bağlantılardır, JavaScript beklemez; hash bağlantıları CSS ile (`:has(:target)`) önceden hazırlanır.
 
-## 6. Doğrulama
+## 7. Doğrulama
 
-`qa:browser` tam koşu (parity dahil, yeni `framework` grubu: ilk boyamadan önce hiçbir çerçeve betiği istenmez, sonra hepsi istenir ve kapı uyanır; boyama yolu kapalıyken tek tuşla; hiçbir girdi yokken 3,5 sn zamanlayıcıyla): **124/124**. `smoke` **184/184** (belge tek yükleyici ister, yükleyicinin adlandırdığı her betik vardır). Denetim **207/0**, yeni kontroller: build betiği ve `--build` sonrası `--check`.
+- **Düz yerel derleme** (`npm run build`, `DEFER_FRAMEWORK=strict`): `faz2-denetim.mjs --build` **214 geçti, 1 uyarı (eski), 0 hata**; `smoke` **184/184**; `qa:browser --parity` tam koşu **124/124**.
+- **Vercel adaptörünün yerel benzetimi** (gerçek `@vercel/next` 23.0.2 adaptörü `NEXT_ADAPTER_PATH` ile, `VERCEL_IMMUTABLE_STATIC_FILES_ENABLED=1`, `VERCEL_SKEW_PROTECTION_ENABLED=1`; Windows'ta sembolik bağ izni olmadığı için bağ yerine kopyalayan bir önyükleme kabuğuyla): derleme tamamlanır, `.next/output/static/_next/static/immutable/chunks/sf-boot.<özet>.js` vardır, genel manifestin kayıtlı özeti dosyayla eşleşir, düzenlenen sayfa manifestinde bayat özet yoktur, `--check` temiz. Bu düzende sunulan belge `0cz1…js` (nomodule) ve `sf-boot…js` ister; kapı hidrate olur (`framework` grubu geçer).
+- **Yapılamayan:** Vercel'in gerçek çalışma zamanını yerelde sunmak. Adaptör çıktısı düz `next start` ile sunulunca RSC yumuşak gezinti çalışmaz (telefonda başka adresten gelen `#bölüm` bağlantıları belgeyi yeniden yükler; **dönüştürülmemiş** adaptör derlemesinde de aynı 4 telefon çapa kontrolü düşer, yani sorun dönüşümden değil, bu sunum biçiminden). Gerçek sınama yalnızca dağıtımdır.
 
-## 7. Sınırlar ve riskler
+## 8. Sınırlar ve riskler
 
 - Yükleyici ya da çerçeve betikleri yüklenemezse sayfa **okunur ama etkileşimsiz** kalır (önceden de çerçeve betikleri yüklenemezse aynıydı).
 - Mobil hâlâ 100'ün **garantisi değildir**: TBT titreşimi 98–100 aralığı verir. Canlıda (Brotli, gerçek ağ) ölçülmeden yazılmaz.
 - Safari ve Firefox'ta sınanmadı (`PerformanceObserver` `paint` desteği yoksa `load` ve 3,5 sn güvencesi devreye girer).
-- Next sürüm yükseltmesi manifest düzenini değiştirirse derleme sesli düşer (istenen davranış); `DEFER_FRAMEWORK=off` ile dönüşümsüz derleme alınır.
-- Geri alma: `package.json`'daki `build` komutundan `&& node scripts/defer-framework.mjs`'i çıkarmak (ya da Vercel'de `DEFER_FRAMEWORK=off` + yeniden dağıtım), ya da `git revert`.
+- **Next ya da Vercel adaptör yükseltmesi:** adaptörün `onBuildComplete` alanını okuma sırası ve `nft.json` özet düzeni Next'in iç ayrıntısıdır. Biri değişirse en kötü durum, dönüşmemiş (≈ 96) bir yayındır; `--check`, `smoke` ve canlı kontrol bunu yakalar. Yükseltmeden sonra `qa:browser --only=framework` çalıştırılır.
+- Yükleyici dosyası `immutable-static-hashes.json`'a eklenmez: platform onu içerik özetsiz statik dosya olarak sunar, `/_next/static/(…|immutable|chunks|…)/` için önbellek başlığı (bir yıl, `immutable`) yine de uygulanır.
+- Geri alma: Vercel'de `DEFER_FRAMEWORK=off` ortam değişkeni + yeniden dağıtım, ya da `git revert` (adaptör ve `adapterPath` birlikte gider).
 
 ## Nasıl doğrulanır
 
 ```
-npm run build                                        # next build + defer-framework
+DEFER_FRAMEWORK=strict npm run build                 # dönüşüm düşerse derleme düşer (varsayılan: uyar ve betikleri belgede bırak)
 node scripts/defer-framework.mjs --check             # .next dönüştürülmüş mü
 npx next start -p 3100
 npm run smoke -- http://localhost:3100               # 184/184
-npm run qa:browser -- http://localhost:3100 --parity # 124/124
+npm run qa:browser -- http://localhost:3100 --parity
 npm run perf -- --runs=5 --desktop=3 --paths=/ new=http://localhost:3100
+node scripts/live-check.mjs https://syncflow.agency  # canlıda belge tek yükleyici ister mi
 ```

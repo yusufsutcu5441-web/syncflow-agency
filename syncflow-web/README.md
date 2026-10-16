@@ -25,7 +25,7 @@ npm install
 npm run dev                 # http://localhost:3000  (geliştirme, Turbopack; yalnızca TR ve EN)
 
 npm run build && npm start  # üretim derlemesi + sunucu (önizleme için bunu kullanın; yedi dil yayında)
-                            # build = next build + scripts/defer-framework.mjs (ADR 0023); dönüşümsüz derleme: npm run build:eager
+                            # build = next build; scripts/sf-adapter.mjs (adapterPath) çerçeve betiklerini ilk boyamadan sonraya taşır (ADR 0023); dönüşümsüz derleme: npm run build:eager
 ```
 
 Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zorunlu değildir (Turnstile ve webhook olmadan form geliştirme kipinde "yerel kabul" yanıtı verir ve bunu söyler); `.env.local` oluşturup gerekenleri doldurun (git'e girmez).
@@ -38,7 +38,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run check:fonts` | Latin yazılı dillerdeki (en tr de fr es) her karakter Inter Display dosyalarında var mı, büyük harfli film sözcükleri Syne'de var mı (Python + `pip install fonttools brotli`; AR, ZH ve JA kasıtlı sistem yazı tipidir, `⌘` açık istisnadır). Dosyaları yeniden üretmek: `python scripts/build-fonts.py InterVariable.woff2` ([ADR 0022](docs/adr/0022-single-text-face-and-mobile-ceiling.md)) |
 | `node faz2-denetim.mjs --build` | **Aşama kapısı**: bağımlılıklar, tasarım belirteçleri, i18n, güvenlik, sahne videoları, hareket, doğrulanmamış iddia yasağı, ardından `npm run build` ve ilk yük paket denetimi |
 | `npm run smoke` | **Çalışan** sunucuya karşı HTTP güvenlik/işlev kontrolleri (aşağıda). Ortam değişkenleri `scripts/smoke.mjs` başlığında: `EXPECT_LOCALES`, `TURNSTILE_MODE`, `MOCK_WEBHOOK_PORT`, `WEBHOOK_SECRET`, `EXPECT_CSP_MODE` |
-| `node scripts/defer-framework.mjs --check` | **Derleme sonrası** dönüşümün uygulandığını doğrular (`build` onu zaten çalıştırır): belge tek `sf-boot` yükleyicisi ister, React ve Next betikleri ilk boyamadan sonra gelir ([ADR 0023](docs/adr/0023-framework-after-first-paint.md)). `DEFER_FRAMEWORK=off` dönüşümü atlar |
+| `node scripts/defer-framework.mjs --check` | `.next`'in dönüştürüldüğünü doğrular (dönüşümü `next build` içinde `scripts/sf-adapter.mjs` yapar, Vercel'in kendi adaptöründen önce): belge tek `sf-boot` yükleyicisi ister, React ve Next betikleri ilk boyamadan sonra gelir ([ADR 0023](docs/adr/0023-framework-after-first-paint.md)). `DEFER_FRAMEWORK=off` atlar, `strict` düzen bilinmiyorsa derlemeyi düşürür (varsayılan: uyar ve betikleri belgede bırak) |
 | `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
 | `npm run arch:verify` · `arch:examples` | Kurumsal kanıtın **65 sözleşme testi** (`tests/arch/`, Node'un kendi test koşucusu, bağımlılık yok): yedekli kuyruk (kayıp 0, çift uygulama 0), HMAC-SHA256/AES-256-GCM zarfı, Salesforce/HubSpot/SAP/Oracle örnek eşleyicileri, belgelerin koddan üretilmiş olması. `arch:examples` `docs/architecture/examples/` dosyalarını koddan yeniden yazar ([ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md) §5) |
 | `npm run qa:browser` · `qa:browser:quick` | **Çalışan** üretim sunucusuna karşı gerçek Chrome (`puppeteer-core`, tarayıcı indirmez): kapı ve bayraklar, çapalar (masaüstü ve telefon), kaydırmada CLS (Arapça dahil), simülatör boyları ve davranışı, entegrasyon modeli, sinema katmanı (worker yolu, ana iş parçacığı yedeği, piksel eşdeğerliği), tipografi (taşma yok, hero iki satır, tek metin yüzü), vaka incelemeleri (kart → diyalog, bağımsız sayfa, Esc ve odak). `--only=<grup>`, `--parity` (görsel eşdeğerlik), `--full` (her dil ve genişlik) |
@@ -274,7 +274,7 @@ Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alınd
 
 ### React ve Next ilk boyamadan sonra: mobil 96 → 99–100 (17.10.2026, yerel; canlı sonuç aşağıda eklenir)
 
-Karar ve ölçümler: [ADR 0023](docs/adr/0023-framework-after-first-paint.md). Derleme sonrası `scripts/defer-framework.mjs`, Next'in koduna dokunmadan yalnızca manifestleri düzenler: belge tek bir 1 KB'lık yükleyici ister, çerçeve betikleri ilk contentful paint'ten sonra (ya da ilk girdide) gelir. Bu, ADR 0022'de "bu mimaride sağlanamaz" yazan mobil tavanı aşar: tavan çerçevenin ilk boyamadan önce yüklenmesindendi, mimarinin kendisinden değil.
+Karar ve ölçümler: [ADR 0023](docs/adr/0023-framework-after-first-paint.md). `scripts/sf-adapter.mjs` (Next `adapterPath`), `next build` içinde ve Vercel'in kendi adaptörü dosya özetlerini çıkarmadan önce `scripts/defer-framework.mjs`'i çalıştırır; Next'in koduna dokunmadan yalnızca manifestleri düzenler (derleme SONRASI bir betik Vercel'de işe yaramazdı: ilk canlı deneme bu yüzden düştü, ADR 0023 §4): belge tek bir 1 KB'lık yükleyici ister, çerçeve betikleri ilk contentful paint'ten sonra (ya da ilk girdide) gelir. Bu, ADR 0022'de "bu mimaride sağlanamaz" yazan mobil tavanı aşar: tavan çerçevenin ilk boyamadan önce yüklenmesindendi, mimarinin kendisinden değil.
 
 | Denetim | Sonuç |
 |---|---|
