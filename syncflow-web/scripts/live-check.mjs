@@ -91,7 +91,8 @@ for (const [path, lang, dir] of [['/', 'en', 'ltr'], ['/tr', 'tr', 'ltr'], ['/ar
 }
 for (const p of ['/privacy', '/imprint', '/robots.txt', '/sitemap.xml', '/.well-known/security.txt']) await expect(p, p, 200);
 await expect('ja is dormant', '/ja', 404);
-await expect('sitemap lists the seven languages', '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === 7, detail: `${n} URLs` }; });
+// Seven home pages and, since docs/adr/0020, four architectural breakdowns in each language: 7 + 28.
+await expect('sitemap lists the seven languages and the 28 breakdowns', '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === 35, detail: `${n} URLs` }; });
 
 // The enterprise tier (docs/adr/0019): four showcase cards, the USD 50,000 floor with the three new bands and no USD 25,000 left, the two
 // enterprise columns, and the new clip served as a real video. Read-only: plain GETs (the clip with a one-byte Range request).
@@ -108,6 +109,49 @@ await expect('sitemap lists the seven languages', '/sitemap.xml', 200, async (r)
     const clip = await get(`/media/clips/logistics.${ext}`, { headers: { range: 'bytes=0-0' } });
     say([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/logistics.${ext} is served as ${type}`, `-> ${clip.status || clip.error} ${clip.headers.get('content-type') ?? ''}`);
   }
+}
+// The case-study layer (docs/adr/0020): the Studio section, both simulators drawn idle, the four breakdown links, SVG flags (no emoji), the 28
+// breakdown pages (one per specimen and language, each with its four parts and the specimen note) and the breakdown API. Read-only GETs;
+// the API is limited to 30 requests a minute per address, so only 11 calls are made (4 specimens in English, the law one in every language).
+{
+  const res = await get('/?m=us');
+  const html = res.status === 200 ? await res.text() : '';
+  const markup = html.replace(/<script[\s\S]*?<\/script>/g, '');
+  const text = markup.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
+  say(markup.includes('id="studio"') && (markup.match(/<details class="note"/g) ?? []).length === 3 && /Zero defects, as a method/.test(text) ? 'PASS' : 'FAIL', 'the Studio section is there with its three engineering notes');
+  say(markup.includes('data-sim="queue"') && markup.includes('data-sim="security"') ? 'PASS' : 'FAIL', 'both simulators are on the page (drawn idle; the live chunks load when a card comes near)');
+  say((markup.match(/data-breakdown-link/g) ?? []).length === 8 && !/\sposter="/.test(markup) ? 'PASS' : 'FAIL', 'four cards lead to their breakdown (pill and hit area), and no video carries a poster attribute');
+  say((markup.match(/data-flag=/g) ?? []).length >= 8 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(markup) ? 'PASS' : 'FAIL', 'the language menu and footer carry SVG flags (no flag emoji)');
+}
+{
+  const SLUGS = ['estate', 'clinic', 'law', 'logistics'];
+  const LANGS = ['en', 'tr', 'ar', 'de', 'fr', 'es', 'zh'];
+  const bad = [];
+  for (const lang of LANGS) {
+    for (const slug of SLUGS) {
+      const res = await get(lang === 'en' ? `/showcase/${slug}` : `/${lang}/showcase/${slug}`);
+      const html = res.status === 200 ? await res.text() : '';
+      const parts = ['challenge', 'solution', 'integration', 'impact'].every((id) => html.includes(`id="bd-${id}"`));
+      if (!(res.status === 200 && /<h1\b/.test(html) && parts && !/noindex/.test(html))) bad.push(`${lang}/${slug} (${res.status || res.error})`);
+    }
+  }
+  say(bad.length === 0 ? 'PASS' : 'FAIL', 'all 28 breakdown pages (4 specimens x 7 languages) answer 200 with an h1 and the four parts', bad.slice(0, 3).join(', '));
+  const en = await (await get('/showcase/law')).text();
+  const plainText = en.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
+  say(/Challenge[\s\S]*Architectural solution[\s\S]*Integration & security[\s\S]*Measured impact & ROI/.test(plainText) && /not client work/.test(plainText) && !/zero.latency|photo.?real/i.test(plainText) ? 'PASS' : 'FAIL', 'the English law breakdown has the four headings in order, says "not client work", and makes no zero-latency or photorealism claim');
+  const apiBad = [];
+  for (const slug of SLUGS) { const r = await get(`/api/breakdown?slug=${slug}&locale=en`); const j = r.status === 200 ? await r.json() : null; if (!(j?.ok && j.data?.parts?.length === 3 && j.data?.impact?.tiles?.length === 4)) apiBad.push(`en/${slug} ${r.status}`); }
+  for (const lang of LANGS.filter((l) => l !== 'en')) { const r = await get(`/api/breakdown?slug=law&locale=${lang}`); const j = r.status === 200 ? await r.json() : null; if (!(j?.ok && j.data?.locale === lang)) apiBad.push(`${lang}/law ${r.status}`); }
+  say(apiBad.length === 0 ? 'PASS' : 'FAIL', '/api/breakdown answers JSON for the four specimens and for every language', apiBad.join(', '));
+  const notFound = [(await get('/showcase/saas')).status, (await get('/ja/showcase/estate')).status, (await get('/api/breakdown?slug=saas&locale=en')).status];
+  say(notFound.every((n) => n === 404) ? 'PASS' : 'FAIL', 'an unknown specimen, a dormant language and a bad API request are all 404', notFound.join(', '));
+  const sizes = [];
+  for (const slug of SLUGS) for (const [ext, type, min] of [['mp4', 'video/mp4', 300_000], ['webm', 'video/webm', 200_000], ['webp', 'image/webp', 8_000]]) {
+    const clip = await get(`/media/clips/${slug}.${ext}`, { headers: { range: 'bytes=0-0' } });
+    const total = Number(/\/(\d+)$/.exec(clip.headers.get('content-range') ?? '')?.[1] ?? 0);
+    if (!([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) && total >= min)) sizes.push(`${slug}.${ext} ${clip.status} ${total}`);
+  }
+  say(sizes.length === 0 ? 'PASS' : 'FAIL', 'the four 1080p sector clips (mp4, webm, webp) are served with the right type and a 1080p-sized body', sizes.slice(0, 3).join(', '));
 }
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });
 const home = await get('/tr');

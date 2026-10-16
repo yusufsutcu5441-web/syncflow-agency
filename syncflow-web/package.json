@@ -7,10 +7,7 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "fonts:fetch": "node scripts/fetch-fonts.mjs",
-    "predev": "node scripts/fetch-fonts.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/fetch-fonts.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -19,6 +16,13 @@
     "check:fonts": "python scripts/check-fonts.py",
     "brand:build": "node scripts/build-brand.mjs",
     "brand:check": "node scripts/build-brand.mjs --check",
+    "flags:build": "node scripts/build-flags.mjs",
+    "flags:check": "node scripts/build-flags.mjs --check",
+    "arch:verify": "node scripts/arch-verify.mjs",
+    "arch:examples": "node scripts/arch-verify.mjs --write-examples",
+    "qa:browser": "node scripts/browser-flow.mjs",
+    "qa:browser:quick": "node scripts/browser-flow.mjs --quick",
+    "perf:gate": "node scripts/perf-gate.mjs",
     "check": "npm run check:messages && npm run typecheck && npm run lint",
     "smoke": "node scripts/smoke.mjs",
     "live": "node scripts/live-check.mjs",
@@ -40,7 +44,6 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
-    "tailwind-merge": "^3.7.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -51,6 +54,7 @@
     "@types/react-dom": "^19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.8",
+    "puppeteer-core": "^25.14.0",
     "remotion": "4.0.533",
     "tailwindcss": "^4.3.3",
     "typescript": "~5.9.3"

@@ -6,7 +6,11 @@ const STAGGER_MS = 150;
  * The four Lighthouse rings fill from empty to their measured value, one after another, when they come into view
  * (Blueprint: 1.2 s, ease-out), and the number in each ring counts up with them. The server renders the final state, so
  * without script (or with reduced motion) the rings are simply full. Only rings that start below the fold are armed (set
- * empty) after the first paint; the ring itself is a CSS transition of stroke-dashoffset on four small circles.
+ * empty), and only once they are within one screen of it; the ring itself is a CSS transition of stroke-dashoffset on four small circles.
+ *
+ * No rectangle is read at load. The rings sit in a block that the renderer skips until it is near (content-visibility: auto,
+ * docs/adr/0021 §1), and a geometry read there would make the browser lay the whole block out inside this task, which is the cost the
+ * skipping saves. Observers answer without it.
  */
 export function initRings(): () => void {
   const reduced = window.matchMedia(REDUCED_MOTION);
@@ -32,12 +36,13 @@ export function initRings(): () => void {
     frames.add(requestAnimationFrame(tick));
   };
 
-  const observer = new IntersectionObserver(
+  // Plays the rings of an armed host once 40 % of it is on screen.
+  const playObserver = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
         const host = entry.target as HTMLElement;
-        observer.unobserve(host);
+        playObserver.unobserve(host);
         if (host.dataset.armed !== 'true') continue;
         // Force a style flush so the empty state is the transition's starting point, then release the rings.
         void host.getBoundingClientRect();
@@ -48,18 +53,29 @@ export function initRings(): () => void {
     { threshold: 0.4 },
   );
 
-  for (const host of hosts) {
-    // Anything already on screen at load stays as the server drew it.
-    if (host.getBoundingClientRect().top < window.innerHeight) continue;
-    host.dataset.armed = 'true';
-    host.querySelectorAll<HTMLElement>('[data-count]').forEach((element) => {
-      element.textContent = numberFormat.format(0);
-    });
-    observer.observe(host);
-  }
+  // Arms a host when it comes within one screen below the fold. Anything already in view at that first report (a reload in the middle of the
+  // page, a jump to the anchor) stays exactly as the server drew it.
+  const armObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const host = entry.target as HTMLElement;
+        armObserver.unobserve(host);
+        if (entry.boundingClientRect.top < window.innerHeight) continue;
+        host.dataset.armed = 'true';
+        host.querySelectorAll<HTMLElement>('[data-count]').forEach((element) => {
+          element.textContent = numberFormat.format(0);
+        });
+        playObserver.observe(host);
+      }
+    },
+    { rootMargin: '0px 0px 100% 0px' },
+  );
+  for (const host of hosts) armObserver.observe(host);
 
   return () => {
-    observer.disconnect();
+    armObserver.disconnect();
+    playObserver.disconnect();
     for (const frame of frames) cancelAnimationFrame(frame);
     for (const host of hosts) {
       if (host.dataset.armed === 'true') {

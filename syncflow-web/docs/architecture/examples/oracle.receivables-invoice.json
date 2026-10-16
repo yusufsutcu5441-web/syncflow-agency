@@ -1,0 +1,16 @@
+{
+  "attribute1": "c47e0a95-5d13-4b86-8e2f-a9b04d6c7f13",
+  "InvoiceNumber": "INV-2026-018842",
+  "BillToCustomerNumber": "0010004711",
+  "InvoiceCurrencyCode": "EUR",
+  "TransactionDate": "2026-11-04",
+  "invoiceLines": [
+    {
+      "Description": "Freight, Rotterdam to Hamburg",
+      "UnitSellingPrice": 4120,
+      "Quantity": 1
+    }
+  ],
+  "TransactionSource": "SYNCFLOW",
+  "BusinessUnit": "Example BU"
+}

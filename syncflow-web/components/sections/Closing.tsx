@@ -22,7 +22,7 @@ export async function Closing() {
   ];
 
   return (
-    <section className="section pb-24 md:pb-32" aria-labelledby="closing-title">
+    <section className="section cv cv-closing pb-24 md:pb-32" aria-labelledby="closing-title">
       <div className="container-x">
         <p id="closing-title" className="text-headline max-w-5xl" data-reveal="words">
           <MaskText>{`${t('manifesto1')} ${t('manifesto2')}`}</MaskText>

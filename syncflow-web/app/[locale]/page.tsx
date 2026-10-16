@@ -2,12 +2,14 @@ import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { EntryGate } from '@/components/gate/EntryGate';
+import { AnchorPrime } from '@/components/sections/AnchorPrime';
 import { Architecture } from '@/components/sections/Architecture';
 import { BriefingSection } from '@/components/sections/BriefingSection';
 import { Closing } from '@/components/sections/Closing';
 import { Film } from '@/components/sections/Film';
 import { Hero } from '@/components/sections/Hero';
 import { Showcase } from '@/components/sections/Showcase';
+import { Studio } from '@/components/sections/Studio';
 import { isOpenLocale } from '@/i18n/launch';
 import { buildJsonLd, jsonLdString } from '@/lib/jsonld';
 import { isCrawler } from '@/lib/crawlers';
@@ -35,12 +37,14 @@ export default async function HomePage({ params, searchParams }: Props) {
   return (
     <>
       <EntryGate entered={market !== null || crawler} market={market} />
+      <AnchorPrime />
 
       <main id="main">
         <Hero />
         <Film />
         <Architecture />
         <Showcase />
+        <Studio />
         <BriefingSection />
         <Closing />
       </main>

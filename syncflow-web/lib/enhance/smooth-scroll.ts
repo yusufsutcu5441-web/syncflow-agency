@@ -1,4 +1,5 @@
 import type Lenis from 'lenis';
+import { holdLayoutBefore } from '@/lib/cv';
 import { cubicBezier } from '@/lib/motion/ease';
 import { EASE_LUX, LENIS } from '@/lib/motion/tokens';
 
@@ -37,11 +38,19 @@ export function initSmoothScroll(): () => void {
     else instance?.start();
   };
 
+  // The same for a dialog over the page (components/sections/BreakdownDialog.tsx): it announces itself with scroll:lock, and its panel
+  // scrolls natively (data-lenis-prevent).
+  const onLock = (event: Event) => {
+    if ((event as CustomEvent<{ locked?: boolean }>).detail?.locked) instance?.stop();
+    else if (!gateOpen()) instance?.start();
+  };
+
   const attach = (lenis: Lenis): (() => void) => {
     const onClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href]');
-      if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
+      // A link inside a dialog belongs to the dialog (the breakdown's call to action closes it first, then scrolls the page itself).
+      if (!link || link.target === '_blank' || link.hasAttribute('download') || link.closest('dialog')) return;
 
       const url = new URL(link.href, window.location.href);
       const samePage = url.origin === window.location.origin && url.pathname.replace(/\/$/, '') === window.location.pathname.replace(/\/$/, '');
@@ -53,7 +62,16 @@ export function initSmoothScroll(): () => void {
       // passed: Lenis already subtracts the target's scroll-margin-top and the page's scroll-padding-top (the header).
       event.preventDefault();
       event.stopPropagation();
-      lenis.scrollTo(target, { duration: LENIS.duration, easing, onComplete: () => focusSection(target) });
+      // The sections above the target must be real before Lenis measures it (lib/cv.ts, content-visibility: auto).
+      const release = holdLayoutBefore(target);
+      lenis.scrollTo(target, {
+        duration: LENIS.duration,
+        easing,
+        onComplete: () => {
+          release();
+          focusSection(target);
+        },
+      });
       if (window.location.hash !== url.hash) window.history.pushState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
     };
 
@@ -95,6 +113,7 @@ export function initSmoothScroll(): () => void {
   finePointer.addEventListener('change', sync);
   reducedMotion.addEventListener('change', sync);
   window.addEventListener('gate:change', onGate);
+  window.addEventListener('scroll:lock', onLock);
   sync();
 
   return () => {
@@ -102,6 +121,7 @@ export function initSmoothScroll(): () => void {
     finePointer.removeEventListener('change', sync);
     reducedMotion.removeEventListener('change', sync);
     window.removeEventListener('gate:change', onGate);
+    window.removeEventListener('scroll:lock', onLock);
     stop();
   };
 }

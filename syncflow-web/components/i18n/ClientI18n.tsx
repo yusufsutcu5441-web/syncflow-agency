@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { AppLocale } from '@/i18n/routing';
 import type en from '@/messages/en.json';
 
@@ -15,7 +15,9 @@ export type ClientMessages = Pick<typeof en, 'Switcher' | 'Briefing' | 'Showcase
 const ClientI18nContext = createContext<{ locale: AppLocale; messages: ClientMessages } | null>(null);
 
 export function ClientI18nProvider({ locale, messages, children }: { locale: AppLocale; messages: ClientMessages; children: ReactNode }) {
-  return <ClientI18nContext value={{ locale, messages }}>{children}</ClientI18nContext>;
+  // One object per locale and message set: every widget that reads the context re-renders when its value changes identity.
+  const value = useMemo(() => ({ locale, messages }), [locale, messages]);
+  return <ClientI18nContext value={value}>{children}</ClientI18nContext>;
 }
 
 export function useClientI18n() {

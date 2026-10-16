@@ -1,4 +1,5 @@
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
+import { clamp, Dust, Grain } from './fx';
 
 const TAU = Math.PI * 2;
 
@@ -84,8 +85,14 @@ export function Logistics() {
     const w = 1 + 2.2 / z;
     const fade = Math.min(1, Math.max(0, (Z_FAR - z) / 2.2));
     const a = strength * fade;
+    const [m1x, m1y] = proj(x - half, -top, z);
+    const [m2x, m2y] = proj(x + half, -top, z);
+    const [px, py] = proj(x, 0, z);
+    const poolRx = (FOCAL * 0.62) / z;
     return (
       <g key={key} opacity={a}>
+        <ellipse cx={px} cy={py + 1} rx={poolRx} ry={poolRx * 0.13} fill="url(#pool)" />
+        <path d={`M${l0x},${l0y} L${m1x},${m1y} L${m2x},${m2y} L${r0x},${r0y}`} fill="none" stroke={platin(0.7)} strokeWidth={w} strokeLinejoin="round" strokeLinecap="round" opacity={0.2} />
         <polygon points={`${l1x},${l1y} ${r1x},${r1y} ${r0x},${r0y} ${l0x},${l0y}`} fill="url(#gate-light)" opacity={0.55} />
         <path d={`M${l0x},${l0y} L${l1x},${l1y} L${r1x},${r1y} L${r0x},${r0y}`} fill="none" stroke={platin(0.7)} strokeWidth={w} strokeLinejoin="round" strokeLinecap="round" />
       </g>
@@ -132,15 +139,32 @@ export function Logistics() {
       const [s1x, s1y] = proj(x + w / 2, 0, z + d);
       const [s2x, s2y] = proj(x + w / 2, 0, z + d + 0.9);
       const [s3x, s3y] = proj(x - w / 2, 0, z + d + 0.9);
+      const [r2x, r2y] = proj(x + w / 2, -h, z);
+      const [r3x, r3y] = proj(x - w / 2, -h, z);
+      // tape across the lid (between 42 % and 58 % of its depth) and a label on the face
+      const at = (ax: number, ay: number, bx: number, by: number, t: number): [number, number] => [ax + (bx - ax) * t, ay + (by - ay) * t];
+      const [t0x, t0y] = at(b0x, b0y, c0x, c0y, 0.42);
+      const [t1x, t1y] = at(b1x, b1y, c1x, c1y, 0.42);
+      const [t2x, t2y] = at(b1x, b1y, c1x, c1y, 0.58);
+      const [t3x, t3y] = at(b0x, b0y, c0x, c0y, 0.58);
+      const [f0x, f0y] = proj(x - w * 0.34, h * 0.28, z);
+      const [f1x, f1y] = proj(x + w * 0.08, h * 0.28, z);
+      const [f2x, f2y] = proj(x + w * 0.08, h * 0.68, z);
+      const [f3x, f3y] = proj(x - w * 0.34, h * 0.68, z);
+      const soft = clamp((2.0 - z) * 2.4, 0, 3.6);
       items.push({
         z,
         node: (
-          <g key={`p-${lane}-${k}`} opacity={fade}>
+          <g key={`p-${lane}-${k}`} opacity={fade} style={soft > 0.3 ? { filter: `blur(${soft.toFixed(2)}px)` } : undefined}>
             {/* a short soft trail behind the parcel (towards the horizon) */}
             <polygon points={`${s0x},${s0y} ${s1x},${s1y} ${s2x},${s2y} ${s3x},${s3y}`} fill="url(#trail)" opacity={0.7} />
             <ellipse cx={sx} cy={sy + 1.5 / z} rx={((a1x - a0x) / 2) * 1.25} ry={1.6 + 3 / z} fill="rgba(13,13,14,0.55)" />
             <polygon points={`${b0x},${b0y} ${b1x},${b1y} ${c1x},${c1y} ${c0x},${c0y}`} fill={platin(0.9)} />
             <polygon points={`${a0x},${a0y} ${a1x},${a1y} ${b1x},${b1y} ${b0x},${b0y}`} fill={platin(0.46)} />
+            <polygon points={`${a0x},${a0y} ${a1x},${a1y} ${r2x},${r2y} ${r3x},${r3y}`} fill="url(#reflect)" />
+            <polygon points={`${t0x},${t0y} ${t1x},${t1y} ${t2x},${t2y} ${t3x},${t3y}`} fill="rgba(13,13,14,0.22)" />
+            <polygon points={`${f0x},${f0y} ${f1x},${f1y} ${f2x},${f2y} ${f3x},${f3y}`} fill="rgba(13,13,14,0.28)" />
+            <line x1={b0x} y1={b0y} x2={b1x} y2={b1y} stroke={platin(0.95)} strokeWidth={Math.max(0.8, 1.4 / z)} />
           </g>
         ),
       });
@@ -192,6 +216,14 @@ export function Logistics() {
           </radialGradient>
           <linearGradient id="gate-light" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.26" />
+            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+          </linearGradient>
+          <radialGradient id="pool" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.2" />
+            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="reflect" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.24" />
             <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="trail" x1="0" y1="1" x2="0" y2="0">
@@ -250,10 +282,14 @@ export function Logistics() {
         {/* gates and parcels, far to near */}
         {items.map((it) => it.node)}
 
+        {/* dust hanging in the air of the corridor */}
+        <Dust loop={u} count={44} area={[240, 110, 800, 520]} color={platin(1)} size={1.3} alpha={0.42} seed={5} />
+
         {/* depth haze at the horizon, and the vignette */}
         <rect x="0" y="0" width="1280" height="190" fill="url(#haze)" />
         <rect x="0" y="0" width="1280" height="720" fill="url(#vignette)" />
       </svg>
+      <Grain opacity={0.07} />
     </AbsoluteFill>
   );
 }

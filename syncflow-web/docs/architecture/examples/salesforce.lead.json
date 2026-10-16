@@ -1,0 +1,14 @@
+{
+  "fields": {
+    "SyncflowEventId__c": "3f2a9c1e-7b4d-4e0a-9d51-6c8b2a7e1f40",
+    "FirstName": "Alex",
+    "LastName": "Morgan",
+    "Company": "Example Holdings",
+    "Email": "alex.morgan@example.com",
+    "Title": "principal",
+    "Description": "Group-wide order portal, integrated with our ERP.",
+    "SyncflowMarket__c": "us",
+    "LeadSource": "Web",
+    "Status": "Open - Not Contacted"
+  }
+}

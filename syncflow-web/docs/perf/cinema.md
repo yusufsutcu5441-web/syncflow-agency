@@ -38,7 +38,7 @@ Erişilebilirlik, en iyi uygulamalar ve SEO: **100, tüm koşularda.** (SEO 100,
 
 1. **Masaüstü gerilemesinin kaynağı sinema motorudur.** Aynı sayfa motor kapalıyken 100/100/100, açıkken 89–96. LCP (≈ 0,7 sn) ve CLS (0) değişmiyor; fark TBT'de (0–2 → 135–236 ms) ve ana iş parçacığı çalışmasında (≈ 440–550 → ≈ 900–1060 ms).
 2. **Bunun gerçek bir GPU'lu masaüstünde de olup olmadığı bilinmiyor.** Başsız Chrome'un GL arka ucu bu ölçümde kaydedilmedi; yazılım rasterleştirme (SwiftShader) olması olasıdır ve yazılımla çizilen ham ışın izleme shader'ı gerçek bir ekran kartından çok daha pahalı olur. Ölçülmedi: gerçek GPU'lu, başlıklı (headful) Chrome ile Lighthouse ve kare ritmi.
-3. **Ana iş parçacığının payı:** motor ilk boyama ve boşta kalmadan sonra (`requestIdleCallback`, en geç 2 sn) başlıyor, bu yüzden TBT penceresine düşüyor. Shader derleme ve ilk çizim `startCinema` içinde ana iş parçacığında (`getProgramParameter` ve ilk `draw`), `KHR_parallel_shader_compile` yoksa ya da yazılım arka uçta derleme beklemesi bloklar. Hangi görevin ne kadar tuttuğu profillenmedi, bu bir varsayımdır.
+3. **Ana iş parçacığının payı:** motor ilk boyama ve boşta kalmadan sonra (`requestIdleCallback`, en geç 2 sn) başlıyor, bu yüzden TBT penceresine düşüyor. Shader derleme ve ilk çizim `startCinema` içinde ana iş parçacığında (`getProgramParameter` ve ilk `draw`), `KHR_parallel_shader_compile` yoksa ya da yazılım arka uçta derleme beklemesi bloklar. Hangi görevin ne kadar tuttuğu bu ilk ölçümde profillenmedi, bu bir varsayımdı; **16.10.2026'da profillendi ve doğrulandı, §7.**
 
 ## 3. Ağırlıklar
 
@@ -87,5 +87,25 @@ Film posterleri (WebGL'siz cihazların resmi) yeni shader ile yeniden render edi
 - **Metin kontrastı sahne üstünde:** büyük metin ve paragraflar için §5'te ölçüldü; küçük etiketler, poster modu, mobil, farklı pencere boyutları ve ince zaman taraması **ölçülmedi**.
 - **Motorun kendini kapatma davranışı** (kare süresi 24 ms'yi aşınca çözünürlük düşürme, alt sınırda kapanma) laboratuvarda gözlenmedi.
 - **Safari ve Firefox**, gerçek telefon, 120 Hz ekran, ekran okuyucu ile elle deneme.
-- **Sinema için tarayıcı testleri** (`puppeteer-core`): bu oturumda yazılıp koşulmadı.
+- **Sinema için tarayıcı testleri** (`puppeteer-core`): bu ilk ölçümde yazılıp koşulmadı; 16.10.2026'dan beri `npm run qa:browser -- --only=cinema` var (§7).
 - **Vercel:** doğrulandı (12.10.2026 dağıtımından sonra `fonts/cabinet-grotesk-500.woff2` canlıda HTTP 200, 20.260 bayt): derleme sırasında `fonts:fetch` çalıştı ve dosya dağıtıma girdi.
+
+## 7. Güncelleme (16.10.2026): masaüstü TBT'nin nedeni profillendi, motor worker'a taşındı ([ADR 0021](../adr/0021-production-performance-and-enterprise-proof.md) §2)
+
+**Profil.** Başsız Chrome 155 (yazılım GL), 1350×940, CPU profili (`Profiler`, 100 µs örnekleme) ve `longtask` gözlemcisi, ana iş parçacığında `getContext` ve `getProgramParameter` süreleri sarılarak; sayfa `/?m=us`, üç ayrı yükleme. Eski yapı (motor ana iş parçacığında):
+
+| Yükleme | `getContext('webgl2')` | `getProgramParameter` (derleme sorguları) | Uzun görevler (ms @ başlangıç) |
+|---|---|---|---|
+| 1 | 44 ms | 237 ms | 261 @1057, 51 @1980 |
+| 2 | 70 ms | 112 ms | 228 @582, 56 @880, 74 @1335 |
+| 3 | 118 ms | 98 ms | 121 @1088 |
+
+Yani masaüstü TBT'nin sinema motorundan gelen kısmı iki kaynaktan oluşuyordu: context yaratma ve derleme sürerken yapılan durum sorguları (GPU sürecinin yanıtını bekler). Önceki mimarideki `KHR_parallel_shader_compile` derlemeyi başka bir iş parçacığına zaten alıyordu; **sorguları** almıyordu. Kare başına sorgu aralığını 150 ms'ye çıkarmak (ilk deneme) bekleme sayısını azalttı ama context yaratma ve kalan beklemeler ana iş parçacığında kaldı.
+
+**Çözüm.** Motoru bir worker'a, `OffscreenCanvas` üzerine taşımak. Aynı üç yükleme, yeni yapı: `getContext` ve `getProgramParameter` ana iş parçacığında **0 ms** (sayfa iş parçacığı WebGL'e hiç dokunmaz); kalan uzun görevler (üçüncü yüklemede 77 ve 61 ms, diğer ikisinde yok) büyük olasılıkla hidrasyondur (eski yapıda da, motordan önce, 121 ila 261 ms uzun görevler vardı); ayrıca ayrıştırılmadı.
+
+**Resim aynı.** `?cinema-debug` kancasıyla zaman sabitlenip beş durumun (ortam, kozmik, organik, monolit, monolit-geç) 1280×720 kareleri eski yapıdan, yeni yapının worker yolundan ve ana iş parçacığı yolundan alındı ve piksel piksel karşılaştırıldı: eski yapıya göre iki yeni yolda da **%0,000** fark (eşik: kanal farkları toplamı > 6). İlk karşılaştırmada ortam karesi %2 ila %5 farklı çıktı; neden resim değil, **tuvalin 1,4 sn'lik opaklık geçişiydi** (kare solma bitmeden alınmıştı, eski yapının kendi karesi de kendisiyle ortalama 0,165 / 255 oynuyordu). Karşılaştırma solmanın bitmesini bekleyince fark sıfırlandı. Aynı karşılaştırma artık sürekli bir testtir (`qa:browser --only=cinema`: sabit monolit karesi iki yolda %0,05'in altı ve boş değil). Test, kalite denetleyicisinin sabit zamanda çalışmaması gerektiğini de ortaya çıkardı: yavaş bir çiziciyle (SwiftShader) sahne çözünürlüğü kare sayısına göre düşüyor ve resmi makinenin hızına bağlı yapıyordu; sabit zamanda (yalnızca test ve still-kare modu) artık düşmez.
+
+**Lighthouse (yerel, araya girerek A/B, Chrome 155, makine ≈%40 başka yük altında).** Masaüstü `/`, n=6: eski **98** (96–99), TBT 110 ms (104–151); yeni **100** (99, 100, 100, 100, 100, 100), TBT **0 ms**. Kategoriler: erişilebilirlik, en iyi uygulamalar ve SEO 100. Mobil `/`, n=5: eski 81, TBT 526 ms; yeni 92, TBT 149 ms (mobilde motor hiç başlamaz; fark, aynı yapıdaki diğer değişikliklerden gelir, bkz. ADR 0021 §8). Bu sayılar **yayınlanmaz** (`lib/metrics.ts` değişmedi): yerel, tek makine, başsız Chrome.
+
+**Bedeli ve sınırları.** (i) Ek bayt: eski tek parça 6,7 KB gz; şimdi sayfa tarafı 2,1 KB + worker parçası 8,8 KB (yedek yol 2,1 + 7,5 KB); hâlâ yalnızca ilk boyama ve boşta kalmadan sonra, yalnızca kapıyı geçen masaüstünde. (ii) Hedefler/işaretçi/kaydırma/boyut yalnızca değiştiklerinde mesajlanır (kare başına en çok bir küçük mesaj; sakin sayfada hiç). (iii) Kaydırma hızı (renk sapmasını artıran) worker'a bir kare gecikmeyle ulaşır; görünür bir fark gözlenmedi ama ölçülmedi. (iv) **Ölçülmeyenler:** gerçek GPU'lu masaüstü (orada `getContext` ucuzdur, kazanç daha küçük olabilir), Safari ve Firefox (OffscreenCanvas üzerinde WebGL2 olmayan tarayıcı ana iş parçacığı yoluna düşer; bu yol `Worker` kurucusunun fırlatmasıyla sınandı), 120 Hz ekran, worker'da `requestAnimationFrame` kare ritmi (kare süresi dağılımı iki yol için karşılaştırılmadı).

@@ -79,21 +79,14 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   // Preload only the font files this page needs. Fonts are always fetched in CORS mode, hence crossOrigin.
-  // Above the fold: Instrument Sans (text), Instrument Serif (the headline: the likely LCP element) and Cabinet Grotesk 500
-  // (buttons, navigation; font-display: optional only uses it when it is ready for the first paint, hence the preload).
+  // One face above the fold (docs/adr/0022): Inter Display does the text, the headline (the likely LCP element), the buttons and the
+  // navigation, so one 26 KB file is the whole critical font cost (three files and 71 KB before). Turkish adds its 3 KB file.
   // Syne sits in the chapters below the fold and is not preloaded.
   // Arabic, Chinese (and Japanese) are set in system stacks (app/globals.css :lang rules): the web fonts would not be used, so they are not preloaded.
   const systemFonts = locale === 'ar' || locale === 'zh' || locale === 'ja';
   const font = { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' } as const;
-  if (!systemFonts) {
-    preload('/fonts/instrument-sans-latin-v1.woff2', font);
-    preload('/fonts/instrument-serif-latin-v1.woff2', font);
-    preload('/fonts/cabinet-grotesk-500.woff2', font);
-  }
-  if (locale === 'tr') {
-    preload('/fonts/instrument-sans-turkish-v1.woff2', font);
-    preload('/fonts/instrument-serif-latin-ext-v1.woff2', font);
-  }
+  if (!systemFonts) preload('/fonts/inter-display-latin-v1.woff2', font);
+  if (locale === 'tr') preload('/fonts/inter-display-turkish-v1.woff2', font);
 
   const [messages, a11y] = await Promise.all([getMessages(), getTranslations('A11y')]);
 

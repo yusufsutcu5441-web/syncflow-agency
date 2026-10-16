@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "8d1b6f42-2c9a-4a73-b0e5-1f7d3c9a5e28",
+  "type": "order.created",
+  "occurredAt": "2026-10-16T09:31:12.000Z",
+  "source": {
+    "site": "syncflow.agency",
+    "locale": "de",
+    "market": "dach"
+  },
+  "payload": {
+    "orderNumber": "PO-2026-004217",
+    "customer": {
+      "id": "0010004711",
+      "name": "Example Logistics GmbH"
+    },
+    "currency": "EUR",
+    "requestedDelivery": "2026-11-03",
+    "lines": [
+      {
+        "sku": "PALLET-EUR-01",
+        "quantity": 24,
+        "unitPrice": 18.5
+      },
+      {
+        "sku": "WRAP-FILM-50",
+        "quantity": 120,
+        "unitPrice": 3.2
+      }
+    ]
+  }
+}

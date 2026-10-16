@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://syncflow.agency/docs/architecture/canonical-event.schema.json",
+  "title": "Canonical event (reference)",
+  "description": "The one envelope every system behind the site receives. `id` is the idempotency key: made once, never changed by a retry, a queue hop or a mapper. The same contract as lib/arch/types.ts and lib/arch/event.ts; tests/arch compares them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "type", "occurredAt", "source", "payload"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9._:-]{8,128}$", "description": "Idempotency key." },
+    "type": { "enum": ["lead.created", "order.created", "invoice.issued"] },
+    "occurredAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,3})?Z$", "description": "ISO 8601, UTC." },
+    "source": { "$ref": "#/$defs/source" },
+    "payload": { "type": "object" }
+  },
+  "oneOf": [
+    { "properties": { "type": { "const": "lead.created" }, "payload": { "$ref": "#/$defs/lead" } } },
+    { "properties": { "type": { "const": "order.created" }, "payload": { "$ref": "#/$defs/order" } } },
+    { "properties": { "type": { "const": "invoice.issued" }, "payload": { "$ref": "#/$defs/invoice" } } }
+  ],
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["site", "locale", "market"],
+      "properties": {
+        "site": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "locale": { "type": "string", "minLength": 2, "maxLength": 16 },
+        "market": { "type": "string", "minLength": 1, "maxLength": 32 }
+      }
+    },
+    "customer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "lead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "company", "email", "role", "projectType", "budgetBand", "timeline", "message"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "company": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "email": { "type": "string", "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", "maxLength": 254 },
+        "role": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "projectType": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "budgetBand": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "timeline": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "message": { "type": "string", "maxLength": 2000 }
+      }
+    },
+    "order": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["orderNumber", "customer", "currency", "requestedDelivery", "lines"],
+      "properties": {
+        "orderNumber": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "customer": { "$ref": "#/$defs/customer" },
+        "currency": { "$ref": "#/$defs/currency" },
+        "requestedDelivery": { "$ref": "#/$defs/date" },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["sku", "quantity", "unitPrice"],
+            "properties": {
+              "sku": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "quantity": { "type": "integer", "exclusiveMinimum": 0 },
+              "unitPrice": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "invoice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["invoiceNumber", "customer", "currency", "issuedOn", "dueOn", "lines"],
+      "properties": {
+        "invoiceNumber": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "customer": { "$ref": "#/$defs/customer" },
+        "currency": { "$ref": "#/$defs/currency" },
+        "issuedOn": { "$ref": "#/$defs/date" },
+        "dueOn": { "$ref": "#/$defs/date" },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["description", "amount"],
+            "properties": {
+              "description": { "type": "string", "minLength": 1, "maxLength": 200 },
+              "amount": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

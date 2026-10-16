@@ -22,8 +22,8 @@ next-env.d.ts
 # The Inter subsets in public/fonts are SIL OFL and stay tracked.
 /public/fonts/satoshi*
 /public/fonts/Satoshi*
-# Cabinet Grotesk (ITF Free Font License): the licence forbids putting the files in a public repository. scripts/fetch-fonts.mjs
-# downloads the official files at build time (docs/adr/0014-cinematic-layer.md).
+# Cabinet Grotesk (ITF Free Font License) is no longer used (docs/adr/0022); the rule stays so a stray copy is never committed:
+# the licence forbids putting the files in a public repository.
 /public/fonts/cabinet-grotesk*
 /brand/**/*.otf
 /brand/**/*.woff

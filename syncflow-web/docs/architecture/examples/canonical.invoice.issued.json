@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "c47e0a95-5d13-4b86-8e2f-a9b04d6c7f13",
+  "type": "invoice.issued",
+  "occurredAt": "2026-10-16T09:32:40.000Z",
+  "source": {
+    "site": "syncflow.agency",
+    "locale": "de",
+    "market": "dach"
+  },
+  "payload": {
+    "invoiceNumber": "INV-2026-018842",
+    "customer": {
+      "id": "0010004711",
+      "name": "Example Logistics GmbH"
+    },
+    "currency": "EUR",
+    "issuedOn": "2026-11-04",
+    "dueOn": "2026-12-04",
+    "lines": [
+      {
+        "description": "Freight, Rotterdam to Hamburg",
+        "amount": 4120
+      },
+      {
+        "description": "Dock handling",
+        "amount": 380
+      }
+    ]
+  }
+}

@@ -11,8 +11,8 @@ import { SITE_URL } from '@/lib/site';
  * Social share card (1200x630): GET /og?locale=tr
  * Headline and subtitle for og:image / twitter:image (LinkedIn, Slack, X, iMessage previews). Referenced from
  * generateMetadata with an explicit URL, so there is no redirect. The locale is whitelisted (public languages only);
- * anything else falls back to English. Arabic, Chinese and Japanese cards are set in English: the share-card font (a static Instrument
- * Sans SemiBold built by scripts/build-fonts.py) has no Arabic or CJK glyphs and would print empty boxes; their
+ * anything else falls back to English. Arabic, Chinese and Japanese cards are set in English: the share-card font (a static Inter
+ * Display SemiBold built by scripts/build-fonts.py) has no Arabic or CJK glyphs and would print empty boxes; their
  * og:title and og:description (the page text) are still in their own language. The response is cacheable for a year at the
  * edge (the "v" query value is bumped when the design changes), and /og is rate limited in proxy.ts because rendering an
  * image costs real CPU.
@@ -29,7 +29,7 @@ const PLATIN = BRAND_COLORS.platin;
 const LOGO_HEIGHT = 44;
 
 let font: Promise<Buffer> | undefined;
-const loadFont = () => (font ??= readFile(join(process.cwd(), 'assets', 'og-instrument-sans-600.ttf')));
+const loadFont = () => (font ??= readFile(join(process.cwd(), 'assets', 'og-inter-display-600.ttf')));
 
 export async function GET(request: Request) {
   const requested = new URL(request.url).searchParams.get('locale') ?? '';
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
           background: BRAND_COLORS.obsidian,
           backgroundImage: 'radial-gradient(60% 55% at 78% 8%, rgba(226,226,230,0.08), rgba(13,13,14,0) 70%)',
           color: PLATIN,
-          fontFamily: 'Instrument Sans',
+          fontFamily: 'Inter Display',
           border: '1px solid rgba(226,226,230,0.10)',
         }}
       >
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
     {
       width: WIDTH,
       height: HEIGHT,
-      fonts: [{ name: 'Instrument Sans', data, weight: 600, style: 'normal' }],
+      fonts: [{ name: 'Inter Display', data, weight: 600, style: 'normal' }],
       headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=31536000, stale-while-revalidate=86400' },
     },
   );

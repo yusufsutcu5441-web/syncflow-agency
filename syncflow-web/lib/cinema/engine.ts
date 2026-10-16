@@ -1,311 +1,258 @@
-import { POST_FRAG, SCENE_FRAG, VERT } from './shaders';
+import type { CoreHandle, DebugSettings, EngineHost, EngineInput } from './core';
+import type { FromWorker, ToWorker, WorkerStats } from './protocol';
 import { cinemaState, reportCinemaOff } from './state';
 
 /**
- * The cinema engine (docs/adr/0014-cinematic-layer.md): one fixed full-viewport canvas behind the page, raw WebGL2.
+ * The cinema engine's page side (docs/adr/0014-cinematic-layer.md, docs/adr/0021 §2): it creates the fixed full-viewport canvas on <body>,
+ * decides where the engine runs and keeps it informed.
  *
- * It is a separate chunk that components/cinema/CinemaStage.tsx imports only after the first paint, only on a desktop with a fine
- * pointer, no reduced-motion preference and no data saver. It never throws into the page: every failure (no WebGL2, a shader that
- * does not compile, a lost context, a machine too slow) ends with `null`/`destroy()` and the CSS fallback stays.
- *
- * Cost control: the scene pass runs at a fraction of the canvas size (soft, which suits film) and that fraction drops when frames
- * run long; if even the smallest size is too slow the engine switches itself off. The ambient state runs at 30 fps, the film at
- * the display rate. Nothing renders while the tab is hidden.
+ * It is a separate chunk that components/cinema/CinemaStage.tsx imports only after the first paint, only on a desktop with a fine pointer,
+ * no reduced-motion preference and no data saver. The picture itself is drawn by lib/cinema/core.ts, which runs
+ *   - in a Web Worker on an OffscreenCanvas when the browser can (the default): creating the WebGL context, compiling the raymarching shader
+ *     and drawing all stay off the main thread. In a headless desktop run `getContext` alone blocked the main thread for 14 to 146 ms and the
+ *     compile queries for up to 224 ms; that is what kept Lighthouse's desktop score below 100 whenever the layer ran;
+ *   - on the main thread otherwise (no OffscreenCanvas, no WebGL2 in workers, a worker that cannot start, `?cinema-worker=off`).
+ * Either way it never throws into the page: every failure ends with `null`/`destroy()` and the CSS fallback stays.
  */
 export type CinemaHandle = { destroy: () => void; glitch: (ms?: number, strength?: number) => void };
 
-type Target = { fbo: WebGLFramebuffer; tex: WebGLTexture; w: number; h: number };
+type DebugState = Partial<typeof cinemaState> & DebugSettings;
+type DebugHook = { set: (patch: DebugState) => void; snap: () => void; stats: () => WorkerStats | null };
 
-const GRAIN = 0.035;
-const MIN_SCENE_SCALE = 0.3;
+/** How long the worker gets to show its first frame before the page gives up on it and uses the main thread. */
+const WORKER_START_TIMEOUT_MS = 25000;
 
-const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
-const mix = (a: number, b: number, t: number) => a + (b - a) * t;
-
-type Job = { program: WebGLProgram; shaders: WebGLShader[] };
-
-/**
- * Starts compiling and linking WITHOUT asking for the result. Asking (getShaderParameter, getProgramParameter) makes the main
- * thread wait for the GPU process, and the raymarching scene shader takes a while to compile: that wait showed up as blocking time.
- * With KHR_parallel_shader_compile the compile runs off the main thread and `ready()` polls for completion.
- */
-function begin(gl: WebGL2RenderingContext, fragment: string): Job | null {
-  const vs = gl.createShader(gl.VERTEX_SHADER);
-  const fs = gl.createShader(gl.FRAGMENT_SHADER);
-  const program = gl.createProgram();
-  if (!vs || !fs || !program) return null;
-  gl.shaderSource(vs, VERT);
-  gl.compileShader(vs);
-  gl.shaderSource(fs, fragment);
-  gl.compileShader(fs);
-  gl.attachShader(program, vs);
-  gl.attachShader(program, fs);
-  gl.linkProgram(program);
-  return { program, shaders: [vs, fs] };
+/** The canvas size in device pixels: the pixel ratio is capped, the engine is soft by design. */
+function viewportSize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+  return { width: Math.max(2, Math.round(window.innerWidth * dpr)), height: Math.max(2, Math.round(window.innerHeight * dpr)) };
 }
 
-async function ready(gl: WebGL2RenderingContext, jobs: Job[]): Promise<void> {
-  const ext = gl.getExtension('KHR_parallel_shader_compile');
-  if (!ext) return;
-  const since = performance.now();
-  while (jobs.some((job) => !gl.getProgramParameter(job.program, ext.COMPLETION_STATUS_KHR)) && performance.now() - since < 15000) {
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-  }
-}
-
-/** Reads the result (now cheap) and releases the shader objects. */
-function finish(gl: WebGL2RenderingContext, job: Job): WebGLProgram | null {
-  const linked = gl.getProgramParameter(job.program, gl.LINK_STATUS);
-  if (!linked && process.env.NODE_ENV !== 'production') {
-    for (const shader of job.shaders) console.warn('cinema shader:', gl.getShaderInfoLog(shader));
-    console.warn('cinema link:', gl.getProgramInfoLog(job.program));
-  }
-  for (const shader of job.shaders) gl.deleteShader(shader);
-  if (!linked) {
-    gl.deleteProgram(job.program);
-    return null;
-  }
-  return job.program;
-}
-
-function target(gl: WebGL2RenderingContext, w: number, h: number): Target | null {
-  const tex = gl.createTexture();
-  const fbo = gl.createFramebuffer();
-  if (!tex || !fbo) return null;
-  gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-  const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  if (!ok) return null;
-  return { fbo, tex, w, h };
-}
-
-export async function startCinema(host: HTMLElement): Promise<CinemaHandle | null> {
+function createCanvas(host: HTMLElement): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  const context = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'high-performance' });
-  if (!context) return null;
-  // An explicitly typed constant: the nested functions below see a non-null context.
-  const gl: WebGL2RenderingContext = context;
-  const sceneJob = begin(gl, SCENE_FRAG);
-  const postJob = begin(gl, POST_FRAG);
-  if (!sceneJob || !postJob) return null;
-  await ready(gl, [sceneJob, postJob]);
-  const scenePass = finish(gl, sceneJob);
-  const postPass = finish(gl, postJob);
-  if (!scenePass || !postPass) return null;
-
-  const u = (p: WebGLProgram, name: string) => gl.getUniformLocation(p, name);
-  const S = { res: u(scenePass, 'uRes'), time: u(scenePass, 'uTime'), w: u(scenePass, 'uW'), local: u(scenePass, 'uLocal'), mouse: u(scenePass, 'uMouse'), gain: u(scenePass, 'uGain') };
-  const P = { tex: u(postPass, 'uTex'), res: u(postPass, 'uRes'), time: u(postPass, 'uTime'), aber: u(postPass, 'uAber'), grain: u(postPass, 'uGrain'), glitch: u(postPass, 'uGlitch'), flare: u(postPass, 'uFlare') };
-
-  const vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
   canvas.className = 'cinema-canvas';
   host.appendChild(canvas);
+  return canvas;
+}
 
-  // ── mutable engine state ────────────────────────────────────────────────────────────────────
-  const cur = { scene: cinemaState.scene, amb: cinemaState.amb, local: cinemaState.local, gain: cinemaState.gain };
-  const mouse = { x: 0.62, y: 0.55, tx: 0.62, ty: 0.55, vel: 0 };
-  let sceneScale = 0.5;
-  let scene: Target | null = null;
-  let width = 0;
-  let height = 0;
-  let raf = 0;
-  let alive = true;
-  let last = performance.now();
-  const startAt = last;
-  let frameCount = 0;
-  let acc = 0;
-  let slowWindows = 0;
-  let glitchUntil = 0;
-  let glitchMs = 1;
-  let glitchStrength = 1;
-  let lastScrollY = window.scrollY;
-  let scrollVel = 0;
-  let tick = 0;
-  let frozen = false;
-  let fixedTime = -1;
-  let grainOverride = -1;
+function queryFlag(name: string): string | null {
+  return new URLSearchParams(window.location.search).get(name);
+}
 
-  const resize = () => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-    width = Math.max(2, Math.round(window.innerWidth * dpr));
-    height = Math.max(2, Math.round(window.innerHeight * dpr));
-    canvas.width = width;
-    canvas.height = height;
-    const sw = Math.max(2, Math.round(width * sceneScale));
-    const sh = Math.max(2, Math.round(height * sceneScale));
-    if (scene) {
-      gl.deleteTexture(scene.tex);
-      gl.deleteFramebuffer(scene.fbo);
-    }
-    scene = target(gl, sw, sh);
+function installDebug(hook: DebugHook) {
+  // Test and still-frame hook, only with ?cinema-debug in the address (used to render the fallback posters and in the tests).
+  if (new URLSearchParams(window.location.search).has('cinema-debug')) (window as unknown as { __cinema: DebugHook }).__cinema = hook;
+}
+
+// ── main thread ─────────────────────────────────────────────────────────────────────────────────
+
+async function startOnMainThread(host: HTMLElement): Promise<CinemaHandle | null> {
+  // The core (and the shader text) is its own chunk, fetched only on this path: with the worker it is the worker's chunk that carries it.
+  const { runEngine } = await import('./core');
+  const canvas = createCanvas(host);
+  const pointer = { x: 0.62, y: 0.55 };
+  // The shared targets are read directly; scroll position and visibility are read when a frame asks.
+  const input: EngineInput = {
+    state: cinemaState,
+    pointer,
+    get scrollY() {
+      return window.scrollY;
+    },
+    get hidden() {
+      return document.hidden;
+    },
   };
-  resize();
-  if (!scene) {
-    canvas.remove();
-    return null;
-  }
+  let core: CoreHandle | null = null;
 
   const onPointer = (e: PointerEvent) => {
-    mouse.tx = e.clientX / window.innerWidth;
-    mouse.ty = 1 - e.clientY / window.innerHeight;
+    pointer.x = e.clientX / window.innerWidth;
+    pointer.y = 1 - e.clientY / window.innerHeight;
   };
-  const onResize = () => resize();
-  const onLost = (e: Event) => {
-    e.preventDefault();
-    destroy();
-  };
-  window.addEventListener('pointermove', onPointer, { passive: true });
-  window.addEventListener('resize', onResize);
-  canvas.addEventListener('webglcontextlost', onLost);
-
+  const onResize = () => core?.resize();
   const onGlitch = (e: Event) => {
     const detail = (e as CustomEvent<{ ms?: number; strength?: number }>).detail;
-    glitch(detail?.ms, detail?.strength);
+    core?.glitch(detail?.ms, detail?.strength);
   };
-  window.addEventListener('cinema:glitch', onGlitch);
-
-  // Test and still-frame hook, only with ?cinema-debug in the address (used to render the fallback posters and in the tests).
-  if (new URLSearchParams(window.location.search).has('cinema-debug')) {
-    (window as unknown as { __cinema: unknown }).__cinema = {
-      set: (p: Partial<typeof cinemaState> & { time?: number; grain?: number; freeze?: boolean }) => {
-        const { time, grain, freeze, ...rest } = p;
-        Object.assign(cinemaState, rest);
-        if (time !== undefined) fixedTime = time;
-        if (grain !== undefined) grainOverride = grain;
-        if (freeze !== undefined) frozen = freeze;
-      },
-      snap: () => Object.assign(cur, cinemaState),
-      stats: () => ({ sceneScale, width, height, frames: frameCount }),
-    };
-  }
-
-  function glitch(ms = 360, strength = 1) {
-    glitchMs = ms;
-    glitchStrength = strength;
-    glitchUntil = performance.now() + ms;
-  }
-
-  function draw(now: number, dt: number) {
-    if (!scene) return;
-    const t = fixedTime >= 0 ? fixedTime : (now - startAt) / 1000;
-
-    // ease the live values towards the targets (a critically damped feel, independent of frame rate)
-    const k = 1 - Math.exp(-dt * 6);
-    cur.scene = mix(cur.scene, cinemaState.scene, k);
-    cur.amb = mix(cur.amb, cinemaState.amb, k);
-    cur.local = mix(cur.local, cinemaState.local, k);
-    // The film and the hero each ask for a picture strength; the stronger request wins.
-    cur.gain = mix(cur.gain, Math.max(cinemaState.gain, cinemaState.heroGain), k);
-
-    const mk = 1 - Math.exp(-dt * 7);
-    const px = mouse.x;
-    const py = mouse.y;
-    mouse.x = mix(mouse.x, mouse.tx, mk);
-    mouse.y = mix(mouse.y, mouse.ty, mk);
-    mouse.vel = mix(mouse.vel, clamp(Math.hypot(mouse.x - px, mouse.y - py) / Math.max(dt, 0.001) * 0.12, 0, 1), 0.2);
-    const sy = window.scrollY;
-    scrollVel = mix(scrollVel, clamp(Math.abs(sy - lastScrollY) / Math.max(dt, 0.001) / 4000, 0, 1), 0.15);
-    lastScrollY = sy;
-
-    // scene weights: the film scenes blend by `scene`, the ambient scene takes over by `amb`
-    const weight = (i: number) => Math.max(0, 1 - Math.abs(cur.scene - i)) * (1 - cur.amb);
-    const w0 = weight(0);
-    const w1 = weight(1);
-    const w2 = weight(2);
-    const w3 = weight(3) + cur.amb;
-
-    // optics follow the content: more flare on the monolith and the light chapter, more aberration when things move
-    const flareStrength = 0.14 + 0.86 * (1 - cur.amb) * clamp(w2 + w3 * 0.6, 0, 1);
-    const aberration = 0.0011 + 0.0045 * Math.max(mouse.vel, scrollVel) + 0.0014 * (1 - cur.amb);
-    const g = clamp((glitchUntil - now) / glitchMs, 0, 1);
-    const glitchAmount = g > 0 ? Math.sin(g * Math.PI) * glitchStrength : 0;
-    const flareX = 0.5 + 0.3 * Math.sin(t * 0.13 + cur.local * 3.0) + (mouse.x - 0.5) * 0.25;
-    const flareY = 0.74 + 0.1 * Math.sin(t * 0.09 + 1.7) + (mouse.y - 0.5) * 0.15;
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, scene.fbo);
-    gl.viewport(0, 0, scene.w, scene.h);
-    gl.useProgram(scenePass);
-    gl.uniform2f(S.res, scene.w, scene.h);
-    gl.uniform1f(S.time, t);
-    gl.uniform4f(S.w, w0, w1, w2, w3);
-    gl.uniform1f(S.local, cur.local);
-    gl.uniform2f(S.mouse, mouse.x, mouse.y);
-    gl.uniform1f(S.gain, cur.gain);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, width, height);
-    gl.useProgram(postPass);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, scene.tex);
-    gl.uniform1i(P.tex, 0);
-    gl.uniform2f(P.res, width, height);
-    gl.uniform1f(P.time, t);
-    gl.uniform1f(P.aber, aberration);
-    gl.uniform1f(P.grain, grainOverride >= 0 ? grainOverride : GRAIN);
-    gl.uniform1f(P.glitch, glitchAmount);
-    gl.uniform3f(P.flare, flareX, flareY, flareStrength);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-  }
-
-  function frame(now: number) {
-    if (!alive) return;
-    raf = requestAnimationFrame(frame);
-    if (document.hidden || frozen) {
-      last = now;
-      return;
-    }
-    tick++;
-    // Ambient only: 30 fps is plenty for a slow liquid and halves the idle GPU load.
-    if (cur.amb > 0.98 && cinemaState.amb > 0.98 && glitchUntil < now && tick % 2 === 1) return;
-
-    const dt = Math.min(0.1, (now - last) / 1000);
-    last = now;
-    draw(now, dt);
-
-    // quality control: judge the average frame time over 90 frames
-    frameCount++;
-    acc += dt;
-    if (frameCount % 90 === 0) {
-      const avg = acc / 90 / (cur.amb > 0.98 ? 2 : 1);
-      acc = 0;
-      if (avg > 0.024) {
-        if (sceneScale > MIN_SCENE_SCALE + 0.001) {
-          sceneScale = Math.max(MIN_SCENE_SCALE, sceneScale * 0.8);
-          resize();
-          slowWindows = 0;
-        } else if (++slowWindows >= 2) destroy();
-      } else slowWindows = 0;
-    }
-  }
-
-  function destroy() {
-    if (!alive) return;
-    alive = false;
-    cancelAnimationFrame(raf);
+  const detach = () => {
     window.removeEventListener('pointermove', onPointer);
     window.removeEventListener('resize', onResize);
     window.removeEventListener('cinema:glitch', onGlitch);
-    canvas.removeEventListener('webglcontextlost', onLost);
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
     canvas.remove();
-    // The canvas is gone, so the film's posters (and the CSS light) take over: tell the film to fetch them.
-    reportCinemaOff();
-  }
+  };
 
-  // show the canvas once the first frame is on it
-  // The marker lives on the canvas, not on <html>: React resets <html>'s attributes when the language changes. CSS reads it with
-  // :has() (body:has(> .cinema-canvas[data-live])).
-  draw(performance.now(), 0.016);
-  canvas.dataset.live = '1';
-  raf = requestAnimationFrame(frame);
-  return { destroy, glitch };
+  const engineHost: EngineHost = {
+    input,
+    requestFrame: (callback) => requestAnimationFrame(callback),
+    cancelFrame: (id) => cancelAnimationFrame(id),
+    viewport: viewportSize,
+    // The marker lives on the canvas, not on <html>: React resets <html>'s attributes when the language changes. CSS reads it with
+    // :has() (body:has(> .cinema-canvas[data-live])).
+    onLive: () => {
+      canvas.dataset.live = '1';
+    },
+    // The canvas is gone, so the film's posters (and the CSS light) take over: tell the film to fetch them.
+    onRetire: () => {
+      detach();
+      reportCinemaOff();
+    },
+  };
+
+  core = await runEngine(canvas, engineHost);
+  if (!core) {
+    detach();
+    return null;
+  }
+  const running = core;
+  window.addEventListener('pointermove', onPointer, { passive: true });
+  window.addEventListener('resize', onResize);
+  window.addEventListener('cinema:glitch', onGlitch);
+  installDebug({
+    set: ({ time, grain, freeze, ...targets }) => {
+      Object.assign(cinemaState, targets);
+      running.debug({ time, grain, freeze });
+    },
+    snap: () => running.snap(),
+    stats: () => running.stats(),
+  });
+  return { destroy: running.destroy, glitch: running.glitch };
+}
+
+// ── worker ──────────────────────────────────────────────────────────────────────────────────────
+
+const canRunInWorker = () =>
+  queryFlag('cinema-worker') !== 'off' && typeof Worker !== 'undefined' && typeof OffscreenCanvas !== 'undefined' && 'transferControlToOffscreen' in HTMLCanvasElement.prototype;
+
+/** Resolves with the handle once the worker's first frame is on the canvas, or `null` when the worker could not run the engine. */
+function startInWorker(host: HTMLElement): Promise<CinemaHandle | null> {
+  return new Promise((resolve) => {
+    const canvas = createCanvas(host);
+    let worker: Worker;
+    try {
+      worker = new Worker(new URL('./worker.ts', import.meta.url), { name: 'cinema' });
+    } catch {
+      canvas.remove();
+      resolve(null);
+      return;
+    }
+    let settled = false;
+    let frame = 0;
+    let stats: WorkerStats | null = null;
+    // What the worker was last told, to send only changes: a quiet page costs nothing.
+    const sent = new Float64Array(8).fill(NaN);
+    const send = (message: ToWorker, transfer?: Transferable[]) => worker.postMessage(message, transfer ?? []);
+
+    const flush = () => {
+      const s = cinemaState;
+      const y = window.scrollY;
+      if (s.scene === sent[0] && s.amb === sent[1] && s.local === sent[2] && s.gain === sent[3] && s.heroGain === sent[4] && pointer.x === sent[5] && pointer.y === sent[6] && y === sent[7]) return;
+      sent.set([s.scene, s.amb, s.local, s.gain, s.heroGain, pointer.x, pointer.y, y]);
+      send({ type: 'input', state: { scene: s.scene, amb: s.amb, local: s.local, gain: s.gain, heroGain: s.heroGain }, pointer: { x: pointer.x, y: pointer.y }, scrollY: y });
+    };
+    const tick = () => {
+      frame = requestAnimationFrame(tick);
+      flush();
+    };
+    const pointer = { x: 0.62, y: 0.55 };
+    const onPointer = (e: PointerEvent) => {
+      pointer.x = e.clientX / window.innerWidth;
+      pointer.y = 1 - e.clientY / window.innerHeight;
+    };
+    const onResize = () => send({ type: 'size', ...viewportSize() });
+    const onVisibility = () => send({ type: 'hidden', hidden: document.hidden });
+    const onGlitch = (e: Event) => {
+      const detail = (e as CustomEvent<{ ms?: number; strength?: number }>).detail;
+      send({ type: 'glitch', ms: detail?.ms, strength: detail?.strength });
+    };
+    const detach = () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.removeEventListener('pointermove', onPointer);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('cinema:glitch', onGlitch);
+      document.removeEventListener('visibilitychange', onVisibility);
+      worker.terminate();
+      canvas.remove();
+    };
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      detach();
+      resolve(null);
+    };
+    // Live and then too slow, the context lost or the worker crashed: same as the main-thread engine's destroy().
+    const retire = () => {
+      if (!settled) return fail();
+      detach();
+      reportCinemaOff();
+    };
+    const timer = window.setTimeout(fail, WORKER_START_TIMEOUT_MS);
+
+    worker.onmessage = (event: MessageEvent<FromWorker>) => {
+      const message = event.data;
+      if (message.type === 'stats') stats = message.stats;
+      else if (message.type === 'live' && !settled) {
+        settled = true;
+        window.clearTimeout(timer);
+        canvas.dataset.live = '1';
+        if (queryFlag('cinema-debug') !== null) (window as unknown as { __cinemaWorker: boolean }).__cinemaWorker = true;
+        resolve({
+          destroy: () => send({ type: 'stop' }),
+          glitch: (ms, strength) => send({ type: 'glitch', ms, strength }),
+        });
+      } else if (message.type === 'failed') fail();
+      else if (message.type === 'retire') retire();
+    };
+    worker.onerror = retire;
+    worker.onmessageerror = retire;
+
+    window.addEventListener('pointermove', onPointer, { passive: true });
+    window.addEventListener('resize', onResize);
+    window.addEventListener('cinema:glitch', onGlitch);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    installDebug({
+      set: ({ time, grain, freeze, ...targets }) => {
+        Object.assign(cinemaState, targets);
+        flush();
+        send({ type: 'debug', settings: { time, grain, freeze } });
+      },
+      snap: () => {
+        flush();
+        send({ type: 'snap' });
+      },
+      stats: () => stats,
+    });
+
+    let offscreen: OffscreenCanvas;
+    try {
+      offscreen = canvas.transferControlToOffscreen();
+    } catch {
+      fail();
+      return;
+    }
+    const s = cinemaState;
+    const size = viewportSize();
+    send(
+      {
+        type: 'init',
+        canvas: offscreen,
+        input: { state: { scene: s.scene, amb: s.amb, local: s.local, gain: s.gain, heroGain: s.heroGain }, pointer: { x: pointer.x, y: pointer.y }, scrollY: window.scrollY },
+        hidden: document.hidden,
+        width: size.width,
+        height: size.height,
+        debug: queryFlag('cinema-debug') !== null,
+      },
+      [offscreen],
+    );
+    frame = requestAnimationFrame(tick);
+  });
+}
+
+export async function startCinema(host: HTMLElement): Promise<CinemaHandle | null> {
+  if (canRunInWorker()) {
+    const handle = await startInWorker(host);
+    if (handle) return handle;
+    // The worker could not run the engine (and has been cleaned up, canvas included): the same engine on the main thread.
+  }
+  return startOnMainThread(host);
 }

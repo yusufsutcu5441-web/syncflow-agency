@@ -6,10 +6,12 @@
  * Faz 5: 7 dil altyapısı (taslak diller uykuda, RTL, yayın listesi), hreflang/sitemap yalnızca yayındaki dillere.
  * 2B-4 (docs/adr/0011): hukuki sayfaların yapısı (KVKK m.10 / GDPR m.13), tarih, rıza bağlantısı; içerik yer tutuculu taslak kalır.
  * 2B-3 (docs/adr/0010): teslimde id + tek yeniden deneme (bütçe < 10 sn), hız sınırı uyarısı, security.txt süresi.
+ * 16.10.2026 (docs/adr/0021): üretim performansı (content-visibility, CSS bayraklar, yerleşim kararlılığı, sağdan sola CLS) ve kurumsal kanıt (docs/architecture, lib/arch, sözleşme testleri): bölüm 12.
+ * 15.10.2026 (docs/adr/0020): vaka incelemeleri (sayfa + diyalog, yedi dil), Stüdyo bölümü, iki etkileşimli simülatör, SVG bayraklar, 1080p sektör klipleri: bölüm 11.
  * 14.10.2026 (docs/adr/0019): kurumsal katman: asgari tutar USD 50.000 (basamaklar 1×/2×/5×), vitrin dört sektör (lojistik eklendi), Mimari bölümünde iki kurumsal sütun (animasyonlu Border Beam sayısı yine en çok 3).
  * 14.10.2026 (docs/adr/0018): yedi sermaye merkezi = yedi dil (en tr ar de fr es zh) ve yedi pazar, Japonca uykuda. "Yedi dil iddiası yok" kuralı pazarlama metni içindir; seçici bir iddia değildir.
  * 2B-2 (docs/adr/0009): TR/EN odak, yedi dil iddiası yok, vitrin kilitli üç sektör (emlak, klinik, kurumsal hukuk), SaaS ve "Reach" bölümü yok.
- * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, Instrument Sans, tek hap ve etiket tarifi, B1/v2 logo.
+ * 2B-1: tokenlar ve marka (docs/adr/0007): obsidian/platin/şampanya paleti, saf siyah-beyaz yok, tek metin yüzü Inter Display (docs/adr/0022), tek hap ve etiket tarifi, B1/v2 logo.
  * Kullanım (proje kökünden):   node faz2-denetim.mjs [--root yol] [--build] [--json]
  *   --build  `npm run build` çalıştırır (production build)    --json  faz2-denetim.json yazar
  * Hiçbir dosyayı değiştirmez; yalnızca okur ve raporlar. Çıkış kodu: FAIL varsa 1.
@@ -104,13 +106,13 @@ else {
   for (const [hex, name] of Object.entries(req)) low.includes(hex) ? add(G2, "PASS", `${hex} ${name}`) : add(G2, "FAIL", `${hex} ${name} tanımlı değil`);
   /#ffffff1a/i.test(c) ? add(G2, "PASS", "cam kenarlık #ffffff1a (%10)") : add(G2, "FAIL", "cam kenarlık #ffffff1a tanımlı değil");
   /#ffffff40/i.test(c) ? add(G2, "PASS", "hover kenarlığı #ffffff40 (%25)") : add(G2, "FAIL", "hover kenarlığı #ffffff40 tanımlı değil");
-  /-0?\.02em/.test(c) ? add(G2, "PASS", "display tracking -0.02em") : add(G2, "FAIL", "-0.02em tracking tanımı yok");
+  /--tracking-display:\s*-0\.035em/.test(c) ? add(G2, "PASS", "display tracking -0.035em (Inter Display 300, docs/adr/0022)") : add(G2, "FAIL", "--tracking-display -0.035em değil");
   /\[lang=['"]?ar['"]?\][^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c) || /:lang\(ar\)[^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c)
     ? add(G2, "PASS", "Arapçada harf aralığı sıfırlanıyor (bitişik yazı bozulmaz)") : add(G2, "FAIL", "Arapça için harf aralığı sıfırlaması yok (letter-spacing bitişik harfleri koparır)");
   const bad = [
-    [/-0?\.045em|-0?\.04em/g, "eski sıkı tracking (-0.04/-0.045em); display için -0.02em olmalı", "FAIL"],
-    // Yüklü yüzler: Instrument Sans 400-600, Instrument Serif 400, Syne 400-800, Cabinet Grotesk 500. 100/200/300/900 hiçbirinde yok.
-    [/font-weight\s*:\s*(?:100|200|300|900)\b/g, "hiçbir yüklü yazı tipinde olmayan ağırlık (300 sessizce 400 çizilir)", "FAIL"],
+    [/-0?\.0(?:4|45|5)em/g, "çok sıkı tracking (-0.04em ve altı): Inter Display başlıkta -0.035em, daha sıkısı harfleri birbirine değdirir", "FAIL"],
+    // Yüklü yüzler: Inter Display 300-500, Syne 400-800. 100/200/600/900 hiçbirinde yok (600 yalnızca OG kartının statik dosyasında).
+    [/font-weight\s*:\s*(?:100|200|600|900)\b/g, "hiçbir yüklü yazı tipinde olmayan ağırlık (sessizce en yakınına düşer)", "FAIL"],
     [/font-style\s*:\s*italic/g, "italik yasak", "WARN"],
     [/\b(?:turquoise|aqua|cyan|teal|navy)\b|#(?:00ffff|40e0d0|2dd4bf|14b8a6|06b6d4)\b/gi, "turkuaz/lacivert tonu (palet tek renklidir)", "FAIL"],
   ];
@@ -128,37 +130,53 @@ else {
   pureHits.length ? add(G2, "FAIL", `saf siyah/beyaz kaldı (${pureHits.length}); obsidian #0D0D0E ve platin #E2E2E6 kullanın: ${[...new Set(pureHits)].slice(0, 5).join(" | ")}`)
     : add(G2, "PASS", "saf siyah ve saf beyaz yok (CSS, bileşenler, OG kartı, Remotion sahneleri)");
 
-  // Yazı tipi: Instrument Sans (OFL), kendi sunucumuzdan; Inter kalmadı.
-  /@font-face\s*\{[^}]*font-family:\s*['"]Instrument Sans['"][^}]*font-weight:\s*400\s+600/.test(c)
-    ? add(G2, "PASS", "@font-face 'Instrument Sans' (400-600) tanımlı") : add(G2, "FAIL", "@font-face 'Instrument Sans' font-weight 400 600 ile tanımlı değil");
-  /--font-sans:\s*['"]Instrument Sans['"]/.test(c) ? add(G2, "PASS", "--font-sans Instrument Sans ile başlıyor") : add(G2, "FAIL", "--font-sans Instrument Sans ile başlamıyor");
-  const fontFiles = ["public/fonts/instrument-sans-latin-v1.woff2", "public/fonts/instrument-sans-turkish-v1.woff2", "assets/og-instrument-sans-600.ttf"];
+  // Yazı tipi (docs/adr/0022): tek metin yüzü Inter Display (OFL, 300-500), kendi sunucumuzdan; Instrument Sans/Serif ve Cabinet Grotesk kalmadı.
+  /@font-face\s*\{[^}]*font-family:\s*['"]Inter Display['"][^}]*font-weight:\s*300\s+500/.test(c)
+    ? add(G2, "PASS", "@font-face 'Inter Display' (300-500) tanımlı") : add(G2, "FAIL", "@font-face 'Inter Display' font-weight 300 500 ile tanımlı değil");
+  /--font-sans:\s*['"]Inter Display['"]/.test(c) && /--font-display:\s*var\(--font-sans\)/.test(c) && /--font-ui:\s*var\(--font-sans\)/.test(c)
+    ? add(G2, "PASS", "--font-sans Inter Display; başlık (--font-display) ve arayüz (--font-ui) aynı yüz: tek metin yüzü") : add(G2, "FAIL", "--font-sans/--font-display/--font-ui tek yüze (Inter Display) bağlı değil");
+  /@font-face\s*\{[^}]*font-family:\s*['"]Inter Display Fallback['"][^}]*size-adjust/.test(c) && /@font-face\s*\{[^}]*font-family:\s*['"]Inter Display['"][^}]*font-display:\s*swap/.test(c)
+    ? add(G2, "PASS", "Inter Display: font-display swap + ölçüsü eşlenmiş yedek yüz (swap sayfayı kaydırmaz)") : add(G2, "FAIL", "Inter Display için swap ya da ölçü eşlemeli yedek yüz yok");
+  const fontFiles = ["public/fonts/inter-display-latin-v1.woff2", "public/fonts/inter-display-turkish-v1.woff2", "assets/og-inter-display-600.ttf"];
   const lostFonts = fontFiles.filter((f) => !exists(f));
-  lostFonts.length ? add(G2, "FAIL", `yazı tipi dosyası yok: ${lostFonts.join(", ")} (scripts/build-fonts.py üretir)`) : add(G2, "PASS", "Instrument Sans dosyaları (Latin, Türkçe, OG kartı) var");
-  exists("public/fonts/OFL.txt") && /Instrument Sans/.test(read("public/fonts/OFL.txt")) ? add(G2, "PASS", "public/fonts/OFL.txt Instrument Sans lisansı") : add(G2, "FAIL", "public/fonts/OFL.txt Instrument Sans lisansını taşımıyor");
-  const oldInter = [...walk(abs("app"), [".tsx", ".ts", ".css"]), ...walk(abs("components"), [".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])].filter((f) => /['"]Inter['"]|inter-(?:latin|turkish)|og-inter/.test(fs.readFileSync(f, "utf8"))).map(rel)
-    .concat(exists("public/fonts") ? fs.readdirSync(abs("public/fonts")).filter((n) => /^inter-/i.test(n)).map((n) => `public/fonts/${n}`) : []);
-  oldInter.length ? add(G2, "FAIL", `eski Inter izi: ${oldInter.slice(0, 4).join(", ")}`) : add(G2, "PASS", "Inter izi kalmadı");
-
-  // Sinematik tipografi (docs/adr/0014): Instrument Serif (başlık), Syne (bölüm sözcükleri), Cabinet Grotesk (düğme ve gezinti).
-  for (const [family, file, weights] of [["Instrument Serif", "public/fonts/instrument-serif-latin-v1.woff2", /font-weight:\s*400\s*;/], ["Syne", "public/fonts/syne-latin-v1.woff2", /font-weight:\s*400\s+800/]]) {
-    const face = new RegExp(`@font-face\\s*\\{[^}]*font-family:\\s*['"]${family}['"][^}]*\\}`).exec(c)?.[0] ?? "";
-    face && weights.test(face) && exists(file) ? add(G2, "PASS", `@font-face '${family}' tanımlı ve dosyası (${file.split("/").pop()}) var`) : add(G2, "FAIL", `'${family}' için @font-face ya da ${file} eksik`);
+  lostFonts.length ? add(G2, "FAIL", `yazı tipi dosyası yok: ${lostFonts.join(", ")} (scripts/build-fonts.py üretir)`) : add(G2, "PASS", "Inter Display dosyaları (Latin, Türkçe, OG kartı) var");
+  {
+    const bytes = (f) => fs.statSync(abs(f)).size;
+    const critical = exists(fontFiles[0]) ? bytes(fontFiles[0]) : 1e9;
+    // Önceki üç yüz (Instrument Sans 30,0 + Serif 21,0 + Cabinet 20,3 = 71,3 KB) ilk görünümde yüklenirdi; hedef en az %60 küçültmek (<= 28,5 KB).
+    critical <= 28500 ? add(G2, "PASS", `ilk görünümdeki kritik yazı tipi ${(critical / 1024).toFixed(1)} KB (önceki üç yüz 71,3 KB: %${Math.round((1 - critical / 73000) * 100)} küçük)`) : add(G2, "FAIL", `inter-display-latin ${(critical / 1024).toFixed(1)} KB: 28,5 KB'ı aşıyor (hedef: üç yüze göre en az %60 küçük)`);
   }
-  ["OFL-instrument-serif.txt", "OFL-syne.txt"].every((f) => exists(`public/fonts/${f}`) && /SIL OPEN FONT LICENSE/i.test(read(`public/fonts/${f}`)))
-    ? add(G2, "PASS", "Instrument Serif ve Syne OFL metinleri public/fonts altında") : add(G2, "FAIL", "OFL-instrument-serif.txt / OFL-syne.txt yok ya da OFL metni içermiyor");
-  // Cabinet Grotesk (ITF FFL v2.0): lisans dosyanın herkese açık depoda dağıtılmasını ve budanmasını yasaklar. Derlemede indirilir.
+  exists("public/fonts/OFL-inter.txt") && /SIL OPEN FONT LICENSE/i.test(read("public/fonts/OFL-inter.txt")) && /Inter Project Authors/.test(read("public/fonts/OFL-inter.txt"))
+    ? add(G2, "PASS", "public/fonts/OFL-inter.txt Inter lisansı (SIL OFL 1.1)") : add(G2, "FAIL", "public/fonts/OFL-inter.txt yok ya da Inter OFL metnini taşımıyor");
+  {
+    const oldFaces = [...walk(abs("app"), [".tsx", ".ts", ".css"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"]), ...walk(abs("remotion"), [".tsx", ".ts"])]
+      .filter((f) => /Instrument (?:Sans|Serif)|Cabinet Grotesk|instrument-s(?:ans|erif)|cabinet-grotesk/.test(stripComments(fs.readFileSync(f, "utf8")))).map(rel)
+      .concat(exists("public/fonts") ? fs.readdirSync(abs("public/fonts")).filter((n) => /^(?:instrument|cabinet)/i.test(n)).map((n) => `public/fonts/${n}`) : []);
+    oldFaces.length ? add(G2, "FAIL", `eski yazı tipi izi (docs/adr/0022: tek yüz Inter Display): ${oldFaces.slice(0, 4).join(", ")}`) : add(G2, "PASS", "Instrument Sans, Instrument Serif ve Cabinet Grotesk izi kalmadı (kod, CSS, Remotion, public/fonts)");
+  }
+
+  // Syne (docs/adr/0014): yalnızca film bölüm sözcükleri, büyük harf, 400-800.
+  {
+    const face = /@font-face\s*\{[^}]*font-family:\s*['"]Syne['"][^}]*\}/.exec(c)?.[0] ?? "";
+    face && /font-weight:\s*400\s+800/.test(face) && exists("public/fonts/syne-latin-v1.woff2") ? add(G2, "PASS", "@font-face 'Syne' tanımlı ve dosyası (syne-latin-v1.woff2) var") : add(G2, "FAIL", "'Syne' için @font-face ya da syne-latin-v1.woff2 eksik");
+  }
+  exists("public/fonts/OFL-syne.txt") && /SIL OPEN FONT LICENSE/i.test(read("public/fonts/OFL-syne.txt"))
+    ? add(G2, "PASS", "Syne OFL metni public/fonts altında") : add(G2, "FAIL", "OFL-syne.txt yok ya da OFL metni içermiyor");
+  // Cabinet Grotesk (ITF FFL v2.0) artık kullanılmıyor: dosyası git'te izlenmemeli (lisans herkese açık depoyu yasaklar), indirme betiği ve derleme kancaları gitmiş olmalı.
   {
     const tracked = spawnSync("git", ["ls-files", "--", "public/fonts"], { cwd: ROOT, encoding: "utf8" });
     const trackedCabinet = tracked.status === 0 ? tracked.stdout.split("\n").filter((l) => /cabinet/i.test(l)) : [];
+    const scripts = JSON.stringify(readJSON("package.json").scripts);
     trackedCabinet.length ? add(G2, "FAIL", `Cabinet Grotesk dosyası git'te izleniyor (ITF FFL §02 herkese açık depoyu yasaklar): ${trackedCabinet.join(", ")}`)
-      : /cabinet-grotesk/.test(read(".gitignore")) ? add(G2, "PASS", "Cabinet Grotesk git'te değil ve .gitignore'da (ITF FFL §02)") : add(G2, "FAIL", ".gitignore Cabinet Grotesk dosyalarını dışlamıyor");
-    const fetcher = exists("scripts/fetch-fonts.mjs") ? read("scripts/fetch-fonts.mjs") : "";
-    const pkgJson = readJSON("package.json");
-    fetcher && /process\.exit\(0\)/.test(fetcher) && !/process\.exit\(1\)/.test(fetcher) && /prebuild/.test(JSON.stringify(pkgJson.scripts))
-      ? add(G2, "PASS", "scripts/fetch-fonts.mjs derlemeden önce çalışır, hata verse bile derlemeyi bozmaz (yedek: Instrument Sans)") : add(G2, "FAIL", "fetch-fonts.mjs yok ya da prebuild'e bağlı değil ya da hata ile çıkıyor");
-    /--font-ui:\s*['"]Cabinet Grotesk['"],\s*['"]Instrument Sans['"]/.test(c) ? add(G2, "PASS", "--font-ui Cabinet Grotesk ile başlıyor, yedek Instrument Sans") : add(G2, "FAIL", "--font-ui yedeği Instrument Sans olmayan bir yığın");
-    /@font-face\s*\{[^}]*font-family:\s*['"]Cabinet Grotesk['"][^}]*font-display:\s*optional/.test(c) ? add(G2, "PASS", "Cabinet Grotesk font-display: optional (sayfa kayması yok)") : add(G2, "FAIL", "Cabinet Grotesk font-display: optional değil (yüklenince düzeni kaydırır)");
+      : !exists("scripts/fetch-fonts.mjs") && !/fetch-fonts|fonts:fetch/.test(scripts) && /cabinet-grotesk/.test(read(".gitignore"))
+        ? add(G2, "PASS", "Cabinet Grotesk yok: dosya git'te değil, indirme betiği ve prebuild/predev kancaları kalktı (derleme artık ağdan yazı tipi çekmez), .gitignore kuralı bir kaza koruması olarak duruyor")
+        : add(G2, "FAIL", "Cabinet Grotesk kalıntısı: scripts/fetch-fonts.mjs, fonts:fetch/prebuild/predev kancası ya da .gitignore kuralı eksik");
+  }
+  // Ön yükleme: yalnızca metin yüzü (Latin; Türkçede Türkçe dosya da). Syne ön yüklenmez.
+  {
+    const layout = read("app/[locale]/layout.tsx");
+    /preload\('\/fonts\/inter-display-latin-v1\.woff2'/.test(layout) && /preload\('\/fonts\/inter-display-turkish-v1\.woff2'/.test(layout) && !/preload\('\/fonts\/syne/.test(layout) && (layout.match(/preload\('\/fonts\//g) ?? []).length === 2
+      ? add(G2, "PASS", "ilk görünümde tek metin yüzü ön yüklenir (Latin; Türkçede +Türkçe dosya), Syne ön yüklenmez") : add(G2, "FAIL", "layout.tsx ön yüklemesi Inter Display Latin (+ Türkçe) dışında dosya içeriyor ya da eksik");
   }
   // Bold ağırlıklar yalnızca Syne kuralında (Syne 400-800); başka ailede sentezlenir ya da 600'e düşer.
   {
@@ -269,7 +287,7 @@ if (tr && en) {
 // koda gömülü Türkçe metin ve yasaklı sınıf taraması
 const srcFiles = walk(abs(base === "." ? "app" : "src"), [".tsx", ".ts"]).concat(walk(abs("components"), [".tsx"]));
 const hard = [], banned = {};
-const BAN = { "italik": /\bitalic\b/, "ağırlık (Instrument Sans 400-600; yalnız font-normal ve font-medium)": /\bfont-(?:extralight|thin|light|semibold|bold|extrabold|black)\b/,
+const BAN = { "italik": /\bitalic\b/, "ağırlık (Inter Display 300-500; yalnız font-light, font-normal ve font-medium)": /\bfont-(?:extralight|thin|semibold|bold|extrabold|black)\b/,
   "saf siyah/beyaz sınıfı (obsidian ve ink kullanın)": /\b(?:bg|text|border|decoration|ring|fill|stroke|from|to|via|outline|divide)-(?:white|black)(?:\/\d+)?\b/,
   "gölge": /\bshadow-(?:md|lg|xl|2xl)\b/, "tracking-tighter": /\btracking-tighter\b/,
   "fiziksel yön (RTL'de bozulur; start/end kullanın)": /(?<![\w-])(?:ml|mr|pl|pr)-(?!auto\b)[\w.[\]]+|(?<![\w-])(?:left|right)-(?:\d|\[|px|full|1\/2)|\btext-(?:left|right)\b|\brounded-[lr]-|\bborder-[lr](?:-|\b)|\bfloat-(?:left|right)\b|\borigin-(?:left|right)\b/,
@@ -482,8 +500,18 @@ function bundleGate() {
   const engineInInitial = chunks.filter((c) => initial.has(c.file) && isEngine(c.text));
   const lazyEngine = chunks.filter((c) => isEngine(c.text) && !initial.has(c.file));
   engineInInitial.length ? add("8. Sinema katmanı (WebGL, film, dil geçişi)", "FAIL", `WebGL motoru ilk yük parçasında: ${engineInInitial.map((c) => c.file).join(", ")}`)
-    : lazyEngine.length ? add("8. Sinema katmanı (WebGL, film, dil geçişi)", "PASS", `WebGL motoru ilk yükte değil, ayrı lazy parça: ${(lazyEngine.reduce((s, c) => s + c.gz, 0) / 1024).toFixed(1)} KB gzip (shader dahil)`)
+    : lazyEngine.length ? add("8. Sinema katmanı (WebGL, film, dil geçişi)", "PASS", `WebGL motoru ilk yükte değil, ayrı lazy parça${lazyEngine.length > 1 ? "lar (worker ve ana iş parçacığı yedeği; bir yolda yalnızca biri iner)" : ""}: ${lazyEngine.map((c) => (c.gz / 1024).toFixed(1)).join(" ve ")} KB gzip (shader dahil)`)
       : add("8. Sinema katmanı (WebGL, film, dil geçişi)", "WARN", "WebGL motoru parçası bulunamadı (shader metni işaretçisi değişmiş olabilir)");
+  // Simülatörler (docs/adr/0020): canlı sürümleri yalnızca kartları ekrana yaklaşınca iner; ilk yük parçalarında olmaz.
+  const isSim = (t) => /syncflow-demo-key-not-a-secret/.test(t) || /q-parcel/.test(t);
+  const simInInitial = chunks.filter((c) => initial.has(c.file) && isSim(c.text));
+  const lazySim = chunks.filter((c) => isSim(c.text) && !initial.has(c.file));
+  simInInitial.length ? add("11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar", "FAIL", `simülatör ilk yük parçasında: ${simInInitial.map((c) => c.file).join(", ")}`)
+    : lazySim.length ? add("11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar", "PASS", `simülatörler ilk yükte değil, ayrı lazy parçalar: ${(lazySim.reduce((s, c) => s + c.gz, 0) / 1024).toFixed(1)} KB gzip`)
+      : add("11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar", "WARN", "simülatör parçaları bulunamadı (işaretçi metin değişmiş olabilir)");
+  const isDialog = (t) => /bd-dialog/.test(t) && /showModal/.test(t);
+  const dialogInInitial = chunks.filter((c) => initial.has(c.file) && isDialog(c.text));
+  dialogInInitial.length ? add("11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar", "FAIL", `inceleme diyaloğu ilk yük parçasında: ${dialogInInitial.map((c) => c.file).join(", ")}`) : add("11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar", "PASS", "inceleme diyaloğunun kodu ilk yük parçalarında değil (ilk üzerine gelişte ya da tıklamada iner)");
   const leaked = chunks.filter((c) => initial.has(c.file) && (isLenis(c.text) || isMotion(c.text)));
   const lazyLenis = chunks.filter((c) => isLenis(c.text) && !initial.has(c.file));
   const lazyMotion = chunks.filter((c) => isMotion(c.text) && !initial.has(c.file));
@@ -499,14 +527,17 @@ function bundleGate() {
 /* ───────── 8) Sinema katmanı (docs/adr/0014): ham WebGL2, scroll ile oynayan film, dil geçişi ───────── */
 const G8 = "8. Sinema katmanı (WebGL, film, dil geçişi)";
 {
-  const need = ["components/cinema/CinemaStage.tsx", "lib/cinema/engine.ts", "lib/cinema/shaders.ts", "lib/cinema/state.ts", "lib/enhance/film.ts", "components/sections/Film.tsx"];
+  const need = ["components/cinema/CinemaStage.tsx", "lib/cinema/engine.ts", "lib/cinema/core.ts", "lib/cinema/worker.ts", "lib/cinema/protocol.ts", "lib/cinema/shaders.ts", "lib/cinema/state.ts", "lib/enhance/film.ts", "components/sections/Film.tsx"];
   const lost = need.filter((f) => !exists(f));
   if (lost.length) add(G8, "FAIL", `sinema dosyası yok: ${lost.join(", ")}`);
   else {
-    const stage = read("components/cinema/CinemaStage.tsx"), engine = read("lib/cinema/engine.ts"), shaders = read("lib/cinema/shaders.ts");
+    // ADR 0021 §2: sayfa tarafı (engine.ts), çekirdek (core.ts, WebGL burada) ve worker (worker.ts) ayrı dosyalar; çekirdek kontrolleri ikisini birlikte okur.
+    const stage = read("components/cinema/CinemaStage.tsx"), pageSide = read("lib/cinema/engine.ts"), core = read("lib/cinema/core.ts"), shaders = read("lib/cinema/shaders.ts");
+    const engine = `${pageSide}
+${core}`;
     // Motor ve shader'lar yalnızca dinamik import ile (ilk yüke girmez); state ve film.ts küçüktür ve serbesttir.
     const staticUse = [...walk(abs("app"), [".tsx", ".ts"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"])]
-      .filter((f) => !rel(f).startsWith("lib/cinema/") && /from\s+['"]@\/lib\/cinema\/(?:engine|shaders)['"]/.test(read(rel(f)))).map(rel);
+      .filter((f) => !rel(f).startsWith("lib/cinema/") && /from\s+['"]@\/lib\/cinema\/(?:engine|core|worker|shaders)['"]/.test(read(rel(f)))).map(rel);
     staticUse.length ? add(G8, "FAIL", `motor/shader statik içe aktarılmış (ilk yüke girer): ${staticUse.join(", ")}`)
       : /import\(\s*['"]@\/lib\/cinema\/engine['"]\s*\)/.test(stage) ? add(G8, "PASS", "WebGL motoru yalnızca dinamik import() ile yükleniyor") : add(G8, "FAIL", "CinemaStage motoru import() ile yüklemiyor");
     // The capability check lives in lib/cinema/capable.ts (shared with the film section); the stage must call it.
@@ -515,6 +546,12 @@ const G8 = "8. Sinema katmanı (WebGL, film, dil geçişi)";
       ? add(G8, "PASS", "motor yalnızca ince işaretçili masaüstünde, azaltılmış hareket ve veri tasarrufu yokken başlıyor (lib/cinema/capable.ts)") : add(G8, "FAIL", "CinemaStage cinemaCapable() çağırmıyor ya da lib/cinema/capable.ts kapısı eksik (reduced-motion, ince işaretçi, saveData)");
     /getContext\(\s*['"]webgl2['"]/.test(engine) && /if \(!context\) return null/.test(engine) && /webglcontextlost/.test(engine)
       ? add(G8, "PASS", "WebGL2 yoksa ya da bağlam kaybolursa motor sessizce çekiliyor (CSS yedeği kalır)") : add(G8, "FAIL", "motorda WebGL2 yokluğu/bağlam kaybı koruması eksik");
+    // ADR 0021 §2: motor varsayılan olarak worker + OffscreenCanvas'ta çalışır (context, shader derlemesi ve çizim ana iş parçacığı dışında);
+    // worker başlamazsa aynı çekirdek ana iş parçacığında çalışır, CSP worker'a izin verir, çekirdek sayfaya/DOM'a dokunmaz.
+    const workerCode = read("lib/cinema/worker.ts"), cspCode = read("lib/security/csp.ts");
+    /new Worker\(new URL\('\.\/worker\.ts', import\.meta\.url\)/.test(pageSide) && /transferControlToOffscreen/.test(pageSide) && /startOnMainThread/.test(pageSide) && /import\('\.\/core'\)/.test(pageSide)
+      && /runEngine/.test(workerCode) && /type: 'failed'/.test(workerCode) && /'worker-src': \["'self'", 'blob:'\]/.test(cspCode) && !/\b(?:window|document)\b/.test(core.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, ""))
+      ? add(G8, "PASS", "motor worker + OffscreenCanvas'ta çalışır (context ve shader derlemesi ana iş parçacığında değil), başlamazsa ana iş parçacığı yedeği var, çekirdek window/document kullanmaz, CSP worker-src izinli") : add(G8, "FAIL", "worker yolu eksik (new Worker, transferControlToOffscreen, ana iş parçacığı yedeği, CSP worker-src ya da çekirdek window/document kullanıyor)");
     /clamp\(col,\s*vec3\(0\.05\d*,\s*0\.05\d*,\s*0\.054\d*\),\s*vec3\(0\.886\d*,\s*0\.886\d*,\s*0\.90\d*\)\)/.test(shaders)
       ? add(G8, "PASS", "POST shader çıktısı paletin (#0D0D0E ... #E2E2E6) içine kıstırılıyor: saf siyah/beyaz üretemez") : add(G8, "FAIL", "POST shader paletin içine kıstırmıyor (saf siyah/beyaz çıkabilir)");
     /document\.hidden/.test(engine) && /destroy\(\)/.test(engine) && /MIN_SCENE_SCALE/.test(engine) ? add(G8, "PASS", "motor sekme gizliyken durur, yavaş karede çözünürlüğü düşürür, çok yavaşsa kendini kapatır") : add(G8, "FAIL", "motorda sekme duraklatma ya da uyarlamalı kalite yok");
@@ -610,6 +647,235 @@ const G10 = "10. Nitelik eşiği, pazarlar ve para birimi";
     markets.every((m) => dl[m] && PUBLIC_LOCALES.includes(dl[m])) && new Set(dlValues).size === PUBLIC_LOCALES.length && PUBLIC_LOCALES.every((l) => dlValues.includes(l)) ? add(G10, "PASS", `pazarların önerdiği diller yayındaki yedi dildir, bire bir (${markets.map((m) => `${m}: ${dl[m]}`).join(", ")})`) : add(G10, "FAIL", "MARKET_DEFAULT_LOCALE yayında olmayan bir dile işaret ediyor, bir dil birden çok pazarda ya da bir pazar eksik");
     // 7) Eski ?m=int bağlantıları hâlâ geçerli (dolar pazarı); API'de 'int' yok.
     /LEGACY[^=]*=\s*\{\s*int:\s*'us',\s*eu:\s*'dach'\s*\}/.test(market) && !/'int'|'eu'/.test(schema) ? add(G10, "PASS", "eski ?m=int ve ?m=eu bağlantıları geçerli kalır (dolar ve Almanca/euro pazarı), API değeri değildir") : add(G10, "FAIL", "eski ?m=int / ?m=eu eşlemesi yok ya da API bu değerleri kabul ediyor");
+  }
+}
+
+/* ───────── 11) Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar (docs/adr/0020) ───────── */
+const G11 = "11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar";
+{
+  const need = [
+    "lib/breakdown.ts", "lib/server/breakdown.ts", "app/api/breakdown/route.ts", "app/[locale]/showcase/[slug]/page.tsx", "app/[locale]/showcase/page.tsx",
+    "components/sections/BreakdownView.tsx", "components/sections/BreakdownDialog.tsx", "components/sections/BreakdownHost.tsx", "components/sections/Studio.tsx",
+    "components/sim/types.ts", "components/sim/QueueView.tsx", "components/sim/SecurityView.tsx", "components/sim/FailSafeSim.tsx", "components/sim/SecurityFlowSim.tsx", "components/sim/LazySims.tsx",
+    "components/ui/Flag.tsx", "app/flags.css", "scripts/build-flags.mjs", "docs/adr/0020-case-study-layer.md",
+  ];
+  const lost = need.filter((f) => !exists(f));
+  if (lost.length) add(G11, "FAIL", `ADR 0020 dosyası yok: ${lost.join(", ")}`);
+  else {
+    const code = (f) => stripComments(read(f));
+    const flatten = (o, p = "", out = {}) => { for (const [k, v] of Object.entries(o)) typeof v === "object" && v ? flatten(v, `${p}${k}.`, out) : (out[`${p}${k}`] = v); return out; };
+    const SLUGS = ["estate", "clinic", "law", "logistics"];
+
+    // 1) Vaka incelemesi dört sektörle sınırlıdır (kilitli dörtlü) ve her sektörde 14 anahtar, her dilde var.
+    const slugs = [...(/BREAKDOWN_SLUGS\s*=\s*\[([^\]]*)\]/.exec(code("lib/breakdown.ts"))?.[1] ?? "").matchAll(/'(\w+)'/g)].map((m) => m[1]);
+    const cards = [...code("components/sections/Showcase.tsx").matchAll(/key:\s*'(\w+)',\s*id:/g)].map((m) => m[1]);
+    JSON.stringify(slugs) === JSON.stringify(SLUGS) && JSON.stringify(cards) === JSON.stringify(SLUGS) ? add(G11, "PASS", "vaka incelemeleri vitrinin kilitli dörtlüsüyle birebir aynı: estate, clinic, law, logistics") : add(G11, "FAIL", `inceleme sektörleri (${slugs.join(",")}) vitrin kartlarıyla (${cards.join(",")}) ya da kilitli dörtlüyle uyuşmuyor`);
+    const KEYS = ["scenario", "c1", "c2", "c3", "s1", "s2", "s3", "i1", "i2", "i3", "m1", "m2", "m3", "note"];
+    const COMMON = ["kicker", "specimen", "briefLabel", "navLabel", "challengeTitle", "challengeLead", "solutionTitle", "solutionLead", "integrationTitle", "integrationLead", "integrationNote", "impactTitle", "impactLead", "measuredTitle", "measuredLead", "tilePerformance", "tileLcp", "tileCls", "tileAudit", "metricCaption", "roiTitle", "roiText", "roi1Title", "roi1", "roi2Title", "roi2", "roi3Title", "roi3", "baselineLabel", "howTitle", "howText", "howLink", "ctaTitle", "ctaText", "back", "metaTitle", "metaDescription"];
+    const missing = [];
+    for (const l of PUBLIC_LOCALES) { const b = readJSON(`messages/${l}.json`).Breakdown ?? {}; for (const slug of SLUGS) for (const k of KEYS) if (!b[slug]?.[k]) missing.push(`${l}:${slug}.${k}`); for (const k of COMMON) if (!b[k]) missing.push(`${l}:${k}`); }
+    missing.length ? add(G11, "FAIL", `inceleme metni eksik (${missing.length}): ${missing.slice(0, 4).join(", ")}`) : add(G11, "PASS", `dört sektör × ${KEYS.length} metin ve ${COMMON.length} ortak metin, yedi dilde de var`);
+
+    // 2) Dört başlık sırasıyla: Challenge, Architectural solution, Integration & security, Measured impact & ROI (ve numune etiketi).
+    const en = readJSON("messages/en.json").Breakdown;
+    [en.challengeTitle, en.solutionTitle, en.integrationTitle, en.impactTitle].join("|") === "Challenge|Architectural solution|Integration & security|Measured impact & ROI" && /not client work/.test(en.specimen) ? add(G11, "PASS", "dört başlık istenen adlarla ve sırayla; her inceleme 'client work değildir' diyor") : add(G11, "FAIL", "dört başlık ya da numune ibaresi istenenle uyuşmuyor");
+    const view = code("components/sections/BreakdownView.tsx"), loader = code("lib/server/breakdown.ts");
+    /id="bd-impact"/.test(view) && /\bparts\.map/.test(view) && /impact\.tiles\.map/.test(view) ? add(G11, "PASS", "inceleme görünümü üç bölümü ve etki panelini sırayla çiziyor (sayfa ve diyalog aynı bileşeni kullanır)") : add(G11, "FAIL", "BreakdownView dört bölümü sırayla çizmiyor");
+
+    // 3) İnceleme sayılarının tek kaynağı lib/metrics.ts; sektör metinlerinde ve simülatör metinlerinde rakam ya da yüzde yok.
+    /METRICS\.lighthousePerformance\b/.test(loader) && /METRICS\.lcpDesktop\b/.test(loader) && /METRICS\.cls\b/.test(loader) && !/\b(?:97|96|570|0\.57)\b/.test(loader) ? add(G11, "PASS", "etki panelinin sayıları lib/metrics.ts'ten okunur; yükleyicide sabit rakam yok") : add(G11, "FAIL", "lib/server/breakdown.ts sayıları METRICS'ten okumuyor ya da sabit rakam taşıyor");
+    const digits = [];
+    for (const l of PUBLIC_LOCALES) { const m = readJSON(`messages/${l}.json`); for (const [k, v] of Object.entries(flatten({ Breakdown: Object.fromEntries(SLUGS.map((s) => [s, m.Breakdown[s]])) }))) if (typeof v === "string" && /\d/.test(v.replace(/AES-256(?:-GCM)?|HMAC-SHA256/g, ""))) digits.push(`${l}:${k}`); }
+    digits.length ? add(G11, "FAIL", `sektör incelemesi metninde rakam var (ölçülmemiş sayı yayınlanmaz): ${digits.slice(0, 4).join(", ")}`) : add(G11, "PASS", "sektör inceleme metinlerinde rakam ya da yüzde yok (yalnızca AES-256 ve HMAC-SHA256 adları); ROI sonucu değil, ölçüm yöntemi anlatılır");
+    const FORBIDDEN = /zero[- ]latency|sıfır gecikme|photo-?real|fotogerçek|SOC ?2|ISO ?27001|certified partner|sertifikalı ortak|\bSLA\s*(?:of|:)\s*\d|\buptime\s*(?:of|:)\s*\d|\d\s?%\s*(?:uptime|ROI|faster|daha hızlı)/i;
+    const claims = [];
+    for (const l of PUBLIC_LOCALES) for (const [k, v] of Object.entries(flatten(readJSON(`messages/${l}.json`)))) if (/^(Breakdown|Sim|Studio)\./.test(k) && typeof v === "string" && FORBIDDEN.test(v)) claims.push(`${l}:${k}`);
+    claims.length ? add(G11, "FAIL", `yasak iddia (zero latency, fotogerçekçi, SLA, sertifika, çalışma süresi, yüzde ROI): ${claims.slice(0, 4).join(", ")}`) : add(G11, "PASS", "inceleme, simülatör ve Stüdyo metinlerinde 'zero latency', 'photorealistic', SLA, sertifika, çalışma süresi ya da yüzde ROI iddiası yok");
+
+    // 4) Sağlık ve hukuk incelemeleri meslek reklam kurallarını söyler (müşteri adına uygulama sorumluluğu müşteridir).
+    const clinic = en.clinic.note + en.clinic.c3;
+    /no prices, discounts/.test(clinic) && /responsibility/.test(en.clinic.note) && /every word is the clinic/.test(en.clinic.note) && /responsibility/.test(en.law.note) && /no client is solicited/.test(en.law.note) ? add(G11, "PASS", "klinik ve hukuk incelemeleri meslek reklam kurallarını anıyor, uygulama sorumluluğunu müşteriye bırakıyor; fiyat, indirim, galeri ve hasta yorumu yok") : add(G11, "FAIL", "klinik ya da hukuk incelemesi reklam kuralı notunu taşımıyor");
+    /Salesforce|SAP|Oracle/.test(en.integrationNote) && /no partnership or certification is implied/.test(en.integrationNote) && PUBLIC_LOCALES.every((l) => (readJSON(`messages/${l}.json`).Breakdown.integrationNote ?? "").length > 40) ? add(G11, "PASS", "Salesforce, SAP ve Oracle örnek hedef olarak anılıyor, 'ortaklık ya da sertifika ima edilmez' notu yedi dilde de var") : add(G11, "FAIL", "entegrasyon notu (ortaklık ima edilmez) eksik");
+
+    // 5) API: iki parametre de beyaz listeli, kapalı dil 404, çıktı yankılanmaz; sayfa: bilinmeyen sektör 404; site haritası incelemeleri listeler.
+    const api = code("app/api/breakdown/route.ts"), page = code("app/[locale]/showcase/[slug]/page.tsx"), sitemap = code("app/sitemap.ts");
+    /isBreakdownSlug\(slug\)/.test(api) && /isOpenLocale\(locale\)/.test(api) && /status:\s*404/.test(api) && /no-store/.test(api) && /default-src 'none'/.test(api) ? add(G11, "PASS", "/api/breakdown iki parametreyi de beyaz listeden geçirir (sektör ve yayındaki dil), 404 verir, önbelleğe girmez ve kilitli CSP gönderir") : add(G11, "FAIL", "/api/breakdown beyaz liste, 404, no-store ya da kilitli CSP eksik");
+    /isOpenLocale\(locale\)\s*\|\|\s*!isBreakdownSlug\(slug\)|!isOpenLocale\(locale\)\s*\|\|\s*!isBreakdownSlug\(slug\)/.test(page) && /notFound\(\)/.test(page) && /hrefLang|languages/.test(page) && /canonical/.test(page) ? add(G11, "PASS", "inceleme sayfası: yayında olmayan dil ve bilinmeyen sektör 404, canonical ve hreflang var") : add(G11, "FAIL", "inceleme sayfası geçersiz dil/sektör için 404 vermiyor ya da canonical/hreflang yok");
+    /BREAKDOWN_SLUGS/.test(sitemap) && /OPEN_LOCALES/.test(sitemap) ? add(G11, "PASS", "site haritası her yayındaki dil için dört incelemeyi de listeliyor (yalnızca yayındaki diller)") : add(G11, "FAIL", "site haritası incelemeleri listelemiyor");
+
+    // 6) Diyalog: yerel <dialog>, Esc/Geri/arka plan, odak geri döner, Lenis durur; tıklama yakalama aşamasında alınır; kart bağlantısı gerçek <a href>.
+    const dialog = code("components/sections/BreakdownDialog.tsx"), host = code("components/sections/BreakdownHost.tsx"), smooth = code("lib/enhance/smooth-scroll.ts"), showcase = code("components/sections/Showcase.tsx");
+    /showModal\(\)/.test(dialog) && /popstate/.test(dialog) && /history\.pushState/.test(dialog) && /history\.back\(\)/.test(dialog) && /focus\(/.test(dialog) && /scroll:lock/.test(dialog) && /data-lenis-prevent/.test(dialog) ? add(G11, "PASS", "diyalog yerel <dialog>/showModal; Geri düğmesi ve Esc kapatır, adres inceleme sayfasına döner ve geri gelir, odak açana döner, Lenis durur") : add(G11, "FAIL", "BreakdownDialog showModal/popstate/pushState/focus/scroll:lock/data-lenis-prevent eksik");
+    /addEventListener\('click',\s*open,\s*true\)/.test(host) && /stopPropagation\(\)/.test(host) && /metaKey/.test(host) && /import\('\.\/BreakdownDialog'\)/.test(host) ? add(G11, "PASS", "tıklama yakalama aşamasında alınır (Next Link'ten önce), değiştirici tuşlar bağlantının kendi davranışını korur, diyalog kodu ayrı parça (ilk yüke girmez)") : add(G11, "FAIL", "BreakdownHost tıklamayı yakalama aşamasında almıyor ya da diyaloğu dinamik import etmiyor");
+    /data-breakdown-link/.test(showcase) && /card-hit/.test(showcase) && /aria-hidden="true"/.test(showcase) && /tabIndex=\{-1\}/.test(showcase) && /breakdownFor/.test(showcase) ? add(G11, "PASS", "her kart gerçek bir bağlantı (JS'siz de açılır) ve tüm kartı kaplayan, ekran okuyucudan gizli bir isabet alanı taşıyor; görünür düğme erişilebilir bağlantı") : add(G11, "FAIL", "vitrin kartında inceleme bağlantısı ya da isabet alanı eksik");
+    /scroll:lock/.test(smooth) ? add(G11, "PASS", "Lenis diyalog açıkken durur (scroll:lock)") : add(G11, "FAIL", "smooth-scroll.ts scroll:lock olayını dinlemiyor");
+
+    // 7) Simülatörler: gerçek Web Crypto (HMAC-SHA256, AES-256-GCM), üçüncü taraf yok, ilk yükte değil (dinamik import), azaltılmış hareket.
+    const sec = code("components/sim/SecurityFlowSim.tsx"), queue = code("components/sim/FailSafeSim.tsx"), lazy = code("components/sim/LazySims.tsx");
+    // ADR 0021: akış kendi kriptosunu yazmaz, testle doğrulanan lib/arch/envelope'u çağırır; gerçek Web Crypto orada çalışır.
+    const env = code("lib/arch/envelope.ts");
+    /crypto\.subtle\.sign\('HMAC'/.test(env) && /name: 'AES-GCM', length: 256/.test(env) && /crypto\.subtle\.decrypt/.test(env) && /timingSafeEqual/.test(env) && /from '@\/lib\/arch\/envelope'/.test(sec) && /signEvent|verifyEnvelope/.test(sec) && /seal\(|open\(/.test(sec) && /prefers-reduced-motion/.test(sec) ? add(G11, "PASS", "güvenlik akışı gerçek Web Crypto çalıştırır (lib/arch/envelope üzerinden, testle doğrulanan aynı kod): HMAC-SHA256 imza, sabit zamanlı karşılaştırma, AES-256-GCM mühürleme ve açma; azaltılmış harekette gecikmesiz") : add(G11, "FAIL", "SecurityFlowSim gerçek HMAC-SHA256/AES-256-GCM çalıştırmıyor");
+    const simImports = [...walk(abs("components/sim"), [".ts", ".tsx"])].flatMap((f) => [...stripComments(fs.readFileSync(f, "utf8")).matchAll(/from\s+'([^'.@][^']*)'/g)].map((m) => `${path.basename(f)}:${m[1]}`)).filter((s) => !/:(react|lucide-react)$/.test(s));
+    simImports.length ? add(G11, "FAIL", `simülatör üçüncü taraf paket içe aktarıyor: ${simImports.join(", ")}`) : add(G11, "PASS", "simülatörlerde react dışında paket yok (Web Crypto tarayıcının kendisi)");
+    /import\('\.\/FailSafeSim'\)/.test(lazy) && /import\('\.\/SecurityFlowSim'\)/.test(lazy) && /IntersectionObserver/.test(lazy) ? add(G11, "PASS", "simülatörler yalnızca kartları ekrana yaklaşınca dinamik import ile iner (IntersectionObserver)") : add(G11, "FAIL", "LazySims simülatörleri dinamik import etmiyor");
+    const staticImport = walk(abs("."), [".ts", ".tsx"]).map(rel).filter((f) => /^(app|components|lib)\//.test(f) && !/^components\/sim\/(LazySims|FailSafeSim|SecurityFlowSim)\.tsx$/.test(f) && /from\s+'(?:@\/components\/sim\/|\.\/)(?:FailSafeSim|SecurityFlowSim)'/.test(stripComments(read(f))));
+    staticImport.length ? add(G11, "FAIL", `canlı simülatör statik içe aktarılıyor (ilk yüke girer): ${staticImport.join(", ")}`) : add(G11, "PASS", "canlı simülatörler hiçbir yerde statik içe aktarılmıyor");
+    /QueueView/.test(queue) && /lost\s*=\s*snap\.accepted - snap\.delivered - waiting - inFlight/.test(queue) && /duplicates/.test(queue) ? add(G11, "PASS", "kuyruk simülatörü 'kayıp'ı modelden hesaplar (kabul edilen eksi hesaba katılanlar) ve mükerrer teslimi (idempotency) sayar") : add(G11, "FAIL", "FailSafeSim kayıp ve mükerrer sayacı eksik");
+    const sim = readJSON("messages/en.json").Sim;
+    /model of the pattern, not a measurement/.test(sim.queue.caption) && /throwaway keys/.test(sim.security.caption) && /no partnership/.test(sim.security.caption) && /does not describe, measure or certify/.test(sim.security.caption) ? add(G11, "PASS", "iki simülatör de kendini 'modeldir, ölçüm değildir' diye etiketliyor; ortaklık ya da sertifika ima edilmez") : add(G11, "FAIL", "simülatör açıklaması model/ölçüm değil uyarısını taşımıyor");
+    const sigCode = code("lib/server/deliver.ts");
+    /sha256=/.test(sigCode) && /sha256=/.test(sec) && /Idempotency|idempotency/i.test(sigCode) ? add(G11, "PASS", "simülatördeki imza biçimi sitenin kendi teslim imzasıyla aynı (sha256=<hex>, idempotency anahtarı): 'aynı desen' cümlesi doğru") : add(G11, "FAIL", "simülatörün imza biçimi lib/server/deliver.ts ile uyuşmuyor ('aynı desen' cümlesi yanlış olur)");
+
+    // 8) Stüdyo: sayfadaki "nasıl yaptık" toleransları koddaki sabitlerle tutuyor (sabit değişirse metin eskir).
+    const engine = `${read("lib/cinema/engine.ts")}
+${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = read("app/globals.css"), capable = read("lib/cinema/capable.ts");
+    const checks = [
+      [/devicePixelRatio\s*\|\|\s*1,\s*1\.25\)/.test(engine), "piksel oranı üst sınırı 1,25"],
+      [/let sceneScale\s*=\s*0\.5/.test(engine) && /MIN_SCENE_SCALE\s*=\s*0\.3/.test(engine), "sahne geçişi %50'den %30'a"],
+      [/frameCount % 90 === 0/.test(engine) && /avg > 0\.024/.test(engine), "90 karelik ortalama 24 ms'yi aşarsa geri çekilme"],
+      [/powerPreference:\s*'high-performance'/.test(engine), "yüksek performanslı GPU isteği"],
+      [/LENIS\s*=\s*\{\s*duration:\s*1\.2\s*\}/.test(tokens) && /EASE_LUX\s*=\s*\[0\.16,\s*1,\s*0\.3,\s*1\]/.test(tokens), "Lenis süresi 1,2 sn ve cubic-bezier(0.16, 1, 0.3, 1)"],
+      [/scroll-padding-top:\s*88px/.test(css), "başlık payı 88 px"],
+      [/\(hover: hover\) and \(pointer: fine\)/.test(read("lib/enhance/smooth-scroll.ts")) && /prefers-reduced-motion/.test(read("lib/enhance/smooth-scroll.ts")), "Lenis yalnızca ince işaretçide ve azaltılmış hareket yokken"],
+      [/saveData/.test(capable) && /innerWidth >= 900/.test(capable), "sinema katmanı kapısı"],
+    ];
+    const enS = readJSON("messages/en.json").Studio, tolText = [enS.n1Tolerances, enS.n1s4, enS.n2Tolerances, enS.n3Tolerances, enS.n3s2].join(" ");
+    const said = ["1.25", "50 %", "30 %", "24 ms", "90", "16.7 ms", "1.2 s", "0.16, 1, 0.3, 1", "88 px"].filter((t) => !tolText.includes(t));
+    const stale = checks.filter(([ok]) => !ok).map(([, name]) => name);
+    stale.length || said.length ? add(G11, "FAIL", `Stüdyo toleransları kodla tutmuyor${stale.length ? ` (kodda değişmiş: ${stale.join("; ")})` : ""}${said.length ? ` (metinde yok: ${said.join(", ")})` : ""}`) : add(G11, "PASS", "Stüdyo'daki toleranslar koddaki sabitlerle tutuyor: piksel oranı 1,25, sahne 0,5→0,3, 24 ms/90 kare, Lenis 1,2 sn ve eğrisi, 88 px, ince işaretçi");
+    /METRICS\.frameMedian/.test(code("components/sections/Studio.tsx")) && /METRICS\.frameP99/.test(code("components/sections/Studio.tsx")) ? add(G11, "PASS", "Stüdyo'daki tek ölçüm (kare süresi) lib/metrics.ts'ten okunur, tarihi ve profiliyle") : add(G11, "FAIL", "Stüdyo kare süresini lib/metrics.ts'ten okumuyor");
+    const studio = Object.entries(flatten(readJSON("messages/en.json").Studio)).map(([, v]) => v).join(" ");
+    /Zero defects, as a method/.test(enS.p1Title) && /never a promise/.test(enS.p1Text) && !/guarantee|%\s*100|100\s*%|flawless|perfect/i.test(studio) && /mutual NDA can be signed/.test(enS.p2Text) ? add(G11, "PASS", "Stüdyo 'sıfır hata'yı yöntem olarak anlatıyor, söz vermiyor; NDA 'imzalanabilir' diyor; garanti/%100/kusursuz yok") : add(G11, "FAIL", "Stüdyo metni sıfır hatayı garanti gibi sunuyor ya da NDA ifadesi yok");
+
+    // 9) Bayraklar: SVG (Windows'ta bayrak emojisi çizilmez), emoji yok, her dilin bir bayrağı var, kapı ve seçici kullanır; palette kalır.
+    const regional = /[\u{1F1E6}-\u{1F1FF}]/u;
+    const emoji = [...walk(abs("app"), [".ts", ".tsx", ".css"]), ...walk(abs("components"), [".tsx"]), ...walk(abs("lib"), [".ts", ".tsx"]), ...walk(abs("messages"), [".json"]), ...walk(abs("i18n"), [".ts"])].filter((f) => regional.test(fs.readFileSync(f, "utf8"))).map(rel);
+    emoji.length ? add(G11, "FAIL", `bayrak emojisi var (Windows'ta iki harf olarak görünür; SVG kullanın): ${emoji.join(", ")}`) : add(G11, "PASS", "bayrak emojisi yok: bayraklar SVG resimli CSS arka planı (Windows'ta da aynı görünür)");
+    const routing = read("i18n/routing.ts"), flagSrc = code("components/ui/Flag.tsx"), flagCss = read("app/flags.css");
+    const flags = [...routing.matchAll(/flag:\s*'(\w+)'/g)].map((m) => m[1]);
+    flags.length === 8 && ["us", "tr", "ae", "de", "fr", "es", "cn", "jp"].every((f) => flags.includes(f)) && ["us", "tr", "ae", "de", "fr", "es", "cn", "jp"].every((f) => flagCss.includes(`.flag[data-flag='${f}']`)) ? add(G11, "PASS", "her dilin bir bayrağı var (en us, tr tr, ar ae, de de, fr fr, es es, zh cn) ve hepsi app/flags.css'te çizili") : add(G11, "FAIL", "LOCALE_LABELS bayrakları ya da app/flags.css çizimleri eksik");
+    /Flag/.test(code("components/layout/LanguageSwitcher.tsx")) && /Flag/.test(code("components/gate/EntryGate.tsx")) && /Flag/.test(code("components/layout/Footer.tsx")) ? add(G11, "PASS", "dil seçici, giriş kapısı (pazar kartları ve dil çipleri) ve footer bayrakları kullanıyor") : add(G11, "FAIL", "bayraklar seçicide, kapıda ya da footer'da kullanılmıyor");
+    /#(?:fff(?:fff)?|000(?:000)?)\b|%23(?:fff(?:fff)?|000(?:000)?)\b|\b(?:white|black)\b/i.test(flagCss + code("scripts/build-flags.mjs")) ? add(G11, "FAIL", "bayraklar saf siyah ya da beyaz taşıyor (beyaz = platin, siyah = grafit)") : add(G11, "PASS", "bayraklar paletin içinde: beyaz yerine platin, siyah yerine grafit");
+    // Bayrak bir CSS arka planıdır (ADR 0021 §3): bileşen tek, boş bir öğe çizer (satır içi SVG = bayrak başına 3-7 düğüm ve her yazı tipi değişiminde yeniden stil), üretici ile CSS aynıdır.
+    /<svg|<path|<rect|<circle|<polygon/.test(flagSrc) || !/data-flag=\{code\}/.test(flagSrc) ? add(G11, "FAIL", "Flag.tsx tek bir boş öğe çizmeli (data-flag); satır içi SVG DOM'u şişirir") : add(G11, "PASS", "Flag.tsx tek bir boş öğe çizer, resim app/flags.css'te (satır içi SVG yok)");
+    const flagsCheck = spawnSync(process.execPath, ["scripts/build-flags.mjs", "--check"], { cwd: ROOT, encoding: "utf8" });
+    flagsCheck.status === 0 ? add(G11, "PASS", "app/flags.css üreticisiyle (scripts/build-flags.mjs) aynı") : add(G11, "FAIL", "app/flags.css üreticisinden sapmış: npm run flags:build", (flagsCheck.stderr || flagsCheck.stdout || "").trim());
+
+    // 10) Sahne videoları: dört sektör sahnesi 1920 × 1080 (Remotion --scale=1.5), posterler tembel <img>; şampanya dışında yeni renk yok.
+    const webp = (f) => { const b = fs.readFileSync(abs(f)); const t = b.toString("ascii", 12, 16); return t === "VP8 " ? [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff] : t === "VP8L" ? [1 + (((b[22] & 0x3f) << 8) | b[21]), 1 + (((b[24] & 0x0f) << 10) | (b[23] << 2) | ((b[22] & 0xc0) >> 6))] : t === "VP8X" ? [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)] : [0, 0]; };
+    const mp4 = (f) => { const b = fs.readFileSync(abs(f)); const at = b.indexOf("tkhd"); if (at < 0) return [0, 0]; const v = b[at + 4]; const o = at + (v === 1 ? 92 : 80); return [b.readUInt32BE(o) / 65536, b.readUInt32BE(o + 4) / 65536]; };
+    const wrong = [];
+    for (const name of ["estate", "clinic", "law", "logistics", "monolith"]) {
+      const want = name === "monolith" ? [1280, 720] : [1920, 1080];
+      for (const [f, size] of [[`public/media/clips/${name}.webp`, webp(`public/media/clips/${name}.webp`)], [`public/media/clips/${name}.mp4`, mp4(`public/media/clips/${name}.mp4`)]]) if (size[0] !== want[0] || size[1] !== want[1]) wrong.push(`${f} ${size.join("x")} (beklenen ${want.join("x")})`);
+    }
+    wrong.length ? add(G11, "FAIL", `klip ya da poster çözünürlüğü tutmuyor: ${wrong.slice(0, 4).join("; ")}`) : add(G11, "PASS", "dört sektör klibi ve posteri 1920×1080 (MP4 ve WebP başlıklarından okundu), mimari monolit 1280×720");
+    /SCALE\s*=\s*\{[^}]*estate:\s*1\.5[^}]*clinic:\s*1\.5[^}]*law:\s*1\.5[^}]*logistics:\s*1\.5/.test(read("scripts/render-film.mjs")) ? add(G11, "PASS", "render betiği dört sektör sahnesini --scale=1.5 ile işliyor (sahne koordinatları değişmeden)") : add(G11, "FAIL", "scripts/render-film.mjs sektör sahneleri için ölçek 1,5 taşımıyor");
+    const sv = code("components/media/SceneVideo.tsx");
+    /loading="lazy"/.test(sv) && !/\bposter=/.test(sv) ? add(G11, "PASS", "klip görüntüsü tembel <img> (video poster'ı sayfa yüklenirken indirilirdi); video preload=none") : add(G11, "FAIL", "SceneVideo hâlâ poster= kullanıyor ya da tembel <img> yok");
+  }
+}
+
+/* ───────── 12) Üretim performansı ve kurumsal kanıt (docs/adr/0021) ───────── */
+const G12 = "12. Üretim performansı ve kurumsal kanıt";
+{
+  const need = [
+    "docs/adr/0021-production-performance-and-enterprise-proof.md", "lib/cv.ts", "lib/enhance/content-visibility.ts", "components/sections/AnchorPrime.tsx",
+    "components/sim/Reserve.tsx", "components/sim/IntegrationView.tsx", "components/sim/IntegrationSim.tsx",
+    "lib/arch/types.ts", "lib/arch/event.ts", "lib/arch/envelope.ts", "lib/arch/queue.ts", "lib/arch/mappers.ts", "lib/arch/simulate.ts", "lib/arch/scenarios.ts", "lib/arch/index.ts",
+    "tests/arch/event.test.ts", "tests/arch/envelope.test.ts", "tests/arch/queue.test.ts", "tests/arch/mappers.test.ts", "tests/arch/docs.test.ts",
+    "docs/architecture/README.md", "docs/architecture/fail-safe-queue.md", "docs/architecture/security-envelope.md", "docs/architecture/integrations.md", "docs/architecture/canonical-event.schema.json",
+    "scripts/arch-verify.mjs", "scripts/browser-flow.mjs", "scripts/perf-gate.mjs", "scripts/perf-budget.json",
+  ];
+  const lost = need.filter((f) => !exists(f));
+  if (lost.length) add(G12, "FAIL", `ADR 0021 dosyası yok: ${lost.join(", ")}`);
+  else {
+    const code = (f) => stripComments(read(f));
+    const css = read("app/globals.css");
+
+    // 1) content-visibility: altı blok yakına gelene kadar atlanır; hero ve film atlanmaz; ölçülmüş yer tutucu boyut hatırlanır
+    const cvRule = (css.match(/\.cv\s*\{[^}]*\}/) ?? [""])[0];
+    /content-visibility:\s*auto/.test(cvRule) && /contain-intrinsic-block-size:\s*auto\b/.test(cvRule) && /\.cv\[data-cv-prime\]/.test(css) && /:has\(:target\)/.test(css)
+      ? add(G12, "PASS", "film altındaki bloklar yakına gelene kadar atlanır: content-visibility: auto, hatırlanan boyut (contain-intrinsic-block-size: auto), çapa ve derin bağlantı için çizim kilidi")
+      : add(G12, "FAIL", ".cv kuralı content-visibility: auto, contain-intrinsic-block-size: auto, .cv[data-cv-prime] ya da :has(:target) eksik");
+    const owners = [["components/sections/Architecture.tsx", "architecture"], ["components/sections/Showcase.tsx", "showcase"], ["components/sections/Studio.tsx", "studio"], ["components/sections/BriefingSection.tsx", "briefing"], ["components/sections/Closing.tsx", "closing"], ["components/layout/Footer.tsx", "footer"]];
+    const missing = owners.filter(([f, name]) => !new RegExp(`className="[^"]*\\bcv cv-${name}\\b`).test(read(f))).map(([, name]) => name);
+    missing.length === 0 && !/className="[^"]*\bcv\b/.test(read("components/sections/Hero.tsx")) && !/className="[^"]*\bcv\b/.test(read("components/sections/Film.tsx"))
+      ? add(G12, "PASS", "altı blok (Architecture, Showcase, Studio, Briefing, Closing, footer) cv sınıfını taşır; hero ve film (betikle ölçülen yapışkan sahneler) taşımaz")
+      : add(G12, "FAIL", `cv sınıfı eksik: ${missing.join(", ") || "-"}, ya da hero/film cv taşıyor`);
+    const users = ["lib/enhance/smooth-scroll.ts", "components/sections/BreakdownDialog.tsx", "components/gate/EntryGate.tsx", "lib/enhance/content-visibility.ts", "components/sections/AnchorPrime.tsx"].filter((f) => !/holdLayoutBefore/.test(code(f)));
+    users.length === 0 ? add(G12, "PASS", "her kaydırma yolu (Lenis, yerel çapa, diyalog bağlantısı, kapının hash kaydırması, yumuşak gezinti) hedefin üstündeki bölümleri önce gerçek hale getirir (lib/cv.ts)") : add(G12, "FAIL", `holdLayoutBefore kullanmayan kaydırma yolu: ${users.join(", ")}`);
+    // Suspense bölümleri akıtır ve gizli bloğa koyar: JS'siz ve tarayıcı olmayan okuyucu için içerik görünmez olur (ADR 0021 §7)
+    !/Suspense/.test(code("app/[locale]/page.tsx")) ? add(G12, "PASS", "ana sayfa bölümleri Suspense ile sarılmaz: sayfa ilk yanıtta eksiksizdir (Suspense bölümleri gizli bloğa akıtıyordu)") : add(G12, "FAIL", "ana sayfada Suspense var: bölümler script ile açılan gizli bloklara akar");
+
+    // 2) ilk ekran: kapı başlığı ve lead kayar (opaklık yok), eklentiler dört görevde başlar, halkalar gözlemciyle kurulur
+    const gate = read("components/gate/EntryGate.tsx");
+    /className="gate-title gate-slide"/.test(gate) && /className="lead gate-slide"/.test(gate) && !/@keyframes gate-slide\s*\{[^}]*opacity/.test(css)
+      ? add(G12, "PASS", "kapı başlığı ve lead ilk karede görünür (gate-slide yalnızca kayar, opaklık ya da gecikme yok): ölçülen LCP ilk karedir")
+      : add(G12, "FAIL", "kapı başlığı/lead hâlâ solma ile geliyor ya da gate-slide opaklık içeriyor");
+    const idx = code("lib/enhance/index.ts");
+    /GROUPS/.test(idx) && /yieldToMain/.test(idx) && /scheduler\??\.yield|scheduler/.test(idx) && /initContentVisibility/.test(idx)
+      ? add(G12, "PASS", "eklentiler tek görevde değil dört yield'li görevde başlar (TBT bir görevi 50 ms üstünden sayar)")
+      : add(G12, "FAIL", "lib/enhance/index.ts eklentileri yield'li gruplarda başlatmıyor");
+    !/host\.getBoundingClientRect\(\)\.top\s*</.test(code("lib/enhance/rings.ts")) && /armObserver/.test(code("lib/enhance/rings.ts"))
+      ? add(G12, "PASS", "halkalar yüklemede geometri okumaz (atlanan bloğu çizdirirdi): gözlemciyle kurulur")
+      : add(G12, "FAIL", "rings.ts yüklemede hâlâ getBoundingClientRect okuyor");
+    /new IntersectionObserver/.test(code("components/sections/ShowcaseStrip.tsx")) && /previous\.start === start/.test(code("components/sections/ShowcaseStrip.tsx"))
+      ? add(G12, "PASS", "ShowcaseStrip ilk ölçümünü yakına gelince yapar ve aynı değer için yeniden çizmez")
+      : add(G12, "FAIL", "ShowcaseStrip hâlâ yüklemede ölçüyor ya da eşit durumda yeniden çiziyor");
+    /useMemo/.test(code("components/i18n/ClientI18n.tsx")) && /useMemo/.test(code("components/sections/Briefing.tsx")) && /moneyFormats/.test(code("lib/pricing.ts"))
+      ? add(G12, "PASS", "i18n bağlamı ve briefing türetilmiş değerleri useMemo/useCallback ile sabit; para biçimleyicisi dil+para birimi başına bir kez kurulur")
+      : add(G12, "FAIL", "ClientI18n/Briefing memoization ya da pricing biçimleyici önbelleği eksik");
+    /built\s*\?/.test(code("components/layout/LanguageSwitcher.tsx")) && /aria-controls=\{built/.test(read("components/layout/LanguageSwitcher.tsx"))
+      ? add(G12, "PASS", "dil menüsü ilk ilgide kurulur (kapalıyken inert ve görünmez, her dilde yazı tipi araması isterdi); tetikleyici olmayan menüyü göstermez")
+      : add(G12, "FAIL", "dil menüsü hâlâ yüklemede çiziliyor");
+
+    // 3-4) yerleşim kararlılığı: simülatör boyu, RTL
+    const views = ["components/sim/QueueView.tsx", "components/sim/SecurityView.tsx", "components/sim/IntegrationView.tsx"];
+    const noReserve = views.filter((f) => !/Reserve/.test(code(f)) || !/inert=\{!/.test(code(f))).map((f) => f.split("/").pop());
+    noReserve.length === 0 && /aria-hidden="true"/.test(code("components/sim/Reserve.tsx")) && /\.reserve-ghost\s*\{[^}]*visibility:\s*hidden/.test(css)
+      ? add(G12, "PASS", "üç simülatör de boşta ve canlı aynı boyda: değişen her satır en uzun seçeneğinin yerini tutar (görünmez, erişilebilirlik ağacının dışında), kontrol satırı baştan çizilir ve inert")
+      : add(G12, "FAIL", `simülatör boyu korunmuyor: ${noReserve.join(", ") || "Reserve/ghost kuralı"}`);
+    const clip = ["frame", "beam-card", "show-card"].filter((c) => !new RegExp(`\\.${c}\\s*\\{[^}]*overflow:\\s*clip`).test(css));
+    clip.length === 0 ? add(G12, "PASS", "medya çerçevesi ve onu taşıyan kartlar overflow: clip kullanır (kaydırma kapsayıcısı sağdan sola sayfada resim yakınlaştırmasını yerleşim kayması saydırıyordu)") : add(G12, "FAIL", `overflow: clip eksik: ${clip.join(", ")}`);
+    /<Reserve live/.test(read("components/sim/QueueView.tsx")) && /key=\{state\.status\}/.test(read("components/sim/QueueView.tsx")) && /key=\{state\.status\}/.test(read("components/sim/SecurityView.tsx"))
+      ? add(G12, "PASS", "canlı satırlar metin değiştirmez, yeni öğe olur (sağdan sola Chrome büyüyen metni yerleşim kayması sayıyordu); canlı bölge kalıcı sarmalayıcıdadır")
+      : add(G12, "FAIL", "canlı durum satırları key ile yeni öğe olmuyor ya da canlı bölge sarmalayıcıda değil");
+
+    // 5) kurumsal kanıt: bağımlılıksız referans, ortak kod, belgeler, testler
+    const archFiles = fs.readdirSync(abs("lib/arch")).filter((f) => f.endsWith(".ts"));
+    const external = archFiles.flatMap((f) => [...stripComments(read(`lib/arch/${f}`)).matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1]).filter((spec) => !spec.startsWith("./")).map((spec) => `${f}: ${spec}`));
+    external.length === 0 ? add(G12, "PASS", "lib/arch bağımlılıksızdır (yalnızca kendi dosyaları ve Web Crypto): Node'da, sunucuda ve tarayıcıda aynı kod çalışır") : add(G12, "FAIL", `lib/arch dış içe aktarma yapıyor: ${external.join("; ")}`);
+    const sec = code("components/sim/SecurityFlowSim.tsx");
+    /from '@\/lib\/arch\/envelope'/.test(sec) && !/crypto\.subtle\.(sign|importKey|encrypt|decrypt|generateKey)/.test(sec)
+      ? add(G12, "PASS", "güvenlik akışı simülatörü kendi kriptosunu yazmaz: testle doğrulanan lib/arch/envelope çağrılır")
+      : add(G12, "FAIL", "SecurityFlowSim hâlâ kendi Web Crypto çağrılarını yazıyor");
+    /mapEvent|TARGETS/.test(code("components/sim/IntegrationView.tsx")) && /TARGETS/.test(code("lib/arch/mappers.ts"))
+      ? add(G12, "PASS", "entegrasyon modeli eşlemeyi referans eşleyicilerden hesaplar (belge, sayfa ve testler aynı tabloyu okur)")
+      : add(G12, "FAIL", "entegrasyon modeli lib/arch/mappers kullanmıyor");
+    const t = spawnSync(process.execPath, ["scripts/arch-verify.mjs"], { cwd: ROOT, encoding: "utf8" });
+    const passed = Number((/ℹ pass (\d+)/.exec(t.stdout || "") ?? [])[1] ?? 0);
+    const failedTests = Number((/ℹ fail (\d+)/.exec(t.stdout || "") ?? [])[1] ?? 1);
+    t.status === 0 && passed >= 60 && failedTests === 0 ? add(G12, "PASS", `sözleşme testleri geçti (npm run arch:verify): ${passed} test; kuyruk senaryolarında kayıp 0, tekrar etkisi 0, sıra korunur; belgeler kodla aynı`) : add(G12, "FAIL", "npm run arch:verify başarısız", `${(t.stdout || "").split("\n").filter((l) => /✖|fail/.test(l)).slice(0, 6).join("\n")}\n${(t.stderr || "").slice(0, 400)}`);
+    const en = readJSON("messages/en.json");
+    const integ = en.Sim?.integration;
+    integ && /\{count\}/.test(integ.status) && /\{object\}/.test(integ.status) && /\{field\}/.test(integ.status) && /no partnership, certification or conformance is implied/.test(integ.caption) && /not generated from, or validated against, a vendor system/.test(integ.caption)
+      ? add(G12, "PASS", "entegrasyon modeli altyazısı örnek şekil olduğunu, satıcı sisteminden üretilmediğini/doğrulanmadığını ve ortaklık/sertifika/uyum ima etmediğini söyler; durum cümlesi üç yer tutucu taşır")
+      : add(G12, "FAIL", "Sim.integration altyazısı ya da durum cümlesi eksik");
+    const readme = read("docs/architecture/README.md");
+    ["Implemented in this repository", "Reference implementation, verified by tests", "Not claimed"].every((p) => readme.includes(p)) && /No uptime, availability, throughput, latency, delivery rate or SLA is stated/.test(readme)
+      ? add(G12, "PASS", "docs/architecture üç kanıt katmanını ayırır (depoda uygulanan, testle doğrulanan referans, iddia edilmeyen) ve uptime/SLA/uyum/satıcı sertifikası iddia etmez")
+      : add(G12, "FAIL", "docs/architecture/README.md katmanları ya da 'Not claimed' bölümünü taşımıyor");
+
+    // 6) QA: betikler ve bütçe
+    const pkg = readJSON("package.json");
+    ["arch:verify", "arch:examples", "qa:browser", "qa:browser:quick", "perf:gate", "flags:check"].every((n) => pkg.scripts?.[n]) && pkg.devDependencies?.["puppeteer-core"] && !pkg.dependencies?.["puppeteer-core"]
+      ? add(G12, "PASS", "arch:verify, arch:examples, qa:browser, perf:gate, flags:check betikleri var; puppeteer-core yalnızca devDependency (tarayıcı indirmez, üretim paketine girmez)")
+      : add(G12, "FAIL", "package.json betikleri ya da puppeteer-core devDependency eksik");
+    const budget = readJSON("scripts/perf-budget.json");
+    ["mobile", "desktop"].every((p) => ["dom", "layoutMs", "taskMs", "cls", "fcpMs"].every((k) => typeof budget[p]?.[k] === "number"))
+      ? add(G12, "PASS", "perf bütçesi (mobil ve masaüstü) DOM, yerleşim, görev süresi, CLS ve ilk boyama için sayı taşır; npm run perf:gate -- --baseline eski yapıyla A/B kıyaslar")
+      : add(G12, "FAIL", "scripts/perf-budget.json eksik bütçe");
   }
 }
 

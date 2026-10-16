@@ -1,0 +1,17 @@
+{
+  "YY1_SyncflowEventId_SDH": "8d1b6f42-2c9a-4a73-b0e5-1f7d3c9a5e28",
+  "SoldToParty": "0010004711",
+  "PurchaseOrderByCustomer": "PO-2026-004217",
+  "TransactionCurrency": "EUR",
+  "RequestedDeliveryDate": "2026-11-03",
+  "to_Item": [
+    {
+      "Material": "PALLET-EUR-01",
+      "RequestedQuantity": "24",
+      "RequestedQuantityUnit": "EA"
+    }
+  ],
+  "SalesOrderType": "OR",
+  "SalesOrganization": "1010",
+  "DistributionChannel": "10"
+}

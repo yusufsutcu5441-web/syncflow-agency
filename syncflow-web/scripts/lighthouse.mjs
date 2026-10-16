@@ -10,7 +10,7 @@
  *   npm run perf -- new=http://localhost:3100                        one target
  *   npm run perf -- --runs=5 new=http://localhost:3100 old=http://localhost:3101      A/B against another build
  *
- * Options: --runs=<n> mobile runs per page (default 3) · --desktop=<n> desktop runs of "/" (default 2, 0 skips)
+ * Options: --runs=<n> mobile runs per page (default 3) · --desktop=<n> desktop runs of "/" (default 2, 0 skips; --desktop-path=/?cinema=off picks another page)
  *          --paths=/,/tr pages to measure (default "/,/tr") · --out=<dir> raw reports (default perf-out, git-ignored)
  * Lighthouse is fetched with npx at the pinned version (nothing is added to package.json). Mobile = Lighthouse's default
  * profile (Moto G Power emulation, simulated slow 4G, 4x CPU slowdown). Chrome: CHROME_PATH or a common install path.
@@ -28,6 +28,7 @@ const argv = process.argv.slice(2);
 const option = (name, fallback) => argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback;
 const mobileRuns = Number(option('runs', 3));
 const desktopRuns = Number(option('desktop', 2));
+const desktopPath = option('desktop-path', '/');
 const paths = option('paths', '/,/tr').split(',');
 const outDir = option('out', join(root, 'perf-out'));
 const targets = argv.filter((a) => !a.startsWith('--')).map((a) => {
@@ -56,7 +57,7 @@ mkdirSync(outDir, { recursive: true });
 
 const plan = [];
 for (let i = 0; i < mobileRuns; i++) for (const path of paths) for (const target of targets) plan.push({ ...target, path, preset: 'mobile', i });
-for (let i = 0; i < desktopRuns; i++) for (const target of targets) plan.push({ ...target, path: '/', preset: 'desktop', i });
+for (let i = 0; i < desktopRuns; i++) for (const target of targets) plan.push({ ...target, path: desktopPath, preset: 'desktop', i });
 
 const kb = (bytes) => Math.round(bytes / 1024);
 const sumTransfer = (items) => items.reduce((total, item) => total + (item.transferSize ?? 0), 0);
