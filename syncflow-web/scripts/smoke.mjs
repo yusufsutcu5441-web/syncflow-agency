@@ -20,7 +20,8 @@
  *   STRESS=1            also fire 250 page requests from one address to prove the page-level limiter.
  */
 import { createHmac } from 'node:crypto';
-import { createServer } from 'node:http';
+import { createServer, request as httpRequest } from 'node:http';
+import { request as httpsRequest } from 'node:https';
 
 const BASE = (process.argv[2] ?? process.env.BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 const ORIGIN = new URL(BASE).origin;
@@ -309,6 +310,20 @@ section('security.txt (RFC 9116)');
 }
 
 section('Metadata routes and error pages');
+// `www` joins the apex permanently once the domain is added in Vercel and the DNS record exists (next.config.mjs redirects). The Host header is
+// sent by hand, so this holds on any server, whatever its own name.
+{
+  // fetch() ignores a Host header; node:http does not.
+  const www = await new Promise((resolve, reject) => {
+    const target = new URL('/tr/showcase?m=tr&x=1', BASE);
+    const send = target.protocol === 'https:' ? httpsRequest : httpRequest;
+    send(target, { headers: { host: 'www.syncflow.agency' } }, (response) => {
+      response.resume();
+      resolve({ status: response.statusCode, location: response.headers.location });
+    }).on('error', reject).end();
+  });
+  check('www.syncflow.agency answers 308 to the apex with path and query kept', www.status === 308 && www.location === 'https://syncflow.agency/tr/showcase?m=tr&x=1', `${www.status} ${www.location}`);
+}
 const sitemap = await (await get('/sitemap.xml')).text();
 const SLUGS = ['estate', 'clinic', 'law', 'logistics'];
 const breakdownPath = (locale, slug) => (locale === 'en' ? `/showcase/${slug}` : `/${locale}/showcase/${slug}`);

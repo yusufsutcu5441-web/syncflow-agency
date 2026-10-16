@@ -44,6 +44,12 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
+  // `www` joins the apex permanently (308, path and query kept). The domain itself is added in Vercel (Project -> Settings -> Domains) and
+  // the DNS record is `CNAME www cname.vercel-dns.com` at the registrar (docs/vercel-next-site.md section 10): this rule is what happens
+  // once a visitor arrives, so adding the domain in Vercel as a plain domain is enough, no redirect has to be set in the dashboard.
+  async redirects() {
+    return [{ source: '/:path*', has: [{ type: 'host', value: 'www.syncflow.agency' }], destination: 'https://syncflow.agency/:path*', permanent: true }];
+  },
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },

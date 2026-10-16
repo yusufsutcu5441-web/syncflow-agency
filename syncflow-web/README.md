@@ -277,7 +277,7 @@ Karar ve tüm ölçümler: [ADR 0022](docs/adr/0022-single-text-face-and-mobile-
 | Denetim | Sonuç |
 |---|---|
 | Yazı tipi | Instrument Sans, Instrument Serif ve Cabinet Grotesk yerine **tek yüz Inter Display** (OFL, 300–500): ilk görünümdeki yazı tipi baytı **71,3 KB → 26,4 KB (−%63)**; Cabinet'in lisans sorusu kapandı, derleme ağdan yazı tipi çekmez |
-| `npm run check` · `check:fonts` · `arch:verify` · `smoke` | temiz (503 anahtar × 7 dil) · temiz · **65/65** · **180/180** |
+| `npm run check` · `check:fonts` · `arch:verify` · `smoke` | temiz (503 anahtar × 7 dil) · temiz · **65/65** · **181/181** (`www` yönlendirmesi dahil) |
 | `npm run qa:browser --parity` (yeni `type` ve `casestudy` grupları dahil) | **119/119** (makine boşta); tam koşuların ikisinde Arapça masaüstü kaydırma CLS'i 0,083 verdi (yüklü makine), boşta 14 koşunun hepsinde 0,00: aralıklı, garanti edilemez (ADR 0022 §8) |
 | Mobil Lighthouse `/` (sakin makine, n=5, `ef72636` ile araya girerek) | eski **94** → yeni **96**; LCP 3.070 → **2.755 ms**; indirilen 387 → **334 KB**; TBT ≈ 28 ms (iki yapıda eşit) |
 | Mobil Lighthouse `/` (yüklü makine, n=5) | eski 92 → yeni **94**; LCP 3.139 → **2.841 ms**; TBT 91 → 145 ms (yük gürültüsü, ayrıştırılmadı) |

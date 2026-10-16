@@ -96,7 +96,7 @@ Temiz kopyada, hiçbir ortam değişkeni olmadan üretim sunucusu başlatılıp 
 | Başka alt alan adı | Yok (`mail`, `n8n`, `app`, `api`, `admin`, `blog`, `staging`, `dev`, `panel` denendi). |
 
 **`www`'yi açmak (panel gerekir, terminalden yapılamaz):**
-1. Vercel → proje `syncflow-web` → **Settings → Domains → Add** `www.syncflow.agency`; "Redirect to `syncflow.agency`" seçin. Vercel size DNS değerini gösterir.
+1. Vercel → proje `syncflow-web` → **Settings → Domains → Add** `www.syncflow.agency` (düz alan adı olarak; yönlendirme **kodda** hazırdır: `next.config.mjs` `redirects()` `www` isteğini yol ve sorguyla `https://syncflow.agency`'ye 308 ile taşır, `npm run smoke` sınar). Vercel size DNS değerini gösterir.
 2. Spaceship → alan adı → **DNS** → kayıt ekleyin: Tür `CNAME`, Host `www`, Değer `cname.vercel-dns.com` (Vercel başka bir değer gösteriyorsa onu kullanın). Sertifikayı Vercel kendisi alır (birkaç dakika).
 3. Doğrulama: `npm run live` içindeki `www.syncflow.agency` satırı PASS olmalı.
 
