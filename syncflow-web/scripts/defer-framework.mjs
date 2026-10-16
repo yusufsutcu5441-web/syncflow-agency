@@ -23,8 +23,8 @@
  * scripts/sf-adapter.mjs therefore calls this module from the adapter hook, before Next computes those hashes (docs/adr/0023 section 4).
  * Locally the same adapter runs it inside `next build`, so one code path serves both.
  *
- * Layouts: a plain build keeps chunks in `static/chunks/`, Vercel's adapter (supportsImmutableAssets) in `static/immutable/chunks/`; the loader goes
- * next to the framework's own chunks, whichever it is.
+ * Layouts: a plain build keeps chunks in `static/chunks/`, Vercel's adapter (supportsImmutableAssets) in `static/immutable/chunks/`, a directory the
+ * platform tracks by content hash. Both are read; the loader is always written to `static/chunks/`, never into the platform's immutable namespace.
  *
  * Everything is validated before anything is written, so an unexpected layout (a Next upgrade) leaves `.next` untouched and the document keeps its
  * scripts (the caller decides whether that is fatal). Idempotent. DEFER_FRAMEWORK=off skips it. `.next/sf-defer.json` records the original lists.
@@ -33,7 +33,7 @@
  *   node scripts/defer-framework.mjs --check    only verify that .next is transformed (exit 1 if not)
  */
 import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, posix, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -46,7 +46,11 @@ export class LayoutError extends Error {
 }
 
 const CHUNK_DIR = String.raw`static/(?:immutable/)?chunks`;
-const BOOT = new RegExp(String.raw`^${CHUNK_DIR}/sf-boot\.[0-9a-f]{12}\.js$`);
+// The loader always lives in `static/chunks/`, also when the framework's own chunks are under `static/immutable/chunks/`: that directory is the
+// platform's namespace for content-addressed files it tracks by hash (immutable-static-hashes.json), and a file there that it does not know is
+// not ours to add (docs/adr/0023 section 4).
+const LOADER_DIR = 'static/chunks';
+const BOOT = new RegExp(String.raw`^${LOADER_DIR}/sf-boot\.[0-9a-f]{12}\.js$`);
 const CHUNK = new RegExp(String.raw`^${CHUNK_DIR}/[\w.-]+\.js$`);
 // The file is one preamble line (`globalThis.__RSC_MANIFEST = ... || {};`) and then the assignment of this route's manifest.
 const REFERENCE = /(globalThis\.__RSC_MANIFEST\["[^"]+"\]\s*=\s*)(\{[\s\S]*\})(;?\s*)$/;
@@ -191,7 +195,8 @@ export function deferFramework(distDir) {
   // KB more than one page strictly needs, all of it fetched after the first paint, and nobody waits for a second round of requests.
   const source = loaderFor(loaded);
   const name = `sf-boot.${createHash('sha256').update(source).digest('hex').slice(0, 12)}.js`;
-  const loader = `${chunkDir}/${name}`;
+  const loader = `${LOADER_DIR}/${name}`;
+  mkdirSync(join(distDir, ...LOADER_DIR.split('/')), { recursive: true });
   writeFileSync(join(distDir, ...loader.split('/')), source);
   for (const path of pending) {
     const manifest = JSON.parse(readFileSync(path, 'utf8'));
