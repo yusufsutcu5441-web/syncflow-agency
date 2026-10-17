@@ -178,7 +178,8 @@ await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(aw
 const home = await get('/tr');
 const h = (n) => home.headers.get(n);
 say(h('strict-transport-security') ? 'PASS' : 'FAIL', 'Strict-Transport-Security present');
-say(h('content-security-policy-report-only') || h('content-security-policy') ? 'PASS' : 'FAIL', 'a CSP header is present', h('content-security-policy') ? 'enforcing' : 'report-only');
+// docs/adr/0024: the policy is enforced. Report-only (CSP_MODE=report-only set on the platform) still protects nothing: WARN. No header at all: FAIL.
+say(h('content-security-policy') ? 'PASS' : h('content-security-policy-report-only') ? 'WARN' : 'FAIL', 'the CSP is enforced (Content-Security-Policy, not Report-Only)', h('content-security-policy') ? 'enforcing' : h('content-security-policy-report-only') ? 'report-only: blocks nothing (CSP_MODE=report-only?)' : 'no CSP header');
 
 /* ── Briefing route: it must answer, and reject what it must reject ─────────────────────────────── */
 section('Briefing API (must not be 500; a 500 here was the jsdom/ERR_REQUIRE_ESM failure of 09.10.2026)');

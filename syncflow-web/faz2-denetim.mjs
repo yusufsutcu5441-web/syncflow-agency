@@ -307,12 +307,12 @@ const G4 = "4. Güvenlik ve depo hijyeni";
 const adr = walk(abs("docs"), [".md"]).filter((f) => /csp/i.test(f) || /Content-Security-Policy/i.test(fs.readFileSync(f, "utf8")));
 adr.length ? add(G4, "PASS", `CSP kararı belgelenmiş: ${rel(adr[0])}`) : add(G4, "WARN", "CSP ADR yok (docs/adr/): nonce mı hash mi statik mi kararı Faz 2 çıktısıdır");
 nc && /headers\s*\(/.test(read(nc)) ? add(G4, "PASS", "next.config güvenlik başlıkları için headers() kullanıyor") : add(G4, "INFO", "güvenlik başlıkları henüz tanımlı değil (Faz 7)");
-// Faz 2 kararı (docs/adr/0001): CSP Faz 7'ye kadar report-only; CSP_MODE=enforce ile enforce.
+// 17.10.2026 kararı (docs/adr/0024; 0001'in "Faz 7'ye kadar report-only"sinin yerine geçer): CSP varsayılan olarak ENFORCE; CSP_MODE=report-only geri alma anahtarı.
 const cspFile = first(["lib/security/csp.ts", "src/lib/security/csp.ts"]);
 if (cspFile) { const t = read(cspFile);
-  /Content-Security-Policy-Report-Only/.test(t) && /CSP_MODE/.test(t) && /report-uri/.test(t)
-    ? add(G4, "PASS", `${cspFile}: CSP varsayılan olarak report-only, ihlaller report-uri ile toplanıyor (CSP_MODE=enforce ile enforce)`)
-    : add(G4, "FAIL", `${cspFile}: report-only kipi / CSP_MODE / report-uri bulunamadı (docs/adr/0001)`);
+  /process\.env\.CSP_MODE === 'report-only' \? 'report-only' : 'enforce'/.test(t) && /Content-Security-Policy-Report-Only/.test(t) && /report-uri/.test(t)
+    ? add(G4, "PASS", `${cspFile}: CSP varsayılan olarak ENFORCE (Content-Security-Policy), ihlaller report-uri ile toplanıyor; CSP_MODE=report-only geri alma anahtarı (docs/adr/0024)`)
+    : add(G4, "FAIL", `${cspFile}: CSP varsayılan olarak enforce değil ya da CSP_MODE/report-uri bulunamadı (docs/adr/0024)`);
 }
 exists("app/api/csp-report/route.ts") ? add(G4, "PASS", "CSP rapor alıcısı var (app/api/csp-report)") : add(G4, "FAIL", "app/api/csp-report/route.ts yok");
 exists(".gitignore") ? (/fonts|woff/i.test(read(".gitignore")) ? add(G4, "PASS", ".gitignore font dosyalarını dışlıyor") : add(G4, "WARN", ".gitignore'da font dosyaları (fonts/woff2) dışlanmıyor; Satoshi lisansı herkese açık dağıtımı yasaklar")) : add(G4, "WARN", ".gitignore yok");

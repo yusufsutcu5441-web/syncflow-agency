@@ -7,8 +7,8 @@ import { clientIp, rateLimit, rateLimitHeaders, type RateResult } from '@/lib/se
 /**
  * Next.js 16 renamed "middleware" to "proxy". It runs before every matched request and does three jobs:
  *   1. Rate limiting (coarse, per client address). The contact route adds a much stricter limit of its own.
- *   2. A fresh CSP nonce per page request, passed to the renderer through request headers. The policy is delivered
- *      as Content-Security-Policy-Report-Only for now (lib/security/csp.ts, CSP_MODE).
+ *   2. A fresh CSP nonce per page request, passed to the renderer through request headers. The policy is enforced
+ *      (Content-Security-Policy; CSP_MODE=report-only reverts to Report-Only, lib/security/csp.ts).
  *   3. next-intl locale routing (prefix, cookie, Accept-Language detection, hreflang Link header).
  *
  * Runtime: proxy always runs on Node.js in Next 16. Everything imported here uses Web APIs only, so it can also
@@ -61,7 +61,7 @@ export default async function proxy(request: NextRequest) {
   requestHeaders.set('x-nonce', nonce);
   requestHeaders.set(CSP_HEADER.toLowerCase(), csp);
 
-  // Report-only until Faz 7 (docs/adr/0001-csp-report-only.md): CSP_HEADER is the one place the mode is decided.
+  // Enforcing since 17.10.2026 (docs/adr/0024-csp-enforced.md): CSP_HEADER is the one place the mode is decided.
   const response = handleI18nRouting(new NextRequest(request, { headers: requestHeaders }));
   response.headers.set(CSP_HEADER, csp);
   return response;

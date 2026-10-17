@@ -44,13 +44,13 @@ Değişkenler **yalnızca panelden** girilir; o yüzden ilk yayında hiçbiri ta
 | `CONTACT_WEBHOOK_URL` | n8n Webhook düğümünün Production URL'si (https) | **evet** |
 | `CONTACT_WEBHOOK_SECRET` | n8n ile paylaşılan HMAC sırrı (`openssl rand -hex 32`) | **evet** |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST (önerilir; yoksa hız sınırı örnek başına sayılır ve ilk istekte günlüğe uyarı düşer) | **evet** |
-| `CSP_MODE` | **tanımlamayın** (report-only). `enforce` yalnızca F7'de, sahibinin kararıyla | hayır |
+| `CSP_MODE` | **tanımlamayın** (CSP enforce, [ADR 0024](adr/0024-csp-enforced.md)). Acil geri alma: `report-only` (ihlalleri raporlar, engellemez) | hayır |
 | `NEXT_PUBLIC_LINKEDIN_URL`, `NEXT_PUBLIC_INSTAGRAM_URL`, `NEXT_PUBLIC_WHATSAPP_URL` | yalnızca gerçek adresler varsa; yoksa footer'da bağlantı çıkmaz | hayır |
 
 `NEXT_PUBLIC_*` değerleri **derleme anında** içeri gömülür: değiştirince yeni bir push (ya da panelden Redeploy) gerekir. Gizli değerleri sohbete ya da depoya yazmayın. Cloudflare'in her zaman geçen **test** anahtarları `.env.example`'da yazılı; yalnızca hazırlık için kullanın.
 
 ## 5. Ortam değişkeni olmadan ne olur
-Temiz kopyada, hiçbir ortam değişkeni olmadan üretim sunucusu başlatılıp duman testi koşturuldu (`TURNSTILE_MODE=unset`): başlıklar, CSP (report-only + nonce), iki dil, `security.txt` ve briefing girdi savunması geçer; **Turnstile gizli anahtarı yokken briefing formu 503 verir** ve ziyaretçiye hazır e-posta taslağı (`mailto:`) çıkar, yanıtlar kaybolmaz. n8n akışı yoksa `CONTACT_WEBHOOK_*` boş kalır, aynı sonuç ([docs/n8n-briefing.md](n8n-briefing.md)). **Yani yayın günü form çalışmaz, e-posta bağlantısı çalışır.**
+Temiz kopyada, hiçbir ortam değişkeni olmadan üretim sunucusu başlatılıp duman testi koşturuldu (`TURNSTILE_MODE=unset`): başlıklar, CSP (enforce + nonce), iki dil, `security.txt` ve briefing girdi savunması geçer; **Turnstile gizli anahtarı yokken briefing formu 503 verir** ve ziyaretçiye hazır e-posta taslağı (`mailto:`) çıkar, yanıtlar kaybolmaz. n8n akışı yoksa `CONTACT_WEBHOOK_*` boş kalır, aynı sonuç ([docs/n8n-briefing.md](n8n-briefing.md)). **Yani yayın günü form çalışmaz, e-posta bağlantısı çalışır.**
 
 ## 6. Yayından sonra kontroller (adres: `https://syncflow.agency`)
 
@@ -59,7 +59,7 @@ Temiz kopyada, hiçbir ortam değişkeni olmadan üretim sunucusu başlatılıp 
 - [ ] Vercel/GitHub'da `main` için derleme **Ready**. (Panele girilemiyorsa: GitHub'daki commit durumu ya da aşağıdaki canlı ölçümler.)
 - [ ] `/` ve `/tr` **200**, başlık yeni sitenin başlığı (eski site değil); `/de`, `/fr`, `/ar` **404**.
 - [ ] `/.well-known/security.txt` 200; `/sitemap.xml` yalnızca `en` ve `tr` ve `syncflow.agency`; `/robots.txt` 200.
-- [ ] Yanıt başlıklarında `Content-Security-Policy-Report-Only` (nonce'lu) ve `Strict-Transport-Security` var, `Content-Security-Policy` (enforce) **yok**.
+- [ ] Yanıt başlıklarında `Content-Security-Policy` (enforce, nonce'lu) ve `Strict-Transport-Security` var, `Content-Security-Policy-Report-Only` **yok** (17.10.2026'dan beri, ADR 0024; `live-check.mjs` bunu doğrular).
 - [ ] **`/og?locale=en` bir PNG (1200×630) döndürüyor.** Bu rota yazı tipini `assets/og-instrument-sans-600.ttf` dosyasından okur ve Vercel'e dosya izleme (`outputFileTracingIncludes`) ile taşınır; yerelde doğrulandı, Vercel'de ilk yayında ölçülür.
 - [ ] `GET /api/briefing` 405.
 - [ ] Gizli anahtarlar girildiyse: bir deneme briefing'i gönderin, `contact@syncflow.agency` kutusuna düştü, konu `[Briefing][...]`. Aynı `id` ile iki kez gelen istek tek e-posta üretiyor (n8n'de "Remove Duplicates").

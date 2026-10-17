@@ -15,11 +15,11 @@
 export const CSP_REPORT_PATH = '/api/csp-report';
 
 /**
- * How the policy is delivered. Report-only until Faz 7 (docs/adr/0001-csp-report-only.md): the browser evaluates the
- * whole policy and reports every violation to CSP_REPORT_PATH, but blocks nothing. Set CSP_MODE=enforce in the
- * environment to start blocking; no code change is needed. Anything else means report-only.
+ * How the policy is delivered. Enforcing since 17.10.2026 (docs/adr/0024-csp-enforced.md; it was report-only until then, docs/adr/0001): the
+ * browser blocks what the policy does not allow and reports every violation to CSP_REPORT_PATH. Set CSP_MODE=report-only in the environment
+ * to go back to reporting without blocking (the instant revert, no code change); anything else means enforce.
  */
-export const CSP_MODE: 'report-only' | 'enforce' = process.env.CSP_MODE === 'enforce' ? 'enforce' : 'report-only';
+export const CSP_MODE: 'report-only' | 'enforce' = process.env.CSP_MODE === 'report-only' ? 'report-only' : 'enforce';
 export const CSP_HEADER = CSP_MODE === 'enforce' ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only';
 
 export const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';

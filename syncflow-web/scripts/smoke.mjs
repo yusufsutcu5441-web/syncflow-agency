@@ -16,7 +16,7 @@
  *                         unset  no TURNSTILE_SECRET_KEY in production: the form must answer 503.
  *   EXPECT_LOCALES      languages that must be public (default "en,tr,ar,de,fr,es,zh", in every environment: the seven capital centres,
  *                       docs/adr/0018; "en,tr,ar,de,fr,es,zh,ja" only with NEXT_PUBLIC_PREVIEW_LOCALES=1). Every other language must answer 404.
- *   EXPECT_CSP_MODE     "enforce" to expect the enforcing CSP header instead of report-only.
+ *   EXPECT_CSP_MODE     "report-only" to expect the report-only CSP header instead of the enforcing one (default: enforce, docs/adr/0024).
  *   STRESS=1            also fire 250 page requests from one address to prove the page-level limiter.
  */
 import { createHmac } from 'node:crypto';
@@ -102,8 +102,8 @@ if (process.env.MOCK_WEBHOOK_PORT) {
 section('Home page, security headers, CSP nonce');
 const home = await get('/');
 const html = await home.text();
-// docs/adr/0001-csp-report-only.md: the policy is delivered as Content-Security-Policy-Report-Only until Faz 7.
-const expectEnforce = process.env.EXPECT_CSP_MODE === 'enforce';
+// docs/adr/0024-csp-enforced.md: the policy is enforced (Content-Security-Policy); a server started with CSP_MODE=report-only is checked with EXPECT_CSP_MODE=report-only.
+const expectEnforce = process.env.EXPECT_CSP_MODE !== 'report-only';
 const cspHeader = expectEnforce ? 'content-security-policy' : 'content-security-policy-report-only';
 const otherCspHeader = expectEnforce ? 'content-security-policy-report-only' : 'content-security-policy';
 const csp = home.headers.get(cspHeader) ?? '';

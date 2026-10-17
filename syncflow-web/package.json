@@ -2,7 +2,7 @@
   "name": "syncflow-agency",
   "version": "2.0.0",
   "private": true,
-  "description": "SyncFlow Agency: high-ticket B2B website. Next.js App Router, next-intl (en, tr), pre-rendered Remotion film (no player in the browser), nonce-based CSP in report-only mode.",
+  "description": "SyncFlow Agency: high-ticket B2B website. Next.js App Router, next-intl (en, tr), pre-rendered Remotion film (no player in the browser), nonce-based enforced CSP.",
   "engines": {
     "node": ">=20.19.0"
   },
@@ -23,6 +23,7 @@
     "arch:examples": "node scripts/arch-verify.mjs --write-examples",
     "qa:browser": "node scripts/browser-flow.mjs",
     "qa:browser:quick": "node scripts/browser-flow.mjs --quick",
+    "qa:csp": "node scripts/qa-csp.mjs",
     "perf:gate": "node scripts/perf-gate.mjs",
     "check": "npm run check:messages && npm run typecheck && npm run lint",
     "smoke": "node scripts/smoke.mjs",

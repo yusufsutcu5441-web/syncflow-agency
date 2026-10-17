@@ -1,6 +1,6 @@
 # ADR 0001: Content-Security-Policy şimdilik report-only
 
-- **Durum:** Kabul edildi, 07.10.2026 (Faz 2)
+- **Durum:** Kabul edildi, 07.10.2026 (Faz 2). **"Faz 7'ye kadar report-only" kısmının yerine 17.10.2026'da [ADR 0024](0024-csp-enforced.md) geçti: CSP artık varsayılan olarak enforce.** Aşağıdaki gerekçe, nonce mekanizması ve `CSP_MODE` anahtarı geçerlidir; yalnızca varsayılan tersine döndü (`CSP_MODE=report-only` geri alma anahtarıdır).
 - **Karar:** proje sahibi ("CSP kararını report-only olarak bağlayalım"). Uygulama: Faz 2.
 
 ## Bağlam
