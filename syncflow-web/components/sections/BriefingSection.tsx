@@ -2,12 +2,14 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
+import { briefingDeliveryConnected } from '@/lib/server/delivery-status';
 import { CONTACT_EMAIL, SECTION_IDS } from '@/lib/site';
 import { Briefing } from './Briefing';
 
 /**
  * Blueprint section 5, "Strategic Briefing & Lead Funnel": the heading and the interactive panel. data-sticky-guard hides
  * the mobile sticky bar while this section is on screen. The Turnstile site key is public by nature and read here, on the server.
+ * `direct` is true while delivery is not connected (lib/server/delivery-status.ts): the panel then composes an email draft instead of posting.
  */
 export async function BriefingSection() {
   const [t, locale] = await Promise.all([getTranslations('Briefing'), getLocale() as Promise<AppLocale>]);
@@ -27,7 +29,17 @@ export async function BriefingSection() {
             {afterEmail}
           </p>
         </noscript>
-        <Briefing privacyHref={`${withLocale('/privacy', locale)}#privacy-p2`} turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || undefined} />
+        <Briefing
+          privacyHref={`${withLocale('/privacy', locale)}#privacy-p2`}
+          turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || undefined}
+          direct={!briefingDeliveryConnected()}
+        />
+        {/* Three facts a visitor can rely on while deciding to write (the NDA and the 24 hours are the studio's own terms, docs/adr/0025). */}
+        <ul className="trust-chips mx-auto mt-8 max-w-[720px]">
+          <li className="chip">{t('chipPrivacy')}</li>
+          <li className="chip">{t('chipNda')}</li>
+          <li className="chip">{t('chipPerson')}</li>
+        </ul>
       </div>
     </section>
   );

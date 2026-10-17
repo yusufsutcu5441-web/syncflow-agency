@@ -249,7 +249,13 @@
     "mailName": "Name",
     "mailCompany": "Company",
     "mailEmail": "Email",
-    "mailMessage": "About the project"
+    "mailMessage": "About the project",
+    "directNote": "Your answers open as an email draft to our founding team. You read it and send it from your own mailbox; nothing is sent from this page.",
+    "directSubmit": "Open the email draft",
+    "directOpened": "Your email app should now show the draft. If it did not open, use this link:",
+    "chipPrivacy": "No cookies · no analytics",
+    "chipNda": "Mutual NDA before the first session",
+    "chipPerson": "Read by a person, answered within 24 hours"
   },
   "Closing": {
     "manifesto1": "A name that is the business deserves a house built like architecture:",
@@ -388,7 +394,27 @@
     "n3s3": "It stands still while the entry gate is open, and the briefing and every dialog scroll natively. After a jump, focus and the address end up where a native anchor would leave them.",
     "n3s4t": "Loaded late, kept small.",
     "n3s4": "The library is a separate chunk, requested by a dynamic import only after the page has painted and only when both conditions hold. It is not part of the first load.",
-    "n3Tolerances": "Duration 1.2 s · ease cubic-bezier(0.16, 1, 0.3, 1) · header offset 88 px · fine pointer only · off under reduced motion"
+    "n3Tolerances": "Duration 1.2 s · ease cubic-bezier(0.16, 1, 0.3, 1) · header offset 88 px · fine pointer only · off under reduced motion",
+    "manifestoLabel": "Manifesto",
+    "manifestoTitle": "Five lines we build by.",
+    "manifestoLead": "Not slogans: each line is something this page does, and you can check it yourself.",
+    "m1Title": "Draw before you build.",
+    "m1Text": "Data, failure modes and tolerances are written down and agreed before any code. A build that cannot be drawn is not started.",
+    "m2Title": "State tolerances, not adjectives.",
+    "m2Text": "We publish numbers with a date, a profile and a source, and say nothing we cannot measure.",
+    "m3Title": "Fail closed. Never pretend.",
+    "m3Text": "When a part is missing, the system refuses and says so. It never answers “received” for a message nobody got.",
+    "m4Title": "Silence by default.",
+    "m4Text": "No cookies, no analytics, a third party only where a bot check is needed. What a client tells us is read by a person, not by a tracker.",
+    "m5Title": "Test the claim, not the page.",
+    "m5Text": "Security and integration claims are backed by tests we run before every release: signed messages, sealed envelopes, and a reference queue that loses nothing and applies nothing twice in every tested failure.",
+    "factsLabel": "Checkable on this page",
+    "f1Name": "HMAC-SHA256 · AES-256-GCM",
+    "f1Text": "The security simulator on this page signs and seals a message with your browser’s own Web Crypto: the same primitives, and the same tests, as our reference architecture.",
+    "f2Name": "No cookies · no analytics",
+    "f2Text": "Open your network tab: nothing is stored on your device and nothing loads from a third party, except the Cloudflare bot check on the briefing form.",
+    "f3Name": "Enforced Content-Security-Policy",
+    "f3Text": "Every script carries a one-time nonce and the browser blocks the rest. A scan for violations is part of our release checks."
   },
   "Sim": {
     "interactive": "Interactive simulation",

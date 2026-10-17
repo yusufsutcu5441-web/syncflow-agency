@@ -249,7 +249,13 @@
     "mailName": "Nombre",
     "mailCompany": "Empresa",
     "mailEmail": "Correo",
-    "mailMessage": "Sobre el proyecto"
+    "mailMessage": "Sobre el proyecto",
+    "directNote": "Sus respuestas se abren como un borrador de correo para nuestro equipo fundador. Usted lo revisa y lo envía desde su propio buzón; desde esta página no se envía nada.",
+    "directSubmit": "Abrir el borrador de correo",
+    "directOpened": "Su aplicación de correo debería mostrar el borrador. Si no se abrió, use este enlace:",
+    "chipPrivacy": "Sin cookies · sin analítica",
+    "chipNda": "NDA mutuo antes de la primera sesión",
+    "chipPerson": "Lo lee una persona, respuesta en 24 horas"
   },
   "Closing": {
     "manifesto1": "Un nombre que es el negocio merece una casa construida como una obra de arquitectura:",
@@ -388,7 +394,27 @@
     "n3s3": "Se queda quieto mientras la puerta de entrada está abierta, y el briefing y cada diálogo se desplazan de forma nativa. Tras un salto, el foco y la dirección quedan donde los dejaría un ancla nativa.",
     "n3s4t": "Se carga tarde, se mantiene pequeño.",
     "n3s4": "La biblioteca es un fragmento aparte, solicitado con una importación dinámica solo después de que la página se ha pintado y solo cuando se cumplen ambas condiciones. No forma parte de la primera carga.",
-    "n3Tolerances": "Duración 1,2 s · curva cubic-bezier(0.16, 1, 0.3, 1) · margen de cabecera 88 px · solo puntero fino · desactivado con movimiento reducido"
+    "n3Tolerances": "Duración 1,2 s · curva cubic-bezier(0.16, 1, 0.3, 1) · margen de cabecera 88 px · solo puntero fino · desactivado con movimiento reducido",
+    "manifestoLabel": "Manifiesto",
+    "manifestoTitle": "Cinco líneas con las que construimos.",
+    "manifestoLead": "No son eslóganes: cada línea es algo que esta página hace y que puede comprobar usted mismo.",
+    "m1Title": "Dibujar antes de construir.",
+    "m1Text": "Los datos, los modos de fallo y las tolerancias se escriben y se acuerdan antes de cualquier código. Lo que no se puede dibujar no se empieza.",
+    "m2Title": "Declarar tolerancias, no adjetivos.",
+    "m2Text": "Publicamos cifras con fecha, perfil y fuente, y no decimos nada que no podamos medir.",
+    "m3Title": "Fallar cerrado. Nunca fingir.",
+    "m3Text": "Cuando falta una pieza, el sistema se niega y lo dice. Nunca responde «recibido» a un mensaje que nadie recibió.",
+    "m4Title": "Silencio por defecto.",
+    "m4Text": "Sin cookies, sin analítica, un tercero solo donde hace falta una verificación anti-bots. Lo que un cliente nos cuenta lo lee una persona, no un rastreador.",
+    "m5Title": "Probar la afirmación, no la página.",
+    "m5Text": "Las afirmaciones de seguridad e integración se respaldan con pruebas que ejecutamos antes de cada publicación: mensajes firmados, sobres sellados y una cola de referencia que, en cada fallo probado, no pierde nada y no aplica nada dos veces.",
+    "factsLabel": "Comprobable en esta página",
+    "f1Name": "HMAC-SHA256 · AES-256-GCM",
+    "f1Text": "El simulador de seguridad de esta página firma y sella un mensaje con el Web Crypto de su propio navegador: las mismas primitivas y las mismas pruebas que nuestra arquitectura de referencia.",
+    "f2Name": "Sin cookies · sin analítica",
+    "f2Text": "Abra la pestaña de red: no se guarda nada en su dispositivo y no se carga nada de terceros, salvo la verificación anti-bots de Cloudflare en el formulario de briefing.",
+    "f3Name": "Content-Security-Policy aplicada",
+    "f3Text": "Cada script lleva un nonce de un solo uso y el navegador bloquea el resto. Un análisis de infracciones forma parte de nuestros controles de publicación."
   },
   "Sim": {
     "interactive": "Simulación interactiva",

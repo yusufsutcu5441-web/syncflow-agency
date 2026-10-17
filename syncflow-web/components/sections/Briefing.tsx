@@ -89,7 +89,7 @@ function loadTurnstile(): Promise<TurnstileApi> {
  * Smooth scrolling is off here (the panel carries data-lenis-prevent): the application flow scrolls natively (CLAUDE.md).
  * If delivery fails (no webhook, server error) the visitor is offered a prepared e-mail instead of losing the answers.
  */
-export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: string; turnstileSiteKey?: string }) {
+export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { privacyHref: string; turnstileSiteKey?: string; direct?: boolean }) {
   const { locale, messages } = useClientI18n();
   const t = messages.Briefing;
   const formId = useId();
@@ -104,6 +104,8 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
   const [formError, setFormError] = useState<FormError | null>(null);
   const [pickError, setPickError] = useState(false);
   const [devOnly, setDevOnly] = useState(false);
+  // Direct mode only (delivery not connected): the email draft has been opened from the answers.
+  const [drafted, setDrafted] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [projectType, setProjectType] = useState<ProjectType | ''>('');
   // Only the three bands at or above the minimum exist: there is no "below" option to pick (docs/adr/0016). The question names the minimum.
@@ -147,7 +149,8 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
   useEffect(() => {
     if (step !== TOTAL || status === 'success') return;
     lastStepAt.current = Date.now();
-    if (!turnstileSiteKey) return;
+    // No bot check in direct mode: nothing is posted, the visitor's own mail app sends the message.
+    if (!turnstileSiteKey || direct) return;
     let cancelled = false;
     void loadTurnstile()
       .then((api) => {
@@ -167,7 +170,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
       if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
       widgetId.current = undefined;
     };
-  }, [step, status, turnstileSiteKey]);
+  }, [step, status, turnstileSiteKey, direct]);
 
   const answered = step === 1 ? budget : step === 2 ? projectType : step === 3 ? timeline : 'done';
 
@@ -182,6 +185,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
   const back = () => {
     setPickError(false);
     setFormError(null);
+    setDrafted(false);
     setStep((current) => Math.max(1, current - 1));
   };
 
@@ -213,6 +217,16 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
       setFormError('fix');
       setStatus('error');
       focusFirstInvalid();
+      return;
+    }
+
+    // Delivery is not connected (lib/server/delivery-status.ts, docs/adr/0025): the API would refuse, so do not post. Compose the email draft from the
+    // answers instead and say so; the visitor reads it and sends it from their own mailbox. Nothing is claimed as received.
+    if (direct) {
+      setErrors({});
+      setFormError(null);
+      setDrafted(true);
+      window.location.href = mailto();
       return;
     }
 
@@ -318,12 +332,13 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
   }
 
   return (
-    <form id={formId} onSubmit={onSubmit} noValidate className="panel mx-auto mt-14 max-w-[720px] p-6 md:p-10" data-lenis-prevent="" data-maskframe="" aria-label={t.panelLabel}>
+    <form id={formId} onSubmit={onSubmit} noValidate className="panel mx-auto mt-14 max-w-[720px] p-6 md:p-10" data-lenis-prevent="" data-maskframe="" data-direct={direct ? '' : undefined} aria-label={t.panelLabel}>
       {progress}
 
       <p className="label mt-8" aria-live="polite">
         {fill(t.stepOf, { current: step, total: TOTAL })}
       </p>
+      {direct ? <p className="mt-3 text-sm leading-relaxed text-muted">{t.directNote}</p> : null}
 
       <div key={step} className="step-in mt-4">
         {/* Step 1 is the qualification: the investment, in the currency of the visitor's market, with the minimum named in the question. */}
@@ -496,7 +511,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
               <p className="mt-4 text-xs leading-relaxed text-faint">{t.contact.micro}</p>
             </div>
 
-            {turnstileSiteKey ? <div ref={turnstileBox} className="mt-6 min-h-[65px]" aria-label={t.contact.securityCheck} /> : null}
+            {turnstileSiteKey && !direct ? <div ref={turnstileBox} className="mt-6 min-h-[65px]" aria-label={t.contact.securityCheck} /> : null}
           </div>
         ) : null}
       </div>
@@ -504,6 +519,14 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
       <div className="mt-8 min-h-6 text-sm text-ink" role="status" aria-live="polite">
         {pickError ? t.choose : null}
         {formError ? t[FORM_ERROR_MESSAGE[formError]] : null}
+        {drafted ? (
+          <span className="block text-muted" data-drafted="">
+            {t.directOpened}{' '}
+            <a href={mailto()} className="text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
+              {t.fallbackLink}
+            </a>
+          </span>
+        ) : null}
         {formError === 'unavailable' || formError === 'generic' ? (
           <span className="mt-2 block text-muted">
             {t.fallbackIntro}{' '}
@@ -537,7 +560,7 @@ export function Briefing({ privacyHref, turnstileSiteKey }: { privacyHref: strin
               </>
             ) : (
               <>
-                {t.submit}
+                {direct ? t.directSubmit : t.submit}
                 <ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
               </>
             )}

@@ -350,16 +350,16 @@ html[lang='ar'] ::after {
     --cv: 1220px;
   }
   .cv-studio {
-    --cv: 3670px;
+    --cv: 5310px;
   }
   .cv-briefing {
-    --cv: 1200px;
+    --cv: 1400px;
   }
   .cv-closing {
     --cv: 730px;
   }
   .cv-footer {
-    --cv: 1340px;
+    --cv: 1510px;
   }
   @media (min-width: 48rem) {
     .cv-closing {
@@ -375,10 +375,10 @@ html[lang='ar'] ::after {
       --cv: 1260px;
     }
     .cv-studio {
-      --cv: 2820px;
+      --cv: 4190px;
     }
     .cv-briefing {
-      --cv: 1100px;
+      --cv: 1240px;
     }
     .cv-closing {
       --cv: 820px;
@@ -395,10 +395,10 @@ html[lang='ar'] ::after {
       --cv: 1590px;
     }
     .cv-studio {
-      --cv: 2350px;
+      --cv: 3260px;
     }
     .cv-briefing {
-      --cv: 1330px;
+      --cv: 1440px;
     }
     .cv-closing {
       --cv: 1020px;
@@ -1314,6 +1314,39 @@ html[lang='ar'] ::after {
       align-items: center;
       min-block-size: 2.75rem;
     }
+  }
+
+  /* ── Checkable facts under the manifesto, and the briefing's trust chips (docs/adr/0025) ──────────────────── */
+  .facts {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 64rem) {
+    .facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .fact {
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    background: var(--color-layer-1);
+  }
+  .fact-name {
+    color: var(--color-ink);
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+  }
+  .trust-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0;
+    list-style: none;
   }
 
   /* ── Masked entrance (docs/adr/0004-motion-and-smooth-scroll.md) ───────────────────────────────────────────

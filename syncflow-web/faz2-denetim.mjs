@@ -690,10 +690,12 @@ const G11 = "11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar";
     const digits = [];
     for (const l of PUBLIC_LOCALES) { const m = readJSON(`messages/${l}.json`); for (const [k, v] of Object.entries(flatten({ Breakdown: Object.fromEntries(SLUGS.map((s) => [s, m.Breakdown[s]])) }))) if (typeof v === "string" && /\d/.test(v.replace(/AES-256(?:-GCM)?|HMAC-SHA256/g, ""))) digits.push(`${l}:${k}`); }
     digits.length ? add(G11, "FAIL", `sektör incelemesi metninde rakam var (ölçülmemiş sayı yayınlanmaz): ${digits.slice(0, 4).join(", ")}`) : add(G11, "PASS", "sektör inceleme metinlerinde rakam ya da yüzde yok (yalnızca AES-256 ve HMAC-SHA256 adları); ROI sonucu değil, ölçüm yöntemi anlatılır");
-    const FORBIDDEN = /zero[- ]latency|sıfır gecikme|photo-?real|fotogerçek|SOC ?2|ISO ?27001|certified partner|sertifikalı ortak|\bSLA\s*(?:of|:)\s*\d|\buptime\s*(?:of|:)\s*\d|\d\s?%\s*(?:uptime|ROI|faster|daha hızlı)/i;
+    // 17.10.2026 (docs/adr/0025): the ban covers every public section, and the compliance claims a studio cannot back (a legal status, a certification, an
+    // availability percentage) are named: they are statements about law and contracts, not about code, and a buyer may rely on them.
+    const FORBIDDEN = /zero[- ]latency|sıfır gecikme|photo-?real|fotogerçek|SOC ?2|ISO ?27001|certified partner|sertifikalı ortak|\bSLA\s*(?:of|:)\s*\d|\buptime\s*(?:of|:)\s*\d|\d\s?%\s*(?:uptime|ROI|faster|daha hızlı)|GDPR[- ](?:compliant|certified)|compliant with (?:the )?GDPR|DSGVO[- ]konform|conforme (?:au |al |con el )?(?:RGPD|GDPR)|符合\s?GDPR|GDPR\s?合规|\b99[.,]9\d?\s?%/i;
     const claims = [];
-    for (const l of PUBLIC_LOCALES) for (const [k, v] of Object.entries(flatten(readJSON(`messages/${l}.json`)))) if (/^(Breakdown|Sim|Studio)\./.test(k) && typeof v === "string" && FORBIDDEN.test(v)) claims.push(`${l}:${k}`);
-    claims.length ? add(G11, "FAIL", `yasak iddia (zero latency, fotogerçekçi, SLA, sertifika, çalışma süresi, yüzde ROI): ${claims.slice(0, 4).join(", ")}`) : add(G11, "PASS", "inceleme, simülatör ve Stüdyo metinlerinde 'zero latency', 'photorealistic', SLA, sertifika, çalışma süresi ya da yüzde ROI iddiası yok");
+    for (const l of PUBLIC_LOCALES) for (const [k, v] of Object.entries(flatten(readJSON(`messages/${l}.json`)))) if (/^(Breakdown|Sim|Studio|Briefing|Closing|Hero|Showcase|Architecture|Meta)\./.test(k) && typeof v === "string" && FORBIDDEN.test(v)) claims.push(`${l}:${k}`);
+    claims.length ? add(G11, "FAIL", `yasak iddia (zero latency, fotogerçekçi, SLA, sertifika, GDPR uyumlu, çalışma süresi, yüzde ROI): ${claims.slice(0, 4).join(", ")}`) : add(G11, "PASS", "herkese açık bölümlerin metinlerinde 'zero latency', 'photorealistic', SLA, SOC 2 / ISO 27001, 'GDPR compliant', %99,9 çalışma süresi ya da yüzde ROI iddiası yok (docs/adr/0025)");
 
     // 4) Sağlık ve hukuk incelemeleri meslek reklam kurallarını söyler (müşteri adına uygulama sorumluluğu müşteridir).
     const clinic = en.clinic.note + en.clinic.c3;

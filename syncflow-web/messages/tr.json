@@ -249,7 +249,13 @@
     "mailName": "Ad Soyad",
     "mailCompany": "Şirket",
     "mailEmail": "E-posta",
-    "mailMessage": "Proje hakkında"
+    "mailMessage": "Proje hakkında",
+    "directNote": "Yanıtlarınız, kurucu ekibimize bir e-posta taslağı olarak açılır. Taslağı okuyup kendi posta kutunuzdan gönderirsiniz; bu sayfadan hiçbir şey gönderilmez.",
+    "directSubmit": "E-posta taslağını aç",
+    "directOpened": "E-posta uygulamanızda taslak açılmış olmalı. Açılmadıysa bu bağlantıyı kullanın:",
+    "chipPrivacy": "Çerez yok · analitik yok",
+    "chipNda": "İlk oturumdan önce karşılıklı NDA",
+    "chipPerson": "Bir insan okur, 24 saat içinde yanıtlanır"
   },
   "Closing": {
     "manifesto1": "Adı işin kendisi olan birine, mimari gibi kurulmuş bir ev yakışır:",
@@ -388,7 +394,27 @@
     "n3s3": "Giriş kapısı açıkken durur; briefing ve her diyalog kendi yerel kaydırmasıyla kayar. Bir atlamadan sonra odak ve adres, yerel bir çapanın bırakacağı yerde kalır.",
     "n3s4t": "Geç yüklenir, küçük tutulur.",
     "n3s4": "Kütüphane ayrı bir parçadır; sayfa boyandıktan sonra ve yalnızca iki koşul da sağlandığında dinamik import ile istenir. İlk yüklemenin parçası değildir.",
-    "n3Tolerances": "Süre 1,2 sn · eğri cubic-bezier(0.16, 1, 0.3, 1) · üst bar payı 88 px · yalnızca ince işaretçi · azaltılmış harekette kapalı"
+    "n3Tolerances": "Süre 1,2 sn · eğri cubic-bezier(0.16, 1, 0.3, 1) · üst bar payı 88 px · yalnızca ince işaretçi · azaltılmış harekette kapalı",
+    "manifestoLabel": "Manifesto",
+    "manifestoTitle": "Üzerine kurduğumuz beş satır.",
+    "manifestoLead": "Slogan değil: her satır bu sayfanın yaptığı bir şeydir ve kendiniz kontrol edebilirsiniz.",
+    "m1Title": "Kurmadan önce çiz.",
+    "m1Text": "Veri, hata biçimleri ve toleranslar, tek satır kod yazılmadan önce yazılır ve üzerinde anlaşılır. Çizilemeyen bir yapı başlatılmaz.",
+    "m2Title": "Sıfat değil, tolerans söyle.",
+    "m2Text": "Sayıları tarih, profil ve kaynakla yayınlarız; ölçemediğimiz hiçbir şeyi söylemeyiz.",
+    "m3Title": "Kapalı düş. Rol yapma.",
+    "m3Text": "Bir parça eksikse sistem reddeder ve bunu söyler. Kimsenin almadığı bir mesaja asla “alındı” demez.",
+    "m4Title": "Varsayılan olarak sessizlik.",
+    "m4Text": "Çerez yok, analitik yok; üçüncü taraf yalnızca bot denetiminin gerektiği yerde. Bir müşterinin bize söylediğini bir insan okur, bir izleyici değil.",
+    "m5Title": "Sayfayı değil, iddiayı sına.",
+    "m5Text": "Güvenlik ve entegrasyon iddialarının arkasında her sürümden önce koşturduğumuz testler var: imzalı mesajlar, mühürlü zarflar ve denenen her arızada hiçbir şey kaybetmeyen, hiçbir şeyi iki kez uygulamayan bir referans kuyruk.",
+    "factsLabel": "Bu sayfada denetlenebilir",
+    "f1Name": "HMAC-SHA256 · AES-256-GCM",
+    "f1Text": "Bu sayfadaki güvenlik simülatörü, tarayıcınızın kendi Web Crypto’su ile bir mesajı imzalar ve mühürler: referans mimarimizle aynı ilkeller, aynı testler.",
+    "f2Name": "Çerez yok · analitik yok",
+    "f2Text": "Ağ sekmesini açın: cihazınızda hiçbir şey saklanmaz ve briefing formundaki Cloudflare bot denetimi dışında hiçbir şey üçüncü taraftan yüklenmez.",
+    "f3Name": "Uygulanan Content-Security-Policy",
+    "f3Text": "Her betik tek kullanımlık bir nonce taşır, gerisini tarayıcı engeller. İhlal taraması sürüm denetimlerimizin parçasıdır."
   },
   "Sim": {
     "interactive": "Etkileşimli simülasyon",

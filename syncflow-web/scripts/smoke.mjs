@@ -576,6 +576,26 @@ for (const locale of OPEN) {
 check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, structured data, hreflang, indexable, the published numbers and none of the forbidden claims`, breakdownFailures.length === 0, breakdownFailures.slice(0, 3).join(' | '));
 const enBreakdown = await (await get('/showcase/law')).text();
 check('the English law breakdown names its four headings in the required order', /Challenge[\s\S]*Architectural solution[\s\S]*Integration &amp; security[\s\S]*Measured impact &amp; ROI/.test(enBreakdown));
+
+/* ── Trust signals that are true, and no claim the studio cannot back (docs/adr/0025-honest-trust-signals.md) ───────────────────── */
+{
+  const fs = await import('node:fs');
+  const decode = (text) => text.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  // A legal status, a certification or an availability percentage is a statement about law and contracts, not about code (mirrors faz2-denetim.mjs).
+  const UNBACKED = /SOC ?2|ISO ?27001|GDPR[- ](?:compliant|certified)|compliant with (?:the )?GDPR|DSGVO[- ]konform|conforme (?:au |al |con el )?(?:RGPD|GDPR)|符合\s?GDPR|GDPR\s?合规|\b99[.,]9\d?\s?%|\bSLA\s*(?:of|:)\s*\d|\buptime\s*(?:of|:)\s*\d/i;
+  const missing = [];
+  const claims = [];
+  for (const locale of OPEN) {
+    const messages = JSON.parse(fs.readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), 'utf8'));
+    const page = await get(locale === 'en' ? '/' : `/${locale}`);
+    const text = normalise(decode(stripTags(await page.text())));
+    const wanted = [...['manifestoTitle', 'm1Title', 'm3Title', 'm5Title', 'f1Name', 'f2Name', 'f3Name'].map((key) => messages.Studio[key]), ...['chipPrivacy', 'chipNda', 'chipPerson'].map((key) => messages.Briefing[key])];
+    for (const line of wanted) if (!text.includes(normalise(line))) missing.push(`${locale}: ${line.slice(0, 30)}`);
+    if (UNBACKED.test(text)) claims.push(locale);
+  }
+  check(`the manifesto, the three checkable facts and the briefing chips are on the home page in all ${OPEN.length} languages`, missing.length === 0, missing.slice(0, 3).join(' | '));
+  check('no home page carries a SOC 2, ISO 27001, GDPR-compliant, 99.9 % or SLA claim (a studio cannot back them from code)', claims.length === 0, claims.join(', '));
+}
 check('every breakdown says it is a specimen, not client work', (await Promise.all(SLUGS.map(async (slug) => (await (await get(breakdownPath('en', slug))).text()).includes('not client work')))).every(Boolean));
 const clinicEn = normalise(stripTags(await (await get('/showcase/clinic')).text()));
 check('the clinic breakdown keeps to the health-advertising rules (no price, no testimonial, no results gallery offered; it says so)', /no prices, discounts, galleries of results or patient testimonials/.test(clinicEn) && !/(?:from|only|starting at) [$€£]\s?\d/.test(clinicEn));

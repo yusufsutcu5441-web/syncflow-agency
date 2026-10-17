@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, framework, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *
@@ -81,6 +81,9 @@ async function open(path, { viewport = DESKTOP, noCv = false, reduced = false } 
     }).observe({ type: 'layout-shift', buffered: true });
   });
   if (noCv) {
+    // The policy is enforced (docs/adr/0024): an inline <style> without the page's nonce is blocked, which silently made the reference run identical to
+    // the normal one (the cls and parity comparisons passed without comparing anything). Only the injection is exempted; qa:csp checks the policy itself.
+    await page.setBypassCSP(true);
     await page.evaluateOnNewDocument(() => {
       document.addEventListener('DOMContentLoaded', () => {
         const style = document.createElement('style');
@@ -521,6 +524,74 @@ if (want('casestudy')) {
     check(`${lang} /showcase/${slug}: no page or console errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
     await page.close();
   }
+}
+
+// ── the briefing while delivery is not connected (docs/adr/0025) ──────────────────────────────────────────────────────────────────
+// Without the Turnstile and webhook settings the API refuses (503), so the page does not post: the last step composes an email draft from the
+// answers and says so, and nothing is claimed as received. Where delivery IS connected the form must not be in that mode (nothing to walk through here).
+if (want('briefing')) {
+  group('The briefing: an email draft while delivery is not connected, never a pretended success');
+  const { page, errors } = await open('/?m=us', { viewport: DESKTOP });
+  await page.evaluate(() => document.querySelector('#briefing')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+  await sleep(600);
+  const direct = await page.evaluate(() => Boolean(document.querySelector('#briefing form[data-direct]')));
+  if (!direct) {
+    const posts = await page.evaluate(() => !document.querySelector('#briefing form[data-direct]') && !document.body.innerText.includes('email draft to our founding team'));
+    check('delivery is connected on this server, so the briefing posts and does not show the email-draft note', posts);
+  } else {
+    const note = await page.evaluate(() => document.querySelector('#briefing form[data-direct] p.text-muted')?.textContent ?? '');
+    check('the panel says up front that the answers open as an email draft the visitor sends themselves', /email draft/i.test(note) && /nothing is sent from this page/i.test(note), note.slice(0, 120));
+    // The page scrolls smoothly and the panel enters under a mask (the new step slides in), so an element's position is stale and a point on it hits the
+    // form itself for a moment: bring it to the middle instantly, wait until the point on it really belongs to it (a stuck overlay fails here, as it
+    // would for a visitor), then click it.
+    const tap = async (selector) => {
+      await page.$eval(selector, (el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await page.waitForFunction(
+        (css) => {
+          const el = document.querySelector(css);
+          if (!el) return false;
+          const r = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+          return Boolean(hit) && (hit === el || el.contains(hit));
+        },
+        { timeout: 6000 },
+        selector,
+      );
+      await page.click(selector);
+    };
+    // Each step: choose the first option (retrying until the panel has taken it), continue, and wait for the next step to be the one on screen.
+    for (const step of [1, 2, 3]) {
+      for (let tries = 0; tries < 8; tries++) {
+        await tap('#briefing .opt');
+        if (await page.evaluate(() => document.querySelectorAll('#briefing .opt input:checked').length === 1)) break;
+        await sleep(500);
+      }
+      await tap('#briefing button.btn-primary');
+      await page.waitForFunction((n) => new RegExp(`Step ${n} of`).test(document.querySelector('#briefing form p.label')?.textContent ?? ''), { timeout: 8000 }, step + 1);
+    }
+    await page.waitForSelector('#briefing input[autocomplete="name"]', { timeout: 8000 });
+    for (const [selector, text] of [['#briefing input[autocomplete="name"]', 'Test Person'], ['#briefing input[autocomplete="organization-title"]', 'Test Company'], ['#briefing input[type="email"]', 'person@example.com']]) {
+      await tap(selector);
+      await page.keyboard.type(text);
+    }
+    await tap('#briefing .role-chip');
+    await tap('#briefing input.field-check');
+    const label = await page.evaluate(() => document.querySelector('#briefing button.btn-primary')?.textContent?.trim() ?? '');
+    check('the last button is the draft button, not "send"', /open the email draft/i.test(label), label);
+    const posted = [];
+    page.on('request', (request) => request.url().includes('/api/briefing') && posted.push(request.method()));
+    await tap('#briefing button.btn-primary');
+    await sleep(900);
+    const drafted = await page.evaluate(() => {
+      const box = document.querySelector('#briefing [data-drafted]');
+      const link = box?.querySelector('a');
+      return { shown: Boolean(box), href: link?.getAttribute('href') ?? '', text: box?.textContent ?? '', received: Boolean(document.querySelector('#briefing .panel-done')) };
+    });
+    check('the draft link carries the answers (address, subject, the typed name and email)', drafted.shown && /^mailto:contact@syncflow\.agency\?subject=/.test(drafted.href) && /Test%20Person/.test(drafted.href) && /person%40example\.com/.test(drafted.href), JSON.stringify({ shown: drafted.shown, href: drafted.href.slice(0, 160) }));
+    check('nothing was posted to the API and nothing was announced as received', posted.length === 0 && !drafted.received, JSON.stringify({ posted, text: drafted.text.slice(0, 80) }));
+  }
+  check('no page or console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await page.close();
 }
 
 // ── the framework starts after the first paint (docs/adr/0023) ────────────────────────────────────────────────────────────────────

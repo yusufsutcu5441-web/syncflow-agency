@@ -28,6 +28,11 @@ export async function Studio() {
     { index: 'III', title: t('p3Title'), text: t('p3Text'), link: t('p3Link'), href: '/#how-we-built-it' },
   ];
 
+  // The manifesto is a set of working rules, each one something this page or its repository does (docs/adr/0025-honest-trust-signals.md); it names
+  // no client, no result and no headcount. The facts beneath it are the ones a visitor can check in their own browser.
+  const manifesto = ([1, 2, 3, 4, 5] as const).map((n) => ({ title: t(`m${n}Title`), text: t(`m${n}Text`) }));
+  const facts = ([1, 2, 3] as const).map((n) => ({ name: t(`f${n}Name`), text: t(`f${n}Text`) }));
+
   const notes = [
     {
       index: 'I',
@@ -94,6 +99,43 @@ export async function Studio() {
               </div>
             </article>
           ))}
+        </div>
+
+        <div id="manifesto" className="mt-24 scroll-mt-28 md:mt-32">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+            <div className="lg:sticky lg:top-32 lg:self-start">
+              <p className="label">{t('manifestoLabel')}</p>
+              <h3 className="display mt-5 how-title">{t('manifestoTitle')}</h3>
+              <p className="body-muted mt-5 max-w-md">{t('manifestoLead')}</p>
+            </div>
+            <ol className="note-steps">
+              {manifesto.map(({ title, text }, i) => (
+                <li key={title}>
+                  <span className="label note-step-index" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <p className="note-step-title">{title}</p>
+                    <p className="body-muted mt-1.5">{text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="mt-14">
+            <p className="label">{t('factsLabel')}</p>
+            <ul className="facts mt-5">
+              {facts.map(({ name, text }) => (
+                <li key={name} className="fact">
+                  <p className="fact-name metric-value" dir="ltr">
+                    {name}
+                  </p>
+                  <p className="body-muted mt-2">{text}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div id="how-we-built-it" className="mt-24 scroll-mt-28 md:mt-32">

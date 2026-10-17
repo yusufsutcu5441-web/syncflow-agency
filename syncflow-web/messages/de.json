@@ -249,7 +249,13 @@
     "mailName": "Name",
     "mailCompany": "Unternehmen",
     "mailEmail": "E-Mail",
-    "mailMessage": "Zum Projekt"
+    "mailMessage": "Zum Projekt",
+    "directNote": "Ihre Antworten öffnen sich als E-Mail-Entwurf an unser Gründerteam. Sie lesen ihn und senden ihn aus Ihrem eigenen Postfach; von dieser Seite wird nichts versendet.",
+    "directSubmit": "E-Mail-Entwurf öffnen",
+    "directOpened": "Ihr E-Mail-Programm sollte den Entwurf jetzt zeigen. Falls nicht, nutzen Sie diesen Link:",
+    "chipPrivacy": "Keine Cookies · keine Analyse",
+    "chipNda": "Gegenseitige NDA vor dem ersten Termin",
+    "chipPerson": "Von einem Menschen gelesen, Antwort binnen 24 Stunden"
   },
   "Closing": {
     "manifesto1": "Ein Name, der das Unternehmen ist, verdient ein Haus, gebaut wie Architektur:",
@@ -388,7 +394,27 @@
     "n3s3": "Es steht still, solange das Eingangstor offen ist; das Briefing und jeder Dialog scrollen nativ. Nach einem Sprung landen Fokus und Adresse dort, wo ein nativer Anker sie lassen würde.",
     "n3s4t": "Spät geladen, klein gehalten.",
     "n3s4": "Die Bibliothek ist ein eigener Chunk, der per dynamischem Import erst angefordert wird, nachdem die Seite gemalt wurde und nur wenn beide Bedingungen erfüllt sind. Sie gehört nicht zum ersten Laden.",
-    "n3Tolerances": "Dauer 1,2 s · Kurve cubic-bezier(0.16, 1, 0.3, 1) · Kopfzeilenabstand 88 px · nur feiner Zeiger · aus bei reduzierter Bewegung"
+    "n3Tolerances": "Dauer 1,2 s · Kurve cubic-bezier(0.16, 1, 0.3, 1) · Kopfzeilenabstand 88 px · nur feiner Zeiger · aus bei reduzierter Bewegung",
+    "manifestoLabel": "Manifest",
+    "manifestoTitle": "Fünf Zeilen, nach denen wir bauen.",
+    "manifestoLead": "Keine Parolen: Jede Zeile ist etwas, das diese Seite tut und das Sie selbst prüfen können.",
+    "m1Title": "Erst zeichnen, dann bauen.",
+    "m1Text": "Daten, Fehlerfälle und Toleranzen werden festgehalten und abgestimmt, bevor Code entsteht. Was sich nicht zeichnen lässt, wird nicht begonnen.",
+    "m2Title": "Toleranzen nennen, keine Adjektive.",
+    "m2Text": "Wir veröffentlichen Zahlen mit Datum, Profil und Quelle und sagen nichts, was wir nicht messen können.",
+    "m3Title": "Geschlossen scheitern. Nichts vortäuschen.",
+    "m3Text": "Fehlt ein Teil, verweigert das System und sagt es. Es antwortet nie „empfangen“ auf eine Nachricht, die niemand erhalten hat.",
+    "m4Title": "Stille als Standard.",
+    "m4Text": "Keine Cookies, keine Analyse, ein Drittanbieter nur dort, wo eine Bot-Prüfung nötig ist. Was ein Mandant uns mitteilt, liest ein Mensch, kein Tracker.",
+    "m5Title": "Die Behauptung testen, nicht die Seite.",
+    "m5Text": "Aussagen zu Sicherheit und Integration stützen sich auf Tests, die wir vor jeder Veröffentlichung ausführen: signierte Nachrichten, versiegelte Umschläge und eine Referenzwarteschlange, die in jedem getesteten Ausfall nichts verliert und nichts doppelt anwendet.",
+    "factsLabel": "Auf dieser Seite prüfbar",
+    "f1Name": "HMAC-SHA256 · AES-256-GCM",
+    "f1Text": "Der Sicherheitssimulator auf dieser Seite signiert und versiegelt eine Nachricht mit dem Web Crypto Ihres Browsers: dieselben Primitive und dieselben Tests wie in unserer Referenzarchitektur.",
+    "f2Name": "Keine Cookies · keine Analyse",
+    "f2Text": "Öffnen Sie den Netzwerk-Tab: Auf Ihrem Gerät wird nichts gespeichert, und nichts wird von Dritten geladen, außer der Cloudflare-Bot-Prüfung im Briefing-Formular.",
+    "f3Name": "Durchgesetzte Content-Security-Policy",
+    "f3Text": "Jedes Skript trägt eine einmalige Nonce, der Browser blockiert alles andere. Eine Prüfung auf Verstöße gehört zu unseren Release-Kontrollen."
   },
   "Sim": {
     "interactive": "Interaktive Simulation",
