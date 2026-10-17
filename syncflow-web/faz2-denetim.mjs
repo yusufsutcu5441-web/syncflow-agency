@@ -384,6 +384,22 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
     exists("tests/delivery/smtp.test.mjs") && /"delivery:verify"/.test(read("package.json")) ? add(G4, "PASS", "SMTP: sözleşme testleri var (npm run delivery:verify)") : add(G4, "FAIL", "tests/delivery/smtp.test.mjs ya da delivery:verify betiği yok");
     /NEXT_PUBLIC_SMTP|NEXT_PUBLIC_BRIEFING_INBOX/.test(read(".env.example")) ? add(G4, "FAIL", ".env.example: SMTP sırrı NEXT_PUBLIC_ önekiyle tarayıcıya açılıyor") : add(G4, "PASS", "SMTP: hiçbir NEXT_PUBLIC_ SMTP değişkeni yok");
   }
+  // docs/adr/0028: Çizim 01 (başvuru yolu) kodla aynı rakamları çizer; kopyalama düğmesi dürüst adlandırılır ve elle yedeği vardır.
+  {
+    const route = exists("app/api/briefing/route.ts") ? read("app/api/briefing/route.ts") : "";
+    const drawing = exists("components/sections/BriefingDrawing.tsx") ? read("components/sections/BriefingDrawing.tsx") : "";
+    const studio = exists("components/sections/Studio.tsx") ? read("components/sections/Studio.tsx") : "";
+    const form = exists("components/sections/Briefing.tsx") ? read("components/sections/Briefing.tsx") : "";
+    const limit = route.match(/STRICT_LIMIT\s*=\s*\{\s*limit:\s*(\d+),\s*windowMs:\s*(\d+)\s*\*\s*60_000/);
+    const drawnRate = drawing.match(/RATE_LIMIT\s*=\s*'(\d+) req \/ (\d+) min'/);
+    limit && drawnRate && limit[1] === drawnRate[1] && limit[2] === drawnRate[2] ? add(G4, "PASS", `Çizim 01: hız sınırı rakamı koddaki ile aynı (${limit[1]} istek / ${limit[2]} dk)`) : add(G4, "FAIL", `Çizim 01'deki hız sınırı (${drawnRate?.slice(1, 3).join("/")}) route.ts STRICT_LIMIT ile (${limit?.slice(1, 3).join("/")}) uyuşmuyor`);
+    const drawnBudget = drawing.match(/DELIVERY_BUDGET\s*=\s*'2 attempts, < ([\d.]+) s'/);
+    const codeBudget = ms("BUDGET_MS");
+    drawnBudget && Number.isFinite(codeBudget) && Math.abs(Number(drawnBudget[1]) * 1000 - codeBudget) < 1 && /second\s*=\s*run\(|outcome\s*=\s*await run\(/.test(del) ? add(G4, "PASS", `Çizim 01: teslim bütçesi koddaki ile aynı (en çok iki deneme, ${codeBudget / 1000} sn)`) : add(G4, "FAIL", `Çizim 01'deki teslim bütçesi (${drawnBudget?.[1]} sn) deliver.ts BUDGET_MS (${codeBudget} ms) ile uyuşmuyor`);
+    /<BriefingDrawing\b/.test(studio) && /role="img"/.test(drawing) && /aria-label=\{label\}/.test(drawing) && !/<script|useEffect|use client/.test(drawing) ? add(G4, "PASS", "Çizim 01: Studio'da, role=img ve çevrilmiş açıklamayla, JavaScript'siz sunucu SVG'si") : add(G4, "FAIL", "Çizim 01: Studio'da değil, role=img/aria-label yok ya da istemci kodu içeriyor");
+    /clipboard\.writeText/.test(form) && /execCommand\('copy'\)/.test(form) && /readOnly/.test(form) && /copyFailed/.test(form) ? add(G4, "PASS", "Kopyalama: pano API'si, seçimle kopyalama yedeği ve elle seçilecek salt okunur metin var") : add(G4, "FAIL", "components/sections/Briefing.tsx: kopyalama düğmesinin pano/yedek/elle seçim yolu eksik");
+    /"copyText"\s*:\s*"[^"]*[Ee]ncrypt/i.test(read("messages/en.json")) ? add(G4, "FAIL", "Kopyalama düğmesi 'şifreli' diye adlandırılmış: pano metni düz metindir, şifrelenmez") : add(G4, "PASS", "Kopyalama düğmesi dürüst adlandırılmış (düz metin; 'encrypted' denmiyor)");
+  }
   const rl = exists("lib/security/rate-limit.ts") ? read("lib/security/rate-limit.ts") : "";
   /NODE_ENV\s*===\s*['"]production['"]/.test(rl) && /UPSTASH_REDIS_REST_URL/.test(rl) && /console\.warn\(/.test(rl) ? add(G4, "PASS", "hız sınırı: üretimde Upstash yoksa örnek başına sayıldığı bir kez uyarılır") : add(G4, "FAIL", "lib/security/rate-limit.ts: üretimde Upstash yoksa uyarı yok");
   if (!exists("public/.well-known/security.txt")) add(G4, "FAIL", "public/.well-known/security.txt yok (RFC 9116)");

@@ -590,16 +590,26 @@ check('the English law breakdown names its four headings in the required order',
   const UNBACKED = /SOC ?2|ISO ?27001|GDPR[- ](?:compliant|certified)|compliant with (?:the )?GDPR|DSGVO[- ]konform|conforme (?:au |al |con el )?(?:RGPD|GDPR)|符合\s?GDPR|GDPR\s?合规|\b99[.,]9\d?\s?%|\bSLA\s*(?:of|:)\s*\d|\buptime\s*(?:of|:)\s*\d/i;
   const missing = [];
   const claims = [];
+  const drawing = [];
+  const RATE_DRAWN = '5 req / 10 min';
+  const BUDGET_DRAWN = '2 attempts, < 9.5 s';
   for (const locale of OPEN) {
     const messages = JSON.parse(fs.readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), 'utf8'));
     const page = await get(locale === 'en' ? '/' : `/${locale}`);
-    const text = normalise(decode(stripTags(await page.text())));
+    const raw = await page.text();
+    const text = normalise(decode(stripTags(raw)));
     const wanted = [...['manifestoTitle', 'm1Title', 'm3Title', 'm5Title', 'f1Name', 'f2Name', 'f3Name'].map((key) => messages.Studio[key]), ...['chipPrivacy', 'chipNda', 'chipPerson'].map((key) => messages.Briefing[key])];
     for (const line of wanted) if (!text.includes(normalise(line))) missing.push(`${locale}: ${line.slice(0, 30)}`);
     if (UNBACKED.test(text)) claims.push(locale);
+    // Drawing 01 (docs/adr/0028): its translated frame, both layouts named for assistive technology, and the annotations the sheet is made of.
+    for (const key of ['drawingLabel', 'drawingTitle', 'drawingLead', 'drawingLegend']) if (!text.includes(normalise(messages.Studio[key]))) drawing.push(`${locale}: ${key}`);
+    const named = decode(raw).split(`aria-label="${messages.Studio.drawingAlt}"`).length - 1;
+    if (named !== 2) drawing.push(`${locale}: ${named} svg(s) carry the translated description (want 2: wide and narrow)`);
+    for (const piece of ['ONE ROUTE · /api/briefing', 'FAILS CLOSED', RATE_DRAWN, BUDGET_DRAWN]) if (!text.includes(piece)) drawing.push(`${locale}: "${piece}" missing from the sheet`);
   }
   check(`the manifesto, the three checkable facts and the briefing chips are on the home page in all ${OPEN.length} languages`, missing.length === 0, missing.slice(0, 3).join(' | '));
   check('no home page carries a SOC 2, ISO 27001, GDPR-compliant, 99.9 % or SLA claim (a studio cannot back them from code)', claims.length === 0, claims.join(', '));
+  check(`Drawing 01 (the briefing path) is on the home page in all ${OPEN.length} languages: translated heading, legend and description on both layouts, English sheet annotations`, drawing.length === 0, drawing.slice(0, 3).join(' | '));
 }
 check('every breakdown says it is a specimen, not client work', (await Promise.all(SLUGS.map(async (slug) => (await (await get(breakdownPath('en', slug))).text()).includes('not client work')))).every(Boolean));
 const clinicEn = normalise(stripTags(await (await get('/showcase/clinic')).text()));

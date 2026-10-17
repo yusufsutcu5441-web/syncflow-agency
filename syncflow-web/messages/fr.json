@@ -255,7 +255,10 @@
     "directOpened": "Votre application de messagerie devrait afficher le brouillon. Sinon, utilisez ce lien :",
     "chipPrivacy": "Aucun cookie · aucune analyse",
     "chipNda": "NDA réciproque avant la première séance",
-    "chipPerson": "Lu par une personne, réponse sous 24 heures"
+    "chipPerson": "Lu par une personne, réponse sous 24 heures",
+    "copyText": "Copier le texte du briefing",
+    "copied": "Copié. Collez-le dans un e-mail à {email}.",
+    "copyFailed": "Votre navigateur a bloqué la copie. Sélectionnez le texte ci-dessous et copiez-le vous-même."
   },
   "Closing": {
     "manifesto1": "Un nom qui est l’entreprise mérite une maison bâtie comme une architecture :",
@@ -414,7 +417,12 @@
     "f2Name": "Aucun cookie · aucune analyse",
     "f2Text": "Ouvrez l’onglet Réseau : rien n’est stocké sur votre appareil et rien n’est chargé chez un tiers, hormis le contrôle anti-robot de Cloudflare dans le formulaire de briefing.",
     "f3Name": "Content-Security-Policy appliquée",
-    "f3Text": "Chaque script porte un nonce à usage unique et le navigateur bloque le reste. Une recherche de violations fait partie de nos contrôles de publication."
+    "f3Text": "Chaque script porte un nonce à usage unique et le navigateur bloque le reste. Une recherche de violations fait partie de nos contrôles de publication.",
+    "drawingLabel": "Plan 01",
+    "drawingTitle": "Le chemin de votre briefing, dessiné d’abord.",
+    "drawingLead": "La première règle ci-dessus, appliquée au formulaire de cette page. Chaque case est du code de notre dépôt, et les chiffres sont ceux de ce code.",
+    "drawingAlt": "Flux du formulaire de briefing. Le navigateur envoie les réponses avec un jeton Turnstile à une seule route, qui vérifie l’origine et la limite de débit, valide le schéma, exécute les contrôles anti-robot, nettoie le texte et fixe une classe de priorité, puis livre par webhook signé ou par SMTP sur TLS à la boîte du studio. Toute étape en échec refuse la demande et propose au visiteur un brouillon d’e-mail.",
+    "drawingLegend": "Trait plein : le chemin d’un briefing. Trait pointillé : toute étape en échec s’arrête là. La demande est refusée et vos réponses s’ouvrent en brouillon d’e-mail, afin que rien ne soit jamais déclaré reçu sans l’avoir été."
   },
   "Sim": {
     "interactive": "Simulation interactive",

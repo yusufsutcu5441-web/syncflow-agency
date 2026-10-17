@@ -255,7 +255,10 @@
     "directOpened": "E-posta uygulamanızda taslak açılmış olmalı. Açılmadıysa bu bağlantıyı kullanın:",
     "chipPrivacy": "Çerez yok · analitik yok",
     "chipNda": "İlk oturumdan önce karşılıklı NDA",
-    "chipPerson": "Bir insan okur, 24 saat içinde yanıtlanır"
+    "chipPerson": "Bir insan okur, 24 saat içinde yanıtlanır",
+    "copyText": "Briefing metnini kopyala",
+    "copied": "Kopyalandı. {email} adresine yazacağınız e-postaya yapıştırın.",
+    "copyFailed": "Tarayıcınız kopyalamayı engelledi. Aşağıdaki metni seçip kendiniz kopyalayın."
   },
   "Closing": {
     "manifesto1": "Adı işin kendisi olan birine, mimari gibi kurulmuş bir ev yakışır:",
@@ -414,7 +417,12 @@
     "f2Name": "Çerez yok · analitik yok",
     "f2Text": "Ağ sekmesini açın: cihazınızda hiçbir şey saklanmaz ve briefing formundaki Cloudflare bot denetimi dışında hiçbir şey üçüncü taraftan yüklenmez.",
     "f3Name": "Engelleyen Content-Security-Policy",
-    "f3Text": "Her betik tek kullanımlık bir nonce taşır, gerisini tarayıcı engeller. İhlal taraması sürüm denetimlerimizin parçasıdır."
+    "f3Text": "Her betik tek kullanımlık bir nonce taşır, gerisini tarayıcı engeller. İhlal taraması sürüm denetimlerimizin parçasıdır.",
+    "drawingLabel": "Çizim 01",
+    "drawingTitle": "Briefing’inizin yolu, önce çizildi.",
+    "drawingLead": "Yukarıdaki ilk kuralın bu sayfadaki forma uygulanmış hâli. Her kutu depomuzdaki gerçek koddur, rakamlar da o koddaki rakamlardır.",
+    "drawingAlt": "Briefing formunun sistem akışı. Tarayıcı yanıtları bir Turnstile belirteciyle tek bir rotaya gönderir; rota kaynağı ve hız sınırını denetler, şemayı doğrular, bot denetimlerini yapar, metni temizler ve bir öncelik sınıfı belirler; ardından imzalı webhook ya da TLS üzerinden SMTP ile stüdyo posta kutusuna iletir. Başarısız her adım isteği reddeder ve ziyaretçiye bir e-posta taslağı önerir.",
+    "drawingLegend": "Düz çizgi: bir briefing’in yolu. Kesikli çizgi: başarısız her adım orada biter. İstek reddedilir ve yanıtlarınız e-posta taslağı olarak açılır, böylece alınmamış hiçbir şey alınmış diye gösterilmez."
   },
   "Sim": {
     "interactive": "Etkileşimli simülasyon",

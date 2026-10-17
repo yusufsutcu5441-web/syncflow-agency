@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, LoaderCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Copy, LoaderCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode, type RefObject } from 'react';
 import { fill, useClientI18n } from '@/components/i18n/ClientI18n';
@@ -62,6 +62,23 @@ declare global {
   }
 }
 
+/** Copy with the old selection command when the Clipboard API is refused (an insecure context, a strict policy, a locked-down browser). */
+function copyBySelection(text: string): boolean {
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.cssText = 'position:fixed;inset-block-start:0;inset-inline-start:0;opacity:0;pointer-events:none';
+  document.body.appendChild(area);
+  area.select();
+  try {
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  } finally {
+    area.remove();
+  }
+}
+
 let turnstileLoading: Promise<TurnstileApi> | undefined;
 function loadTurnstile(): Promise<TurnstileApi> {
   if (window.turnstile) return Promise.resolve(window.turnstile);
@@ -106,6 +123,8 @@ export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { pr
   const [devOnly, setDevOnly] = useState(false);
   // Direct mode only (delivery not connected): the email draft has been opened from the answers.
   const [drafted, setDrafted] = useState(false);
+  // The answers as plain text on the clipboard, for a visitor whose browser opens no mail app (docs/adr/0028).
+  const [copy, setCopy] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [projectType, setProjectType] = useState<ProjectType | ''>('');
   // Only the three bands at or above the minimum exist: there is no "below" option to pick (docs/adr/0016). The question names the minimum.
@@ -186,13 +205,14 @@ export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { pr
     setPickError(false);
     setFormError(null);
     setDrafted(false);
+    setCopy('idle');
     setStep((current) => Math.max(1, current - 1));
   };
 
   // A plain function: it reads the current answers on every render, and the market-dependent band text with them.
-  const mailto = () => {
+  const briefingBody = () => {
     const line = (label: string, value: string) => `${label}: ${value}`;
-    const body = [
+    return [
       line(t.mailProject, projectType ? t.project[projectType] : ''),
       line(t.mailBudget, budget ? bandText(budget) : ''),
       line(t.mailTiming, timeline ? t.timing[timeline] : ''),
@@ -202,8 +222,45 @@ export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { pr
       line(t.mailEmail, values.email.trim()),
       line(t.mailMessage, values.message.trim()),
     ].join('\n');
-    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t.mailSubject)}&body=${encodeURIComponent(body)}`;
   };
+  const mailto = () => `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(t.mailSubject)}&body=${encodeURIComponent(briefingBody())}`;
+  /** What the clipboard gets: the address and subject on top, so the text can be pasted into any mail client or web mail as it is. */
+  const plainText = () => `To: ${CONTACT_EMAIL}\nSubject: ${t.mailSubject}\n\n${briefingBody()}`;
+
+  const copyBriefing = async () => {
+    const text = plainText();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopy('copied');
+    } catch {
+      setCopy(copyBySelection(text) ? 'copied' : 'failed');
+    }
+  };
+  const [copiedBefore = '', copiedAfter = ''] = t.copied.split('{email}');
+  // Shown wherever the visitor is sent to an email draft: the button, then either the confirmation or, if the browser refused, the text to select.
+  const copyControl = (
+    <span className="mt-3 block">
+      <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => void copyBriefing()}>
+          <Copy size={15} strokeWidth={1.75} aria-hidden="true" />
+          {t.copyText}
+        </button>
+        {copy === 'copied' ? (
+          <span className="text-ink" data-copied="">
+            {copiedBefore}
+            <bdi dir="ltr">{CONTACT_EMAIL}</bdi>
+            {copiedAfter}
+          </span>
+        ) : null}
+      </span>
+      {copy === 'failed' ? (
+        <span className="mt-3 block" data-copy-failed="">
+          <span className="block text-ink">{t.copyFailed}</span>
+          <textarea readOnly rows={8} dir="auto" className="field-line mt-2 w-full text-sm" value={plainText()} onFocus={(event) => event.currentTarget.select()} aria-label={t.copyText} />
+        </span>
+      ) : null}
+    </span>
+  );
 
   const focusFirstInvalid = () =>
     requestAnimationFrame(() => document.getElementById(formId)?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')?.focus());
@@ -525,6 +582,7 @@ export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { pr
             <a href={mailto()} className="text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
               {t.fallbackLink}
             </a>
+            {copyControl}
           </span>
         ) : null}
         {formError === 'unavailable' || formError === 'generic' ? (
@@ -533,6 +591,7 @@ export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { pr
             <a href={mailto()} className="text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink">
               {t.fallbackLink}
             </a>
+            {copyControl}
           </span>
         ) : null}
       </div>

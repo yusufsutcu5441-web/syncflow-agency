@@ -255,7 +255,10 @@
     "directOpened": "Your email app should now show the draft. If it did not open, use this link:",
     "chipPrivacy": "No cookies · no analytics",
     "chipNda": "Mutual NDA before the first session",
-    "chipPerson": "Read by a person, answered within 24 hours"
+    "chipPerson": "Read by a person, answered within 24 hours",
+    "copyText": "Copy briefing text",
+    "copied": "Copied. Paste it into an email to {email}.",
+    "copyFailed": "Your browser blocked copying. Select the text below and copy it yourself."
   },
   "Closing": {
     "manifesto1": "A name that is the business deserves a house built like architecture:",
@@ -414,7 +417,12 @@
     "f2Name": "No cookies · no analytics",
     "f2Text": "Open your network tab: nothing is stored on your device and nothing loads from a third party, except the Cloudflare bot check on the briefing form.",
     "f3Name": "Enforced Content-Security-Policy",
-    "f3Text": "Every script carries a one-time nonce and the browser blocks the rest. A scan for violations is part of our release checks."
+    "f3Text": "Every script carries a one-time nonce and the browser blocks the rest. A scan for violations is part of our release checks.",
+    "drawingLabel": "Drawing 01",
+    "drawingTitle": "The path of your briefing, drawn first.",
+    "drawingLead": "The first rule above, applied to the form on this page. Every box is code in our repository, and the figures are the ones in that code.",
+    "drawingAlt": "System flow of the briefing form. The browser sends the answers with a Turnstile token to one route, which checks the origin and the rate limit, validates the schema, runs the bot checks, sanitises the text and sets a priority class, then delivers by signed webhook or SMTP over TLS to the studio mailbox. Any failed step refuses the request and offers the visitor an email draft.",
+    "drawingLegend": "Solid line: the path of a briefing. Dashed line: any failed step ends there. The request is refused and your answers open as an email draft, so nothing is ever reported as received that was not."
   },
   "Sim": {
     "interactive": "Interactive simulation",

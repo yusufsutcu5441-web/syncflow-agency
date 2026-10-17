@@ -255,7 +255,10 @@
     "directOpened": "Ihr E-Mail-Programm sollte den Entwurf jetzt zeigen. Falls nicht, nutzen Sie diesen Link:",
     "chipPrivacy": "Keine Cookies · keine Analyse",
     "chipNda": "Gegenseitige NDA vor dem ersten Termin",
-    "chipPerson": "Von einem Menschen gelesen, Antwort binnen 24 Stunden"
+    "chipPerson": "Von einem Menschen gelesen, Antwort binnen 24 Stunden",
+    "copyText": "Briefing-Text kopieren",
+    "copied": "Kopiert. Fügen Sie ihn in eine E-Mail an {email} ein.",
+    "copyFailed": "Ihr Browser hat das Kopieren blockiert. Markieren Sie den Text unten und kopieren Sie ihn selbst."
   },
   "Closing": {
     "manifesto1": "Ein Name, der das Unternehmen ist, verdient ein Haus, gebaut wie Architektur:",
@@ -414,7 +417,12 @@
     "f2Name": "Keine Cookies · keine Analyse",
     "f2Text": "Öffnen Sie den Netzwerk-Tab: Auf Ihrem Gerät wird nichts gespeichert, und nichts wird von Dritten geladen, außer der Cloudflare-Bot-Prüfung im Briefing-Formular.",
     "f3Name": "Durchgesetzte Content-Security-Policy",
-    "f3Text": "Jedes Skript trägt eine einmalige Nonce, der Browser blockiert alles andere. Eine Prüfung auf Verstöße gehört zu unseren Release-Kontrollen."
+    "f3Text": "Jedes Skript trägt eine einmalige Nonce, der Browser blockiert alles andere. Eine Prüfung auf Verstöße gehört zu unseren Release-Kontrollen.",
+    "drawingLabel": "Zeichnung 01",
+    "drawingTitle": "Der Weg Ihres Briefings, zuerst gezeichnet.",
+    "drawingLead": "Die erste Regel oben, angewandt auf das Formular dieser Seite. Jeder Kasten ist Code in unserem Repository, die Zahlen sind die Zahlen aus diesem Code.",
+    "drawingAlt": "Systemfluss des Briefing-Formulars. Der Browser sendet die Antworten mit einem Turnstile-Token an eine einzige Route, die Herkunft und Ratenbegrenzung prüft, das Schema validiert, die Bot-Prüfungen ausführt, den Text bereinigt und eine Prioritätsklasse setzt und dann per signiertem Webhook oder SMTP über TLS an das Postfach des Studios zustellt. Jeder fehlgeschlagene Schritt lehnt die Anfrage ab und bietet dem Besucher einen E-Mail-Entwurf an.",
+    "drawingLegend": "Durchgezogene Linie: der Weg eines Briefings. Gestrichelte Linie: jeder fehlgeschlagene Schritt endet dort. Die Anfrage wird abgelehnt und Ihre Antworten öffnen sich als E-Mail-Entwurf, damit nichts als empfangen gemeldet wird, was nicht empfangen wurde."
   },
   "Sim": {
     "interactive": "Interaktive Simulation",

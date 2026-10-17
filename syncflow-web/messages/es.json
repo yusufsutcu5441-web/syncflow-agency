@@ -255,7 +255,10 @@
     "directOpened": "Su aplicación de correo debería mostrar el borrador. Si no se abrió, use este enlace:",
     "chipPrivacy": "Sin cookies · sin analítica",
     "chipNda": "NDA mutuo antes de la primera sesión",
-    "chipPerson": "Lo lee una persona, respuesta en 24 horas"
+    "chipPerson": "Lo lee una persona, respuesta en 24 horas",
+    "copyText": "Copiar el texto del briefing",
+    "copied": "Copiado. Péguelo en un correo a {email}.",
+    "copyFailed": "Su navegador bloqueó la copia. Seleccione el texto de abajo y cópielo usted."
   },
   "Closing": {
     "manifesto1": "Un nombre que es el negocio merece una casa construida como una obra de arquitectura:",
@@ -414,7 +417,12 @@
     "f2Name": "Sin cookies · sin analítica",
     "f2Text": "Abra la pestaña de red: no se guarda nada en su dispositivo y no se carga nada de terceros, salvo la verificación anti-bots de Cloudflare en el formulario de briefing.",
     "f3Name": "Content-Security-Policy aplicada",
-    "f3Text": "Cada script lleva un nonce de un solo uso y el navegador bloquea el resto. Un análisis de infracciones forma parte de nuestros controles de publicación."
+    "f3Text": "Cada script lleva un nonce de un solo uso y el navegador bloquea el resto. Un análisis de infracciones forma parte de nuestros controles de publicación.",
+    "drawingLabel": "Plano 01",
+    "drawingTitle": "El camino de su briefing, dibujado primero.",
+    "drawingLead": "La primera regla de arriba, aplicada al formulario de esta página. Cada recuadro es código de nuestro repositorio, y las cifras son las de ese código.",
+    "drawingAlt": "Flujo del formulario de briefing. El navegador envía las respuestas con un token de Turnstile a una sola ruta, que comprueba el origen y el límite de peticiones, valida el esquema, ejecuta las comprobaciones antibots, sanea el texto y fija una clase de prioridad; después entrega mediante webhook firmado o SMTP sobre TLS al buzón del estudio. Cualquier paso fallido rechaza la solicitud y ofrece al visitante un borrador de correo.",
+    "drawingLegend": "Línea continua: el camino de un briefing. Línea discontinua: cualquier paso fallido termina ahí. La solicitud se rechaza y sus respuestas se abren como borrador de correo, de modo que nada se da por recibido sin haberlo sido."
   },
   "Sim": {
     "interactive": "Simulación interactiva",

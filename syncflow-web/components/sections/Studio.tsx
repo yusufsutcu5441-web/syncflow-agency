@@ -1,6 +1,7 @@
 import { ArrowUpRight, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
+import { BriefingDrawing } from '@/components/sections/BriefingDrawing';
 import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
@@ -122,6 +123,18 @@ export async function Studio() {
               ))}
             </ol>
           </div>
+
+          <figure className="drawing mt-14" aria-labelledby="drawing-title">
+            <figcaption>
+              <p className="label">{t('drawingLabel')}</p>
+              <h4 id="drawing-title" className="text-title mt-3">
+                {t('drawingTitle')}
+              </h4>
+              <p className="body-muted mt-3 max-w-2xl">{t('drawingLead')}</p>
+            </figcaption>
+            <BriefingDrawing label={t('drawingAlt')} />
+            <p className="body-muted mt-6 max-w-3xl text-sm">{t('drawingLegend')}</p>
+          </figure>
 
           <div className="mt-14">
             <p className="label">{t('factsLabel')}</p>

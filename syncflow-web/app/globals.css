@@ -350,7 +350,7 @@ html[lang='ar'] ::after {
     --cv: 1220px;
   }
   .cv-studio {
-    --cv: 5310px;
+    --cv: 6481px;
   }
   .cv-briefing {
     --cv: 1400px;
@@ -375,7 +375,7 @@ html[lang='ar'] ::after {
       --cv: 1260px;
     }
     .cv-studio {
-      --cv: 4190px;
+      --cv: 5556px;
     }
     .cv-briefing {
       --cv: 1240px;
@@ -395,7 +395,7 @@ html[lang='ar'] ::after {
       --cv: 1590px;
     }
     .cv-studio {
-      --cv: 3260px;
+      --cv: 3974px;
     }
     .cv-briefing {
       --cv: 1440px;
@@ -1347,6 +1347,71 @@ html[lang='ar'] ::after {
     gap: 0.6rem;
     padding: 0;
     list-style: none;
+  }
+
+  /* ── Drawing 01: the briefing path as an engineering sheet (docs/adr/0028). Monochrome, on the page tokens, no script ───── */
+  .drawing {
+    margin-inline: 0;
+    padding: 1.25rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    background-color: var(--color-layer-1);
+    background-image: linear-gradient(rgb(226 226 230 / 0.035) 1px, transparent 1px), linear-gradient(90deg, rgb(226 226 230 / 0.035) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+  }
+  @media (min-width: 48rem) {
+    .drawing {
+      padding: 2rem;
+    }
+  }
+  /* The annotations are English technical names: the sheet reads left to right whatever the page direction (text-anchor follows direction). */
+  .dwg {
+    display: block;
+    direction: ltr;
+    width: 100%;
+    height: auto;
+    margin: 1.75rem auto 0;
+  }
+  .dwg text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    fill: var(--color-muted);
+  }
+  .dwg .dwg-t {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    fill: var(--color-ink);
+  }
+  .dwg .dwg-b {
+    letter-spacing: 0.06em;
+    fill: var(--color-ink);
+  }
+  .dwg .dwg-f {
+    font-size: 10px;
+    fill: var(--color-faint);
+  }
+  .dwg .dwg-line {
+    fill: none;
+    stroke: var(--color-hairline-strong);
+    stroke-width: 1;
+  }
+  .dwg .dwg-frame {
+    stroke: var(--color-hairline);
+  }
+  .dwg .dwg-box {
+    fill: rgb(13 13 14 / 0.8);
+    stroke: var(--color-ink);
+    stroke-opacity: 0.55;
+    stroke-width: 1;
+  }
+  .dwg .dwg-dash {
+    stroke-dasharray: 5 4;
+  }
+  .dwg .dwg-arrow {
+    fill: var(--color-ink);
+    fill-opacity: 0.7;
   }
 
   /* ── Masked entrance (docs/adr/0004-motion-and-smooth-scroll.md) ───────────────────────────────────────────

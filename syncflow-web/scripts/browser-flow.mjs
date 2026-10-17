@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, framework, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *
@@ -594,9 +594,126 @@ if (want('briefing')) {
     });
     check('the draft link carries the answers (address, subject, the typed name and email)', drafted.shown && /^mailto:contact@syncflow\.agency\?subject=/.test(drafted.href) && /Test%20Person/.test(drafted.href) && /person%40example\.com/.test(drafted.href), JSON.stringify({ shown: drafted.shown, href: drafted.href.slice(0, 160) }));
     check('nothing was posted to the API and nothing was announced as received', posted.length === 0 && !drafted.received, JSON.stringify({ posted, text: drafted.text.slice(0, 80) }));
+
+    // ── the copy button for a visitor whose browser opens no mail app (docs/adr/0028) ────────────────────────────────────────────────
+    // The clipboard itself is the browser's; what is tested is OUR part: what text is handed to it, what the visitor is told, and the manual
+    // fallback when the browser refuses. writeText is replaced by a recorder (a headless page has no focus, which a real clipboard needs).
+    const copyButton = '#briefing [data-drafted] button';
+    check('the draft notice offers a "Copy briefing text" button', (await page.$(copyButton)) !== null);
+    await page.evaluate(() => {
+      window.__clip = null;
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text) => void (window.__clip = text) } });
+    });
+    await tap(copyButton);
+    await sleep(400);
+    const copied = await page.evaluate(() => ({ clip: window.__clip, note: document.querySelector('#briefing [data-copied]')?.textContent ?? '', failed: Boolean(document.querySelector('#briefing [data-copy-failed]')) }));
+    check('it hands the whole briefing to the clipboard (address, subject, the answers) as plain text', typeof copied.clip === 'string' && /^To: contact@syncflow\.agency\nSubject: .+\n\n/.test(copied.clip) && /Test Person/.test(copied.clip) && /Test Company/.test(copied.clip) && /person@example\.com/.test(copied.clip) && !/[<>]/.test(copied.clip), JSON.stringify(copied.clip?.slice(0, 220)));
+    check('and tells the visitor, naming the address to paste it to', /Copied/.test(copied.note) && /contact@syncflow\.agency/.test(copied.note) && !copied.failed, copied.note);
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => Promise.reject(new Error('blocked')) } });
+      document.execCommand = () => false;
+    });
+    await tap(copyButton);
+    await sleep(400);
+    const refused = await page.evaluate(() => {
+      const box = document.querySelector('#briefing [data-copy-failed]');
+      const area = box?.querySelector('textarea');
+      return { shown: Boolean(box), readOnly: area?.readOnly ?? false, value: area?.value ?? '', stillCopied: Boolean(document.querySelector('#briefing [data-copied]')) };
+    });
+    check('when the browser refuses, the text is shown ready to select (read-only) and the false "copied" note is gone', refused.shown && refused.readOnly && /^To: contact@syncflow\.agency\n/.test(refused.value) && /Test Person/.test(refused.value) && !refused.stillCopied, JSON.stringify(refused).slice(0, 220));
   }
   check('no page or console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   await page.close();
+}
+
+// ── Drawing 01 and the call to action that stays within reach (docs/adr/0028) ──────────────────────────────────────────────────
+if (want('drawing')) {
+  group('Drawing 01 (the briefing path): the right layout per width, nothing clipped, nothing overflowing');
+  for (const [label, viewport, layout] of [['desktop 1440', DESKTOP, 'wide'], ['phone 412', PHONE, 'narrow']]) {
+    const { page, errors } = await open('/?m=us', { viewport });
+    await page.evaluate(() => document.querySelector('figure.drawing')?.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await sleep(500);
+    const info = await page.evaluate(() => {
+      const svgs = [...document.querySelectorAll('figure.drawing svg.dwg')];
+      const shown = svgs.filter((s) => getComputedStyle(s).display !== 'none');
+      const svg = shown[0];
+      const vb = svg?.viewBox.baseVal;
+      const clipped = [];
+      const outside = [];
+      if (svg) {
+        for (const g of svg.querySelectorAll(':scope > g')) {
+          const box = g.querySelector(':scope > rect.dwg-box');
+          if (!box) continue;
+          const r = box.getBBox();
+          for (const text of g.querySelectorAll(':scope > text')) {
+            const b = text.getBBox();
+            if (b.x < r.x + 2 || b.x + b.width > r.x + r.width - 2 || b.y < r.y || b.y + b.height > r.y + r.height) clipped.push(`${text.textContent} [${[b.x, b.width, r.x, r.width].map(Math.round).join('/')}]`);
+          }
+        }
+        for (const text of svg.querySelectorAll('text')) {
+          const b = text.getBBox();
+          if (text.getAttribute('transform')) continue;
+          if (b.x < 0 || b.y < 0 || b.x + b.width > vb.width || b.y + b.height > vb.height) outside.push(text.textContent);
+        }
+      }
+      const rect = svg?.getBoundingClientRect();
+      const fontPx = svg ? parseFloat(getComputedStyle(svg.querySelector('.dwg-s')).fontSize) * (rect.width / vb.width) : 0;
+      const figure = document.querySelector('figure.drawing');
+      return {
+        total: svgs.length,
+        shown: shown.length,
+        label: svg?.getAttribute('aria-label') ?? '',
+        classes: svg?.getAttribute('class') ?? '',
+        boxes: svg?.querySelectorAll('rect.dwg-box').length ?? 0,
+        clipped,
+        outside,
+        fontPx: Math.round(fontPx * 10) / 10,
+        width: Math.round(rect?.width ?? 0),
+        overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        figureInside: figure ? figure.getBoundingClientRect().right <= document.documentElement.clientWidth + 1 : false,
+        heading: document.querySelector('#drawing-title')?.textContent ?? '',
+      };
+    });
+    check(`${label}: exactly one of the two layouts is shown (the ${layout} one) and it is named for assistive technology`, info.total === 2 && info.shown === 1 && info.classes.includes(layout === 'wide' ? 'lg:block' : 'lg:hidden') && info.label.length > 120, JSON.stringify({ total: info.total, shown: info.shown, label: info.label.slice(0, 40) }));
+    check(`${label}: seven boxes plus the refusal box, no text outside its box or the sheet`, info.boxes === 8 && info.clipped.length === 0 && info.outside.length === 0, JSON.stringify({ boxes: info.boxes, clipped: info.clipped, outside: info.outside }));
+    check(`${label}: the annotations stay legible once scaled (>= 9.5 px) and the page does not scroll sideways`, info.fontPx >= 9.5 && info.overflowX <= 0 && info.figureInside, JSON.stringify({ fontPx: info.fontPx, width: info.width, overflowX: info.overflowX }));
+    check(`${label}: the figure has its translated heading`, info.heading.length > 10, info.heading);
+    check(`${label}: no page or console errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
+    await page.close();
+  }
+}
+
+if (want('cta')) {
+  group('"Start a briefing" stays within reach while scrolling, and one click lands on the form');
+  // Phones get the thumb-zone bar, which hides on purpose while the hero button or the briefing is on screen, so the first sample is below the hero there.
+  for (const [label, viewport, selector, fractions] of [['desktop', DESKTOP, 'header .btn', [0.15, 0.4, 0.7]], ['phone', PHONE, '[data-sticky-cta] a', [0.4, 0.7]]]) {
+    const { page, errors } = await open('/?m=us', { viewport });
+    const total = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+    const seen = [];
+    for (const fraction of fractions) {
+      await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), Math.round(total * fraction));
+      await sleep(900);
+      seen.push(
+        await page.evaluate((css) => {
+          const el = [...document.querySelectorAll(css)].find((candidate) => /briefing/i.test(candidate.getAttribute('href') ?? '') || /briefing/i.test(candidate.textContent ?? ''));
+          if (!el) return { found: false };
+          const r = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+          const holder = el.closest('[data-sticky-cta]');
+          return { found: true, visible: r.width > 0 && r.top >= 0 && r.bottom <= innerHeight, reachable: Boolean(hit) && (hit === el || el.contains(hit)), shown: holder ? holder.getAttribute('data-visible') === 'true' : true, href: el.getAttribute('href') };
+        }, selector),
+      );
+    }
+    check(`${label}: the button is on screen and clickable at ${fractions.map((f) => `${Math.round(f * 100)} %`).join(', ')} of the page`, seen.every((s) => s.found && s.visible && s.reachable && s.shown), JSON.stringify(seen));
+    await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), Math.round(total * 0.4));
+    await sleep(700);
+    await page.evaluate((css) => [...document.querySelectorAll(css)].find((candidate) => /briefing/i.test(candidate.getAttribute('href') ?? '') || /briefing/i.test(candidate.textContent ?? ''))?.click(), selector);
+    await settle(page);
+    const landed = await page.evaluate(() => ({ hash: location.hash, top: Math.round(document.querySelector('#briefing').getBoundingClientRect().top) }));
+    check(`${label}: one click lands on the briefing (hash #briefing, section top within 3 px of the header)`, landed.hash === '#briefing' && Math.abs(landed.top - SCROLL_PADDING) <= 3, JSON.stringify(landed));
+    check(`${label}: no page or console errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
+    await page.close();
+  }
 }
 
 // ── the framework starts after the first paint (docs/adr/0023) ────────────────────────────────────────────────────────────────────

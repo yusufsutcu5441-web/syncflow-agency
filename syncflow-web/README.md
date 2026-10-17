@@ -72,7 +72,7 @@ components/
   layout/    Header · Footer · StickyCta · LanguageSwitcher(client; sahneli dil geçişi)
   cinema/    CinemaStage(client): yetenek kapısından sonra WebGL2 motorunu yükler, CSS yedeğini çizer
   gate/      EntryGate(client): tam ekran pazar ve dil kapısı (sunucuda açık, gerçek bağlantılarla; çerezsiz, ?m=)
-  sections/  Hero · Film · Architecture · Showcase + ShowcaseStrip(client) · Studio · BreakdownView (sayfa ve diyalog aynı bileşen) + BreakdownDialog + BreakdownHost(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
+  sections/  Hero · Film · Architecture · Showcase + ShowcaseStrip(client) · Studio · BriefingDrawing (Çizim 01, ADR 0028) · BreakdownView (sayfa ve diyalog aynı bileşen) + BreakdownDialog + BreakdownHost(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
   sim/       QueueView · SecurityView · IntegrationView (saf görünüm, sunucuda boşta çizilir) · FailSafeSim · SecurityFlowSim · IntegrationSim (client, tembel parça; kripto ve eşleme `lib/arch/` modüllerini çağırır) · Reserve (boştaki ve canlı sürüm aynı boyda) · LazySims · types
   media/     SceneVideo(client): poster + önceden render edilmiş video, ekran dışında durur
   i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead, Flag (tek boş öğe, resim `app/flags.css`'te)
@@ -90,7 +90,7 @@ lib/
 messages/   en tr ar de fr es zh ja (.json; ja uykuda)
 i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/       adr/ (mimari kararlar 0001–0027) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+docs/       adr/ (mimari kararlar 0001–0028) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
 tests/      arch/ (65 sözleşme testi)
 public/     fonts/ Inter Display (Latin + Türkçe) ve Syne alt kümeleri (OFL)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
