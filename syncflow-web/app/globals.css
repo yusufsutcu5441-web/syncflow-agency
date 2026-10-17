@@ -369,7 +369,7 @@ html[lang='ar'] ::after {
       --cv-pad: 7rem;
     }
     .cv-architecture {
-      --cv: 5600px;
+      --cv: 5605px;
     }
     .cv-showcase {
       --cv: 1260px;
@@ -389,7 +389,7 @@ html[lang='ar'] ::after {
   }
   @media (min-width: 64rem) {
     .cv-architecture {
-      --cv: 5530px;
+      --cv: 5560px;
     }
     .cv-showcase {
       --cv: 1590px;

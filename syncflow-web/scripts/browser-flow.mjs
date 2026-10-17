@@ -97,12 +97,17 @@ async function open(path, { viewport = DESKTOP, noCv = false, reduced = false } 
   return { page, errors };
 }
 
+// Scrolling has settled when scrollY has not moved for three consecutive samples (about 360 ms): one equal pair is not enough, the easing of a long
+// smooth scroll has plateaus (its first and last frames barely move), and under load a single pair declared "arrived" while the page was still on its way.
 const settle = async (page) => {
   await sleep(300);
-  for (let i = 0; i < 40; i++) {
-    const a = await page.evaluate(() => scrollY);
+  let still = 0;
+  let last = await page.evaluate(() => scrollY);
+  for (let i = 0; i < 80 && still < 3; i++) {
     await sleep(120);
-    if (a === (await page.evaluate(() => scrollY))) break;
+    const now = await page.evaluate(() => scrollY);
+    still = now === last ? still + 1 : 0;
+    last = now;
   }
   await sleep(250);
 };

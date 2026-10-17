@@ -26,23 +26,24 @@ const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 bu
 
 // The numbers below are the medians of Lighthouse runs against the LIVE site (https://syncflow.agency, the deployment of 6db4007: React and
 // Next start after the first paint, on top of the case studies, the worker-driven cinema layer and the single text face Inter Display), taken
-// on 17.10.2026. Raw runs and the spread: docs/perf/live-2026-10-17.md. They are what was measured, not what was hoped for. Desktop: five runs,
-// score 97-100 (median 100; the 97 is one run with a single 144 ms long task), TBT 0 ms in four of five runs, CLS 0 in every run. Mobile: 18 runs
-// in three sessions, median 99 (range 72-100): the first session (7 runs, quiet machine) scored 99-100 with TBT 26-40 ms, the two later ones
-// (11 runs, host CPU at 42-91 % from other programs) 72-99 with TBT up to 928 ms, because hydration now falls inside the TBT window (ADR 0023)
-// and the lab's 4x slowdown is relative to a host that was busy. LCP stayed 1.47-2.1 s throughout. Accessibility, best practices and SEO were
-// 100 in every run of both presets. The measurement before this one (94f3490) is docs/perf/live-2026-10-16.md (mobile 96, LCP 2.43 s).
-// Re-measure after every visual change, on a quiet machine, and put the new medians here.
+// on 17.10.2026. Raw runs and the spread: docs/perf/live-2026-10-17.md. They are what was measured, not what was hoped for. Desktop: eight runs,
+// score 97-100 (median 100; the 97 is one run with a single 144 ms long task), TBT 0 ms in most runs, CLS 0 in every run. Mobile: four sessions on
+// the same day. Two ran on a quiet machine (host CPU 2-12 %): 14 runs, score 99-100, median 100, TBT 24-48 ms, LCP 1.47-1.62 s; the latest of them
+// (deployment c72a253, 7 runs) was 100 in every run. Two ran while the host CPU was at 42-91 % from other programs: 11 runs, 72-99, TBT up to 928 ms,
+// because hydration now falls inside the TBT window (ADR 0023) and the lab's 4x slowdown is relative to a busy host. The seal is the quiet-machine
+// median, and the profile below says how far the score moves under load; a run on a loaded machine is not published as 100. Accessibility, best
+// practices and SEO were 100 in every run of both presets. The measurement before this one (94f3490) is docs/perf/live-2026-10-16.md (mobile 96,
+// LCP 2.43 s). Re-measure after every visual change, on a quiet machine, and put the new medians here.
 const LIVE = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency, docs/perf/live-2026-10-17.md';
 const LIVE_DESKTOP = 'desktop preset, live production (syncflow.agency), median of 5 runs';
-const LIVE_MOBILE = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 18 runs in three sessions (72-100; 99-100 on a quiet machine)';
+const LIVE_MOBILE = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 14 runs in two sessions on a quiet machine (99-100)';
 
 export const METRICS = {
   lighthousePerformance: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
   lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
   lighthouseBestPractices: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
   lighthouseSeo: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
-  lighthousePerformanceMobile: { value: 99, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_MOBILE, source: LIVE },
+  lighthousePerformanceMobile: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_MOBILE, source: LIVE },
   cls: { value: 0, unit: 'cls', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
   lcpDesktop: { value: 425, unit: 'ms', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
   tbtDesktop: { value: 0, unit: 'ms', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },

@@ -193,7 +193,8 @@ export async function Architecture() {
                 </p>
                 {METRICS.lighthouseAccessibility.measuredAt ? (
                   <p className="mt-2 text-xs text-faint">
-                    {t('c3Caption', { tool: 'Lighthouse', profile: METRICS.lighthouseAccessibility.profile, date: date(METRICS.lighthouseAccessibility.measuredAt) })}
+                    {/* Both profiles are named: the desktop one and the mobile one (whose median is of quiet-machine runs; the load sensitivity is in docs/perf/live-2026-10-17.md). */}
+                    {t('c3Caption', { tool: 'Lighthouse', profile: `${METRICS.lighthouseAccessibility.profile}; ${METRICS.lighthousePerformanceMobile.profile}`, date: date(METRICS.lighthouseAccessibility.measuredAt) })}
                   </p>
                 ) : null}
               </div>
