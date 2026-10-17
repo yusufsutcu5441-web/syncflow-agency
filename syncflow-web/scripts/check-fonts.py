@@ -104,3 +104,31 @@ if gaps:
         print('NOT COVERED by Syne: %r U+%04X in %s' % (ch, ord(ch), ', '.join(sorted(locales))))
     sys.exit(1)
 print('OK: the film chapter words in capitals (Syne) are covered in en tr de fr es.')
+
+# ── Share cards (docs/adr/0026-share-cards-in-arabic-and-chinese.md) ──
+# app/og/route.tsx draws the Chinese card on request with a subset of Noto Sans SC that holds only the card's characters, and serves the Arabic card
+# as a PNG rendered once from messages/ar.json. A copy change must not print empty boxes or leave a card that says something the page no longer does.
+import hashlib
+
+
+def card_strings(locale):
+    with open(os.path.join(root, 'messages', '%s.json' % locale), encoding='utf-8') as handle:
+        data = json.load(handle)
+    return [data['Hero']['title1'], data['Hero']['title2'], data['Meta']['ogSubtitle']]
+
+
+zh_font = set(TTFont(os.path.join(root, 'assets', 'og-noto-sans-sc-700.otf')).getBestCmap())
+zh_gaps = sorted({ch for text in card_strings('zh') for ch in text if not ch.isspace() and ord(ch) not in zh_font})
+if zh_gaps:
+    for ch in zh_gaps:
+        print('NOT COVERED by the Chinese card font: %r U+%04X (rebuild: python scripts/build-og-fonts.py <NotoSansArabic-SemiBold.ttf> <NotoSansSC-Bold.otf>)' % (ch, ord(ch)))
+    sys.exit(1)
+print('OK: the Chinese share card font covers the card text.')
+
+with open(os.path.join(root, 'assets', 'og-ar.json'), encoding='utf-8') as handle:
+    recorded = json.load(handle)['sha256']
+current = hashlib.sha256('\n'.join(card_strings('ar')).encode('utf-8')).hexdigest()
+if recorded != current:
+    print('STALE: assets/og-ar.png was rendered from different Arabic text than messages/ar.json has now (run: node scripts/render-og-card-ar.mjs)')
+    sys.exit(1)
+print('OK: the Arabic share card (assets/og-ar.png) matches the current Arabic copy.')

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const [{ title, description }, meta] = await Promise.all([breakdownMetadata(slug, locale), getTranslations({ locale, namespace: 'Meta' })]);
   const path = (code: AppLocale) => withLocale(breakdownPath(slug), code);
-  const image = `/og?locale=${locale}&v=3`;
+  const image = `/og?locale=${locale}&v=4`;
 
   return {
     title,

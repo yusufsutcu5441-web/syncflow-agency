@@ -349,13 +349,18 @@ const robots = await (await get('/robots.txt')).text();
 check('robots.txt disallows /api/ and links the sitemap', /Disallow: \/api\//.test(robots) && /Sitemap:/.test(robots));
 check('manifest + icon served', (await get('/manifest.webmanifest')).status === 200 && (await get('/icon.svg')).status === 200);
 const ogUrls = [...html.matchAll(/<meta[^>]+(?:property="og:image"|name="twitter:image")[^>]*content="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
-check('og:image and twitter:image use the explicit, redirect-free /og?locale= URL', ogUrls.length >= 2 && ogUrls.every((u) => /\/og\?locale=en&v=3$/.test(u)), ogUrls.join(' '));
+check('og:image and twitter:image use the explicit, redirect-free /og?locale= URL', ogUrls.length >= 2 && ogUrls.every((u) => /\/og\?locale=en&v=4$/.test(u)), ogUrls.join(' '));
 check('og:image:alt is localized', /property="og:image:alt"[^>]*content="syncflow\.agency: Built in the dark\. Moves like liquid\./.test(html));
+const cards = new Map();
 for (const loc of OPEN) {
-  const r = await get(`/og?locale=${loc}&v=3`);
+  const r = await get(`/og?locale=${loc}&v=4`);
   const bytes = Buffer.from(await r.arrayBuffer());
+  cards.set(loc, bytes);
   check(`/og?locale=${loc}: 200 image/png, 1200x630, > 10 KB`, r.status === 200 && r.headers.get('content-type') === 'image/png' && bytes.length > 10_000 && bytes.readUInt32BE(16) === 1200 && bytes.readUInt32BE(20) === 630, `${r.status} ${r.headers.get('content-type')} ${bytes.length}`);
 }
+// docs/adr/0026: the Arabic and Chinese cards carry their own language (they used to be the English card): every card differs from every other.
+const distinct = new Set([...cards.values()].map((bytes) => bytes.toString('base64'))).size;
+check(`each of the ${OPEN.length} share cards is its own picture (Arabic and Chinese are no longer the English card)`, distinct === OPEN.length, `${distinct} distinct of ${OPEN.length}`);
 const ogHeaders = (await get('/og?locale=tr')).headers;
 check('/og is cacheable at the edge (s-maxage) and rate-limit headers present', /s-maxage=\d+/.test(ogHeaders.get('cache-control') ?? '') && ogHeaders.get('ratelimit-limit') === '30', `${ogHeaders.get('cache-control')} | ${ogHeaders.get('ratelimit-limit')}`);
 check('/og with an unknown locale falls back to English instead of failing', (await get('/og?locale=xx')).status === 200);

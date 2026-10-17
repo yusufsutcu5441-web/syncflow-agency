@@ -410,7 +410,7 @@
     "m5Text": "Security and integration claims are backed by tests we run before every release: signed messages, sealed envelopes, and a reference queue that loses nothing and applies nothing twice in every tested failure.",
     "factsLabel": "Checkable on this page",
     "f1Name": "HMAC-SHA256 · AES-256-GCM",
-    "f1Text": "The security simulator on this page signs and seals a message with your browser’s own Web Crypto: the same primitives, and the same tests, as our reference architecture.",
+    "f1Text": "The enterprise security flow on this page signs and seals a message with your browser’s own Web Crypto: the same primitives, and the same tests, as our reference architecture.",
     "f2Name": "No cookies · no analytics",
     "f2Text": "Open your network tab: nothing is stored on your device and nothing loads from a third party, except the Cloudflare bot check on the briefing form.",
     "f3Name": "Enforced Content-Security-Policy",

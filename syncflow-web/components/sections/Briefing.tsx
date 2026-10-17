@@ -338,7 +338,7 @@ export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { pr
       <p className="label mt-8" aria-live="polite">
         {fill(t.stepOf, { current: step, total: TOTAL })}
       </p>
-      {direct ? <p className="mt-3 text-sm leading-relaxed text-muted">{t.directNote}</p> : null}
+      {direct ? <p className="mb-5 mt-3 text-sm leading-relaxed text-muted">{t.directNote}</p> : null}
 
       <div key={step} className="step-in mt-4">
         {/* Step 1 is the qualification: the investment, in the currency of the visitor's market, with the minimum named in the question. */}

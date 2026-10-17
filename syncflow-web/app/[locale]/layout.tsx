@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   const t = await getTranslations({ locale, namespace: 'Meta' });
   const ogLocale = LOCALE_LABELS[locale];
   // Explicit, redirect-free URL of the share card (app/og/route.tsx). Bump v when the design changes.
-  const shareImage = `/og?locale=${locale}&v=3`;
+  const shareImage = `/og?locale=${locale}&v=4`;
 
   return {
     metadataBase: new URL(SITE_URL),

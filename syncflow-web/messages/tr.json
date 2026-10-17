@@ -27,7 +27,7 @@
   "Gate": {
     "eyebrow": "Dijital mimari stüdyosu",
     "title": "Finans merkezinizi seçin.",
-    "lead": "Pazarınız dili önerir ve briefing’in para birimini belirler. Seçiminiz sayfa adresinde durur; çerez bırakmaz, tarayıcı depolaması kullanmayız.",
+    "lead": "Pazarınız dili önerir ve briefing’in para birimini belirler. Seçiminiz yalnızca sayfa adresinde saklanır; çerez ve tarayıcı depolaması kullanmayız.",
     "marketLabel": "Finans merkezi",
     "languageLabel": "Dil",
     "us": "Amerika Birleşik Devletleri ve küresel",
@@ -402,7 +402,7 @@
     "m1Text": "Veri, hata biçimleri ve toleranslar, tek satır kod yazılmadan önce yazılır ve üzerinde anlaşılır. Çizilemeyen bir yapı başlatılmaz.",
     "m2Title": "Sıfat değil, tolerans söyle.",
     "m2Text": "Sayıları tarih, profil ve kaynakla yayınlarız; ölçemediğimiz hiçbir şeyi söylemeyiz.",
-    "m3Title": "Kapalı düş. Rol yapma.",
+    "m3Title": "Arızada kapalı kal. Rol yapma.",
     "m3Text": "Bir parça eksikse sistem reddeder ve bunu söyler. Kimsenin almadığı bir mesaja asla “alındı” demez.",
     "m4Title": "Varsayılan olarak sessizlik.",
     "m4Text": "Çerez yok, analitik yok; üçüncü taraf yalnızca bot denetiminin gerektiği yerde. Bir müşterinin bize söylediğini bir insan okur, bir izleyici değil.",
@@ -410,10 +410,10 @@
     "m5Text": "Güvenlik ve entegrasyon iddialarının arkasında her sürümden önce koşturduğumuz testler var: imzalı mesajlar, mühürlü zarflar ve denenen her arızada hiçbir şey kaybetmeyen, hiçbir şeyi iki kez uygulamayan bir referans kuyruk.",
     "factsLabel": "Bu sayfada denetlenebilir",
     "f1Name": "HMAC-SHA256 · AES-256-GCM",
-    "f1Text": "Bu sayfadaki güvenlik simülatörü, tarayıcınızın kendi Web Crypto’su ile bir mesajı imzalar ve mühürler: referans mimarimizle aynı ilkeller, aynı testler.",
+    "f1Text": "Bu sayfadaki kurumsal güvenlik akışı, tarayıcınızın kendi Web Crypto’su ile bir mesajı imzalar ve mühürler: referans mimarimizle aynı ilkeller, aynı testler.",
     "f2Name": "Çerez yok · analitik yok",
     "f2Text": "Ağ sekmesini açın: cihazınızda hiçbir şey saklanmaz ve briefing formundaki Cloudflare bot denetimi dışında hiçbir şey üçüncü taraftan yüklenmez.",
-    "f3Name": "Uygulanan Content-Security-Policy",
+    "f3Name": "Engelleyen Content-Security-Policy",
     "f3Text": "Her betik tek kullanımlık bir nonce taşır, gerisini tarayıcı engeller. İhlal taraması sürüm denetimlerimizin parçasıdır."
   },
   "Sim": {

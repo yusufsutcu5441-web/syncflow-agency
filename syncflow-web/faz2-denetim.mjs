@@ -140,6 +140,17 @@ else {
   const fontFiles = ["public/fonts/inter-display-latin-v1.woff2", "public/fonts/inter-display-turkish-v1.woff2", "assets/og-inter-display-600.ttf"];
   const lostFonts = fontFiles.filter((f) => !exists(f));
   lostFonts.length ? add(G2, "FAIL", `yazı tipi dosyası yok: ${lostFonts.join(", ")} (scripts/build-fonts.py üretir)`) : add(G2, "PASS", "Inter Display dosyaları (Latin, Türkçe, OG kartı) var");
+  // Paylaşım kartları (docs/adr/0026): Çince kart istek anında Noto Sans SC alt kümesiyle, Arapça kart tarayıcıda bir kez çizilmiş PNG olarak sunulur;
+  // üçü de işlevle birlikte paketlenmeli (outputFileTracingIncludes), yoksa Vercel'de /og?locale=ar ya da zh 500 verir ve yerelde görünmez.
+  {
+    const cardFiles = ["assets/og-noto-sans-sc-700.otf", "assets/og-ar.png", "assets/og-ar.json"];
+    const lostCards = cardFiles.filter((f) => !exists(f));
+    const cfg = exists("next.config.mjs") ? read("next.config.mjs") : "";
+    const traced = ["og-inter-display-600.ttf", "og-noto-sans-sc-700.otf", "og-ar.png"].filter((f) => !cfg.includes(f));
+    lostCards.length === 0 && traced.length === 0
+      ? add(G2, "PASS", "Arapça (PNG) ve Çince (Noto Sans SC alt kümesi) paylaşım kartı dosyaları var ve /og işleviyle paketleniyor (outputFileTracingIncludes)")
+      : add(G2, "FAIL", `paylaşım kartı dosyası yok ya da işlevle paketlenmiyor: ${[...lostCards, ...traced.map((f) => `${f} (next.config.mjs)`)].join(", ")}`);
+  }
   {
     const bytes = (f) => fs.statSync(abs(f)).size;
     const critical = exists(fontFiles[0]) ? bytes(fontFiles[0]) : 1e9;
