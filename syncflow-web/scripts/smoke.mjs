@@ -412,7 +412,7 @@ section(`Turnstile (mode: ${TURNSTILE_MODE})`);
 if (TURNSTILE_MODE === 'pass') {
   const noToken = await post(valid({ turnstileToken: undefined }));
   const noTokenJson = await noToken.json();
-  check('a briefing without a Turnstile token is refused (400 verification)', noToken.status === 400 && noTokenJson.code === 'verification', JSON.stringify(noTokenJson));
+  check('a briefing without a Turnstile token is refused (403 verification)', noToken.status === 403 && noTokenJson.code === 'verification', JSON.stringify(noTokenJson));
 } else if (TURNSTILE_MODE === 'unset') {
   const res = await post(valid());
   check('production without TURNSTILE_SECRET_KEY refuses the form (503)', res.status === 503, `status ${res.status}`);

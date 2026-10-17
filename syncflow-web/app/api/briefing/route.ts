@@ -82,7 +82,7 @@ export async function POST(request: Request) {
   // Turnstile is verified on the server; an unverified submission never reaches the webhook.
   const human = await verifyTurnstile(input.turnstileToken, ip);
   if (human === 'not_configured') return fail('unavailable', 503);
-  if (human === 'failed') return fail('verification', 400);
+  if (human === 'failed') return fail('verification', 403);
 
   const name = toPlainText(input.name);
   const company = toPlainText(input.company);
