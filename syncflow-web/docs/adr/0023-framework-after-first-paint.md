@@ -92,14 +92,14 @@ Her şey yazmadan **önce** doğrulanır: düzen bilinmiyorsa (`LayoutError`) hi
 
 | | 16.10 (betikler belgede) | 17.10 (ilk boyamadan sonra) |
 |---|---|---|
-| **Mobil performans** (medyan, n=7) | 96 (87–97) | **100** (99–100; yedi koşunun beşi 100, ikisi 99) |
-| Mobil LCP · TBT · CLS | 2.433 ms · 88 ms · 0 | **1.622 ms · 33 ms · 0** |
+| **Mobil performans** (medyan, üç oturum, n=18) | 96 (87–97) | **99** (72–100). Sakin makinede (7 koşu) medyan **100** (99–100); makine yüklüyken (11 koşu) 72–99 |
+| Mobil LCP · TBT · CLS | 2.433 ms · 88 ms · 0 | **1.47–2.1 sn** (sakin: 1.622) · 26–40 ms sakin, 43–928 ms yükte · 0 |
 | Masaüstü performans (n=5) | 100 | **100** (97–100) · LCP 425 ms · TBT 0 |
 | Erişilebilirlik · En iyi uyg. · SEO | 100 · 100 · 100 | 100 · 100 · 100 (iki profilde, her koşuda) |
 
 `live-check.mjs`: **45 geçti, 1 uyarı (`www` DNS), 0 hata**; belge tek betik (`sf-boot`) ister, yükleyicinin adlandırdığı 10 betiğin hepsi sunulur. Tarayıcı akışı canlıya karşı: `framework` grubu geçti; dört telefon çapa kontrolü ilk koşuda düştü ve **testin zamanlamasından** çıktı (uzak sunucuda yumuşak gezinti bir RSC gidiş-dönüşü ister, `settle` bunu "vardı" sayıyordu); sayfa doğru iniyordu (`top 88`, tutulan bölüm 0). Test adres değişimini bekleyecek biçimde düzeltildi, çapa grubu canlıda 8/8.
 
-**Dürüst sınır:** mobil medyan 100, ama garanti değil: TBT'nin 26–40 ms'lik titreşimi iki koşuyu 99'a çekti. Skoru 100'de tutan marj dardır; her yayından sonra yeniden ölçülür (`lib/metrics.ts` mührü bu ölçümdendir).
+**Dürüst sınır:** "mobil 100" **sakin makinede** tekrarlanan bir sonuçtur, bir garanti değildir. Çerçeve ilk boyamadan sonra başladığı için hidrasyon görevi TBT penceresine girer (eskiden boyamadan önceydi ve sayılmazdı); ana makine yükteyken (aynı gün, ilk oturumdan sonra CPU %42–91) TBT 43–928 ms'ye şişti ve skor 72–99 arasında oynadı, LCP ise 1,47–2,1 sn'de kaldı. Aynı derlemede aralıklı A/B (CSP enforce ile report-only, 14'er koşu) farkı gürültüden ayırt etmedi (Mann–Whitney p ≈ 0,46): neden CSP değil, yük. `lib/metrics.ts` mührü bu yüzden **üç oturumun 18 koşusunun medyanı olan 99**'dur; "100" tek bir sakin oturumun medyanıdır. Skoru yükte de korumanın yolu TBT'yi küçültmektir (daha küçük bir çerçeve ya da adalar mimarisi: ayrı bir karar).
 
 ## Nasıl doğrulanır
 
