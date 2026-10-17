@@ -1,6 +1,6 @@
 # ADR 0023: React ve Next ilk boyamadan sonra başlar (mobil Lighthouse 96 → 99–100)
 
-- **Durum:** Uygulandı, yerelde ve Vercel adaptörünün yerel benzetiminde doğrulandı, 17.10.2026. Canlı doğrulama bu belgenin sonundaki "Canlıda" bölümüne eklenir.
+- **Durum:** Uygulandı ve **canlıda doğrulandı**, 17.10.2026 (dağıtım `6db4007`; üçüncü denemede: ilk ikisi Vercel'de düştü, §4). Canlı ölçüm: [docs/perf/live-2026-10-17.md](../perf/live-2026-10-17.md), özeti "Canlıda" bölümünde.
 - **Karar:** proje sahibi, 17.10.2026: "mobil 100 istiyorum, gerekeni yap"; tam yetki. [ADR 0022](0022-single-text-face-and-mobile-ceiling.md) §5 bunu "ulaşılabilir tek büyük kaldıraç, ayrı bir mimari karar" diye yazmıştı; bu ADR o kaldıracı **Next'in koduna dokunmadan**, derleme sırasında manifest dosyalarını düzenleyen bir adaptörle uygular.
 - **Tamamlar:** [ADR 0004](0004-motion-and-smooth-scroll.md) (geliştirmeler ilk boyamadan sonra başlar), [ADR 0021](0021-production-performance-and-enterprise-proof.md), [ADR 0022](0022-single-text-face-and-mobile-ceiling.md).
 
@@ -29,7 +29,7 @@ Betikler ilk boyamadan sonra başladığı için artık TBT penceresinin **için
 3. `sf-boot` yükleyicisi (≈1 KB, her derlemede içerik özetiyle adlanır): orijinal betikleri aynı sırayla **ilk contentful paint'ten sonra** ekler. Ayrıca ilk dokunuş, tuş, tekerlek ya da `pointerdown` ile hemen, 3,5 sn sonra zamanlayıcıyla, gizli sekmede anında başlar. Her adresi, yükleyicinin kendi **`src` özniteliğinden** (göreli `/_next/...`, varsa `?dpl=` ve nonce dahil) kurar.
 4. `.next/sf-defer.json`: özgün listeler (denetim okur).
 
-Her şey yazmadan **önce** doğrulanır: düzen bilinmiyorsa (`LayoutError`) hiçbir şey yazılmaz. Betik idempotenttir ve yazdığını geri okuyup doğrular. İki yerleşimi bilir: düz derleme `static/chunks/`, Vercel adaptörü `static/immutable/chunks/` (yükleyici çerçevenin kendi parçalarının yanına konur).
+Her şey yazmadan **önce** doğrulanır: düzen bilinmiyorsa (`LayoutError`) hiçbir şey yazılmaz. Betik idempotenttir ve yazdığını geri okuyup doğrular. İki yerleşimi okur: düz derleme `static/chunks/`, Vercel adaptörü `static/immutable/chunks/`. Yükleyici ise **her zaman `static/chunks/`'a** yazılır (§4, ikinci ders).
 
 **Bulunan hata 1 (testin değeri):** ilk sürüm adresleri `script.src` (mutlak) ile kurdu. Turbopack çalışma zamanı bir parçanın kimliğini `src` özniteliğinden çıkarır ve `/_next/` ile başlayan göreli yolu bekler; mutlak adres eşleşmedi, sayfa **hidrate olmadı**: tüm betikler 200 ile yüklendi, konsolda hata yoktu, Lighthouse yine 100 gösterdi (hiç JavaScript çalışmıyordu). Yeni `framework` tarayıcı grubu (`.gate[data-ready]` bekler) bunu yakaladı.
 
@@ -43,6 +43,8 @@ Her şey yazmadan **önce** doğrulanır: düzen bilinmiyorsa (`LayoutError`) hi
 Çözüm: `next.config.mjs` `adapterPath` ile **`scripts/sf-adapter.mjs`**'i bağlar. Next, adaptörün `onBuildComplete` alanını **hiçbir özet ya da liste hesaplamadan önce** (ve tüm manifestler yazıldıktan sonra) bir kez `typeof … === 'function'` diye okur; bu alan bir `get`'tir: okunduğu an dönüşüm uygulanır (eşzamanlı, idempotent; Next onu çağırmak için ikinci kez okur). Sonra Vercel'de `NEXT_ADAPTER_PATH`'teki platform adaptörü yüklenir ve kancaları (`modifyConfig`, `onBuildComplete`) olduğu gibi çalıştırılır: paketleme eskisi gibi, yalnızca dönüştürülmüş dosyalardan yapılır. Yerelde platform adaptörü yoktur, `get` `undefined` döner, Next adaptör adımını (her çıktıyı izleyip listelemeyi) tümden atlar.
 
 İki ayrıntı, ancak gerçek adaptör yerelde çalıştırılınca görüldü: (a) Next'in `<sayfa>.js.nft.json` dosyaları, her izlenen dosya için paketleyicinin yazdığı **özet** taşır; düzenlediğimiz `page_client-reference-manifest.js`'in özeti artık yanlıştır: dönüşüm onu boş bırakır ("kayıtlı değil", platform kendisi hesaplar), `--check` bunu da doğrular; (b) genel `build-manifest.json`'un özetini Next dönüşümden sonra hesaplar, doğrudur (benzetimde dosya özetiyle eşleşti).
+
+**İkinci ders: yükleyicinin yeri (ikinci canlı deneme de düştü).** Adaptörlü sürüm (`4f45b7e`, `dpl_4B9EbPba9PV3ZzkADtbf1KyT4LXF`) normal bir dağıtım süresi (23 sn) çalışıp düştü: derleme tamamlanmış, başarısızlık ondan sonraydı. Tek yeni çıktı dosyası, `static/immutable/chunks/` altındaki yükleyiciydi; o klasör platformun içerik özetiyle izlediği dosyaların ad alanıdır (`immutable-static-hashes.json` → `immutable.json`) ve yükleyici orada listelenmiyordu. Günlüğü göremediğim için nedeni doğrudan doğrulayamadım; **denedim**: aynı kodu yalnızca yükleyiciyi `static/chunks/`'a yazacak biçimde değiştirip ayrı bir önizleme dalına (`exp/loader-outside-immutable`, üretime dokunmadan) ittim: dağıtım başarılı oldu (23 sn), `main`'e ileri sarıldı ve canlıda çalıştı. Yerel Windows benzetiminde `immutable.json` hiç yazılmadı (Next'in anahtar eşleşmesi Windows yol ayırıcısında kaçıyor gibi görünüyor; bu bir çıkarımdır, doğrulamadım), yani bu hata yerelde görünemezdi; gerçek CLI oluşturucusu (`vercel build`, v64.4.0) yerelde başarılı gösteriyordu. Ders: bir dağıtımın platform tarafı doğrulaması yerelde benzetilemez; önizleme dalı bunun için ucuz ve güvenli yoldur. Tek koşulum: dönüşümün sonucu platformun izlediği bir ad alanına dosya eklememeli.
 
 **Tavizsiz olmayan davranış:** düzen bilinmiyorsa (bir Next yükseltmesi) adaptör yüksek sesle **uyarır ve betikleri belgede bırakır** (sayfa çalışır, mobil ≈ 96); dağıtımı düşürmez. `DEFER_FRAMEWORK=strict` düşürür (denetimin `--build` adımı bunu kullanır), `DEFER_FRAMEWORK=off` atlar (`npm run build:eager`). `node scripts/defer-framework.mjs --check`, `smoke` ve canlı kontrol dönüşmemiş çıktıyı yakalar.
 
@@ -74,6 +76,7 @@ Her şey yazmadan **önce** doğrulanır: düzen bilinmiyorsa (`LayoutError`) hi
 
 - **Düz yerel derleme** (`npm run build`, `DEFER_FRAMEWORK=strict`): `faz2-denetim.mjs --build` **214 geçti, 1 uyarı (eski), 0 hata**; `smoke` **184/184**; `qa:browser --parity` tam koşu **124/124**.
 - **Vercel adaptörünün yerel benzetimi** (gerçek `@vercel/next` 23.0.2 adaptörü `NEXT_ADAPTER_PATH` ile, `VERCEL_IMMUTABLE_STATIC_FILES_ENABLED=1`, `VERCEL_SKEW_PROTECTION_ENABLED=1`; Windows'ta sembolik bağ izni olmadığı için bağ yerine kopyalayan bir önyükleme kabuğuyla): derleme tamamlanır, `.next/output/static/_next/static/immutable/chunks/sf-boot.<özet>.js` vardır, genel manifestin kayıtlı özeti dosyayla eşleşir, düzenlenen sayfa manifestinde bayat özet yoktur, `--check` temiz. Bu düzende sunulan belge `0cz1…js` (nomodule) ve `sf-boot…js` ister; kapı hidrate olur (`framework` grubu geçer).
+- **Gerçek `vercel build`** (CLI 64.4.0, kendi `@vercel/next` oluşturucusu, adaptör açık): derleme tamamlanır, çıktıda yükleyici `static/_next/static/chunks/sf-boot.<özet>.js` altındadır. Bu, platformun yükleme ve dağıtım doğrulamasını **kapsamaz** (§4, ikinci ders).
 - **Yapılamayan:** Vercel'in gerçek çalışma zamanını yerelde sunmak. Adaptör çıktısı düz `next start` ile sunulunca RSC yumuşak gezinti çalışmaz (telefonda başka adresten gelen `#bölüm` bağlantıları belgeyi yeniden yükler; **dönüştürülmemiş** adaptör derlemesinde de aynı 4 telefon çapa kontrolü düşer, yani sorun dönüşümden değil, bu sunum biçiminden). Gerçek sınama yalnızca dağıtımdır.
 
 ## 8. Sınırlar ve riskler
@@ -82,8 +85,21 @@ Her şey yazmadan **önce** doğrulanır: düzen bilinmiyorsa (`LayoutError`) hi
 - Mobil hâlâ 100'ün **garantisi değildir**: TBT titreşimi 98–100 aralığı verir. Canlıda (Brotli, gerçek ağ) ölçülmeden yazılmaz.
 - Safari ve Firefox'ta sınanmadı (`PerformanceObserver` `paint` desteği yoksa `load` ve 3,5 sn güvencesi devreye girer).
 - **Next ya da Vercel adaptör yükseltmesi:** adaptörün `onBuildComplete` alanını okuma sırası ve `nft.json` özet düzeni Next'in iç ayrıntısıdır. Biri değişirse en kötü durum, dönüşmemiş (≈ 96) bir yayındır; `--check`, `smoke` ve canlı kontrol bunu yakalar. Yükseltmeden sonra `qa:browser --only=framework` çalıştırılır.
-- Yükleyici dosyası `immutable-static-hashes.json`'a eklenmez: platform onu içerik özetsiz statik dosya olarak sunar, `/_next/static/(…|immutable|chunks|…)/` için önbellek başlığı (bir yıl, `immutable`) yine de uygulanır.
+- Yükleyici `static/chunks/`'ta durur, platformun `static/immutable/` ad alanında değil (§4): içerik özetiyle adlıdır, platform onu sıradan statik dosya olarak sunar ve `/_next/static/(…|chunks|…)/` için bir yıllık `immutable` önbellek başlığı yine uygulanır. Bilinmeyen: eski bir dağıtımın HTML'ini tutan bir sekme, o dağıtımın yükleyicisi artık sunulmuyorsa betiksiz (okunur ama etkileşimsiz) kalır; HTML `no-store` ile sunulduğu için yenileme düzeltir. Ölçülmedi.
 - Geri alma: Vercel'de `DEFER_FRAMEWORK=off` ortam değişkeni + yeniden dağıtım, ya da `git revert` (adaptör ve `adapterPath` birlikte gider).
+
+## Canlıda (17.10.2026, `6db4007`; ayrıntı [docs/perf/live-2026-10-17.md](../perf/live-2026-10-17.md))
+
+| | 16.10 (betikler belgede) | 17.10 (ilk boyamadan sonra) |
+|---|---|---|
+| **Mobil performans** (medyan, n=7) | 96 (87–97) | **100** (99–100; yedi koşunun beşi 100, ikisi 99) |
+| Mobil LCP · TBT · CLS | 2.433 ms · 88 ms · 0 | **1.622 ms · 33 ms · 0** |
+| Masaüstü performans (n=5) | 100 | **100** (97–100) · LCP 425 ms · TBT 0 |
+| Erişilebilirlik · En iyi uyg. · SEO | 100 · 100 · 100 | 100 · 100 · 100 (iki profilde, her koşuda) |
+
+`live-check.mjs`: **45 geçti, 1 uyarı (`www` DNS), 0 hata**; belge tek betik (`sf-boot`) ister, yükleyicinin adlandırdığı 10 betiğin hepsi sunulur. Tarayıcı akışı canlıya karşı: `framework` grubu geçti; dört telefon çapa kontrolü ilk koşuda düştü ve **testin zamanlamasından** çıktı (uzak sunucuda yumuşak gezinti bir RSC gidiş-dönüşü ister, `settle` bunu "vardı" sayıyordu); sayfa doğru iniyordu (`top 88`, tutulan bölüm 0). Test adres değişimini bekleyecek biçimde düzeltildi, çapa grubu canlıda 8/8.
+
+**Dürüst sınır:** mobil medyan 100, ama garanti değil: TBT'nin 26–40 ms'lik titreşimi iki koşuyu 99'a çekti. Skoru 100'de tutan marj dardır; her yayından sonra yeniden ölçülür (`lib/metrics.ts` mührü bu ölçümdendir).
 
 ## Nasıl doğrulanır
 

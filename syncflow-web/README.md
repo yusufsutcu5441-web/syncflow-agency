@@ -272,14 +272,16 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 
 Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
 
-### React ve Next ilk boyamadan sonra: mobil 96 → 99–100 (17.10.2026, yerel; canlı sonuç aşağıda eklenir)
+### React ve Next ilk boyamadan sonra: canlıda mobil 96 → 100 (17.10.2026, dağıtım `6db4007`)
 
-Karar ve ölçümler: [ADR 0023](docs/adr/0023-framework-after-first-paint.md). `scripts/sf-adapter.mjs` (Next `adapterPath`), `next build` içinde ve Vercel'in kendi adaptörü dosya özetlerini çıkarmadan önce `scripts/defer-framework.mjs`'i çalıştırır; Next'in koduna dokunmadan yalnızca manifestleri düzenler (derleme SONRASI bir betik Vercel'de işe yaramazdı: ilk canlı deneme bu yüzden düştü, ADR 0023 §4): belge tek bir 1 KB'lık yükleyici ister, çerçeve betikleri ilk contentful paint'ten sonra (ya da ilk girdide) gelir. Bu, ADR 0022'de "bu mimaride sağlanamaz" yazan mobil tavanı aşar: tavan çerçevenin ilk boyamadan önce yüklenmesindendi, mimarinin kendisinden değil.
+Karar ve ölçümler: [ADR 0023](docs/adr/0023-framework-after-first-paint.md). `scripts/sf-adapter.mjs` (Next `adapterPath`), `next build` içinde ve Vercel'in kendi adaptörü dosya özetlerini çıkarmadan önce `scripts/defer-framework.mjs`'i çalıştırır; Next'in koduna dokunmadan yalnızca manifestleri düzenler (derleme SONRASI bir betik Vercel'de işe yaramazdı ve yükleyiciyi platformun `immutable` ad alanına koymak da dağıtımı düşürdü: ilk iki canlı deneme bu yüzden düştü, üçüncüsü çalıştı, ADR 0023 §4): belge tek bir 1 KB'lık yükleyici ister, çerçeve betikleri ilk contentful paint'ten sonra (ya da ilk girdide) gelir. Bu, ADR 0022'de "bu mimaride sağlanamaz" yazan mobil tavanı aşar: tavan çerçevenin ilk boyamadan önce yüklenmesindendi, mimarinin kendisinden değil.
 
 | Denetim | Sonuç |
 |---|---|
-| Mobil Lighthouse `/` (yerel, 12 koşu) | önce **96** → şimdi **100 ×6, 99 ×5, 98 ×1**; LCP 2.755 → **1.51–1.59 sn**; TBT 28–159 ms (React DOM değerlendirmesi artık TBT penceresine girer) |
-| Masaüstü Lighthouse `/` (6 koşu) | **100 ×6**, TBT 0, LCP ≈ 0,38 sn (önce ≈ 0,60 sn) |
+| **Canlı** mobil Lighthouse `/` (n=7, [docs/perf/live-2026-10-17.md](docs/perf/live-2026-10-17.md)) | önce **96** → şimdi medyan **100** (99–100: beş koşu 100, iki koşu 99); LCP 2.433 → **1.622 ms**; TBT 88 → **33 ms**; erişilebilirlik, en iyi uygulamalar, SEO 100. Garanti değil: TBT titreşimi iki koşuyu 99'a çekti |
+| **Canlı** masaüstü Lighthouse `/` (n=5) | medyan **100** (97–100), LCP 595 → **425 ms**, TBT 0 (bir koşuda 144 ms), tüm kategoriler 100 |
+| Yerel mobil (12 koşu) | önce 96 → **100 ×6, 99 ×5, 98 ×1**; LCP 2.755 → 1.51–1.59 sn |
+| Canlı `live-check` · canlı çapa/çerçeve tarayıcı grupları | **45 geçti, 0 hata, 1 uyarı (`www` DNS)** · geçti (telefon çapa testinin uzak sunucu zamanlaması düzeltildi, 8/8) |
 | Ödünleşim (yavaş 4G, 4× CPU, 3 koşu medyan) | ilk boyama **1,13 sn** (önce 1,64) · etkileşime hazır **2,63 sn** (önce 2,07) |
 | `qa:browser --parity` (yeni `framework` grubu dahil) · `smoke` · `faz2-denetim.mjs --build` | **124/124** · **184/184** · **207 geçti, 0 hata** |
 

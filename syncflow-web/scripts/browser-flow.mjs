@@ -160,6 +160,9 @@ if (want('anchors')) {
       }
       await sleep(500);
       await page.evaluate(() => document.querySelector('[data-qa-link]').click());
+      // A link from /?m=us to /#section is a soft navigation (a round trip for the page's RSC payload) and only then the scroll: on a remote server that
+      // is a few hundred ms in which scrollY does not move, which `settle` would take for "arrived". Wait for the address to change first.
+      await page.waitForFunction((t) => location.hash === `#${t}`, { timeout: 10000 }, target).catch(() => undefined);
       await settle(page);
       const top = await topOf(page, `#${target}`);
       const held = await page.evaluate(() => document.querySelectorAll('.cv[data-cv-prime]').length);
