@@ -273,6 +273,10 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 
 Hepsi üretim derlemesi üzerinde, Windows 11, Node 24.12, Chrome 154 ile alındı. Aşama sonuçları:
 
+### Kalite turu ve küresel karşılaştırma (17.10.2026)
+
+Rapor: [docs/benchmark/2026-10-17-global-comparison.md](docs/benchmark/2026-10-17-global-comparison.md). Aynı makine, aynı Lighthouse, aynı gün, 12 küresel stüdyo: rakip medyanı mobil **40** (29–55; hiçbiri 90'a ulaşmadı), sayfa ağırlığı 9,4 MB; syncflow mobil 99–100, 0,3 MB (≈ 29× hafif). Bulunan ve kapatılan: CSP enforce ([ADR 0024](docs/adr/0024-csp-enforced.md), `npm run qa:csp`), axe 2 kural → **0 ihlal** (16 tarama: yedi dil, telefon, açık diyalog ve menü), telefonda dokunma hedefleri (44 px altı 49 → 22), vaka sayfalarına `WebPage` + `BreadcrumbList` JSON-LD, bağlantı taraması (118 iç bağlantı, hepsi 200). **Kalanlar yalnızca sahibin elinde:** form teslimi (503), `www` DNS, sosyal kanıt (logo, referans, ekip yok; uydurulmaz), hukuki metinler, ana dil gözden geçirmesi.
+
 ### React ve Next ilk boyamadan sonra: canlıda mobil 96 → 100 (17.10.2026, dağıtım `6db4007`)
 
 Karar ve ölçümler: [ADR 0023](docs/adr/0023-framework-after-first-paint.md). `scripts/sf-adapter.mjs` (Next `adapterPath`), `next build` içinde ve Vercel'in kendi adaptörü dosya özetlerini çıkarmadan önce `scripts/defer-framework.mjs`'i çalıştırır; Next'in koduna dokunmadan yalnızca manifestleri düzenler (derleme SONRASI bir betik Vercel'de işe yaramazdı ve yükleyiciyi platformun `immutable` ad alanına koymak da dağıtımı düşürdü: ilk iki canlı deneme bu yüzden düştü, üçüncüsü çalıştı, ADR 0023 §4): belge tek bir 1 KB'lık yükleyici ister, çerçeve betikleri ilk contentful paint'ten sonra (ya da ilk girdide) gelir. Bu, ADR 0022'de "bu mimaride sağlanamaz" yazan mobil tavanı aşar: tavan çerçevenin ilk boyamadan önce yüklenmesindendi, mimarinin kendisinden değil.

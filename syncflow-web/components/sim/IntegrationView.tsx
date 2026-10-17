@@ -113,7 +113,8 @@ export function IntegrationView({ labels, system, onSelect }: { labels: Integrat
 
       <p className="label mt-5">{labels.payloadLabel}</p>
       <Reserve className="map-code" ghosts={TARGET_SYSTEMS.filter((s) => s !== system).map((s) => PLANS[s].json)}>
-        <pre key={system} className="metric-value" dir="ltr">
+        {/* On a narrow screen the sample scrolls sideways: a keyboard user must be able to reach and scroll it (axe: scrollable-region-focusable). */}
+        <pre key={system} className="metric-value" dir="ltr" tabIndex={0} role="region" aria-label={labels.payloadLabel}>
           {plan.json}
         </pre>
       </Reserve>

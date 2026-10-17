@@ -1305,6 +1305,16 @@ html[lang='ar'] ::after {
       color: var(--color-ink);
     }
   }
+  /* Touch: a footer link and the contact address are at least 44 px tall, the comfortable size under a thumb. (The 24 px minimum of WCAG 2.2, 2.5.8,
+     was already met by their spacing; the footer lists drop their row gap on touch, Footer.tsx, so the taller links do not double the space.) */
+  @media (pointer: coarse) {
+    .footer-link,
+    .tap {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 2.75rem;
+    }
+  }
 
   /* ── Masked entrance (docs/adr/0004-motion-and-smooth-scroll.md) ───────────────────────────────────────────
      .mw is the mask: a clip-path on the word's (or line's) own box, grown past the box so descenders, accents and tall

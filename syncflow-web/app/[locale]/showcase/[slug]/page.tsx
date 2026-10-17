@@ -8,6 +8,7 @@ import { isOpenLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
 import { breakdownPath, isBreakdownSlug } from '@/lib/breakdown';
 import { withLocale } from '@/lib/i18n-paths';
+import { buildBreakdownJsonLd, jsonLdString } from '@/lib/jsonld';
 import { breakdownMetadata, loadBreakdown } from '@/lib/server/breakdown';
 
 type Props = { params: Promise<{ locale: string; slug: string }> };
@@ -52,10 +53,12 @@ export default async function BreakdownPage({ params }: Props) {
   if (!isOpenLocale(locale) || !isBreakdownSlug(slug)) notFound();
   setRequestLocale(locale);
 
-  const data = await loadBreakdown(slug, locale);
+  const [data, { title, description }, meta] = await Promise.all([loadBreakdown(slug, locale), breakdownMetadata(slug, locale), getTranslations({ locale, namespace: 'Meta' })]);
+  const jsonLd = buildBreakdownJsonLd({ locale, siteName: meta('siteName'), title, description, path: withLocale(breakdownPath(slug), locale) });
 
   return (
     <main id="main" className="pb-24 pt-32 md:pb-32 md:pt-44">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }} />
       <div className="container-x">
         <Link href={data.cta.backHref} prefetch={false} className="footer-link inline-flex items-center gap-2 text-sm">
           <ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />

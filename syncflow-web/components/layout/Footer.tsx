@@ -30,7 +30,7 @@ export async function Footer() {
         <nav aria-label={a11y('footerNav')} className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="label">{t('studio')}</p>
-            <ul className="mt-5 grid gap-3">
+            <ul className="mt-5 grid gap-3 pointer-coarse:gap-0">
               <li>
                 <Link href={here(SECTION_IDS.architecture)} prefetch={false} className={linkClass}>
                   {t('architecture')}
@@ -56,7 +56,7 @@ export async function Footer() {
 
           <div>
             <p className="label">{t('showcase')}</p>
-            <ul className="mt-5 grid gap-3">
+            <ul className="mt-5 grid gap-3 pointer-coarse:gap-0">
               <li>
                 <Link href={here('show-estate')} prefetch={false} className={linkClass}>
                   {t('realEstate')}
@@ -82,7 +82,7 @@ export async function Footer() {
 
           <div>
             <p className="label">{t('languages')}</p>
-            <ul className="mt-5 grid gap-3">
+            <ul className="mt-5 grid gap-3 pointer-coarse:gap-0">
               {OPEN_LOCALES.map((code) => (
                 <li key={code}>
                   {/* Plain crawlable links to every public translation: good for visitors and for hreflang discovery. */}
@@ -104,7 +104,7 @@ export async function Footer() {
 
           <div>
             <p className="label">{t('legal')}</p>
-            <ul className="mt-5 grid gap-3">
+            <ul className="mt-5 grid gap-3 pointer-coarse:gap-0">
               <li>
                 <Link href={withLocale('/privacy', locale)} prefetch={false} className={linkClass}>
                   {t('privacy')}

@@ -31,6 +31,8 @@ function viewportSize() {
 function createCanvas(host: HTMLElement): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.className = 'cinema-canvas';
+  // Pure decoration: out of the accessibility tree (and so out of axe's "content outside landmarks"), the page's meaning is in its text.
+  canvas.setAttribute('aria-hidden', 'true');
   host.appendChild(canvas);
   return canvas;
 }

@@ -59,6 +59,50 @@ export function buildJsonLd({ locale, siteName, description }: Input) {
   };
 }
 
+type BreakdownInput = {
+  locale: AppLocale;
+  siteName: string;
+  /** The page's own title and description, as in its metadata. */
+  title: string;
+  description: string;
+  /** The page's path with the language prefix, e.g. "/tr/showcase/law". */
+  path: string;
+};
+
+/**
+ * schema.org graph of an architectural breakdown page (docs/adr/0020): a WebPage that belongs to the site and its publisher (the ids the home page
+ * defines) and a two-step BreadcrumbList, home then this page. Nothing the page does not say: no author, no dates, no ratings (the specimens are
+ * concept work, not client work, and the page says so).
+ */
+export function buildBreakdownJsonLd({ locale, siteName, title, description, path }: BreakdownInput) {
+  const pageUrl = `${SITE_URL}${path}`;
+  const homeUrl = `${SITE_URL}${pathFor(locale) === '/' ? '' : pathFor(locale)}`;
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${pageUrl}#webpage`,
+        url: pageUrl,
+        name: title,
+        description,
+        inLanguage: LOCALE_LABELS[locale].hreflang,
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        publisher: { '@id': `${SITE_URL}/#organization` },
+        breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${pageUrl}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: siteName, item: homeUrl },
+          { '@type': 'ListItem', position: 2, name: title, item: pageUrl },
+        ],
+      },
+    ],
+  };
+}
+
 /**
  * JSON for an inline <script type="application/ld+json">. "<" is escaped so no string value can ever
  * close the script element early (the standard JSON-in-HTML injection vector).

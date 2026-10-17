@@ -559,11 +559,21 @@ for (const locale of OPEN) {
     const ids = ['challenge', 'solution', 'integration', 'impact'].map((id) => body.includes(`id="bd-${id}"`));
     const canonical = new RegExp(`<link rel="canonical" href="[^"]*${breakdownPath(locale, slug).replace(/\//g, '\\/')}"`).test(body);
     const hreflangs = (body.match(/<link rel="alternate" hrefLang="/g) ?? body.match(/<link rel="alternate" hreflang="/g) ?? []).length;
-    const ok = res.status === 200 && /<h1\b/.test(body) && ids.every(Boolean) && canonical && hreflangs >= OPEN.length + 1 && /noindex/.test(body) === false && !FORBIDDEN_IN_BREAKDOWN.test(text) && text.includes(`${perfDesktop} · ${perfMobile}`) && new RegExp(`${lcpSeconds.replace('.', '[.,]')}\\s?s\\b`).test(text) && /0[.,]00/.test(text);
-    if (!ok) breakdownFailures.push(`${locale}/${slug}: status ${res.status}, parts ${ids.join('')}, canonical ${canonical}, hreflang ${hreflangs}`);
+    // Structured data: a WebPage that names its own address and a two-step BreadcrumbList (lib/jsonld.ts buildBreakdownJsonLd).
+    let graph = [];
+    try {
+      graph = JSON.parse(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/.exec(body)?.[1] ?? '{}')['@graph'] ?? [];
+    } catch {
+      graph = [];
+    }
+    const page = graph.find((node) => node['@type'] === 'WebPage');
+    const crumbs = graph.find((node) => node['@type'] === 'BreadcrumbList');
+    const ld = Boolean(page) && page.url.endsWith(breakdownPath(locale, slug)) && crumbs?.itemListElement?.length === 2 && crumbs.itemListElement[1].item === page.url;
+    const ok = res.status === 200 && /<h1\b/.test(body) && ids.every(Boolean) && canonical && ld && hreflangs >= OPEN.length + 1 && /noindex/.test(body) === false && !FORBIDDEN_IN_BREAKDOWN.test(text) && text.includes(`${perfDesktop} · ${perfMobile}`) && new RegExp(`${lcpSeconds.replace('.', '[.,]')}\\s?s\\b`).test(text) && /0[.,]00/.test(text);
+    if (!ok) breakdownFailures.push(`${locale}/${slug}: status ${res.status}, parts ${ids.join('')}, canonical ${canonical}, structured data ${ld}, hreflang ${hreflangs}`);
   }
 }
-check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, hreflang, indexable, the published numbers and none of the forbidden claims`, breakdownFailures.length === 0, breakdownFailures.slice(0, 3).join(' | '));
+check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, structured data, hreflang, indexable, the published numbers and none of the forbidden claims`, breakdownFailures.length === 0, breakdownFailures.slice(0, 3).join(' | '));
 const enBreakdown = await (await get('/showcase/law')).text();
 check('the English law breakdown names its four headings in the required order', /Challenge[\s\S]*Architectural solution[\s\S]*Integration &amp; security[\s\S]*Measured impact &amp; ROI/.test(enBreakdown));
 check('every breakdown says it is a specimen, not client work', (await Promise.all(SLUGS.map(async (slug) => (await (await get(breakdownPath('en', slug))).text()).includes('not client work')))).every(Boolean));
