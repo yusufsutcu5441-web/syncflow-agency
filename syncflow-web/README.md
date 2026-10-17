@@ -46,6 +46,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run perf:gate` | Mobil profilde (4× CPU, yavaş 4G) belirleyici sayaçlar (DOM, yerleşim, stil, görev, TBT tahmini, CLS) ve bütçe (`scripts/perf-budget.json`); `--baseline=<url>` eski yapıyla araya girerek A/B. **Mutlak bütçeler sessiz makine içindir**; yük altında göreli farka bakın |
 | `npm run flags:build` · `flags:check` | Bayrakları (`app/flags.css`, bayrak başına tek boş öğe) üreticiden yeniden yazar / CSS'in üreticiyle aynı olduğunu doğrular (denetim çalıştırır) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
+| `npm run delivery:verify` | İsteğe bağlı SMTP teslimi: loopback'te sahte bir SMTP sunucusuyla gerçek konuşma (oturum, zarf, başlıklar, başlık enjeksiyonu, reddedilen parola) |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
 | `npm run film:render` | Beş sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
 | `npm run remotion:studio` | Sahneleri Remotion Studio'da açar |
@@ -89,7 +90,7 @@ lib/
 messages/   en tr ar de fr es zh ja (.json; ja uykuda)
 i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/       adr/ (mimari kararlar 0001–0021) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+docs/       adr/ (mimari kararlar 0001–0027) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
 tests/      arch/ (65 sözleşme testi)
 public/     fonts/ Inter Display (Latin + Türkçe) ve Syne alt kümeleri (OFL)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
@@ -136,7 +137,7 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 
 **`security.txt`** (RFC 9116): `public/.well-known/security.txt`, `Expires` **2027-04-08**; süresi dolarsa denetim ve duman testi kırmızıya döner, yenileyin. **CSP enforce hazırlığı:** aynı derleme `CSP_MODE=enforce` ile gerçek bloklama altında denendi (duman 115/115, gerçek Turnstile widget'ı 12/12 ve üç tarayıcı seti geçti, [docs/perf/faz2b3.md](docs/perf/faz2b3.md)); varsayılan 17.10.2026'da enforce oldu (ADR 0024).
 
-**Sırlar:** `CONTACT_WEBHOOK_*`, `TURNSTILE_SECRET_KEY`, `UPSTASH_*` `NEXT_PUBLIC_` önekli değildir; `lib/server/*` `server-only` ile işaretlidir. **Gmail kimlik bilgisi uygulamada hiçbir yerde yoktur**: e-postayı n8n'deki Gmail düğümü gönderir ([docs/n8n-briefing.md](docs/n8n-briefing.md)). `npm run audit:secrets` derleme çıktısını tarar.
+**Sırlar:** `CONTACT_WEBHOOK_*`, `TURNSTILE_SECRET_KEY`, `UPSTASH_*` `NEXT_PUBLIC_` önekli değildir; `lib/server/*` `server-only` ile işaretlidir. **Varsayılan yolda Gmail kimlik bilgisi uygulamada hiçbir yerde yoktur**: e-postayı n8n'deki Gmail düğümü gönderir ([docs/n8n-briefing.md](docs/n8n-briefing.md)). Kapalı gelen istisna: webhook tanımlı değilken `SMTP_USER` + `SMTP_PASSWORD` girilirse başvuru doğrudan SMTP ile gönderilir ([ADR 0027](docs/adr/0027-optional-smtp-delivery.md); ayrılmış gönderici hesabı kullanın, `npm run delivery:verify` protokolü sınar). `npm run audit:secrets` derleme çıktısını tarar.
 
 **Bilinçli kararlar / dikkat:** HSTS `preload` jetonu yalnızca *uygunluk* bildirir; `hstspreload.org`'a başvurursanız tüm alt alan adları kalıcı olarak HTTPS olmak zorundadır. Webhook ayarlı değilken üretimde form `503` verir ve ziyaretçiye yanıtlarıyla hazırlanmış bir `mailto:` taslağı sunar: yanıtlar kaybolmaz.
 

@@ -36,7 +36,7 @@ const nextConfig = {
   // jsdom (used server-side by DOMPurify) must be loaded by Node, not bundled. Keep jsdom on 26.x: 27+ require() an ES-only
   // dependency chain, which Vercel's runtime refuses (ERR_REQUIRE_ESM), so /api/briefing answered 500 (docs/adr/0013).
   // faz2-denetim.mjs checks that jsdom loads with require(esm) disabled.
-  serverExternalPackages: ['jsdom'],
+  serverExternalPackages: ['jsdom', 'nodemailer'],
   // Lets a browser on 127.0.0.1 use the dev server (HMR/websocket). No effect in production.
   allowedDevOrigins: ['127.0.0.1'],
   images: {

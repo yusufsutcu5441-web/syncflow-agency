@@ -372,6 +372,18 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
   /crypto\.randomUUID\(\)/.test(del) && /['"]idempotency-key['"]/.test(del) && /\bid,/.test(del) ? add(G4, "PASS", "teslim: her başvuru rastgele bir id taşır ve Idempotency-Key başlığı olarak da gider (iki deneme aynı id)") : add(G4, "FAIL", "lib/server/deliver.ts: crypto.randomUUID() id'si, gövdede id ve Idempotency-Key başlığı yok");
   first + pause + second < 10_000 && budget < 10_000 && first > 0 ? add(G4, "PASS", `teslim: en çok iki deneme, en kötü durumda ${first + pause + second} ms (< 10 sn)`) : add(G4, "FAIL", `teslim süre bütçesi 10 sn'yi aşıyor ya da okunamadı (${first}+${pause}+${second}, bütçe ${budget})`);
   /status\s*>=\s*500/.test(del) && /408/.test(del) && /429/.test(del) && /'final'/.test(del) ? add(G4, "PASS", "teslim: yalnızca zaman aşımı, ağ hatası ve 5xx/408/429 yeniden denenir; 4xx kesindir") : add(G4, "FAIL", "teslim: yeniden deneme kuralı (5xx/408/429, 4xx kesin) bulunamadı");
+  // docs/adr/0027: isteğe bağlı SMTP yolu yalnızca webhook yokken, yalnızca TLS ile, sunucuda ve çift e-postasız çalışır.
+  {
+    const smtp = exists("lib/server/smtp.ts") ? read("lib/server/smtp.ts") : "";
+    const status = exists("lib/server/delivery-status.ts") ? read("lib/server/delivery-status.ts") : "";
+    const next = exists("next.config.mjs") ? read("next.config.mjs") : "";
+    /const smtp = url \? null : smtpSettings\(/.test(del) && /import 'server-only'/.test(del) ? add(G4, "PASS", "SMTP: yalnızca CONTACT_WEBHOOK_URL yokken kullanılır (iki yol aynı anda çift e-posta üretmez) ve deliver.ts server-only") : add(G4, "FAIL", "lib/server/deliver.ts: SMTP yolu 'webhook yokken' koşuluna bağlı değil ya da server-only değil");
+    /requireTLS/.test(smtp) && /ignoreTLS/.test(smtp) && /messageId/.test(smtp) && /\\u0000-\\u001f/.test(smtp) ? add(G4, "PASS", "SMTP: TLS zorunlu (yalnızca loopback test sunucusu düz), Message-ID teslim kimliği, denetim karakterleri başlığa girmez") : add(G4, "FAIL", "lib/server/smtp.ts: requireTLS / loopback istisnası / messageId / denetim karakteri temizliği eksik");
+    /SMTP_USER/.test(status) && /SMTP_PASSWORD/.test(status) ? add(G4, "PASS", "SMTP: 'teslim bağlı mı' kararı SMTP girişini de sayar (form doğrudan e-posta kipinden çıkar)") : add(G4, "FAIL", "lib/server/delivery-status.ts SMTP girişini saymıyor");
+    /serverExternalPackages:\s*\[[^\]]*nodemailer/.test(next) ? add(G4, "PASS", "SMTP: nodemailer paketlenmez (serverExternalPackages)") : add(G4, "FAIL", "next.config.mjs: serverExternalPackages içinde nodemailer yok");
+    exists("tests/delivery/smtp.test.mjs") && /"delivery:verify"/.test(read("package.json")) ? add(G4, "PASS", "SMTP: sözleşme testleri var (npm run delivery:verify)") : add(G4, "FAIL", "tests/delivery/smtp.test.mjs ya da delivery:verify betiği yok");
+    /NEXT_PUBLIC_SMTP|NEXT_PUBLIC_BRIEFING_INBOX/.test(read(".env.example")) ? add(G4, "FAIL", ".env.example: SMTP sırrı NEXT_PUBLIC_ önekiyle tarayıcıya açılıyor") : add(G4, "PASS", "SMTP: hiçbir NEXT_PUBLIC_ SMTP değişkeni yok");
+  }
   const rl = exists("lib/security/rate-limit.ts") ? read("lib/security/rate-limit.ts") : "";
   /NODE_ENV\s*===\s*['"]production['"]/.test(rl) && /UPSTASH_REDIS_REST_URL/.test(rl) && /console\.warn\(/.test(rl) ? add(G4, "PASS", "hız sınırı: üretimde Upstash yoksa örnek başına sayıldığı bir kez uyarılır") : add(G4, "FAIL", "lib/security/rate-limit.ts: üretimde Upstash yoksa uyarı yok");
   if (!exists("public/.well-known/security.txt")) add(G4, "FAIL", "public/.well-known/security.txt yok (RFC 9116)");

@@ -2,7 +2,7 @@
 
 Site tarafı hazırdır: form, Turnstile doğrulaması, imzalı webhook (`lib/server/deliver.ts`). Bu belge **n8n tarafında** yapılacakları anlatır. n8n bu depoda değildir ve **bu makinede doğrulanmadı**: sahte alıcıyla (`npm run dev:inbox`, `scripts/smoke.mjs`) yük, imza ve sınıf doğrulandı; gerçek Gmail teslimi sizin ilk deneme gönderiminizle teyit edilir (aşağıdaki kontrol listesi).
 
-Gmail kimlik bilgisi Next uygulamasında hiçbir yerde tutulmaz (CLAUDE.md "Güvenlik"): site yalnızca imzalı bir HTTPS isteği atar, e-postayı n8n'deki Gmail düğümü gönderir.
+Gmail kimlik bilgisi bu yolda Next uygulamasında hiçbir yerde tutulmaz (CLAUDE.md "Güvenlik"): site yalnızca imzalı bir HTTPS isteği atar, e-postayı n8n'deki Gmail düğümü gönderir. (n8n kurmak istemeyen sahip için kapalı gelen ikinci bir yol vardır: doğrudan SMTP, [ADR 0027](adr/0027-optional-smtp-delivery.md) ve [go-live-checklist](go-live-checklist.md) yol B; bir posta sırrı sitenin ortamında durduğu için tercih edilen yol bu belgedeki yoldur.)
 
 ## Hızlı yol (16.10.2026)
 
