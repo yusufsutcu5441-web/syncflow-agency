@@ -713,7 +713,11 @@ if (want('cta')) {
     check(`${label}: the button is on screen and clickable at ${fractions.map((f) => `${Math.round(f * 100)} %`).join(', ')} of the page`, seen.every((s) => s.found && s.visible && s.reachable && s.shown), JSON.stringify(seen));
     await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), Math.round(total * 0.4));
     await sleep(700);
+    const startedAt = await page.evaluate(() => scrollY);
     await page.evaluate((css) => [...document.querySelectorAll(css)].find((candidate) => /briefing/i.test(candidate.getAttribute('href') ?? '') || /briefing/i.test(candidate.textContent ?? ''))?.click(), selector);
+    // The soft navigation can start late on a slow connection (the live site, a long page): wait until the page has begun to move before waiting for it to stop,
+    // or three still samples taken before the first frame of the scroll would pass for "arrived".
+    await page.waitForFunction((y) => Math.abs(scrollY - y) > 40, { timeout: 8000 }, startedAt).catch(() => undefined);
     await settle(page);
     const landed = await page.evaluate(() => ({ hash: location.hash, top: Math.round(document.querySelector('#briefing').getBoundingClientRect().top) }));
     check(`${label}: one click lands on the briefing (hash #briefing, section top within 3 px of the header)`, landed.hash === '#briefing' && Math.abs(landed.top - SCROLL_PADDING) <= 3, JSON.stringify(landed));
