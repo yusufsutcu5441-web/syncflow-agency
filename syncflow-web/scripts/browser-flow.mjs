@@ -9,14 +9,14 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, framework, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *
  * Read-only: it only reads pages and clicks controls (the briefing form is never submitted). Chrome: CHROME_PATH or a common install path.
  * Exit code 1 when any check fails.
  */
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import puppeteer from 'puppeteer-core';
 
@@ -719,6 +719,75 @@ if (want('cta')) {
     check(`${label}: one click lands on the briefing (hash #briefing, section top within 3 px of the header)`, landed.hash === '#briefing' && Math.abs(landed.top - SCROLL_PADDING) <= 3, JSON.stringify(landed));
     check(`${label}: no page or console errors`, errors.length === 0, errors.slice(0, 3).join(' | '));
     await page.close();
+  }
+}
+
+// ── the founding statement and the scope block of the budget step (docs/adr/0031) ────────────────────────────────────────────────
+if (want('scope')) {
+  group('Founding statement (Studio) and the budget step\'s scope block: right text, in the right language, and nothing below it ever moves');
+  const profiles = QUICK ? [['desktop', DESKTOP, ['en', 'ar']]] : [['desktop', DESKTOP, ['en', 'tr', 'ar', 'de', 'fr', 'es', 'zh']], ['phone', PHONE, ['en', 'ar', 'de', 'fr']]];
+  for (const [label, viewport, langs] of profiles) {
+    for (const lang of langs) {
+      const messages = JSON.parse(readFileSync(new URL(`../messages/${lang}.json`, import.meta.url), 'utf8'));
+      const budgetCopy = messages.Briefing.budget;
+      const { page, errors } = await open(`${lang === 'en' ? '' : `/${lang}`}/?m=${MARKET[lang]}`, { viewport });
+      const tag = `${label} ${lang}`;
+
+      // The founding statement is in the Studio section, whole, inside the page.
+      const founding = await page.evaluate(() => {
+        const el = document.querySelector('.founding-text');
+        const box = el?.getBoundingClientRect();
+        return { text: el?.textContent?.trim() ?? '', label: document.querySelector('.founding .label')?.textContent?.trim() ?? '', inside: box ? box.left >= 0 && box.right <= document.documentElement.clientWidth + 1 : false, inStudio: Boolean(el?.closest('#studio')) };
+      });
+      check(`${tag}: the founding statement is in the Studio section, as written, and inside the page`, founding.text === messages.Studio.founding && founding.label === messages.Studio.foundingLabel && founding.inside && founding.inStudio, JSON.stringify({ text: founding.text.slice(0, 50), inside: founding.inside, inStudio: founding.inStudio }));
+
+      // The budget step: before a choice the prompt shows; then each level in turn, and back; the geometry below the options must never change.
+      await page.evaluate(() => document.querySelector('#briefing')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+      await sleep(900);
+      // Positions are taken from the top of the panel that holds the step, not from the document: choosing a level moves focus, the page scrolls to the
+      // radio, and the panel itself carries a slight scroll-linked transform, none of which is a change of layout. What must not change is where everything
+      // sits relative to the panel, and the heights of the block, the panel and the section. (The height of the whole page is left out on purpose: the sections
+      // below the form are drawn on demand and settle to their real height when the scroll brings them near, a few pixels either way, whatever the form does.)
+      const geometry = () =>
+        page.evaluate(() => {
+          const panel = document.querySelector('#briefing .panel');
+          const base = panel.getBoundingClientRect().top;
+          const below = (css) => {
+            const el = document.querySelector(css);
+            return el ? Math.round((el.getBoundingClientRect().top - base) * 10) / 10 : null;
+          };
+          const height = (css) => Math.round((document.querySelector(css)?.getBoundingClientRect().height ?? 0) * 10) / 10;
+          return { scope: below('#briefing .scope'), stack: height('#briefing .scope-stack'), note: below('#briefing .scope-note'), foot: below('#briefing fieldset > p.text-faint'), button: below('#briefing button.btn-primary'), panel: height('#briefing .panel'), section: document.querySelector('#briefing')?.offsetHeight ?? 0 };
+        });
+      const live = () => page.evaluate(() => document.querySelector('#briefing .scope-live')?.textContent?.trim() ?? '');
+      const hasBlock = await page.evaluate(() => Boolean(document.querySelector('#briefing .scope')));
+      check(`${tag}: the budget step carries the scope block, its invisible layer is hidden from assistive technology and the visible one is a polite status region`, hasBlock && (await page.evaluate(() => document.querySelector('#briefing .scope-ghost')?.getAttribute('aria-hidden') === 'true' && getComputedStyle(document.querySelector('#briefing .scope-ghost')).visibility === 'hidden' && document.querySelector('#briefing .scope-live')?.getAttribute('role') === 'status')));
+      const idle = await live();
+      const reference = await geometry();
+      check(`${tag}: before a choice the prompt is shown`, idle === budgetCopy.scopeIdle, idle.slice(0, 60));
+      const shiftBefore = await page.evaluate(() => window.__cls);
+      const moved = [];
+      const wrong = [];
+      for (const [i, level] of [[0, 't1'], [1, 't2'], [2, 't3'], [1, 't2'], [0, 't1']]) {
+        await page.evaluate((index) => {
+          const label = document.querySelectorAll('#briefing .opt')[index];
+          label.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }, i);
+        await sleep(150);
+        await page.evaluate((index) => document.querySelectorAll('#briefing .opt')[index].click(), i);
+        await sleep(350);
+        const text = await live();
+        for (const n of [1, 2, 3]) if (!text.includes(budgetCopy[`${level}s${n}`])) wrong.push(`${level}s${n}`);
+        const now = await geometry();
+        for (const key of Object.keys(reference)) if (Math.abs((now[key] ?? 0) - (reference[key] ?? 0)) > 0.5) moved.push(`${level}:${key} ${reference[key]}->${now[key]}`);
+      }
+      check(`${tag}: each level shows its three lines, in this language, and changing level switches them`, wrong.length === 0, wrong.join(', '));
+      check(`${tag}: choosing and changing the level moves nothing (the block, the note, the footnote, the button, the panel and the section keep their position and height)`, moved.length === 0, moved.slice(0, 4).join(' | '));
+      const shiftAfter = await page.evaluate(() => window.__cls);
+      check(`${tag}: the layout-shift score of those changes is 0`, shiftAfter - shiftBefore < 0.0001, `${(shiftAfter - shiftBefore).toFixed(5)}`);
+      check(`${tag}: no sideways scroll and no page or console errors`, (await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0 && errors.length === 0, errors.slice(0, 3).join(' | '));
+      await page.close();
+    }
   }
 }
 

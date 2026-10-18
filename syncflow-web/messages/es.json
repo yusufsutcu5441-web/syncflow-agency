@@ -182,7 +182,19 @@
       "t1Desc": "Arquitectura central y automatización de flujos de trabajo",
       "t2Desc": "Infraestructura empresarial y ecosistema multirregional",
       "t3Desc": "Ecosistemas globales a medida",
-      "micro": "Las cifras se muestran en la moneda de su mercado. Solo nos ayudan a reunir el equipo y el alcance adecuados."
+      "micro": "Las cifras se muestran en la moneda de su mercado. Solo nos ayudan a reunir el equipo y el alcance adecuados.",
+      "scopeTitle": "Lo que este nivel suele incluir",
+      "scopeNote": "Se fija por escrito después del briefing: es una descripción, no un presupuesto. Los nombres de producto pertenecen a sus propietarios; no se insinúa ninguna alianza.",
+      "scopeIdle": "Elija un nivel para ver lo que suele incluir.",
+      "t1s1": "Front-end: renderizado en el servidor, localizado, sujeto a un presupuesto de rendimiento medido",
+      "t1s2": "Automatización: webhooks firmados (HMAC-SHA256) con entrega idempotente",
+      "t1s3": "Refuerzo: Content-Security-Policy aplicada, sin cookies, sin analítica",
+      "t2s1": "Resiliencia: carriles de cola redundantes y reintentos acotados, según una cola de referencia probada frente a pérdidas y duplicados",
+      "t2s2": "Integración: conectores CRM y ERP sobre eventos firmados (por ejemplo Salesforce, SAP, HubSpot, Oracle)",
+      "t2s3": "Alcance: varios idiomas, mercados y monedas desde una sola base de código",
+      "t3s1": "Seguridad: sobre de confianza cero, mensajes firmados (HMAC-SHA256) y sellados (AES-256-GCM)",
+      "t3s2": "Arquitectura: diseño multisistema, dibujado y acordado antes de escribir código",
+      "t3s3": "Ámbito: se redacta con usted después del briefing; no hay paquete fijo"
     },
     "project": {
       "title": "¿Qué vamos a construir?",
@@ -423,7 +435,9 @@
     "drawingTitle": "El camino de su briefing, dibujado primero.",
     "drawingLead": "La primera regla de arriba, aplicada al formulario de esta página. Cada recuadro es código de nuestro repositorio, y las cifras son las de ese código.",
     "drawingAlt": "Flujo del formulario de briefing. El navegador envía las respuestas con un token de Turnstile a una sola ruta, que comprueba el origen y el límite de peticiones, valida el esquema, ejecuta las comprobaciones antibots, sanea el texto y fija una clase de prioridad; después entrega mediante webhook firmado o SMTP sobre TLS al buzón del estudio. Cualquier paso fallido rechaza la solicitud y ofrece al visitante un borrador de correo.",
-    "drawingLegend": "Línea continua: el camino de un briefing. Línea discontinua: cualquier paso fallido termina ahí. La solicitud se rechaza y sus respuestas se abren como borrador de correo, de modo que nada se da por recibido sin haberlo sido."
+    "drawingLegend": "Línea continua: el camino de un briefing. Línea discontinua: cualquier paso fallido termina ahí. La solicitud se rechaza y sus respuestas se abren como borrador de correo, de modo que nada se da por recibido sin haberlo sido.",
+    "foundingLabel": "Principios fundacionales",
+    "founding": "Fundado por un arquitecto que trabaja en la oscuridad y diseña para infraestructuras empresariales de baja tolerancia. No funcionamos con elogios sociales ni con ruido público. Construimos, medimos y, ante un fallo, cerramos."
   },
   "Sim": {
     "interactive": "Simulación interactiva",

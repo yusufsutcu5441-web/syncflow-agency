@@ -350,10 +350,10 @@ html[lang='ar'] ::after {
     --cv: 1220px;
   }
   .cv-studio {
-    --cv: 6481px;
+    --cv: 6693px;
   }
   .cv-briefing {
-    --cv: 1400px;
+    --cv: 1752px;
   }
   .cv-closing {
     --cv: 730px;
@@ -375,10 +375,10 @@ html[lang='ar'] ::after {
       --cv: 1260px;
     }
     .cv-studio {
-      --cv: 5556px;
+      --cv: 5741px;
     }
     .cv-briefing {
-      --cv: 1240px;
+      --cv: 1494px;
     }
     .cv-closing {
       --cv: 820px;
@@ -395,10 +395,10 @@ html[lang='ar'] ::after {
       --cv: 1590px;
     }
     .cv-studio {
-      --cv: 3974px;
+      --cv: 4173px;
     }
     .cv-briefing {
-      --cv: 1440px;
+      --cv: 1700px;
     }
     .cv-closing {
       --cv: 1020px;
@@ -1347,6 +1347,68 @@ html[lang='ar'] ::after {
     gap: 0.6rem;
     padding: 0;
     list-style: none;
+  }
+
+  /* ── The founding statement (Studio) and the scope block of the briefing's budget step (docs/adr/0031) ──────────────── */
+  .founding {
+    max-width: 56rem;
+    padding-inline-start: 1.25rem;
+    border-inline-start: 1px solid var(--color-hairline-strong);
+  }
+  .founding-text {
+    color: var(--color-ink);
+    font-size: clamp(1.1rem, 0.8rem + 1.1vw, 1.55rem);
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+    text-wrap: pretty;
+  }
+  /* The block under the budget options never changes height: every variant (the idle prompt and the three levels) is laid out invisibly in the same
+     grid cell, so the cell is as tall as the tallest of them and the visible text is drawn over it. Choosing a level moves nothing below it. */
+  .scope {
+    margin-top: 1.75rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    background: var(--color-layer-1);
+  }
+  .scope-stack {
+    display: grid;
+    margin-top: 0.75rem;
+  }
+  .scope-ghost,
+  .scope-live {
+    grid-area: 1 / 1;
+  }
+  .scope-ghost {
+    display: grid;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .scope-ghost > * {
+    grid-area: 1 / 1;
+  }
+  .scope-list {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+  .scope-idle {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .scope-note {
+    margin: 0.9rem 0 0;
+    color: var(--color-faint);
+    font-size: 0.75rem;
+    line-height: 1.5;
   }
 
   /* ── Drawing 01: the briefing path as an engineering sheet (docs/adr/0028). Monochrome, on the page tokens, no script ───── */

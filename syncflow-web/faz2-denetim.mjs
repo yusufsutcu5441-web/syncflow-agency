@@ -400,6 +400,25 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
     /clipboard\.writeText/.test(form) && /execCommand\('copy'\)/.test(form) && /readOnly/.test(form) && /copyFailed/.test(form) ? add(G4, "PASS", "Kopyalama: pano API'si, seçimle kopyalama yedeği ve elle seçilecek salt okunur metin var") : add(G4, "FAIL", "components/sections/Briefing.tsx: kopyalama düğmesinin pano/yedek/elle seçim yolu eksik");
     /"copyText"\s*:\s*"[^"]*[Ee]ncrypt/i.test(read("messages/en.json")) ? add(G4, "FAIL", "Kopyalama düğmesi 'şifreli' diye adlandırılmış: pano metni düz metindir, şifrelenmez") : add(G4, "PASS", "Kopyalama düğmesi dürüst adlandırılmış (düz metin; 'encrypted' denmiyor)");
   }
+  // docs/adr/0031: bütçe adımındaki "bu düzeyde genellikle yer alanlar" bloğu kaydırmaz (görünmez katman yüksekliği sabitler) ve söylediği her
+  // bileşenin depoda kodu ve testi vardır; kurucu cümlesi yedi dilde bulunur.
+  {
+    const css = exists("app/globals.css") ? read("app/globals.css") : "";
+    const form = exists("components/sections/Briefing.tsx") ? read("components/sections/Briefing.tsx") : "";
+    /\.scope-ghost\s*\{[^}]*visibility:\s*hidden/.test(css) && /\.scope-ghost,\s*\.scope-live\s*\{[^}]*grid-area:\s*1\s*\/\s*1/.test(css) && /className="scope-ghost" aria-hidden="true"/.test(form) && /className="scope-live" role="status" aria-live="polite"/.test(form) ? add(G4, "PASS", "bütçe adımı: kapsam bloğu tüm varyantları aynı ızgara hücresinde görünmez tutar (yükseklik sabit, CLS 0), görünmez katman ekran okuyucudan gizli, görünen katman polite status") : add(G4, "FAIL", "bütçe adımının kapsam bloğu yükseklik sabitleyen yapıda değil (.scope-ghost visibility:hidden + aynı hücre + aria-hidden / role=status)");
+    const env = exists("lib/arch/envelope.ts") ? read("lib/arch/envelope.ts") : "";
+    const csp = exists("lib/security/csp.ts") ? read("lib/security/csp.ts") : "";
+    const claims = [
+      [/HMAC/.test(env) && /AES-GCM|AES-256-GCM/.test(env), "HMAC-SHA256 imzası ve AES-256-GCM mühürü (lib/arch/envelope.ts)"],
+      [/idempotency-key/i.test(del) && /sha256=/.test(del), "imzalı webhook ve idempotent teslim (lib/server/deliver.ts)"],
+      [/CSP_MODE[^=]*=\s*process\.env\.CSP_MODE === 'report-only' \? 'report-only' : 'enforce'/.test(csp), "uygulanan Content-Security-Policy (lib/security/csp.ts)"],
+      [exists("tests/arch") && fs.readdirSync(abs("tests/arch")).length > 0, "kayıp ve çift uygulama için sınanan referans kuyruk (tests/arch)"],
+    ];
+    const missingClaims = claims.filter(([ok]) => !ok).map(([, what]) => what);
+    missingClaims.length === 0 ? add(G4, "PASS", "kapsam bloğundaki teknik iddiaların hepsinin depoda kodu ve testi var: imza ve mühür, idempotent teslim, uygulanan CSP, sınanan referans kuyruk") : add(G4, "FAIL", `kapsam bloğu depoda karşılığı olmayan bileşen söylüyor: ${missingClaims.join("; ")}`);
+    const lacking = PUBLIC_LOCALES.filter((l) => { const m = readJSON(`messages/${l}.json`); return !(m.Studio?.founding && m.Studio?.foundingLabel && ["t1", "t2", "t3"].every((t) => [1, 2, 3].every((n) => m.Briefing?.budget?.[`${t}s${n}`]))); });
+    lacking.length === 0 ? add(G4, "PASS", "kurucu cümlesi ve her düzeyin üç satırı yedi dilde var") : add(G4, "FAIL", `kurucu cümlesi ya da kapsam satırları eksik: ${lacking.join(", ")}`);
+  }
   const rl = exists("lib/security/rate-limit.ts") ? read("lib/security/rate-limit.ts") : "";
   /NODE_ENV\s*===\s*['"]production['"]/.test(rl) && /UPSTASH_REDIS_REST_URL/.test(rl) && /console\.warn\(/.test(rl) ? add(G4, "PASS", "hız sınırı: üretimde Upstash yoksa örnek başına sayıldığı bir kez uyarılır") : add(G4, "FAIL", "lib/security/rate-limit.ts: üretimde Upstash yoksa uyarı yok");
   if (!exists("public/.well-known/security.txt")) add(G4, "FAIL", "public/.well-known/security.txt yok (RFC 9116)");

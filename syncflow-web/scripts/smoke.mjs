@@ -625,7 +625,9 @@ check('the English law breakdown names its four headings in the required order',
     const page = await get(locale === 'en' ? '/' : `/${locale}`);
     const raw = await page.text();
     const text = normalise(decode(stripTags(raw)));
-    const wanted = [...['manifestoTitle', 'm1Title', 'm3Title', 'm5Title', 'f1Name', 'f2Name', 'f3Name'].map((key) => messages.Studio[key]), ...['chipPrivacy', 'chipNda', 'chipPerson'].map((key) => messages.Briefing[key])];
+    // The founding statement (docs/adr/0031) and what each budget level typically includes (the form draws all of it, a level shown on a choice).
+    const scope = ['scopeTitle', 'scopeNote', 't1s1', 't1s2', 't1s3', 't2s1', 't2s2', 't2s3', 't3s1', 't3s2', 't3s3'].map((key) => messages.Briefing.budget[key]);
+    const wanted = [...['manifestoTitle', 'm1Title', 'm3Title', 'm5Title', 'f1Name', 'f2Name', 'f3Name', 'foundingLabel', 'founding'].map((key) => messages.Studio[key]), ...['chipPrivacy', 'chipNda', 'chipPerson'].map((key) => messages.Briefing[key]), ...scope];
     for (const line of wanted) if (!text.includes(normalise(line))) missing.push(`${locale}: ${line.slice(0, 30)}`);
     if (UNBACKED.test(text)) claims.push(locale);
     // Drawing 01 (docs/adr/0028): its translated frame, both layouts named for assistive technology, and the annotations the sheet is made of.

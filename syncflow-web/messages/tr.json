@@ -182,7 +182,19 @@
       "t1Desc": "Çekirdek Mimari ve İş Akışı Otomasyonu",
       "t2Desc": "Kurumsal Altyapı ve Çok Bölgeli Ekosistem",
       "t3Desc": "Özel Küresel Ekosistemler",
-      "micro": "Tutarlar pazarınızın para biriminde gösterilir. Yalnızca doğru ekibi ve doğru kapsamı hazırlamamıza yardım eder."
+      "micro": "Tutarlar pazarınızın para biriminde gösterilir. Yalnızca doğru ekibi ve doğru kapsamı hazırlamamıza yardım eder.",
+      "scopeTitle": "Bu düzeyde genellikle yer alanlar",
+      "scopeNote": "Briefing sonrasında yazılı olarak belirlenir: bir tanımdır, teklif değildir. Ürün adları sahiplerine aittir; ortaklık ima edilmez.",
+      "scopeIdle": "Genellikle neleri kapsadığını görmek için bir düzey seçin.",
+      "t1s1": "Ön yüz: sunucuda çizilen, yerelleştirilmiş, ölçülen bir performans bütçesine bağlı",
+      "t1s2": "Otomasyon: imzalı webhook’lar (HMAC-SHA256) ve tekrar etkisiz (idempotent) teslim",
+      "t1s3": "Sağlamlaştırma: uygulanan Content-Security-Policy, çerez yok, analitik yok",
+      "t2s1": "Dayanıklılık: yedekli kuyruk şeritleri ve sınırlı yeniden deneme; kayıp ve çift uygulama için sınanmış bir referans kuyruk örnek alınır",
+      "t2s2": "Entegrasyon: imzalı olaylar üzerinden CRM ve ERP bağlayıcıları (örneğin Salesforce, SAP, HubSpot, Oracle)",
+      "t2s3": "Erişim: tek kod tabanından birden çok dil, pazar ve para birimi",
+      "t3s1": "Güvenlik: sıfır güven zarfı; iletiler imzalı (HMAC-SHA256) ve mühürlü (AES-256-GCM)",
+      "t3s2": "Mimari: çok sistemli tasarım, tek satır kod yazılmadan önce çizilir ve üzerinde uzlaşılır",
+      "t3s3": "Kapsam: briefing sonrasında sizinle birlikte yazılır; sabit bir paket yoktur"
     },
     "project": {
       "title": "Ne inşa ediyoruz?",
@@ -423,7 +435,9 @@
     "drawingTitle": "Briefing’inizin yolu, önce çizildi.",
     "drawingLead": "Yukarıdaki ilk kuralın bu sayfadaki forma uygulanmış hâli. Her kutu depomuzdaki gerçek koddur, rakamlar da o koddaki rakamlardır.",
     "drawingAlt": "Briefing formunun sistem akışı. Tarayıcı yanıtları bir Turnstile belirteciyle tek bir rotaya gönderir; rota kaynağı ve hız sınırını denetler, şemayı doğrular, bot denetimlerini yapar, metni temizler ve bir öncelik sınıfı belirler; ardından imzalı webhook ya da TLS üzerinden SMTP ile stüdyo posta kutusuna iletir. Başarısız her adım isteği reddeder ve ziyaretçiye bir e-posta taslağı önerir.",
-    "drawingLegend": "Düz çizgi: bir briefing’in yolu. Kesikli çizgi: başarısız her adım orada biter. İstek reddedilir ve yanıtlarınız e-posta taslağı olarak açılır, böylece alınmamış hiçbir şey alınmış diye gösterilmez."
+    "drawingLegend": "Düz çizgi: bir briefing’in yolu. Kesikli çizgi: başarısız her adım orada biter. İstek reddedilir ve yanıtlarınız e-posta taslağı olarak açılır, böylece alınmamış hiçbir şey alınmış diye gösterilmez.",
+    "foundingLabel": "Kuruluş ilkeleri",
+    "founding": "Karanlıkta çalışan ve düşük toleranslı kurumsal altyapılar için tasarlayan bir mimar tarafından kuruldu. Toplumsal övgüyle ya da kamusal gürültüyle çalışmayız. Kurarız, ölçeriz, arızada kapalı kalırız."
   },
   "Sim": {
     "interactive": "Etkileşimli simülasyon",

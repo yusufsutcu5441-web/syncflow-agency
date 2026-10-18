@@ -182,7 +182,19 @@
       "t1Desc": "Kernarchitektur & Workflow-Automatisierung",
       "t2Desc": "Enterprise-Infrastruktur & Multi-Region-Ökosystem",
       "t3Desc": "Maßgeschneiderte globale Ökosysteme",
-      "micro": "Beträge werden in der Währung Ihres Marktes angezeigt. Sie helfen uns lediglich, das richtige Team und den richtigen Umfang zusammenzustellen."
+      "micro": "Beträge werden in der Währung Ihres Marktes angezeigt. Sie helfen uns lediglich, das richtige Team und den richtigen Umfang zusammenzustellen.",
+      "scopeTitle": "Was diese Stufe üblicherweise umfasst",
+      "scopeNote": "Wird nach dem Briefing schriftlich festgelegt: eine Beschreibung, kein Angebot. Produktnamen gehören ihren Inhabern; eine Partnerschaft wird nicht impliziert.",
+      "scopeIdle": "Wählen Sie eine Stufe, um zu sehen, was sie üblicherweise umfasst.",
+      "t1s1": "Frontend: serverseitig gerendert, lokalisiert, an ein gemessenes Performance-Budget gebunden",
+      "t1s2": "Automatisierung: signierte Webhooks (HMAC-SHA256) mit idempotenter Zustellung",
+      "t1s3": "Härtung: durchgesetzte Content-Security-Policy, keine Cookies, keine Analyse",
+      "t2s1": "Ausfallsicherheit: redundante Warteschlangen-Spuren und begrenzte Wiederholungen, nach dem Vorbild einer auf Verlust und Duplikate getesteten Referenzwarteschlange",
+      "t2s2": "Integration: CRM- und ERP-Anbindungen über signierte Ereignisse (zum Beispiel Salesforce, SAP, HubSpot, Oracle)",
+      "t2s3": "Reichweite: mehrere Sprachen, Märkte und Währungen aus einer Codebasis",
+      "t3s1": "Sicherheit: Zero-Trust-Umschlag, Nachrichten signiert (HMAC-SHA256) und versiegelt (AES-256-GCM)",
+      "t3s2": "Architektur: Mehrsystem-Entwurf, gezeichnet und abgestimmt, bevor Code geschrieben wird",
+      "t3s3": "Umfang: nach dem Briefing gemeinsam mit Ihnen schriftlich festgelegt; es gibt kein festes Paket"
     },
     "project": {
       "title": "Was bauen wir?",
@@ -423,7 +435,9 @@
     "drawingTitle": "Der Weg Ihres Briefings, zuerst gezeichnet.",
     "drawingLead": "Die erste Regel oben, angewandt auf das Formular dieser Seite. Jeder Kasten ist Code in unserem Repository, die Zahlen sind die Zahlen aus diesem Code.",
     "drawingAlt": "Systemfluss des Briefing-Formulars. Der Browser sendet die Antworten mit einem Turnstile-Token an eine einzige Route, die Herkunft und Ratenbegrenzung prüft, das Schema validiert, die Bot-Prüfungen ausführt, den Text bereinigt und eine Prioritätsklasse setzt und dann per signiertem Webhook oder SMTP über TLS an das Postfach des Studios zustellt. Jeder fehlgeschlagene Schritt lehnt die Anfrage ab und bietet dem Besucher einen E-Mail-Entwurf an.",
-    "drawingLegend": "Durchgezogene Linie: der Weg eines Briefings. Gestrichelte Linie: jeder fehlgeschlagene Schritt endet dort. Die Anfrage wird abgelehnt und Ihre Antworten öffnen sich als E-Mail-Entwurf, damit nichts als empfangen gemeldet wird, was nicht empfangen wurde."
+    "drawingLegend": "Durchgezogene Linie: der Weg eines Briefings. Gestrichelte Linie: jeder fehlgeschlagene Schritt endet dort. Die Anfrage wird abgelehnt und Ihre Antworten öffnen sich als E-Mail-Entwurf, damit nichts als empfangen gemeldet wird, was nicht empfangen wurde.",
+    "foundingLabel": "Gründungsprinzipien",
+    "founding": "Gegründet von einem Architekten, der im Dunkeln arbeitet und für toleranzarme Unternehmensinfrastrukturen entwirft. Wir leben nicht von sozialem Lob oder öffentlichem Lärm. Wir bauen, messen und sperren im Fehlerfall."
   },
   "Sim": {
     "interactive": "Interaktive Simulation",

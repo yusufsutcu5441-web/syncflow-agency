@@ -86,6 +86,12 @@ export async function Studio() {
       <div className="container-x">
         <SectionHead id="studio-title" label={t('label')} title={t('title')} subtitle={t('lead')} />
 
+        {/* The founding statement (docs/adr/0031): the owner's own words about how the studio is founded and works; it names no client and no result. */}
+        <div className="founding mt-12 md:mt-14">
+          <p className="label">{t('foundingLabel')}</p>
+          <p className="founding-text mt-4">{t('founding')}</p>
+        </div>
+
         <div className="mt-14 grid gap-6 lg:grid-cols-3">
           {principles.map(({ index, title, text, link, href }) => (
             <article key={index} className="beam-card" data-maskframe="">

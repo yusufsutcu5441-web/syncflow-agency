@@ -182,7 +182,19 @@
       "t1Desc": "Architecture centrale et automatisation des flux de travail",
       "t2Desc": "Infrastructure d’entreprise et écosystème multirégional",
       "t3Desc": "Écosystèmes mondiaux sur mesure",
-      "micro": "Les montants sont affichés dans la devise de votre marché. Ils nous aident seulement à réunir la bonne équipe et le bon périmètre."
+      "micro": "Les montants sont affichés dans la devise de votre marché. Ils nous aident seulement à réunir la bonne équipe et le bon périmètre.",
+      "scopeTitle": "Ce que ce niveau comprend habituellement",
+      "scopeNote": "Défini par écrit après le briefing : une description, pas un devis. Les noms de produits appartiennent à leurs propriétaires ; aucun partenariat n’est sous-entendu.",
+      "scopeIdle": "Choisissez un niveau pour voir ce qu’il comprend habituellement.",
+      "t1s1": "Front-end : rendu côté serveur, localisé, tenu à un budget de performance mesuré",
+      "t1s2": "Automatisation : webhooks signés (HMAC-SHA256) avec livraison idempotente",
+      "t1s3": "Durcissement : Content-Security-Policy appliquée, pas de cookies, pas d’analytique",
+      "t2s1": "Résilience : voies de file redondantes et reprises bornées, d’après une file de référence testée contre la perte et les doublons",
+      "t2s2": "Intégration : connecteurs CRM et ERP sur événements signés (par exemple Salesforce, SAP, HubSpot, Oracle)",
+      "t2s3": "Portée : plusieurs langues, marchés et devises à partir d’une seule base de code",
+      "t3s1": "Sécurité : enveloppe Zero Trust, messages signés (HMAC-SHA256) et scellés (AES-256-GCM)",
+      "t3s2": "Architecture : conception multi-systèmes, dessinée et validée avant d’écrire du code",
+      "t3s3": "Périmètre : rédigé avec vous après le briefing ; il n’y a pas de forfait fixe"
     },
     "project": {
       "title": "Que construisons-nous ?",
@@ -423,7 +435,9 @@
     "drawingTitle": "Le chemin de votre briefing, dessiné d’abord.",
     "drawingLead": "La première règle ci-dessus, appliquée au formulaire de cette page. Chaque case est du code de notre dépôt, et les chiffres sont ceux de ce code.",
     "drawingAlt": "Flux du formulaire de briefing. Le navigateur envoie les réponses avec un jeton Turnstile à une seule route, qui vérifie l’origine et la limite de débit, valide le schéma, exécute les contrôles anti-robot, nettoie le texte et fixe une classe de priorité, puis livre par webhook signé ou par SMTP sur TLS à la boîte du studio. Toute étape en échec refuse la demande et propose au visiteur un brouillon d’e-mail.",
-    "drawingLegend": "Trait plein : le chemin d’un briefing. Trait pointillé : toute étape en échec s’arrête là. La demande est refusée et vos réponses s’ouvrent en brouillon d’e-mail, afin que rien ne soit jamais déclaré reçu sans l’avoir été."
+    "drawingLegend": "Trait plein : le chemin d’un briefing. Trait pointillé : toute étape en échec s’arrête là. La demande est refusée et vos réponses s’ouvrent en brouillon d’e-mail, afin que rien ne soit jamais déclaré reçu sans l’avoir été.",
+    "foundingLabel": "Principes fondateurs",
+    "founding": "Fondé par un architecte qui travaille dans l’ombre et conçoit pour des infrastructures d’entreprise à faible tolérance. Nous ne vivons ni d’éloges sociaux ni de bruit public. Nous construisons, nous mesurons et, en cas de panne, nous nous fermons."
   },
   "Sim": {
     "interactive": "Simulation interactive",

@@ -182,7 +182,19 @@
       "t1Desc": "Core Architecture & Workflow Automation",
       "t2Desc": "Enterprise Infrastructure & Multi-Region Ecosystem",
       "t3Desc": "Custom Global Ecosystems",
-      "micro": "Figures are shown in your market’s currency. They only help us assemble the right team and the right scope."
+      "micro": "Figures are shown in your market’s currency. They only help us assemble the right team and the right scope.",
+      "scopeTitle": "Typically included at this level",
+      "scopeNote": "Set in writing after the briefing: a description, not a quote. Product names belong to their owners; no partnership is implied.",
+      "scopeIdle": "Choose a level to see what it typically includes.",
+      "t1s1": "Front end: server-rendered, localised, held to a measured performance budget",
+      "t1s2": "Automation: signed webhooks (HMAC-SHA256) with idempotent delivery",
+      "t1s3": "Hardening: enforced Content-Security-Policy, no cookies, no analytics",
+      "t2s1": "Resilience: redundant queue lanes and bounded retries, modelled on a reference queue tested for loss and duplicates",
+      "t2s2": "Integration: CRM and ERP connectors over signed events (for example Salesforce, SAP, HubSpot, Oracle)",
+      "t2s3": "Reach: several languages, markets and currencies from one codebase",
+      "t3s1": "Security: zero-trust envelope, messages signed (HMAC-SHA256) and sealed (AES-256-GCM)",
+      "t3s2": "Architecture: multi-system design, drawn and agreed before any code is written",
+      "t3s3": "Scope: written with you after the briefing; there is no fixed package"
     },
     "project": {
       "title": "What are we building?",
@@ -423,7 +435,9 @@
     "drawingTitle": "The path of your briefing, drawn first.",
     "drawingLead": "The first rule above, applied to the form on this page. Every box is code in our repository, and the figures are the ones in that code.",
     "drawingAlt": "System flow of the briefing form. The browser sends the answers with a Turnstile token to one route, which checks the origin and the rate limit, validates the schema, runs the bot checks, sanitises the text and sets a priority class, then delivers by signed webhook or SMTP over TLS to the studio mailbox. Any failed step refuses the request and offers the visitor an email draft.",
-    "drawingLegend": "Solid line: the path of a briefing. Dashed line: any failed step ends there. The request is refused and your answers open as an email draft, so nothing is ever reported as received that was not."
+    "drawingLegend": "Solid line: the path of a briefing. Dashed line: any failed step ends there. The request is refused and your answers open as an email draft, so nothing is ever reported as received that was not.",
+    "foundingLabel": "Founding principles",
+    "founding": "Founded by an architect who works in the dark and designs for low-tolerance enterprise infrastructures. We do not operate on social praise or public noise. We build, measure, and fail closed."
   },
   "Sim": {
     "interactive": "Interactive simulation",

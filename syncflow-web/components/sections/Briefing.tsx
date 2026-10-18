@@ -191,6 +191,37 @@ export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { pr
     };
   }, [step, status, turnstileSiteKey, direct]);
 
+  // What a level typically includes (docs/adr/0031): three lines per level, shown under the options once one is chosen. The cell never changes height: every
+  // variant (the prompt shown before a choice, and the three levels) sits invisibly in one grid cell and the visible text is laid over it, so choosing or
+  // changing a level moves nothing below (CLS 0). The visible layer is the polite live region; the invisible one is hidden from assistive technology.
+  const scopeItem = (id: Budget | 'idle') =>
+    id === 'idle' ? (
+      <p key="idle" className="scope-idle">
+        {t.budget.scopeIdle}
+      </p>
+    ) : (
+      <ul key={id} className="scope-list">
+        <li>{t.budget[`${id}s1`]}</li>
+        <li>{t.budget[`${id}s2`]}</li>
+        <li>{t.budget[`${id}s3`]}</li>
+      </ul>
+    );
+  const scopeBlock = (
+    <div className="scope" data-scope={budget || 'idle'}>
+      <p className="label">{t.budget.scopeTitle}</p>
+      <div className="scope-stack">
+        <div className="scope-ghost" aria-hidden="true">
+          {scopeItem('idle')}
+          {BUDGETS.map((id) => scopeItem(id))}
+        </div>
+        <div className="scope-live" role="status" aria-live="polite">
+          {scopeItem(budget || 'idle')}
+        </div>
+      </div>
+      <p className="scope-note">{t.budget.scopeNote}</p>
+    </div>
+  );
+
   const answered = step === 1 ? budget : step === 2 ? projectType : step === 3 ? timeline : 'done';
 
   const next = () => {
@@ -411,6 +442,7 @@ export function Briefing({ privacyHref, turnstileSiteKey, direct = false }: { pr
               setPickError(false);
             }}
             options={BUDGETS.map((id) => ({ id: id as string, title: bandText(id), desc: t.budget[`${id}Desc`] }))}
+            after={scopeBlock}
             footnote={t.budget.micro}
           />
         ) : null}
@@ -638,6 +670,7 @@ function Choice({
   value,
   onChange,
   options,
+  after,
   footnote,
 }: {
   title: string;
@@ -647,6 +680,8 @@ function Choice({
   value: string;
   onChange: (value: string) => void;
   options: Array<{ id: string; title: string; desc: string }>;
+  /** Shown under the options, above the footnote. */
+  after?: ReactNode;
   footnote?: string;
 }) {
   return (
@@ -667,6 +702,7 @@ function Choice({
           </label>
         ))}
       </div>
+      {after}
       {footnote ? <p className="mt-5 text-xs text-faint">{footnote}</p> : null}
     </fieldset>
   );
