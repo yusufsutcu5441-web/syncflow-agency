@@ -90,7 +90,7 @@ lib/
 messages/   en tr ar de fr es zh ja (.json; ja uykuda)
 i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/       adr/ (mimari kararlar 0001–0028) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+docs/       adr/ (mimari kararlar 0001–0029) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
 tests/      arch/ (65 sözleşme testi)
 public/     fonts/ Inter Display (Latin + Türkçe) ve Syne alt kümeleri (OFL)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py

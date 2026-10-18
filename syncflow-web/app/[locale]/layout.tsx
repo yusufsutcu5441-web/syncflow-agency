@@ -56,7 +56,8 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
       url: pathFor(locale),
       siteName: t('siteName'),
       title: t('ogTitle'),
-      description: t('description'),
+      // The share preview has its own line (LinkedIn, X, Slack and WhatsApp show it under the title); the search description above is longer.
+      description: t('ogDescription'),
       locale: ogLocale.ogLocale,
       alternateLocale: OPEN_LOCALES.filter((code) => code !== locale).map((code) => LOCALE_LABELS[code].ogLocale),
       images: [{ url: shareImage, width: 1200, height: 630, alt: t('ogAlt') }],
@@ -64,7 +65,7 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
     twitter: {
       card: 'summary_large_image',
       title: t('ogTitle'),
-      description: t('description'),
+      description: t('ogDescription'),
       images: [{ url: shareImage, alt: t('ogAlt') }],
     },
     robots: { index: true, follow: true },

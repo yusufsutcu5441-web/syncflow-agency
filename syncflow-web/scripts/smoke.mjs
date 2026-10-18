@@ -351,6 +351,33 @@ check('manifest + icon served', (await get('/manifest.webmanifest')).status === 
 const ogUrls = [...html.matchAll(/<meta[^>]+(?:property="og:image"|name="twitter:image")[^>]*content="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
 check('og:image and twitter:image use the explicit, redirect-free /og?locale= URL', ogUrls.length >= 2 && ogUrls.every((u) => /\/og\?locale=en&v=4$/.test(u)), ogUrls.join(' '));
 check('og:image:alt is localized', /property="og:image:alt"[^>]*content="syncflow\.agency: Built in the dark\. Moves like liquid\./.test(html));
+{
+  // The share preview (LinkedIn, X, Slack, WhatsApp) in every language: its own description line, the title, the card type, and the card's size.
+  const fs = await import('node:fs');
+  const unescape = (text) => text.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  const meta = (markup, attr, key) => {
+    const found = markup.match(new RegExp(`<meta[^>]+${attr}="${key}"[^>]*content="([^"]*)"`));
+    return found ? unescape(found[1]) : null;
+  };
+  const problems = [];
+  for (const locale of OPEN) {
+    const m = JSON.parse(fs.readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), 'utf8')).Meta;
+    const page = await (await get(locale === 'en' ? '/' : `/${locale}`)).text();
+    const expected = [
+      ['og:description', meta(page, 'property', 'og:description'), m.ogDescription],
+      ['twitter:description', meta(page, 'name', 'twitter:description'), m.ogDescription],
+      ['og:title', meta(page, 'property', 'og:title'), m.ogTitle],
+      ['twitter:title', meta(page, 'name', 'twitter:title'), m.ogTitle],
+      ['description', meta(page, 'name', 'description'), m.description],
+      ['twitter:card', meta(page, 'name', 'twitter:card'), 'summary_large_image'],
+      ['og:type', meta(page, 'property', 'og:type'), 'website'],
+      ['og:image:width', meta(page, 'property', 'og:image:width'), '1200'],
+      ['og:image:height', meta(page, 'property', 'og:image:height'), '630'],
+    ];
+    for (const [name, got, want] of expected) if (got !== want) problems.push(`${locale} ${name}: ${JSON.stringify(got)?.slice(0, 60)} != ${JSON.stringify(want).slice(0, 60)}`);
+  }
+  check(`the share preview tags (og:/twitter: description, title, card, image size) are right in all ${OPEN.length} languages, with the preview's own description line`, problems.length === 0, problems.slice(0, 3).join(' | '));
+}
 const cards = new Map();
 for (const loc of OPEN) {
   const r = await get(`/og?locale=${loc}&v=4`);

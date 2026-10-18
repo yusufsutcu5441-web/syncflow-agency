@@ -57,6 +57,12 @@ npm run qa:browser -- https://syncflow.agency --only=briefing   # bağlıyken "d
 
 Son adımda sayfada "E-posta taslağını aç" yerine "Briefing'i gönder" düğmesi görünmeli; gerçek bir test briefing'i gönderin ve e-postanın gelmesini bekleyin.
 
+## 5b. Hukuki sayfaların gerçek bilgileri
+
+`/privacy` ve `/imprint` sayfalarının 13 yer tutucusu yalnızca sizin bildiğiniz olgulardır (unvan, adres, sicil, vergi no, sorumlu kişi, saklama süresi...). Liste, nerede göründükleri ve neyin avukat kararı olduğu: [docs/legal-facts-intake.md](legal-facts-intake.md). Doldurulana kadar iki sayfa `noindex` kalır (bilinçli).
+
+> `node scripts/live-check.mjs` sitenin hız sınırına (10 dakikada 5 briefing POST'u, dakikada 30 API isteği) çarparsa 429'u bekler ya da **uyarı** olarak gösterir; arka arkaya sık koşmak hata üretmez ([ADR 0029](adr/0029-share-preview-live-check-429-and-declines.md)).
+
 ## 6. Bir şey ters giderse (geri alma anahtarları)
 
 | Sorun | Anahtar |

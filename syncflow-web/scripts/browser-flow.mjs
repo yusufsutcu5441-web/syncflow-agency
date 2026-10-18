@@ -629,8 +629,9 @@ if (want('briefing')) {
 // ── Drawing 01 and the call to action that stays within reach (docs/adr/0028) ──────────────────────────────────────────────────
 if (want('drawing')) {
   group('Drawing 01 (the briefing path): the right layout per width, nothing clipped, nothing overflowing');
-  for (const [label, viewport, layout] of [['desktop 1440', DESKTOP, 'wide'], ['phone 412', PHONE, 'narrow']]) {
-    const { page, errors } = await open('/?m=us', { viewport });
+  // English and Arabic: the page direction flips for /ar (dir="rtl"), the sheet must not (it reads left to right whatever the page does).
+  for (const [label, viewport, layout, path] of [['desktop 1440', DESKTOP, 'wide', '/?m=us'], ['phone 412', PHONE, 'narrow', '/?m=us'], ['ar desktop 1440', DESKTOP, 'wide', '/ar?m=me'], ['ar phone 412', PHONE, 'narrow', '/ar?m=me']]) {
+    const { page, errors } = await open(path, { viewport });
     await page.evaluate(() => document.querySelector('figure.drawing')?.scrollIntoView({ block: 'center', behavior: 'instant' }));
     await sleep(500);
     const info = await page.evaluate(() => {
@@ -672,8 +673,13 @@ if (want('drawing')) {
         overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         figureInside: figure ? figure.getBoundingClientRect().right <= document.documentElement.clientWidth + 1 : false,
         heading: document.querySelector('#drawing-title')?.textContent ?? '',
+        pageDir: document.documentElement.dir,
+        sheetDir: svg ? getComputedStyle(svg).direction : '',
+        // Centred in its figure: the space on both sides is the same (a sheet that hugged one edge would show a direction leak).
+        centred: svg && figure ? Math.abs(svg.getBoundingClientRect().left - figure.getBoundingClientRect().left - (figure.getBoundingClientRect().right - svg.getBoundingClientRect().right)) <= 2 : false,
       };
     });
+    check(`${label}: the page direction is ${path.startsWith('/ar') ? 'rtl' : 'ltr'} while the sheet itself stays left to right and centred in its figure`, info.pageDir === (path.startsWith('/ar') ? 'rtl' : 'ltr') && info.sheetDir === 'ltr' && info.centred, JSON.stringify({ pageDir: info.pageDir, sheetDir: info.sheetDir, centred: info.centred }));
     check(`${label}: exactly one of the two layouts is shown (the ${layout} one) and it is named for assistive technology`, info.total === 2 && info.shown === 1 && info.classes.includes(layout === 'wide' ? 'lg:block' : 'lg:hidden') && info.label.length > 120, JSON.stringify({ total: info.total, shown: info.shown, label: info.label.slice(0, 40) }));
     check(`${label}: seven boxes plus the refusal box, no text outside its box or the sheet`, info.boxes === 8 && info.clipped.length === 0 && info.outside.length === 0, JSON.stringify({ boxes: info.boxes, clipped: info.clipped, outside: info.outside }));
     check(`${label}: the annotations stay legible once scaled (>= 9.5 px) and the page does not scroll sideways`, info.fontPx >= 9.5 && info.overflowX <= 0 && info.figureInside, JSON.stringify({ fontPx: info.fontPx, width: info.width, overflowX: info.overflowX }));

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Live reachability check: what a visitor on the open internet gets from the production domain.
- * Read-only: DNS lookups, one TLS handshake, GET requests, and two POSTs that the briefing route must reject
- * (no Origin, foreign Origin). Nothing is sent that could reach the webhook.
+ * Read-only: DNS lookups, one TLS handshake, GET requests, and three POSTs that the briefing route must reject
+ * (no Origin, foreign Origin, our Origin with an empty body). Nothing is sent that could reach the webhook or the mailbox.
+ * The site rate-limits each address on purpose; a 429 is waited out when short and otherwise reported as a warning, never as a failure.
  *
  *   node scripts/live-check.mjs [https://syncflow.agency]
  *
@@ -69,7 +70,23 @@ await new Promise((resolve) => {
 
 /* ── HTTP ───────────────────────────────────────────────────────────────────────────────────────── */
 section('HTTP');
-const get = (path, init = {}) => fetch(BASE + path, { redirect: 'manual', signal: AbortSignal.timeout(20000), ...init }).catch((e) => ({ status: 0, error: e.cause?.code ?? e.message, headers: new Headers() }));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const rawGet = (path, init = {}) => fetch(BASE + path, { redirect: 'manual', signal: AbortSignal.timeout(20000), ...init }).catch((e) => ({ status: 0, error: e.cause?.code ?? e.message, headers: new Headers() }));
+// The site rate-limits every address (30 API calls a minute, 5 briefing posts in 10 minutes). A run that sweeps the breakdowns in every language, or two runs
+// in a row, can meet that limit, which is the site working as designed and says nothing about whether it is up. A short limit (Retry-After up to 65 s) is
+// waited out and the request repeated; a long one is returned as it is and reported by the caller as what it is, not as a failure.
+let waitedOutSeconds = 0;
+const get = async (path, init = {}) => {
+  let res = await rawGet(path, init);
+  for (let attempt = 0; attempt < 2 && res.status === 429; attempt++) {
+    const wait = Number(res.headers.get('retry-after') ?? 0);
+    if (!(wait > 0 && wait <= 65)) break;
+    waitedOutSeconds += wait;
+    await sleep(wait * 1000 + 500);
+    res = await rawGet(path, init);
+  }
+  return res;
+};
 const expect = async (name, path, status, extra) => {
   const res = await get(path);
   let ok = res.status === status;
@@ -187,10 +204,16 @@ await expect('GET /api/briefing', '/api/briefing', 405);
 const post = (headers) => get('/api/briefing', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: '{}' });
 for (const [name, headers, want] of [['POST without Origin', {}, 403], ['POST with a foreign Origin', { origin: 'https://evil.example' }, 403], ['POST with our Origin and an empty body', { origin: ORIGIN }, 422]]) {
   const r = await post(headers);
+  if (r.status === 429) {
+    // Not a failure: the limiter answered, so the route is up and protected. Say when this address can ask again.
+    const minutes = Math.ceil(Number(r.headers.get('retry-after') ?? 0) / 60);
+    say('WARN', `${name}: 429, this address has used its request limit`, `the rate limiter is working (5 briefing posts per 10 minutes per address); the ${want} check is skipped, run again in ${minutes || 10} min`);
+    continue;
+  }
   say(r.status === want ? 'PASS' : 'FAIL', `${name} is ${want}`, `-> ${r.status || r.error}`);
 }
 
 const fails = results.filter((l) => l === 'FAIL').length;
 const warns = results.filter((l) => l === 'WARN').length;
-console.log(`\n${results.length - fails - warns} passed, ${warns} warning(s), ${fails} failure(s) for ${BASE}`);
+console.log(`\n${results.length - fails - warns} passed, ${warns} warning(s), ${fails} failure(s) for ${BASE}${waitedOutSeconds ? ` (waited ${Math.round(waitedOutSeconds)} s out of the site's rate limit; that is by design)` : ''}`);
 process.exit(fails ? 1 : 0);
