@@ -47,6 +47,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run flags:build` · `flags:check` | Bayrakları (`app/flags.css`, bayrak başına tek boş öğe) üreticiden yeniden yazar / CSS'in üreticiyle aynı olduğunu doğrular (denetim çalıştırır) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
 | `npm run delivery:verify` | İsteğe bağlı SMTP teslimi: loopback'te sahte bir SMTP sunucusuyla gerçek konuşma (oturum, zarf, başlıklar, başlık enjeksiyonu, reddedilen parola) |
+| `npm run release:verify` | **Sürüm kapısı** (`-- --quick` hızlı küme): tip+lint+mesajlar, denetim `--build`, teslim ve mimari sözleşme testleri, üretim sunucusunda (:3190) smoke, CSP ve tam tarayıcı akışı; teslim değişkenleri bilerek tanımsız. Yaklaşık 13 dk. Bkz. [docs/deployment.md](docs/deployment.md) |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
 | `npm run film:render` | Beş sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
 | `npm run remotion:studio` | Sahneleri Remotion Studio'da açar |
@@ -90,7 +91,7 @@ lib/
 messages/   en tr ar de fr es zh ja (.json; ja uykuda)
 i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/       adr/ (mimari kararlar 0001–0032) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı)
+docs/       adr/ (mimari kararlar 0001–0032) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı) · deployment.md (dağıtım yapılandırması ve sürüm kilidi)
 tests/      arch/ (65 sözleşme testi)
 public/     fonts/ Inter Display (Latin + Türkçe) ve Syne alt kümeleri (OFL)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py

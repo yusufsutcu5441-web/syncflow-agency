@@ -21,6 +21,7 @@
     "flags:check": "node scripts/build-flags.mjs --check",
     "arch:verify": "node scripts/arch-verify.mjs",
     "delivery:verify": "node --test tests/delivery/smtp.test.mjs",
+    "release:verify": "node scripts/release-verify.mjs",
     "arch:examples": "node scripts/arch-verify.mjs --write-examples",
     "qa:browser": "node scripts/browser-flow.mjs",
     "qa:browser:quick": "node scripts/browser-flow.mjs --quick",

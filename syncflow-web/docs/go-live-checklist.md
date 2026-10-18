@@ -1,6 +1,6 @@
 # Canlıya alma kontrol listesi: form, alan adı, doğrulama
 
-Kodda yapılacak bir şey kalmadı; aşağıdakiler yalnızca **sizin hesaplarınızda** yapılabilir. Sırayla ilerleyin, her adımın sonunda doğrulama komutu var. Ayrıntılı kaynaklar: [docs/n8n-briefing.md](n8n-briefing.md) ("Hızlı yol"), [docs/vercel-next-site.md](vercel-next-site.md) §4 ve §10.
+Kodda yapılacak bir şey kalmadı; aşağıdakiler yalnızca **sizin hesaplarınızda** yapılabilir ve **isteğe bağlıdır**: sahibi bugünkü yer tutucu mantığıyla (form e-posta taslağı modunda, hukuki sayfalar yer tutuculu) yayında kalmayı kabul etti. Kilitli sürüm, dağıtım yapılandırması ve geri alma: [docs/deployment.md](deployment.md). Sırayla ilerleyin, her adımın sonunda doğrulama komutu var. Ayrıntılı kaynaklar: [docs/n8n-briefing.md](n8n-briefing.md) ("Hızlı yol"), [docs/vercel-next-site.md](vercel-next-site.md) §4 ve §10.
 
 > Şu an form **bağlı değil**: ziyaretçi dört adımı doldurur, son düğme "E-posta taslağını aç" olur ve yanıtlar `contact@syncflow.agency` adresine bir e-posta taslağı olarak açılır (hiçbir şey "alındı" diye gösterilmez). Turnstile'ın iki anahtarı ve bir teslim yolu (A: imzalı webhook → n8n → Gmail, ya da B: doğrudan SMTP) girilince site **kod değişmeden** normal teslim yoluna geçer.
 

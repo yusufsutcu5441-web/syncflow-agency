@@ -1,0 +1,87 @@
+#!/usr/bin/env node
+/**
+ * The release gate (docs/deployment.md): every check that must be green before a commit is called production-ready, in one command, on THIS machine.
+ *
+ *   npm run release:verify               full gate: type + lint + messages, audit with a production build, delivery and architecture contract tests,
+ *                                        then a production server on :3190 with the HTTP smoke test, the CSP/console check and the complete browser flow
+ *   npm run release:verify -- --quick    the same, with the fast browser set (anchors, shift, one simulator pass)
+ *
+ * The delivery variables are DELIBERATELY not set here: the gate proves the build that ships while the SMTP and legal variables are still placeholders
+ * (the briefing in its honest email-draft mode, the legal pages noindex). The server gets Cloudflare's always-pass Turnstile secret so the smoke test's
+ * bot-check paths run; no key of the owner is read or needed. Exit code 1 when any step fails; a server it started is always stopped.
+ */
+import { spawn, spawnSync } from 'node:child_process';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const quick = process.argv.includes('--quick');
+const PORT = 3190;
+const BASE = `http://localhost:${PORT}`;
+const node = process.execPath;
+const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const rows = [];
+
+// A build of what ships: none of the owner's delivery or bot-check variables, whatever this machine's shell has set.
+const CLEAN = { ...process.env };
+for (const name of ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_FROM', 'BRIEFING_INBOX', 'CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'CSP_MODE', 'DEFER_FRAMEWORK']) delete CLEAN[name];
+
+function step(label, command, args, { env = CLEAN, shell = false } = {}) {
+  const started = Date.now();
+  process.stdout.write(`\n▶ ${label}\n`);
+  const run = spawnSync(command, args, { cwd: root, env, encoding: 'utf8', shell, maxBuffer: 64 * 1024 * 1024 });
+  const output = `${run.stdout ?? ''}${run.stderr ?? ''}`;
+  const lines = output.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const summary = [...lines].reverse().find((line) => /passed|geçti|pass \d|checks|errors?|OK:|tests \d|ℹ pass/i.test(line)) ?? lines.at(-1) ?? '';
+  const ok = run.status === 0;
+  const seconds = Math.round((Date.now() - started) / 1000);
+  rows.push({ label, ok, seconds, summary: summary.slice(0, 120) });
+  process.stdout.write(`  ${ok ? 'PASS' : 'FAIL'}  ${seconds}s  ${summary.slice(0, 120)}\n`);
+  if (!ok) process.stdout.write(`${lines.slice(-25).join('\n')}\n`);
+  return ok;
+}
+
+async function waitFor(url, ms) {
+  const until = Date.now() + ms;
+  while (Date.now() < until) {
+    try {
+      if ((await fetch(url)).ok) return true;
+    } catch {
+      /* not up yet */
+    }
+    await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+  }
+  return false;
+}
+
+let server;
+try {
+  step('type check, lint and message parity (npm run check)', npm, ['run', 'check'], { shell: true });
+  step('design audit with a production build (faz2-denetim --build)', node, ['faz2-denetim.mjs', '--build']);
+  step('briefing delivery contract tests (npm run delivery:verify)', npm, ['run', 'delivery:verify'], { shell: true });
+  step('reference architecture contract tests (npm run arch:verify)', npm, ['run', 'arch:verify'], { shell: true });
+
+  if (rows.every((row) => row.ok)) {
+    process.stdout.write(`\n▶ production server on :${PORT} (placeholders as shipped: no delivery variables)\n`);
+    server = spawn(node, [join(root, 'node_modules', 'next', 'dist', 'bin', 'next'), 'start', '-p', String(PORT)], {
+      cwd: root,
+      env: { ...CLEAN, TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA' },
+      stdio: 'ignore',
+    });
+    const up = await waitFor(`${BASE}/?m=us`, 60_000);
+    rows.push({ label: `production server on :${PORT}`, ok: up, seconds: 0, summary: up ? 'up' : 'did not come up in 60 s' });
+    process.stdout.write(`  ${up ? 'PASS' : 'FAIL'}  ${up ? 'up' : 'did not come up'}\n`);
+    if (up) {
+      step('HTTP smoke test (scripts/smoke.mjs)', node, ['scripts/smoke.mjs', BASE]);
+      step('CSP violations and console errors, 12 visits (scripts/qa-csp.mjs)', node, ['scripts/qa-csp.mjs', BASE]);
+      step(`real-browser flow (scripts/browser-flow.mjs${quick ? ' --quick' : ''})`, node, ['scripts/browser-flow.mjs', BASE, ...(quick ? ['--quick'] : [])]);
+    }
+  }
+} finally {
+  server?.kill();
+}
+
+const failed = rows.filter((row) => !row.ok);
+process.stdout.write(`\n${'─'.repeat(100)}\nRelease gate: ${rows.length - failed.length} of ${rows.length} steps green${failed.length ? `, ${failed.length} FAILED` : ''}\n`);
+for (const row of rows) process.stdout.write(`  ${row.ok ? 'PASS' : 'FAIL'}  ${String(row.seconds).padStart(4)} s  ${row.label}\n          ${row.summary}\n`);
+process.exit(failed.length ? 1 : 0);
