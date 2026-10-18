@@ -7,6 +7,7 @@ import type { AppLocale } from '@/i18n/routing';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
+import { SPECIMEN_KEY, SPECIMEN_NUMBER, SPECIMEN_SLUGS, specimenPath } from '@/lib/specimens';
 
 /**
  * Section 03, "Studio" (docs/adr/0020-case-study-layer.md): who we are and how we work, with the engineering written out.
@@ -19,7 +20,17 @@ import { SECTION_IDS } from '@/lib/site';
  * Plain server markup: native <details> panels, so everything is readable and crawlable without JavaScript.
  */
 export async function Studio() {
-  const [t, locale, format, hero] = await Promise.all([getTranslations('Studio'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Hero')]);
+  const [t, locale, format, hero, sp] = await Promise.all([getTranslations('Studio'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Hero'), getTranslations('Specimen')]);
+
+  // The architectural R&D specimens (docs/adr/0032): the studio's own engineering, each a page of its own. Cards only; the figures live on the pages.
+  const specimens = SPECIMEN_SLUGS.map((slug) => ({
+    slug,
+    number: SPECIMEN_NUMBER[slug],
+    tag: sp(`${SPECIMEN_KEY[slug]}.tag`),
+    title: sp(`${SPECIMEN_KEY[slug]}.title`),
+    card: sp(`${SPECIMEN_KEY[slug]}.card`),
+    href: withLocale(specimenPath(slug), locale),
+  }));
 
   const ms = (value: number | null) => (value === null ? hero('pending') : `${format.number(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ms`);
 
@@ -198,6 +209,31 @@ export async function Studio() {
                     </p>
                   </div>
                 </details>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div id="specimens" className="mt-24 scroll-mt-28 md:mt-32">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+            <div className="lg:sticky lg:top-32 lg:self-start">
+              <p className="label">{t('specimensLabel')}</p>
+              <h3 className="display mt-5 how-title">{t('specimensTitle')}</h3>
+              <p className="body-muted mt-5 max-w-md">{t('specimensLead')}</p>
+            </div>
+            <div className="grid gap-4">
+              {specimens.map(({ slug, number, tag, title, card, href }) => (
+                <Link key={slug} href={href} prefetch={false} className="spec-card" data-specimen={slug}>
+                  <p className="label">
+                    {number} — {tag}
+                  </p>
+                  <h4 className="text-title mt-3">{title}</h4>
+                  <p className="body-muted mt-3">{card}</p>
+                  <span className="footer-link mt-5 inline-flex items-center gap-1.5 text-sm">
+                    {t('specimenRead')}
+                    <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                  </span>
+                </Link>
               ))}
             </div>
           </div>

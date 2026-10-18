@@ -343,8 +343,12 @@ section('Metadata routes and error pages');
 const sitemap = await (await get('/sitemap.xml')).text();
 const SLUGS = ['estate', 'clinic', 'law', 'logistics'];
 const breakdownPath = (locale, slug) => (locale === 'en' ? `/showcase/${slug}` : `/${locale}/showcase/${slug}`);
-check(`sitemap lists ${OPEN.length} locale URLs and ${OPEN.length * SLUGS.length} breakdown URLs with alternates (and no closed language)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length) && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
+// The architectural R&D specimens (docs/adr/0032): two pages per language, each in the sitemap with its own alternates.
+const SPEC_SLUGS = ['studio-site', 'fail-safe-queue'];
+const specimenPath = (locale, slug) => (locale === 'en' ? `/specimens/${slug}` : `/${locale}/specimens/${slug}`);
+check(`sitemap lists ${OPEN.length} locale URLs, ${OPEN.length * SLUGS.length} breakdown URLs and ${OPEN.length * SPEC_SLUGS.length} R&D specimen URLs with alternates (and no closed language)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length + SPEC_SLUGS.length) && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
 check('every public language and every specimen has its breakdown URL in the sitemap', OPEN.every((l) => SLUGS.every((slug) => sitemap.includes(`${breakdownPath(l, slug)}</loc>`))));
+check('every public language has both R&D specimen URLs in the sitemap', OPEN.every((l) => SPEC_SLUGS.every((slug) => sitemap.includes(`${specimenPath(l, slug)}</loc>`))));
 const robots = await (await get('/robots.txt')).text();
 check('robots.txt disallows /api/ and links the sitemap', /Disallow: \/api\//.test(robots) && /Sitemap:/.test(robots));
 check('manifest + icon served', (await get('/manifest.webmanifest')).status === 200 && (await get('/icon.svg')).status === 200);
@@ -606,6 +610,53 @@ for (const locale of OPEN) {
   }
 }
 check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, structured data, hreflang, indexable, the published numbers and none of the forbidden claims`, breakdownFailures.length === 0, breakdownFailures.slice(0, 3).join(' | '));
+/* ── The architectural R&D specimens (docs/adr/0032-rd-specimens.md): two pages in every language ─────────────────────────────────── */
+{
+  const fs = await import('node:fs');
+  // What the reference queue does on its scenarios is read from the file the contract tests keep equal to the code (docs/architecture/examples/scenarios.json).
+  const scenarios = JSON.parse(fs.readFileSync(new URL('../docs/architecture/examples/scenarios.json', import.meta.url), 'utf8'));
+  const sum = (key) => scenarios.reduce((n, r) => n + r[key], 0);
+  const queue = { n: scenarios.length, accepted: sum('accepted'), lost: sum('lost'), dead: sum('deadLettered'), dropped: sum('duplicatesDroppedAtReceiver') + sum('duplicatesDroppedAtQueue'), twice: scenarios.reduce((n, r) => n + (r.appliedAtReceiver - r.appliedDistinct), 0) };
+  // No frame-budget figure the site has not measured: the measured cadence is 16.7 ms (60 Hz); "14 ms" would be a number nobody measured.
+  const UNMEASURED = /\b14\s?ms\b|14\s?毫秒|14\s?مللي|14\s?milisegundos/i;
+  const decode = (text) => text.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+  // A legal status, a certification or an availability percentage is a statement about law and contracts, not about code (mirrors the home-page check below).
+  const UNBACKED_ON_PAGES = /SOC ?2|ISO ?27001|GDPR[- ](?:compliant|certified)|compliant with (?:the )?GDPR|DSGVO[- ]konform|conforme (?:au |al |con el )?(?:RGPD|GDPR)|符合\s?GDPR|GDPR\s?合规|\b99[.,]9\d?\s?%|\bSLA\s*(?:of|:)\s*\d|\buptime\s*(?:of|:)\s*\d/i;
+  const problems = [];
+  for (const locale of OPEN) {
+    const m = JSON.parse(fs.readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), 'utf8')).Specimen;
+    for (const [slug, key] of [['studio-site', 'studioSite'], ['fail-safe-queue', 'failSafeQueue']]) {
+      const path = specimenPath(locale, slug);
+      const res = await get(path);
+      const body = await res.text();
+      const text = normalise(decode(stripTags(body)));
+      const ids = ['challenge', 'solution', 'integration', 'impact'].map((id) => body.includes(`id="bd-${id}"`));
+      const canonical = new RegExp(`<link rel="canonical" href="[^"]*${path.replace(/\//g, '\\/')}"`).test(body);
+      const hreflangs = (body.match(/<link rel="alternate" hrefLang="/g) ?? body.match(/<link rel="alternate" hreflang="/g) ?? []).length;
+      let graph = [];
+      try {
+        graph = JSON.parse(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/.exec(body)?.[1] ?? '{}')['@graph'] ?? [];
+      } catch {
+        graph = [];
+      }
+      const page = graph.find((node) => node['@type'] === 'WebPage');
+      const ld = Boolean(page) && page.url.endsWith(path);
+      const words = [m.note, m[key].title, m[key].scenario, m[key].r1Title, m.p1Title, m.p2Title, m.p3Title, m.impactTitle].map((s) => normalise(s));
+      const missing = words.filter((w) => !text.includes(w));
+      const numbers =
+        slug === 'studio-site'
+          ? text.includes(`${perfDesktop} · ${perfMobile}`) && /16[.,]7 · 16[.,]9/.test(text) && /0[.,]00/.test(text)
+          : new RegExp(`${queue.accepted}`).test(text) && text.includes(String(queue.n)) && new RegExp(`${queue.dropped}`).test(text) && new RegExp(`${queue.dead}\\s`).test(text);
+      const ok = res.status === 200 && /<h1\b/.test(body) && ids.every(Boolean) && canonical && ld && hreflangs >= OPEN.length + 1 && !/noindex/.test(body) && missing.length === 0 && numbers && !FORBIDDEN_IN_BREAKDOWN.test(text) && !UNMEASURED.test(text) && !UNBACKED_ON_PAGES.test(text);
+      if (!ok) problems.push(`${locale}/${slug}: status ${res.status}, parts ${ids.join('')}, canonical ${canonical}, ld ${ld}, hreflang ${hreflangs}, missing ${missing.map((w) => w.slice(0, 20)).join('|')}, numbers ${numbers}`);
+    }
+  }
+  check(`all ${OPEN.length * SPEC_SLUGS.length} R&D specimen pages (2 specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, structured data, hreflang, indexable, their translated texts, the measured or computed figures, and no unmeasured frame budget, certification or SLA claim`, problems.length === 0, problems.slice(0, 3).join(' | '));
+  const home = await (await get('/?m=us')).text();
+  const cards = [...home.matchAll(/data-specimen="([a-z-]+)"/g)].map((x) => x[1]);
+  check('the home page (Studio) links to both R&D specimens', SPEC_SLUGS.every((slug) => cards.includes(slug)) && SPEC_SLUGS.every((slug) => home.includes(`href="/specimens/${slug}"`)), cards.join(','));
+  check('an unknown specimen and a dormant language are 404', (await get('/specimens/nope')).status === 404 && (await get('/ja/specimens/studio-site')).status === 404);
+}
 const enBreakdown = await (await get('/showcase/law')).text();
 check('the English law breakdown names its four headings in the required order', /Challenge[\s\S]*Architectural solution[\s\S]*Integration &amp; security[\s\S]*Measured impact &amp; ROI/.test(enBreakdown));
 

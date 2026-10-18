@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, framework, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *
@@ -788,6 +788,67 @@ if (want('scope')) {
       check(`${tag}: no sideways scroll and no page or console errors`, (await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0 && errors.length === 0, errors.slice(0, 3).join(' | '));
       await page.close();
     }
+  }
+}
+
+// ── the architectural R&D specimens (docs/adr/0032): two pages in every language ──────────────────────────────────────────────────────
+if (want('specimens')) {
+  group('Architectural R&D specimens: layout shift 0, the right direction, nothing clipped, the in-page navigation lands, the Studio cards lead there');
+  const profiles = QUICK ? [['desktop', DESKTOP, ['en', 'ar']]] : [['desktop', DESKTOP, ['en', 'tr', 'ar', 'de', 'fr', 'es', 'zh']], ['phone', PHONE, ['en', 'ar', 'de', 'zh']]];
+  for (const [label, viewport, langs] of profiles) {
+    for (const lang of langs) {
+      const messages = JSON.parse(readFileSync(new URL(`../messages/${lang}.json`, import.meta.url), 'utf8'));
+      for (const [slug, key] of [['studio-site', 'studioSite'], ['fail-safe-queue', 'failSafeQueue']]) {
+        const { page, errors } = await open(`${lang === 'en' ? '' : `/${lang}`}/specimens/${slug}`, { viewport });
+        const tag = `${label} ${lang} ${slug}`;
+        // Read the whole page the way a visitor does, then count what moved.
+        const height = await page.evaluate(() => document.documentElement.scrollHeight);
+        for (let y = 0; y < height; y += Math.round(viewport.height * 0.8)) {
+          await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y);
+          await sleep(100);
+        }
+        await sleep(400);
+        const info = await page.evaluate(() => {
+          const tiles = [...document.querySelectorAll('.bd-tile-value')];
+          return {
+            cls: window.__cls,
+            h1: document.querySelectorAll('h1').length,
+            title: document.querySelector('h1')?.textContent?.trim() ?? '',
+            dir: document.documentElement.dir,
+            sections: ['challenge', 'solution', 'integration', 'impact'].filter((id) => document.getElementById(`bd-${id}`)).length,
+            tiles: tiles.map((el) => el.textContent.trim()),
+            clippedTiles: tiles.filter((el) => el.scrollWidth > el.clientWidth + 1).length,
+            overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            robots: document.querySelector('meta[name="robots"]')?.content ?? '',
+          };
+        });
+        check(`${tag}: one h1 with the translated title, four parts, ${info.dir}, indexable`, info.h1 === 1 && info.title === messages.Specimen[key].title && info.sections === 4 && info.dir === (lang === 'ar' ? 'rtl' : 'ltr') && !/noindex/.test(info.robots), JSON.stringify({ h1: info.h1, title: info.title.slice(0, 30), sections: info.sections, dir: info.dir, robots: info.robots }));
+        check(`${tag}: four measured or computed tiles, none clipped, no sideways scroll`, info.tiles.length === 4 && info.tiles.every((t) => t.length > 0) && info.clippedTiles === 0 && info.overflowX <= 0, JSON.stringify({ tiles: info.tiles, clipped: info.clippedTiles, overflowX: info.overflowX }));
+        check(`${tag}: layout-shift score 0 and no page or console errors`, info.cls < 0.0001 && errors.length === 0, `${info.cls} ${errors.slice(0, 2).join(' | ')}`);
+        if (lang === 'en' || lang === 'ar') {
+          // The in-page navigation: a chip leads to its part, which lands under the header.
+          await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+          await sleep(300);
+          await page.evaluate(() => document.querySelector('.bd-nav a[href="#bd-integration"]')?.click());
+          await settle(page);
+          const landed = await page.evaluate(() => ({ hash: location.hash, top: Math.round(document.getElementById('bd-integration').getBoundingClientRect().top) }));
+          check(`${tag}: the in-page link to part III lands on it, below the header (hash and position)`, landed.hash === '#bd-integration' && landed.top >= 72 && landed.top <= 220, JSON.stringify(landed));
+        }
+        await page.close();
+      }
+    }
+  }
+  // From the home page: the Studio section carries both cards, and a click leads to the specimen page.
+  for (const [label, viewport] of QUICK ? [['desktop', DESKTOP]] : [['desktop', DESKTOP], ['phone', PHONE]]) {
+    const { page, errors } = await open('/?m=us', { viewport });
+    const cards = await page.evaluate(() => [...document.querySelectorAll('#specimens .spec-card')].map((a) => ({ slug: a.getAttribute('data-specimen'), href: a.getAttribute('href') })));
+    check(`${label}: the Studio section lists both specimens as cards that link to their pages`, cards.length === 2 && cards.every((c) => c.href === `/specimens/${c.slug}`), JSON.stringify(cards));
+    await page.evaluate(() => document.querySelector('#specimens .spec-card')?.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await sleep(500);
+    await Promise.all([page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => undefined), page.evaluate(() => document.querySelector('#specimens .spec-card')?.click())]);
+    check(`${label}: a click on a card opens its specimen page`, page.url().includes('/specimens/studio-site') && (await page.evaluate(() => document.querySelector('[data-breakdown="studio-site"]') !== null)), page.url());
+    check(`${label}: no page or console errors on the way`, errors.length === 0, errors.slice(0, 2).join(' | '));
+    await page.close();
   }
 }
 

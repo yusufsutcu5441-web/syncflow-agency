@@ -4,9 +4,11 @@ import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
 import { BREAKDOWN_SLUGS, breakdownPath } from '@/lib/breakdown';
 import { withLocale } from '@/lib/i18n-paths';
 import { SITE_URL } from '@/lib/site';
+import { SPECIMEN_SLUGS, specimenPath } from '@/lib/specimens';
 
 const urlFor = (locale: AppLocale) => (locale === routing.defaultLocale ? `${SITE_URL}/` : `${SITE_URL}/${locale}`);
 const breakdownUrl = (slug: (typeof BREAKDOWN_SLUGS)[number], locale: AppLocale) => `${SITE_URL}${withLocale(breakdownPath(slug), locale)}`;
+const specimenUrl = (slug: (typeof SPECIMEN_SLUGS)[number], locale: AppLocale) => `${SITE_URL}${withLocale(specimenPath(slug), locale)}`;
 
 /**
  * One entry per PUBLIC language (i18n/launch.ts), each listing all public translations (hreflang), plus x-default; and, since
@@ -41,5 +43,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }));
   });
 
-  return [...home, ...breakdowns];
+  // Since docs/adr/0032: the architectural R&D specimens, one entry per specimen and public language, each with its own hreflang set.
+  const specimens = SPECIMEN_SLUGS.flatMap((slug) => {
+    const alternates = {
+      languages: {
+        ...Object.fromEntries(OPEN_LOCALES.map((locale) => [LOCALE_LABELS[locale].hreflang, specimenUrl(slug, locale)])),
+        'x-default': specimenUrl(slug, routing.defaultLocale),
+      },
+    };
+    return OPEN_LOCALES.map((locale) => ({
+      url: specimenUrl(slug, locale),
+      changeFrequency: 'monthly' as const,
+      priority: locale === routing.defaultLocale ? 0.7 : 0.6,
+      alternates,
+    }));
+  });
+
+  return [...home, ...breakdowns, ...specimens];
 }

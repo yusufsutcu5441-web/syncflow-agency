@@ -1,4 +1,5 @@
 import type { AppLocale } from '@/i18n/routing';
+import type { SpecimenSlug } from '@/lib/specimens';
 
 /**
  * The architectural breakdown of each showcase specimen (docs/adr/0020-case-study-layer.md): the same content as a page of its own
@@ -20,7 +21,8 @@ export const BREAKDOWN_PARTS = ['challenge', 'solution', 'integration', 'impact'
 export type BreakdownPart = (typeof BREAKDOWN_PARTS)[number];
 
 export type BreakdownData = {
-  slug: BreakdownSlug;
+  /** A sector specimen of the showcase, or an architectural R&D specimen (lib/specimens.ts), which is drawn by the same page component. */
+  slug: BreakdownSlug | SpecimenSlug;
   locale: AppLocale;
   dir: 'ltr' | 'rtl';
   lang: string;

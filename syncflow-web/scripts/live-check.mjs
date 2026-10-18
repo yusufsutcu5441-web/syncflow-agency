@@ -129,8 +129,24 @@ for (const [path, lang, dir] of [['/', 'en', 'ltr'], ['/tr', 'tr', 'ltr'], ['/ar
 }
 for (const p of ['/privacy', '/imprint', '/robots.txt', '/sitemap.xml', '/.well-known/security.txt']) await expect(p, p, 200);
 await expect('ja is dormant', '/ja', 404);
-// Seven home pages and, since docs/adr/0020, four architectural breakdowns in each language: 7 + 28.
-await expect('sitemap lists the seven languages and the 28 breakdowns', '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === 35, detail: `${n} URLs` }; });
+// Seven home pages, four architectural breakdowns in each language (docs/adr/0020) and two architectural R&D specimens in each language (docs/adr/0032): 7 + 28 + 14.
+await expect('sitemap lists the seven languages, the 28 breakdowns and the 14 R&D specimen pages', '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === 49, detail: `${n} URLs` }; });
+// The two architectural R&D specimens (docs/adr/0032) in every public language: a page with its h1, the four parts and its own canonical, indexable, and no
+// unmeasured frame budget on it. 14 plain GETs (the page limit is 240 a minute).
+{
+  const bad = [];
+  for (const lang of ['en', 'tr', 'ar', 'de', 'fr', 'es', 'zh']) {
+    for (const slug of ['studio-site', 'fail-safe-queue']) {
+      const path = `${lang === 'en' ? '' : `/${lang}`}/specimens/${slug}`;
+      const res = await get(path);
+      const html = res.status === 200 ? await res.text() : '';
+      const parts = ['challenge', 'solution', 'integration', 'impact'].every((id) => html.includes(`id="bd-${id}"`));
+      const text = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ');
+      if (!(res.status === 200 && /<h1\b/.test(html) && parts && html.includes(`rel="canonical" href="${ORIGIN}${path}"`) && !/noindex/.test(html) && !/\b14\s?ms\b/i.test(text))) bad.push(`${path} (${res.status || res.error})`);
+    }
+  }
+  say(bad.length === 0 ? 'PASS' : 'FAIL', 'both R&D specimen pages answer 200 in all seven languages with an h1, the four parts, their canonical and no noindex', bad.slice(0, 3).join(', '));
+}
 
 // The enterprise tier (docs/adr/0019): four showcase cards, the USD 50,000 floor with the three new bands and no USD 25,000 left, the two
 // enterprise columns, and the new clip served as a real video. Read-only: plain GETs (the clip with a one-byte Range request).

@@ -419,6 +419,28 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
     const lacking = PUBLIC_LOCALES.filter((l) => { const m = readJSON(`messages/${l}.json`); return !(m.Studio?.founding && m.Studio?.foundingLabel && ["t1", "t2", "t3"].every((t) => [1, 2, 3].every((n) => m.Briefing?.budget?.[`${t}s${n}`]))); });
     lacking.length === 0 ? add(G4, "PASS", "kurucu cümlesi ve her düzeyin üç satırı yedi dilde var") : add(G4, "FAIL", `kurucu cümlesi ya da kapsam satırları eksik: ${lacking.join(", ")}`);
   }
+  // docs/adr/0032: iki mimari Ar-Ge numunesi. Rakamları ölçülmüş (lib/metrics.ts) ya da koddan hesaplanmış (lib/arch) olur, metinlerde yazılı rakam yoktur;
+  // sitenin hiçbir metninde ölçülmemiş bir kare bütçesi ("14 ms") ya da kanıtsız sertifika/SLA iddiası bulunmaz; yedi dilde iki sayfa, site haritasında.
+  {
+    const loader = exists("lib/server/specimen.ts") ? read("lib/server/specimen.ts") : "";
+    const sitemap = exists("app/sitemap.ts") ? read("app/sitemap.ts") : "";
+    const route = exists("app/[locale]/specimens/[slug]/page.tsx") ? read("app/[locale]/specimens/[slug]/page.tsx") : "";
+    const studio = exists("components/sections/Studio.tsx") ? read("components/sections/Studio.tsx") : "";
+    const slugsSrc = exists("lib/specimens.ts") ? read("lib/specimens.ts") : "";
+    /METRICS\.frameMedian/.test(loader) && /METRICS\.lighthousePerformance/.test(loader) && /runScenario/.test(loader) && /SCENARIOS/.test(loader) && !/\b16[.,]7\b|\b16[.,]9\b/.test(loader) ? add(G4, "PASS", "numuneler: rakamlar lib/metrics.ts'den ölçülmüş ya da lib/arch senaryolarından hesaplanmış, yükleyicide yazılı rakam yok") : add(G4, "FAIL", "lib/server/specimen.ts: rakamlar METRICS ve runScenario(SCENARIOS) dışından geliyor ya da yazılı kare süresi var");
+    /SPECIMEN_SLUGS/.test(sitemap) && /robots:\s*\{\s*index:\s*true/.test(route) && /canonical/.test(route) && /languages/.test(route) && /id="specimens"/.test(studio) && /'studio-site'/.test(slugsSrc) && /'fail-safe-queue'/.test(slugsSrc) ? add(G4, "PASS", "numuneler: iki sayfa da site haritasında, canonical + hreflang'lı, indekslenebilir; Studio'da #specimens kartları var") : add(G4, "FAIL", "numune sayfaları site haritasında / canonical + hreflang'da / Studio kartlarında eksik");
+    const strings = (o, out = []) => { for (const v of Object.values(o ?? {})) typeof v === "string" ? out.push(v) : strings(v, out); return out; };
+    const UNMEASURED = /\b14\s?ms\b|14\s?毫秒|14\s?مللي|14\s?milisegundos/i;
+    const UNBACKED = /SOC ?2|ISO ?27001|GDPR[- ](?:compliant|certified)|compliant with (?:the )?GDPR|DSGVO[- ]konform|\b99[.,]9\d?\s?%|\bSLA\s*(?:of|:)\s*\d|\buptime\s*(?:of|:)\s*\d|\bour clients?\b.{0,40}\b(?:saw|achieved|reduced|increased|reported)\b/i;
+    const frame = [], claims = [];
+    for (const l of PUBLIC_LOCALES) {
+      const m = readJSON(`messages/${l}.json`);
+      for (const text of strings(m)) if (UNMEASURED.test(text)) frame.push(`${l}: ${text.slice(0, 50)}`);
+      for (const text of strings(m.Specimen)) if (UNBACKED.test(text)) claims.push(`${l}: ${text.slice(0, 50)}`);
+    }
+    frame.length === 0 ? add(G4, "PASS", "hiçbir dilde hiçbir metinde ölçülmemiş kare bütçesi ('14 ms') yok: ölçülen kare süresi 16,7 ms (60 Hz)") : add(G4, "FAIL", `ölçülmemiş kare bütçesi yazılmış: ${frame.slice(0, 3).join(" | ")}`);
+    claims.length === 0 ? add(G4, "PASS", "numune metinlerinde sertifika, SLA, çalışma süresi ya da müşteri sonucu iddiası yok (yedi dil)") : add(G4, "FAIL", `numune metinlerinde kanıtsız iddia: ${claims.slice(0, 3).join(" | ")}`);
+  }
   const rl = exists("lib/security/rate-limit.ts") ? read("lib/security/rate-limit.ts") : "";
   /NODE_ENV\s*===\s*['"]production['"]/.test(rl) && /UPSTASH_REDIS_REST_URL/.test(rl) && /console\.warn\(/.test(rl) ? add(G4, "PASS", "hız sınırı: üretimde Upstash yoksa örnek başına sayıldığı bir kez uyarılır") : add(G4, "FAIL", "lib/security/rate-limit.ts: üretimde Upstash yoksa uyarı yok");
   if (!exists("public/.well-known/security.txt")) add(G4, "FAIL", "public/.well-known/security.txt yok (RFC 9116)");

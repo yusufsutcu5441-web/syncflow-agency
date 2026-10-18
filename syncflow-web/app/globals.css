@@ -350,7 +350,7 @@ html[lang='ar'] ::after {
     --cv: 1220px;
   }
   .cv-studio {
-    --cv: 6693px;
+    --cv: 7625px;
   }
   .cv-briefing {
     --cv: 1752px;
@@ -375,7 +375,7 @@ html[lang='ar'] ::after {
       --cv: 1260px;
     }
     .cv-studio {
-      --cv: 5741px;
+      --cv: 6567px;
     }
     .cv-briefing {
       --cv: 1494px;
@@ -395,7 +395,7 @@ html[lang='ar'] ::after {
       --cv: 1590px;
     }
     .cv-studio {
-      --cv: 4173px;
+      --cv: 4807px;
     }
     .cv-briefing {
       --cv: 1700px;
@@ -1347,6 +1347,27 @@ html[lang='ar'] ::after {
     gap: 0.6rem;
     padding: 0;
     list-style: none;
+  }
+
+  /* ── The entry cards of the architectural R&D specimens (Studio, docs/adr/0032) ───────────────────────────────────────── */
+  .spec-card {
+    display: block;
+    padding: 1.4rem 1.5rem;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    background: var(--color-layer-1);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.3s ease;
+  }
+  @media (hover: hover) {
+    .spec-card:hover {
+      border-color: var(--color-hairline-strong);
+    }
+  }
+  .spec-card:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
   }
 
   /* ── The founding statement (Studio) and the scope block of the briefing's budget step (docs/adr/0031) ──────────────── */
