@@ -19,7 +19,7 @@ export const SOCIAL = {
 } as const;
 
 /** When the legal drafts (privacy notice, legal notice) were last edited. A draft's edit date, never a claim that the text is reviewed. */
-export const LEGAL_UPDATED = '2026-10-08';
+export const LEGAL_UPDATED = '2026-10-18';
 
 /** Section anchors used by the header, footer and sticky bar. */
 export const SECTION_IDS = {
