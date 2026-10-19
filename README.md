@@ -69,7 +69,7 @@ Start with [syncflow-web/docs/architecture/README.md](syncflow-web/docs/architec
 
 ### Status of the live site
 
-- The briefing form opens a prepared email draft until delivery credentials are set. The signed-webhook delivery path is verified against a mock receiver only.
+- The briefing form is connected on the live site since 19 October 2026: a submission reaches the studio's owner as a Telegram message (Telegram is named as a processor in the consent line and in the privacy notice). The signed-webhook (n8n) and SMTP paths are not connected and are verified against fakes only. Without any delivery path the form opens a prepared email draft instead of pretending to send.
 - The legal pages are drafts with placeholders and are marked `noindex`.
 - The translations other than English and Turkish are machine-written drafts that have not had a native-speaker review.
 
