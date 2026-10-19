@@ -46,7 +46,8 @@ Temiz klondaki tam kapı koşusunda tarayıcı adımı 313/315 verdi, aynı adı
 
 - `npm run release:verify` (çalışma kopyası, bu değişikliklerle, 19.10.2026): **8/8 adım yeşil**, 844 sn. Tip/lint/mesajlar 30 sn; tasarım denetimi 60 sn, **233 geçti, 0 hata**, 1 uyarı (yer tutuculu hukuki sayfalar, kabul edilmiş), 4 bilgi; teslim 7/7; mimari 65/65; smoke 193/193; CSP 0 ihlal, 0 konsol hatası; tarayıcı akışı 646 sn, **315/315**, yeniden yükleme gerekmedi.
 - `eslint` iki betikte temiz; `node --check` temiz.
-- Etiket, canlı doğrulama (`live-check`, `qa:csp` canlıya karşı) ve **yeni etiketin temiz klonda** (GitHub'dan klon, `npm ci`, `arch:verify`, `release:verify`) doğrulanması: etiket atıldıktan sonra yapılır ve sonuçlar `docs/deployment.md` §7'ye yazılır (etiketlenen commit'ten sonra gelen, yalnızca belge içeren bir commit).
+- Etiket `release-2026-10-19b` (`d7e75ff`) atıldı ve itildi. **Canlı** (dağıtımdan sonra): `live-check` ilk koşuda (dağıtımdan hemen sonra) 46 geçti, 1 hata (adı yakalanmadı: çıktının yalnızca sonu okunmuştu), sonraki iki koşuda 47 geçti, 0 uyarı, 0 hata; `qa:csp` 0 ihlal, 0 konsol hatası; GitHub `license` alanı MIT.
+- **Yeni etiket temiz klonda** (GitHub'dan `git clone --depth 1 --branch release-2026-10-19b`, `npm ci` 115 sn, `arch:verify` 3 sn, `release:verify`): **8/8 yeşil, 791 sn**, 233/193/7/65/0/315, yeniden yükleme gerekmedi. Windows 11, Node 24.12; macOS ve Linux denenmedi. Ayrıntı: `docs/deployment.md` §7.1.
 
 ## 5. GitHub "About" alanları (sahibin panelinden; metinler)
 

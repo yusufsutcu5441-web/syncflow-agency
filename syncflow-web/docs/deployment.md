@@ -91,7 +91,10 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 | CSP ihlali ve konsol hatası (12 ziyaret) | 95 sn | **0 / 0** |
 | Gerçek tarayıcı akışı | 646 sn | **315/315** |
 
-Canlı doğrulama ve etiketin temiz klonda doğrulanması etiketten sonra yapılır; sonuçları bu bölümün sonuna, etiketlenen commit'ten sonra gelen bir belge commit'iyle eklenir.
+Etiketten sonra yapılan doğrulamalar (bu satırlar, etiketlenen commit'ten sonra gelen bir belge commit'iyle eklendi):
+
+- **Canlı** (`https://syncflow.agency`, dağıtımdan sonra): `live-check` ilk koşu (dağıtımdan hemen sonra) 46 geçti, 1 hata (adı yakalanmadı), sonraki iki koşu **47 geçti, 0 uyarı, 0 hata**; `qa:csp` **0 ihlal, 0 konsol hatası**; GitHub lisansı MIT olarak algıladı.
+- **Temiz klon** (GitHub'dan `git clone --depth 1 --branch release-2026-10-19b`, `npm ci` 115 sn): `arch:verify` 3 sn; `release:verify` **8/8 yeşil, 791 sn**, aynı sayılar (tarayıcı akışı 315/315, yeniden yükleme gerekmedi). Windows 11, Node 24.12; macOS ve Linux denenmedi.
 
 ### 7.2 `release-2026-10-19` (yerel, temiz derleme)
 
