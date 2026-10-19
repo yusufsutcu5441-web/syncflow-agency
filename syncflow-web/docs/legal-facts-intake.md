@@ -29,6 +29,8 @@ Gizlilik metni işleyicileri adlandırır ve bu, **gerçekten kullanılan** yola
 - **Yol A (imzalı webhook → n8n → Gmail):** işleyiciler Cloudflare (Turnstile), n8n (barındıran taraf kim ise) ve Google. Metin şu an bunu söylüyor.
 - **Yol B (doğrudan SMTP, [ADR 0027](adr/0027-optional-smtp-delivery.md)):** n8n **işleyici değildir**; işleyiciler Cloudflare ve posta sağlayıcısı (Google Workspace/Gmail ya da seçtiğiniz SMTP hizmeti). p2 ve p5 buna göre yeniden yazılır.
 
+- **Yol C (Telegram, [ADR 0034](adr/0034-telegram-lead-alert.md)):** Telegram bir işleyicidir ve rıza satırı ile p5 onu yedi dilde adlandırır. Webhook ya da SMTP varken Telegram'a yalnızca uyarı gider (şirket ve unvan satırı, yatırım düzeyi, proje türü, zamanlama); tek yolsa tüm başvuru (ad, e-posta, mesaj) gider. Telegram'ın hukuki unvanı, sunucu konumları, aktarım dayanağı (madde 12) ve sohbetteki mesajların **saklama/silme süresi** (madde 9) sizin ve avukatınızın kararıdır; ben yazamam.
+
 Hangi yolu seçtiğinizi söyleyin; ben p2 ve p5'in işleyici listesini ona göre yedi dilde düzeltirim.
 
 ## 3. Hukuki karar gerektirenler (ben yazamam, yazmam)

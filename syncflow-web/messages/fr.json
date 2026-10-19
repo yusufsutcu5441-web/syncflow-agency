@@ -233,7 +233,7 @@
       "exploring": "J’étudie les options",
       "consent": "J’accepte d’être contacté au sujet de cette demande et que mes réponses soient traitées à cette fin.",
       "consentLink": "Notice de confidentialité",
-      "micro": "Vos informations servent uniquement à cette demande. Nos prestataires de formulaire et de messagerie (Cloudflare Turnstile, n8n, Gmail) les traitent pour notre compte, uniquement pour la transmettre.",
+      "micro": "Vos informations servent uniquement à cette demande. Nos prestataires de formulaire, de messagerie et de notification (Cloudflare Turnstile, n8n, Gmail, Telegram) les traitent pour notre compte, uniquement pour la transmettre.",
       "securityCheck": "Contrôle de sécurité",
       "honeypot": "Laissez ce champ vide"
     },
@@ -339,7 +339,7 @@
     "p4h": "Cookies",
     "p4": "Nous ne déposons aucun cookie qui nous soit propre. Votre langue et votre marché sont déterminés par l’adresse de la page (par exemple « / » pour l’anglais, « /de » pour l’allemand, « ?m= » pour le marché) et ne sont pas conservés. Nous n’utilisons aucun cookie d’analyse, de publicité ou de suivi.",
     "p5h": "Sous-traitants et transferts",
-    "p5": "Cloudflare (contrôle anti-robot Turnstile), n8n et Google (Gmail) traitent des données pour notre compte afin de transmettre votre briefing ; certains de leurs serveurs se trouvent hors de votre pays. [GARANTIES DE TRANSFERT, p. ex. clauses contractuelles types]. Leurs propres politiques de confidentialité s’appliquent aux données qu’ils traitent.",
+    "p5": "Cloudflare (contrôle anti-robot Turnstile), n8n, Google (Gmail) et Telegram (notification immédiate à notre équipe) traitent des données pour notre compte afin de transmettre votre briefing ; certains de leurs serveurs se trouvent hors de votre pays. [GARANTIES DE TRANSFERT, p. ex. clauses contractuelles types]. Leurs propres politiques de confidentialité s’appliquent aux données qu’ils traitent.",
     "p6h": "Conservation",
     "p6": "Nous conservons les briefings [DURÉE DE CONSERVATION] sauf si un contrat est conclu, auquel cas les durées légales de conservation s’appliquent.",
     "p7h": "Vos droits",

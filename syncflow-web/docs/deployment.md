@@ -8,7 +8,7 @@ Bu belge, sitenin bugünkü **kilitli, üretime hazır** durumunu, onu nasıl ya
 |---|---|
 | **Sürüm etiketi** | `release-2026-10-19b` (açıklamalı git etiketi, `origin`'e gönderilir; önceki: `release-2026-10-19`, `c06f6f9`) |
 | **Canlı** | https://syncflow.agency · `https://www.syncflow.agency` → 308 → apex (yol ve sorgu korunur) |
-| **Yapı** | Next.js 16.3.8, React 19, Tailwind v4, next-intl (7 dil), `npm` + `package-lock.json`; Node `>=20.19.0` (yerel doğrulama Node 24.12) |
+| **Yapı** | Next.js 16.3.8, React 19, Tailwind v4, next-intl (7 dil), `npm` + `package-lock.json`; Node `>=20.19.0` (yerel doğrulama Node 24.12; `delivery:verify` ve `arch:verify` Node 20.19.0'da da denendi, [ADR 0034](adr/0034-telegram-lead-alert.md) §6) |
 | **Doğrulama** | `npm run release:verify`: **8/8 adım yeşil**, yerel, temiz derleme (aşağıda §7) |
 | **Canlı doğrulama** | `node scripts/live-check.mjs https://syncflow.agency`: 47 geçti, 0 uyarı, 0 hata; `qa:csp` 0 ihlal, 0 konsol hatası |
 
@@ -16,7 +16,7 @@ Bu belge, sitenin bugünkü **kilitli, üretime hazır** durumunu, onu nasıl ya
 
 Sahibi, teslim ve hukuki değişkenlerin **yer tutucu mantığıyla** yayında kalmasını kabul etti. Bunlar **kusur değil, bilinen ve kabul edilmiş durumlardır**; sürüm kapısı onları bilerek boş bırakarak çalışır ve yine de sıfır hatayla geçer:
 
-- **Teslim (SMTP, webhook) bağlı değil:** briefing formu dürüst "e-posta taslağı" modundadır (ziyaretçi yanıtlarını kendi posta programında gönderir, "kopyala" düğmesi vardır); hiçbir şey "alındı" diye gösterilmez. API, anahtarlar ya da teslim yolu yokken kapalı düşer (403/503). Kod değişmeden bağlanır (§3, §9).
+- **Teslim (SMTP, webhook, Telegram) bağlı değil:** briefing formu dürüst "e-posta taslağı" modundadır (ziyaretçi yanıtlarını kendi posta programında gönderir, "kopyala" düğmesi vardır); hiçbir şey "alındı" diye gösterilmez. API, anahtarlar ya da teslim yolu yokken kapalı düşer (403/503). Kod değişmeden bağlanır (§3, §9).
 - **Hukuki sayfalar yer tutuculu:** `/privacy` ve `/imprint` (yedi dilde) 13 yer tutucu taşır ve `noindex`'tir; "uyumludur" yazılmaz. Gerçek olgular [legal-facts-intake.md](legal-facts-intake.md)'de listelidir.
 - Diğer bilinen sınırlar (kusur değil): altı çevirinin ana dil konuşuru incelemesi yok; Lighthouse son değişikliklerden sonra sakin makinede yeniden ölçülmedi (mühürlü değerler `lib/metrics.ts`'te); düzey-bileşen eşlemesi (bütçe adımı) sahibin onayına tabidir ([ADR 0031](adr/0031-founding-statement-and-budget-scope.md)).
 
@@ -41,6 +41,7 @@ NEXT_PUBLIC_ önekliler **derleme anında gömülür** (değişince yeniden dağ
 | `TURNSTILE_SECRET_KEY` | **Tanımlı** (Sensitive, Production + Preview) | Bot denetiminin sunucu doğrulaması; API belirteçsiz isteği 403 ile reddeder |
 | `SMTP_USER`, `SMTP_PASSWORD` (+ `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, `BRIEFING_INBOX`) | **Yer tutucu: tanımsız** | Girilirse (ve `CONTACT_WEBHOOK_URL` yoksa) başvuru düz metin e-posta olarak SMTP ile gider ([ADR 0027](adr/0027-optional-smtp-delivery.md)); form "gönder" moduna geçer |
 | `CONTACT_WEBHOOK_URL`, `CONTACT_WEBHOOK_SECRET` | **Yer tutucu: tanımsız** | Tercih edilen yol: imzalı webhook → n8n → Gmail ([n8n-briefing.md](n8n-briefing.md)); tanımlıysa SMTP kullanılmaz |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (+ `TELEGRAM_API_BASE`, yalnızca test) | **Yer tutucu: tanımsız** | Ücretsiz, n8n'siz üçüncü yol ([ADR 0034](adr/0034-telegram-lead-alert.md), [go-live-checklist.md](go-live-checklist.md) yol C): webhook ya da SMTP varken yalnızca uyarı (ad, e-posta, mesaj yok) ve o yol başarısız olursa tüm başvuru; tek başına tüm başvuru. Geçerli bir çift girilince form "gönder" moduna geçer. Telegram rıza satırında ve gizlilik metninde işleyici olarak adlandırılmıştır |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Tanımsız | Paylaşımlı hız sınırı; yokken örnek başına bellek (bir kez uyarır) |
 | `NEXT_PUBLIC_SITE_URL` | Tanımsız | Varsayılan `https://syncflow.agency` (canonical, hreflang, OG, site haritası) |
 | `NEXT_PUBLIC_LAUNCHED_LOCALES` | Tanımsız | Varsayılan yedi dil (`en,tr,ar,de,fr,es,zh`); `en,tr` ile beş dil kapatılır |
@@ -70,7 +71,7 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 | Kod | `git revert <sha>` + `git push origin main`; ya da `git checkout release-2026-10-19` ile kilitli sürümden dal açmak |
 | Çerçeve ertelemesi sorun çıkarırsa | `DEFER_FRAMEWORK=off` + yeniden dağıtım |
 | CSP bir kaynağı engellerse | `CSP_MODE=report-only` + yeniden dağıtım |
-| Teslim sorun çıkarırsa | SMTP/webhook değişkenlerini silmek: form dürüst taslak moduna döner |
+| Teslim sorun çıkarırsa | SMTP/webhook/Telegram değişkenlerini silmek: form dürüst taslak moduna döner |
 | Beş yeni dili kapatmak | `NEXT_PUBLIC_LAUNCHED_LOCALES=en,tr` + yeniden dağıtım |
 
 ## 7. Sürüm kapısı sonuçları
@@ -111,6 +112,22 @@ Aynı etiketin GitHub'dan **temiz klonda** denemesi (19.10.2026): 7/8 adım yeş
 | Gerçek tarayıcı akışı (Chrome, iki ekran, yedi dil) | **315/315** (CLS 0, Arapça sağdan sola, kapı, simülatörler, briefing, çizim, bütçe bloğu, numuneler, bağlantılar) |
 
 Canlıda ayrıca: `live-check` 47/0/0, W3C Nu HTML denetleyicisi `/privacy`, `/imprint` ve iki numune sayfasında (toplam 28 sayfa) 0 hata, axe 0 ihlal.
+
+### 7.3 `main` + ADR 0034 (etiketsiz; yerel, 19.10.2026, 794 sn)
+
+Telegram bildirimi ve teslimi ([ADR 0034](adr/0034-telegram-lead-alert.md)) ve Node 20.19'da düşen teslim testlerinin düzeltilmesi. **Yeni etiket atılmadı:** kanıt etiketi `release-2026-10-19b` kalır (dışarıya giden mesajlar ona bağlıdır); bu değişiklik o etiketin sayılarını değiştirmez, üstüne kontrol ekler. Aşağıdaki sayılar bu commit'e aittir, etikete değil.
+
+| Adım | Süre | Sonuç |
+|---|---|---|
+| Tip denetimi, lint, mesaj eşitliği (yedi dil) | 22 sn | yeşil |
+| Tasarım denetimi, üretim derlemesiyle | 13 sn (derleme önbellekten; ilk derleme ayrıca alınmıştı) | **241 geçti, 0 hata**, 1 uyarı (yer tutuculu hukuki sayfalar, kabul edildi), 4 bilgi (233 + 8 yeni Telegram kapısı) |
+| Teslim sözleşme testleri | 2 sn | **16/16** (7 SMTP + 9 Telegram) |
+| Referans mimari sözleşme testleri | 1 sn | 65/65 |
+| HTTP duman testi (üretim sunucusu) | 8 sn | **193/193** |
+| CSP ihlali ve konsol hatası (12 ziyaret) | 98 sn | **0 / 0** |
+| Gerçek tarayıcı akışı | 650 sn | **315/315** |
+
+Kapı dışında ayrıca (19.10.2026): `npm run delivery:verify` **Node 20.19.0 ve 24.12.0'da 16/16**, `npm run arch:verify` Node 20.19.0'da 65/65 (`npx -p node@20.19.0`); `npm run delivery:e2e` (önce `npm run build`; üretim derlemesi, sahte webhook ve sahte Telegram) **18/18**. **Doğrulanmadı:** Telegram'ın gerçek bir mesajı kabul etmesi (jeton verilmedi): `npm run telegram:check -- --send`.
 
 ## 8. Gizli bilgi kuralları
 

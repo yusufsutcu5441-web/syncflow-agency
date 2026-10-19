@@ -233,7 +233,7 @@
       "exploring": "Ich prüfe Optionen",
       "consent": "Ich bin damit einverstanden, dass man mich zu dieser Anfrage kontaktiert und dass meine Angaben zu diesem Zweck verarbeitet werden.",
       "consentLink": "Datenschutzhinweis",
-      "micro": "Ihre Angaben werden ausschließlich für diese Anfrage verwendet. Unsere Formular- und E-Mail-Dienstleister (Cloudflare Turnstile, n8n, Gmail) verarbeiten sie in unserem Auftrag, nur um sie zuzustellen.",
+      "micro": "Ihre Angaben werden ausschließlich für diese Anfrage verwendet. Unsere Formular-, E-Mail- und Benachrichtigungsdienstleister (Cloudflare Turnstile, n8n, Gmail, Telegram) verarbeiten sie in unserem Auftrag, nur um sie zuzustellen.",
       "securityCheck": "Sicherheitsprüfung",
       "honeypot": "Dieses Feld leer lassen"
     },
@@ -339,7 +339,7 @@
     "p4h": "Cookies",
     "p4": "Wir setzen keine eigenen Cookies. Ihre Sprache und Ihr Markt werden durch die Adresse der Seite bestimmt (zum Beispiel „/“ für Englisch, „/de“ für Deutsch, „?m=“ für den Markt) und nicht gespeichert. Wir verwenden keine Analyse-, Werbe- oder Tracking-Cookies.",
     "p5h": "Auftragsverarbeiter und Übermittlungen",
-    "p5": "Cloudflare (Turnstile-Bot-Prüfung), n8n und Google (Gmail) verarbeiten Daten in unserem Auftrag, um Ihr Briefing zuzustellen; einige ihrer Server befinden sich außerhalb Ihres Landes. [ÜBERMITTLUNGSGARANTIEN, z. B. Standardvertragsklauseln]. Für die von ihnen verarbeiteten Daten gelten ihre eigenen Datenschutzrichtlinien.",
+    "p5": "Cloudflare (Turnstile-Bot-Prüfung), n8n, Google (Gmail) und Telegram (sofortige Benachrichtigung unseres Teams) verarbeiten Daten in unserem Auftrag, um Ihr Briefing zuzustellen; einige ihrer Server befinden sich außerhalb Ihres Landes. [ÜBERMITTLUNGSGARANTIEN, z. B. Standardvertragsklauseln]. Für die von ihnen verarbeiteten Daten gelten ihre eigenen Datenschutzrichtlinien.",
     "p6h": "Aufbewahrung",
     "p6": "Briefings bewahren wir [AUFBEWAHRUNGSDAUER] auf, sofern kein Vertrag zustande kommt; kommt ein Vertrag zustande, gelten die gesetzlichen Aufbewahrungsfristen.",
     "p7h": "Ihre Rechte",

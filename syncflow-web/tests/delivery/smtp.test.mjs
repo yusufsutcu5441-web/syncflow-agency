@@ -5,7 +5,12 @@
 import assert from 'node:assert/strict';
 import net from 'node:net';
 import test from 'node:test';
-import { buildBriefingMail, sendBriefingMail, smtpSettings } from '../../lib/server/smtp.ts';
+import { pathToFileURL } from 'node:url';
+
+// scripts/delivery-verify.mjs compiles lib/server/*.ts into a temporary folder (DELIVERY_LIB), so this runs on Node 20.19 too; started by hand on
+// Node 22.18 or newer, the TypeScript source is loaded as it is.
+const load = (name) => import(process.env.DELIVERY_LIB ? pathToFileURL(`${process.env.DELIVERY_LIB}/${name}.js`).href : new URL(`../../lib/server/${name}.ts`, import.meta.url).href);
+const { buildBriefingMail, sendBriefingMail, smtpSettings } = await load('smtp');
 
 const LEAD = {
   projectType: 'platform',

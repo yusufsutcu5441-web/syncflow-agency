@@ -233,7 +233,7 @@
       "exploring": "I am exploring options",
       "consent": "I agree to be contacted about this request and that my answers are processed for that purpose.",
       "consentLink": "Privacy notice",
-      "micro": "Your details are used only for this request. Our form and e-mail providers (Cloudflare Turnstile, n8n, Gmail) process them on our behalf, only to deliver it.",
+      "micro": "Your details are used only for this request. Our form, e-mail and notification providers (Cloudflare Turnstile, n8n, Gmail, Telegram) process them on our behalf, only to deliver it.",
       "securityCheck": "Security check",
       "honeypot": "Leave this field empty"
     },
@@ -339,7 +339,7 @@
     "p4h": "Cookies",
     "p4": "We do not set cookies of our own. Your language and your market are chosen by the address of the page (for example “/” for English, “/de” for German, “?m=” for the market) and are not stored. We use no analytics, advertising or tracking cookies.",
     "p5h": "Processors and transfers",
-    "p5": "Cloudflare (Turnstile bot check), n8n and Google (Gmail) process data on our behalf to deliver your briefing; some of their servers are outside your country. [TRANSFER SAFEGUARDS, e.g. standard contractual clauses]. Their own privacy policies apply to what they process.",
+    "p5": "Cloudflare (Turnstile bot check), n8n, Google (Gmail) and Telegram (instant notification to our team) process data on our behalf to deliver your briefing; some of their servers are outside your country. [TRANSFER SAFEGUARDS, e.g. standard contractual clauses]. Their own privacy policies apply to what they process.",
     "p6h": "Retention",
     "p6": "We keep briefings for [RETENTION PERIOD] unless a contract is concluded, in which case statutory retention periods apply.",
     "p7h": "Your rights",

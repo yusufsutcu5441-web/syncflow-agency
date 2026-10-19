@@ -25,7 +25,7 @@ To check exactly what was recorded for a release, add `--branch <tag>` to the cl
 |---|---|
 | 1 | Types, lint and translation parity across the seven live languages |
 | 2 | Design audit with a production build: dependencies, design tokens, i18n, security and briefing hardening, motion, a ban on unverified claims, the first-load bundle budget |
-| 3 | Briefing delivery contract tests (an SMTP conversation against a loopback fake) |
+| 3 | Briefing delivery contract tests (an SMTP conversation and the Telegram Bot API, each against a loopback fake) |
 | 4 | Architecture contract tests: queue, signed envelope, example mappers, generated documents |
 | 5 | The production server starts |
 | 6 | HTTP smoke test against the production server |
@@ -38,6 +38,7 @@ The gate deliberately leaves the delivery and bot-check variables unset. It prov
 
 - Tested on Windows 11 with Node 24 and Chrome. The scripts contain macOS and Linux Chrome paths, but those platforms were not run.
 - The design audit prints its labels and its summary in Turkish: `233 geçti, 1 uyarı, 0 hata` means 233 passed, 1 warning, 0 failed.
+- Release tags up to `release-2026-10-19b` load the delivery tests' TypeScript directly, which only Node 22.18 or newer can do: on Node 20.19 to 22.17 step 3 of the gate fails there (`ERR_UNKNOWN_FILE_EXTENSION`, seen on 20.19.0). From the next commit on the tests are compiled first and pass on Node 20.19.0 as well; `npm run arch:verify` was never affected.
 - The browser step (8) is timing-sensitive on a heavily loaded machine. If it fails, run the gate again on a quiet machine before reporting it. `node scripts/browser-flow.mjs <url> --throttle=4` runs the same checks with every page's CPU slowed fourfold, which is how that sensitivity is measured.
 - A passing gate is evidence about this repository at one commit. It is not a certification or a security audit, and it says nothing about a client's volumes, credentials or legal context.
 

@@ -20,7 +20,7 @@ Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith
 
 ## 1. Hızlı başlangıç
 
-Gereksinim: **Node ≥ 20.19** (Node 24 ile test edildi), npm.
+Gereksinim: **Node ≥ 20.19** (Node 24 ile test edildi; `delivery:verify` ve `arch:verify` Node 20.19.0'da da geçti. `release-2026-10-19b` ve öncesinin teslim testleri TypeScript'i doğrudan yüklediği için o etiketlerin tam kapısı Node 22.18+ ister, [ADR 0034](docs/adr/0034-telegram-lead-alert.md) §6), npm.
 
 ```bash
 npm install
@@ -48,7 +48,9 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run perf:gate` | Mobil profilde (4× CPU, yavaş 4G) belirleyici sayaçlar (DOM, yerleşim, stil, görev, TBT tahmini, CLS) ve bütçe (`scripts/perf-budget.json`); `--baseline=<url>` eski yapıyla araya girerek A/B. **Mutlak bütçeler sessiz makine içindir**; yük altında göreli farka bakın |
 | `npm run flags:build` · `flags:check` | Bayrakları (`app/flags.css`, bayrak başına tek boş öğe) üreticiden yeniden yazar / CSS'in üreticiyle aynı olduğunu doğrular (denetim çalıştırır) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
-| `npm run delivery:verify` | İsteğe bağlı SMTP teslimi: loopback'te sahte bir SMTP sunucusuyla gerçek konuşma (oturum, zarf, başlıklar, başlık enjeksiyonu, reddedilen parola) |
+| `npm run delivery:verify` | Teslim yollarının sözleşme testleri: loopback'te sahte bir SMTP sunucusuyla gerçek konuşma (oturum, zarf, başlıklar, başlık enjeksiyonu, reddedilen parola) ve sahte bir Telegram Bot API'siyle gerçek istek (yol, gövde, yanıtların üçe ayrılması, yönlendirmenin reddi, jetonun hiçbir yere yazılmaması, hostile girdi). TypeScript derlenip çalıştırıldığı için Node 20.19'da da geçer ([ADR 0034](docs/adr/0034-telegram-lead-alert.md)) |
+| `npm run delivery:e2e` | Önce `npm run build`. Üretim derlemesine karşı dört ortamda (webhook + Telegram, yalnızca Telegram, bozuk jeton, hiçbiri) `/api/briefing`'i sahte webhook ve sahte Telegram ile uçtan uca dener; ağ gerekir (Cloudflare kendi Turnstile test anahtarını doğrular) |
+| `npm run telegram:check` | Sahibin Telegram denetimi: botun kim olduğu, `-- --find-chat` (sohbet kimliği), `-- --dry-run` (iki mesajı yazdırır), `-- --send` (telefona iki TEST mesajı). Jetonu ve sohbet kimliğini yalnızca o kabuğun ortamından okur, hiçbir yere yazdırmaz |
 | `npm run release:verify` | **Sürüm kapısı** (`-- --quick` hızlı küme): tip+lint+mesajlar, denetim `--build`, teslim ve mimari sözleşme testleri, üretim sunucusunda (:3190) smoke, CSP ve tam tarayıcı akışı; teslim değişkenleri bilerek tanımsız. Sessiz makinede yaklaşık 13 dk, yoğun makinede 15 dk ve üzeri; düşen adımın `FAIL` satırları ve tam çıktısı (geçici klasörde bir dosya) yazılır. Bkz. [docs/deployment.md](docs/deployment.md) |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
 | `npm run film:render` | Beş sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |

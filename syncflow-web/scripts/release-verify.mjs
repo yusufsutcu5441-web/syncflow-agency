@@ -26,7 +26,7 @@ const rows = [];
 
 // A build of what ships: none of the owner's delivery or bot-check variables, whatever this machine's shell has set.
 const CLEAN = { ...process.env };
-for (const name of ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_FROM', 'BRIEFING_INBOX', 'CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'CSP_MODE', 'DEFER_FRAMEWORK']) delete CLEAN[name];
+for (const name of ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_FROM', 'BRIEFING_INBOX', 'CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID', 'TELEGRAM_API_BASE', 'CSP_MODE', 'DEFER_FRAMEWORK']) delete CLEAN[name];
 
 function step(label, command, args, { env = CLEAN, shell = false } = {}) {
   const started = Date.now();

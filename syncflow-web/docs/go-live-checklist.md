@@ -2,14 +2,14 @@
 
 Kodda yapılacak bir şey kalmadı; aşağıdakiler yalnızca **sizin hesaplarınızda** yapılabilir ve **isteğe bağlıdır**: sahibi bugünkü yer tutucu mantığıyla (form e-posta taslağı modunda, hukuki sayfalar yer tutuculu) yayında kalmayı kabul etti. Kilitli sürüm, dağıtım yapılandırması ve geri alma: [docs/deployment.md](deployment.md). Sırayla ilerleyin, her adımın sonunda doğrulama komutu var. Ayrıntılı kaynaklar: [docs/n8n-briefing.md](n8n-briefing.md) ("Hızlı yol"), [docs/vercel-next-site.md](vercel-next-site.md) §4 ve §10.
 
-> Şu an form **bağlı değil**: ziyaretçi dört adımı doldurur, son düğme "E-posta taslağını aç" olur ve yanıtlar `contact@syncflow.agency` adresine bir e-posta taslağı olarak açılır (hiçbir şey "alındı" diye gösterilmez). Turnstile'ın iki anahtarı ve bir teslim yolu (A: imzalı webhook → n8n → Gmail, ya da B: doğrudan SMTP) girilince site **kod değişmeden** normal teslim yoluna geçer.
+> Şu an form **bağlı değil**: ziyaretçi dört adımı doldurur, son düğme "E-posta taslağını aç" olur ve yanıtlar `contact@syncflow.agency` adresine bir e-posta taslağı olarak açılır (hiçbir şey "alındı" diye gösterilmez). Turnstile'ın iki anahtarı ve bir teslim yolu (A: imzalı webhook → n8n → Gmail, B: doğrudan SMTP ya da C: Telegram) girilince site **kod değişmeden** normal teslim yoluna geçer.
 
 ## 1. Cloudflare Turnstile (bot denetimi; ücretsiz)
 
 1. Cloudflare panel → **Turnstile** → *Add site*. Alan adı: `syncflow.agency`. Widget türü: *Managed*.
 2. İki değer verir: **Site Key** (herkese açık) ve **Secret Key** (gizli).
 
-## 2. Teslim yolu: **A** (n8n, tercih edilen) ya da **B** (doğrudan SMTP); birini seçin
+## 2. Teslim yolu: **A** (n8n, tercih edilen), **B** (doğrudan SMTP) ya da **C** (Telegram, ücretsiz); birini seçin
 
 **A. n8n akışı (Gmail'e teslim; Gmail parolası sitede tutulmaz)**
 
@@ -26,6 +26,15 @@ Kodda yapılacak bir şey kalmadı; aşağıdakiler yalnızca **sizin hesapları
 4. Gönderici adresi bir Gmail hesabı değilse (Resend, Postmark gibi yalnızca gönderen bir sağlayıcı daha dar bir anahtar verir) `SMTP_HOST`, gerekirse `SMTP_PORT` ve `SMTP_FROM` da girin.
 5. `CONTACT_WEBHOOK_URL` **tanımlı olmamalı**: tanımlıysa SMTP kullanılmaz.
 
+**C. Telegram (n8n ve posta hesabı gerekmez; ücretsiz, yaklaşık 5 dakika, [ADR 0034](adr/0034-telegram-lead-alert.md))**
+
+1. Telegram'da **@BotFather** → `/newbot` → bir ad ve `bot` ile biten bir kullanıcı adı verin. Size bir **jeton** (`123456789:AA…`) verir. Sohbete, depoya ya da bir ekran görüntüsüne yazmayın; sızarsa BotFather'da `/revoke`.
+2. Yeni botunuzu açın, **Start**'a basın ve "hi" yazın (bir bot, kendisine hiç yazmamış bir sohbete mesaj atamaz).
+3. Bu klasörde (`syncflow-web/`) jetonu yalnızca o komutun kabuğuna verin. PowerShell: `$env:TELEGRAM_BOT_TOKEN = '<jeton>'; npm run telegram:check -- --find-chat` → özel sohbetinizin sayısal kimliğini yazar. **Özel sohbet** kullanın: grup kimliği negatiftir ve gruptaki herkes her başvuruyu görür.
+4. Aynı kabukta `$env:TELEGRAM_CHAT_ID = '<kimlik>'; npm run telegram:check -- --send` → telefonunuza ve masaüstü uygulamasına iki deneme mesajı düşmeli (biri uyarı, biri tam başvuru; "TEST" yazar). Düşmezse komut nedenini söyler (yanlış jeton, Start'a basılmamış, yanlış kimlik).
+5. Webhook (A) ya da SMTP (B) de girdiyseniz Telegram yalnızca **uyarı** verir ve o yol başarısız olursa tüm başvuruyu üstlenir; hiçbiri yoksa tek yol Telegram'dır ve tüm başvuru oraya gider.
+6. **Açmadan önce:** Telegram rıza satırında ve gizlilik metninde işleyici olarak adlandırılmıştır, ama aktarım dayanağı ve sohbetteki mesajların saklama/silme süresi sizin ve avukatınızın kararıdır ([legal-facts-intake.md](legal-facts-intake.md)).
+
 ## 3. Vercel ortam değişkenleri (Project → Settings → Environment Variables; Production ve Preview)
 
 | Ad | Değer |
@@ -37,6 +46,8 @@ Kodda yapılacak bir şey kalmadı; aşağıdakiler yalnızca **sizin hesapları
 | `SMTP_USER` | **B:** gönderici hesabın adresi (örn. `site@syncflow.agency`) |
 | `SMTP_PASSWORD` | **B:** uygulama parolası (ya da sağlayıcının anahtarı) |
 | `BRIEFING_INBOX` | **B, isteğe bağlı:** başvurunun düşeceği adres (varsayılan `contact@syncflow.agency`) |
+| `TELEGRAM_BOT_TOKEN` | **C:** adım 1, BotFather jetonu (**Sensitive**; yalnızca **Production**: Preview dağıtımları da gerçek mesaj atar) |
+| `TELEGRAM_CHAT_ID` | **C:** adım 3, özel sohbetinizin sayısal kimliği (yalnızca Production) |
 
 Kaydedin ve **yeniden dağıtın** (`NEXT_PUBLIC_*` derleme anında gömülür): Deployments → son dağıtım → Redeploy ya da boş bir commit push edin (`git commit --allow-empty -m "chore: redeploy"`).
 
@@ -50,7 +61,8 @@ Kaydedin ve **yeniden dağıtın** (`NEXT_PUBLIC_*` derleme anında gömülür):
 ```
 node scripts/live-check.mjs https://syncflow.agency        # www satırı PASS; belge tek yükleyici ister; CSP enforce
 node scripts/n8n-test.mjs <webhook-url> <paylaşılan-sır>   # yol A: imzalı test: kabul, çift gönderim tek e-posta, kötü imza reddi
-npm run delivery:verify                                    # yol B: SMTP konuşması yerelde (Google'ın kabulünü değil, protokolü sınar)
+npm run delivery:verify                                    # yol B ve C: SMTP konuşması ve Telegram Bot API isteği yerelde, sahte sunuculara karşı (Google'ın ya da Telegram'ın kabulünü değil, protokolü sınar)
+npm run telegram:check -- --send                           # yol C: gerçek botunuzla; telefonunuza iki TEST mesajı düşmeli (jeton ve sohbet kimliği kabuğun ortamında)
 npm run qa:csp -- https://syncflow.agency                  # Turnstile widget'ı ilk kez gerçek alan adında: 0 ihlal olmalı
 npm run qa:browser -- https://syncflow.agency --only=briefing   # bağlıyken "doğrudan e-posta" kipi görünmez
 ```

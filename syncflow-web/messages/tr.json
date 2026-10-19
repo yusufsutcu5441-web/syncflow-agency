@@ -233,7 +233,7 @@
       "exploring": "Seçenekleri değerlendiriyorum",
       "consent": "Bu talep hakkında benimle iletişime geçilmesini ve yanıtlarımın bu amaçla işlenmesini kabul ediyorum.",
       "consentLink": "Aydınlatma metni",
-      "micro": "Bilgileriniz yalnızca bu talep için kullanılır. Form ve e-posta altyapısı sağlayıcılarımız (Cloudflare Turnstile, n8n, Gmail) onları yalnızca talebi iletmek için, bizim adımıza işler.",
+      "micro": "Bilgileriniz yalnızca bu talep için kullanılır. Form, e-posta ve bildirim altyapısı sağlayıcılarımız (Cloudflare Turnstile, n8n, Gmail, Telegram) onları yalnızca talebi iletmek için, bizim adımıza işler.",
       "securityCheck": "Güvenlik kontrolü",
       "honeypot": "Bu alanı boş bırakın"
     },
@@ -339,7 +339,7 @@
     "p4h": "Çerezler",
     "p4": "Kendi çerezlerimizi kullanmayız. Diliniz ve pazarınız sayfanın adresiyle belirlenir (örneğin “/” İngilizce, “/de” Almanca, pazar için “?m=”) ve saklanmaz. Analitik, reklam ya da izleme çerezi kullanmayız.",
     "p5h": "İşleyiciler ve aktarımlar",
-    "p5": "Cloudflare (Turnstile bot kontrolü), n8n ve Google (Gmail), briefing’inizi iletmek için bizim adımıza veri işler; sunucularından bir kısmı ülkenizin dışındadır. [AKTARIM GÜVENCELERİ, ör. standart sözleşme hükümleri]. İşledikleri veriler için kendi gizlilik politikaları geçerlidir.",
+    "p5": "Cloudflare (Turnstile bot kontrolü), n8n, Google (Gmail) ve Telegram (ekibimize anlık bildirim), briefing’inizi iletmek için bizim adımıza veri işler; sunucularından bir kısmı ülkenizin dışındadır. [AKTARIM GÜVENCELERİ, ör. standart sözleşme hükümleri]. İşledikleri veriler için kendi gizlilik politikaları geçerlidir.",
     "p6h": "Saklama",
     "p6": "Sözleşme yapılmazsa briefing’leri [SAKLAMA SÜRESİ] boyunca saklarız; sözleşme yapılırsa yasal saklama süreleri geçerlidir.",
     "p7h": "Haklarınız",

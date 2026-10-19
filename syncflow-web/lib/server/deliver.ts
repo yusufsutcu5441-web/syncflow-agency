@@ -5,6 +5,7 @@ import type { Market } from '@/lib/market';
 import { formatBand, ladder, PRICING } from '@/lib/pricing';
 import { CONTACT_EMAIL } from '@/lib/site';
 import { buildBriefingMail, sendBriefingMail, smtpSettings, type Attempt, type MailLabels } from './smtp';
+import { buildTelegramText, sendTelegram, telegramSettings, type TelegramSettings } from './telegram';
 
 /**
  * Delivery of a validated, sanitised briefing to the operator's own system (n8n, Make, Zapier, a Slack workflow, a CRM).
@@ -12,6 +13,11 @@ import { buildBriefingMail, sendBriefingMail, smtpSettings, type Attempt, type M
  * credentials never live in this app. The alternative, used only when no webhook is set and SMTP_USER and SMTP_PASSWORD are, is to send the
  * briefing as a plain-text e-mail from here (lib/server/smtp.ts, docs/adr/0027-optional-smtp-delivery.md): simpler, but a mail credential then
  * lives in this deployment's environment, which is why it is opt-in and the webhook stays the preferred path.
+ *
+ * A third, free way needs neither n8n nor a mail account: TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID (lib/server/telegram.ts,
+ * docs/adr/0034-telegram-lead-alert.md). Next to the webhook or SMTP it only RINGS THE PHONE after a delivery (company, priority, answers, delivery
+ * id: no name, no e-mail address, no message text) and carries the whole briefing when that delivery fails. On its own it carries the whole briefing.
+ * Nothing is sent to the visitor automatically: the privacy notice says a person reads every request and nothing is answered by a machine.
  *
  * - CONTACT_WEBHOOK_URL and CONTACT_WEBHOOK_SECRET are server-only: no NEXT_PUBLIC_ prefix, never imported by a
  *   client component (this file imports 'server-only', so the build fails if anyone tries).
@@ -40,13 +46,20 @@ export type BriefingPayload = {
   market?: Market;
 };
 
-export type DeliveryResult = { ok: true; via: 'webhook' | 'smtp' | 'dev-log'; attempts?: number } | { ok: false; reason: 'not_configured' | 'failed'; attempts?: number };
+export type DeliveryResult =
+  | { ok: true; via: 'webhook' | 'smtp' | 'telegram' | 'dev-log'; attempts?: number }
+  | { ok: false; reason: 'not_configured' | 'failed'; attempts?: number };
 
-/** First try, pause, second try: 5.0 + 0.4 + at most 4.0 = under 9.5 s in the worst case. */
+/** The result of the channel that carries the briefing before Telegram is considered: the signed webhook, else SMTP. */
+type Primary = { ok: true; via: 'webhook' | 'smtp'; attempts: number } | { ok: false; reason: 'not_configured' | 'failed'; attempts?: number };
+
+/** First try, pause, second try: 5.0 + 0.4 + at most 4.0 = under 9.5 s in the worst case. Every channel shares this one budget. */
 const FIRST_ATTEMPT_MS = 5_000;
 const PAUSE_MS = 400;
 const SECOND_ATTEMPT_MS = 4_000;
 const BUDGET_MS = 9_500;
+/** Kept back for Telegram when it is set next to another channel: the alert after a delivery, or the whole briefing after a failed one. */
+const TELEGRAM_RESERVE_MS = 2_500;
 
 /** One POST. A thrown error (timeout, refused connection, a redirect) and a transient status are worth another try. */
 async function attempt(url: string, headers: Record<string, string>, body: string, timeoutMs: number): Promise<Attempt> {
@@ -93,12 +106,12 @@ function mailLabels(lead: BriefingPayload): MailLabels {
 }
 
 /** First try, a short pause, a second try inside the same budget (both carry the SAME delivery id); a final answer is never retried. */
-async function withRetry(id: string, run: (timeoutMs: number) => Promise<Attempt>): Promise<{ outcome: Attempt; attempts: number }> {
+async function withRetry(id: string, run: (timeoutMs: number) => Promise<Attempt>, budgetMs: number = BUDGET_MS): Promise<{ outcome: Attempt; attempts: number }> {
   const started = Date.now();
-  let outcome = await run(FIRST_ATTEMPT_MS);
+  let outcome = await run(Math.min(FIRST_ATTEMPT_MS, budgetMs));
   let attempts = 1;
   if (outcome === 'retry') {
-    const left = BUDGET_MS - (Date.now() - started) - PAUSE_MS;
+    const left = budgetMs - (Date.now() - started) - PAUSE_MS;
     if (left >= 1_000) {
       console.warn(`[briefing] delivery ${id}: first attempt failed, retrying once`);
       await new Promise((resolve) => setTimeout(resolve, PAUSE_MS));
@@ -109,45 +122,78 @@ async function withRetry(id: string, run: (timeoutMs: number) => Promise<Attempt
   return { outcome, attempts };
 }
 
+/** The briefing is delivered; ring the phone. One attempt, whatever the budget has left (up to the reserve), and a failure never changes the answer to the visitor. */
+async function alertTelegram(telegram: TelegramSettings, lead: BriefingPayload, id: string, via: 'webhook' | 'smtp', startedAt: number): Promise<void> {
+  const timeoutMs = Math.min(TELEGRAM_RESERVE_MS, BUDGET_MS - (Date.now() - startedAt));
+  if (timeoutMs < 500) {
+    console.warn(`[briefing] delivery ${id}: no time left for the Telegram alert`);
+    return;
+  }
+  const text = buildTelegramText(lead, id, new Date().toISOString(), mailLabels(lead), { kind: 'summary', via });
+  if ((await sendTelegram(telegram, text, { protect: false, timeoutMs })) !== 'ok') console.warn(`[briefing] delivery ${id}: the Telegram alert was not accepted`);
+}
+
 export async function deliverBriefing(lead: BriefingPayload): Promise<DeliveryResult> {
+  const startedAt = Date.now();
   const url = process.env.CONTACT_WEBHOOK_URL?.trim();
   const smtp = url ? null : smtpSettings(process.env, CONTACT_EMAIL);
+  const telegram = telegramSettings(process.env);
 
-  if (!url && !smtp) {
+  if (!url && !smtp && !telegram) {
     if (process.env.NODE_ENV !== 'production') {
       // Development convenience only. Never log message bodies or addresses: they are personal data.
-      console.info('[briefing] neither CONTACT_WEBHOOK_URL nor SMTP_USER and SMTP_PASSWORD are set; accepted a briefing locally without delivering it.');
+      console.info('[briefing] neither CONTACT_WEBHOOK_URL, SMTP_USER and SMTP_PASSWORD, nor TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set; accepted a briefing locally without delivering it.');
       return { ok: true, via: 'dev-log' };
     }
     return { ok: false, reason: 'not_configured' };
   }
 
   const id = crypto.randomUUID();
+  // Next to another channel, Telegram keeps a part of the one budget for itself.
+  const budgetMs = telegram ? BUDGET_MS - TELEGRAM_RESERVE_MS : BUDGET_MS;
+  let primary: Primary | null = null;
 
   if (smtp) {
     // No webhook: the briefing goes out as a plain-text e-mail (lib/server/smtp.ts). The id is the Message-ID, so a retry after a timeout that
     // had in fact delivered is the same message, which a mailbox drops.
     const mail = buildBriefingMail(lead, id, smtp, new Date().toISOString(), mailLabels(lead));
-    const { outcome, attempts } = await withRetry(id, (timeoutMs) => sendBriefingMail(smtp, mail, timeoutMs));
-    if (outcome === 'ok') return { ok: true, via: 'smtp', attempts };
-    console.error(`[briefing] delivery ${id} by SMTP failed after ${attempts} attempt(s)`);
-    return { ok: false, reason: 'failed', attempts };
+    const { outcome, attempts } = await withRetry(id, (timeoutMs) => sendBriefingMail(smtp, mail, timeoutMs), budgetMs);
+    if (outcome === 'ok') primary = { ok: true, via: 'smtp', attempts };
+    else {
+      console.error(`[briefing] delivery ${id} by SMTP failed after ${attempts} attempt(s)`);
+      primary = { ok: false, reason: 'failed', attempts };
+    }
+  } else if (url) {
+    if (!isAllowedWebhookUrl(url)) {
+      console.error('[briefing] CONTACT_WEBHOOK_URL must be an https:// URL.');
+      primary = { ok: false, reason: 'not_configured' };
+    } else {
+      // Ready-made subject for the mail node: "[Briefing][high] Company, Name". Both parts are already single-line plain text.
+      const subject = `[Briefing][${lead.tier}] ${lead.company}, ${lead.name}`;
+      const body = JSON.stringify({ type: 'syncflow.briefing', id, receivedAt: new Date().toISOString(), subject, ...lead });
+      const headers: Record<string, string> = { 'content-type': 'application/json', 'idempotency-key': id };
+      const secret = process.env.CONTACT_WEBHOOK_SECRET?.trim();
+      if (secret) headers['x-syncflow-signature'] = `sha256=${await hmacHex(secret, body)}`;
+
+      const { outcome, attempts } = await withRetry(id, (timeoutMs) => attempt(url, headers, body, timeoutMs), budgetMs);
+      if (outcome === 'ok') primary = { ok: true, via: 'webhook', attempts };
+      else {
+        console.error(`[briefing] delivery ${id} failed after ${attempts} attempt(s)`);
+        primary = { ok: false, reason: 'failed', attempts };
+      }
+    }
   }
 
-  if (!url || !isAllowedWebhookUrl(url)) {
-    console.error('[briefing] CONTACT_WEBHOOK_URL must be an https:// URL.');
-    return { ok: false, reason: 'not_configured' };
+  if (primary?.ok) {
+    if (telegram) await alertTelegram(telegram, lead, id, primary.via, startedAt);
+    return primary;
   }
+  if (!telegram) return primary ?? { ok: false, reason: 'not_configured' };
 
-  // Ready-made subject for the mail node: "[Briefing][high] Company, Name". Both parts are already single-line plain text.
-  const subject = `[Briefing][${lead.tier}] ${lead.company}, ${lead.name}`;
-  const body = JSON.stringify({ type: 'syncflow.briefing', id, receivedAt: new Date().toISOString(), subject, ...lead });
-  const headers: Record<string, string> = { 'content-type': 'application/json', 'idempotency-key': id };
-  const secret = process.env.CONTACT_WEBHOOK_SECRET?.trim();
-  if (secret) headers['x-syncflow-signature'] = `sha256=${await hmacHex(secret, body)}`;
-
-  const { outcome, attempts } = await withRetry(id, (timeoutMs) => attempt(url, headers, body, timeoutMs));
-  if (outcome === 'ok') return { ok: true, via: 'webhook', attempts };
-  console.error(`[briefing] delivery ${id} failed after ${attempts} attempt(s)`);
-  return { ok: false, reason: 'failed', attempts };
+  // Telegram carries the whole briefing: it is the only way out, or the normal one has just failed. The message says which (lib/server/telegram.ts).
+  const text = buildTelegramText(lead, id, new Date().toISOString(), mailLabels(lead), { kind: 'full', primaryFailed: primary !== null });
+  const { outcome, attempts } = await withRetry(id, (timeoutMs) => sendTelegram(telegram, text, { protect: true, timeoutMs }), primary ? TELEGRAM_RESERVE_MS : BUDGET_MS);
+  if (outcome === 'ok') return { ok: true, via: 'telegram', attempts };
+  console.error(`[briefing] delivery ${id} by Telegram failed after ${attempts} attempt(s)`);
+  return primary ?? { ok: false, reason: 'failed', attempts };
 }

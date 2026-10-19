@@ -384,6 +384,41 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
     exists("tests/delivery/smtp.test.mjs") && /"delivery:verify"/.test(read("package.json")) ? add(G4, "PASS", "SMTP: sözleşme testleri var (npm run delivery:verify)") : add(G4, "FAIL", "tests/delivery/smtp.test.mjs ya da delivery:verify betiği yok");
     /NEXT_PUBLIC_SMTP|NEXT_PUBLIC_BRIEFING_INBOX/.test(read(".env.example")) ? add(G4, "FAIL", ".env.example: SMTP sırrı NEXT_PUBLIC_ önekiyle tarayıcıya açılıyor") : add(G4, "PASS", "SMTP: hiçbir NEXT_PUBLIC_ SMTP değişkeni yok");
   }
+  // docs/adr/0034: isteğe bağlı Telegram bildirimi yalnızca sunucuda çalışır, düz metin gönderir, jetonu hiçbir yere yazmaz, tek teslim bütçesini paylaşır ve işleyici olarak yedi dilde adlandırılır.
+  {
+    const tg = exists("lib/server/telegram.ts") ? read("lib/server/telegram.ts") : "";
+    const tgCode = tg.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    const status = exists("lib/server/delivery-status.ts") ? read("lib/server/delivery-status.ts") : "";
+    const envExample = exists(".env.example") ? read(".env.example") : "";
+    !/parse_mode/.test(tgCode) && /link_preview_options/.test(tgCode) && /protect_content/.test(tgCode) && /redirect:\s*'error'/.test(tgCode) && /\\u0000-\\u001f/.test(tgCode) && /CHAT_ID\s*=\s*\/\^-\?\\d/.test(tgCode)
+      ? add(G4, "PASS", "Telegram: düz metin (parse_mode yok), bağlantı önizlemesi kapalı, tüm başvuru korumalı gönderilir, yönlendirme reddedilir, denetim karakterleri temizlenir, sohbet kimliği yalnızca sayısal (@kanal reddedilir)")
+      : add(G4, "FAIL", "lib/server/telegram.ts: parse_mode kullanılıyor ya da önizleme / koruma / yönlendirme / denetim karakteri / sayısal sohbet kimliği kuralı eksik");
+    !/console\./.test(tgCode) && !/console\.\w+\([^)]*(?:\.token\b|\$\{[^}]*token)/i.test(del)
+      ? add(G4, "PASS", "Telegram: jeton hiçbir günlük satırına ve hata iletisine yazılmaz (istek adresi jetonu taşır; telegram.ts console kullanmaz)")
+      : add(G4, "FAIL", "Telegram: telegram.ts console kullanıyor ya da deliver.ts'te bir günlük satırı jetona değiniyor");
+    /kind:\s*'summary'/.test(del) && /kind:\s*'full'/.test(del) && /primaryFailed:\s*primary\s*!==\s*null/.test(del) && /telegramSettings\(process\.env\)/.test(del)
+      ? add(G4, "PASS", "Telegram: webhook/SMTP varken yalnızca uyarı (ad, e-posta ve mesaj yok); tüm başvuru yalnızca tek yol Telegram'sa ya da normal yol başarısız olduysa gider ve başarısızlığı adıyla söyler")
+      : add(G4, "FAIL", "lib/server/deliver.ts: Telegram uyarı (summary) / tam (full) ayrımı ya da primaryFailed bulunamadı");
+    /BUDGET_MS\s*-\s*TELEGRAM_RESERVE_MS/.test(del) && ms("TELEGRAM_RESERVE_MS") > 0 && ms("TELEGRAM_RESERVE_MS") < budget
+      ? add(G4, "PASS", `Telegram: webhook/SMTP ile aynı tek bütçeyi paylaşır (${budget - ms("TELEGRAM_RESERVE_MS")} ms + ${ms("TELEGRAM_RESERVE_MS")} ms = ${budget} ms, < 10 sn)`)
+      : add(G4, "FAIL", "lib/server/deliver.ts: Telegram payı tek teslim bütçesinden ayrılmıyor (BUDGET_MS - TELEGRAM_RESERVE_MS)");
+    /telegramSettings\(process\.env\)/.test(status)
+      ? add(G4, "PASS", "Telegram: 'teslim bağlı mı' kararı Telegram girişini de sayar (form doğrudan e-posta kipinden çıkar)")
+      : add(G4, "FAIL", "lib/server/delivery-status.ts Telegram girişini saymıyor");
+    /TELEGRAM_BOT_TOKEN=/.test(envExample) && !/NEXT_PUBLIC_TELEGRAM/.test(envExample) && /TELEGRAM_BOT_TOKEN/.test(read("scripts/audit-secrets.mjs")) && /TELEGRAM_BOT_TOKEN/.test(read("scripts/release-verify.mjs"))
+      ? add(G4, "PASS", "Telegram: .env.example açıklıyor, hiçbir NEXT_PUBLIC_ Telegram değişkeni yok; sır denetimi (audit:secrets) ve sürüm kapısı değişkeni tanıyor")
+      : add(G4, "FAIL", "Telegram: .env.example / scripts/audit-secrets.mjs / scripts/release-verify.mjs değişkeni tanımıyor ya da NEXT_PUBLIC_ önekiyle açılıyor");
+    exists("tests/delivery/telegram.test.mjs") && /telegram/.test(exists("scripts/delivery-verify.mjs") ? read("scripts/delivery-verify.mjs") : "") && /delivery-verify\.mjs/.test(read("package.json"))
+      ? add(G4, "PASS", "Telegram: sözleşme testleri var (npm run delivery:verify; TypeScript derlenip çalıştığı için Node 20.19'da da geçer)")
+      : add(G4, "FAIL", "tests/delivery/telegram.test.mjs ya da scripts/delivery-verify.mjs yok");
+    const named = PUBLIC_LOCALES.filter((l) => {
+      const m = readJSON(`messages/${l}.json`);
+      return /Telegram/.test(m.Briefing?.contact?.micro ?? "") && /Telegram/.test(m.Legal?.p5 ?? "");
+    });
+    named.length === PUBLIC_LOCALES.length
+      ? add(G4, "PASS", "Telegram: rıza satırında (Briefing.contact.micro) ve gizlilik metninin işleyici bölümünde (Legal.p5) yedi dilde işleyici olarak adlandırılmış")
+      : add(G4, "FAIL", `Telegram kodu var ama işleyici olarak adlandırılmayan dil(ler): ${PUBLIC_LOCALES.filter((l) => !named.includes(l)).join(", ")} (Briefing.contact.micro ve Legal.p5)`);
+  }
   // docs/adr/0028: Çizim 01 (başvuru yolu) kodla aynı rakamları çizer; kopyalama düğmesi dürüst adlandırılır ve elle yedeği vardır.
   {
     const route = exists("app/api/briefing/route.ts") ? read("app/api/briefing/route.ts") : "";
