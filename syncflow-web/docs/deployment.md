@@ -129,6 +129,11 @@ Telegram bildirimi ve teslimi ([ADR 0034](adr/0034-telegram-lead-alert.md)) ve N
 
 Kapı dışında ayrıca (19.10.2026): `npm run delivery:verify` **Node 20.19.0 ve 24.12.0'da 16/16**, `npm run arch:verify` Node 20.19.0'da 65/65 (`npx -p node@20.19.0`); `npm run delivery:e2e` (önce `npm run build`; üretim derlemesi, sahte webhook ve sahte Telegram) **18/18**. **Doğrulanmadı:** Telegram'ın gerçek bir mesajı kabul etmesi (jeton verilmedi): `npm run telegram:check -- --send`.
 
+Commit `9d690d1` push edildikten sonra (bu satırlar, o commit'ten sonra gelen bir belge commit'iyle eklendi):
+
+- **Canlı** (`https://syncflow.agency`, dağıtımdan sonra): Vercel durumu `success` ("Deployment has completed"); `live-check` **47 geçti, 0 uyarı, 0 hata**; `qa:csp` **0 ihlal, 0 konsol hatası**; `qa:browser --only=briefing` **9/9** (Telegram değişkenleri tanımsız olduğundan form hâlâ dürüst e-posta taslağı modunda: API'ye hiçbir şey gitmedi, hiçbir şey "alındı" diye gösterilmedi); `/privacy`, `/tr/privacy`, `/de/privacy` ve ana sayfadaki rıza satırı Telegram'ı işleyici olarak adlandırıyor.
+- Telegram değişkenleri **canlıda tanımlı değildir**: yol sahibin BotFather jetonunu ve sohbet kimliğini girmesini bekliyor ([go-live-checklist.md](go-live-checklist.md) yol C).
+
 ## 8. Gizli bilgi kuralları
 
 - Sırlar yalnızca Vercel ortam değişkenlerinde durur; sohbette paylaşılan iki Vercel API anahtarı iş bitince silindi (18.10.2026). Turnstile gizli anahtarı bir sohbette göründü: kaygı varsa Cloudflare'de **Rotate secret key** ile yenilenir, yenisi Vercel'e girilir.
