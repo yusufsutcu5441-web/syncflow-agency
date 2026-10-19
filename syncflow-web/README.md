@@ -1,5 +1,7 @@
 # syncflow.agency
 
+> **English overview, how to verify the repository yourself, and the license: [../README.md](../README.md).** Bu belge uygulamanın Türkçe ayrıntı belgesidir.
+
 Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)) üzerinde B1/v2 marka sistemi ([ADR 0007](docs/adr/0007-tokens-and-brand.md)): obsidian zemin, platin metin, Inter Display, çizili logo. Üstüne **sinematik katman** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): tek WebGL2 tuvali, kaydırmayla oynayan dört bölümlük film ve sahneli dil geçişi.
 **Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (yedi dil yayında: EN, TR, AR, DE, FR, ES, ZH; JA uykuda) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · Remotion ile önceden render edilmiş sahne videoları · ham WebGL2 sinema katmanı (yalnızca yetenekli masaüstünde, lazy) · nonce tabanlı CSP (enforce, 17.10.2026'dan beri)**
 
@@ -41,13 +43,13 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `node scripts/defer-framework.mjs --check` | `.next`'in dönüştürüldüğünü doğrular (dönüşümü `next build` içinde `scripts/sf-adapter.mjs` yapar, Vercel'in kendi adaptöründen önce): belge tek `sf-boot` yükleyicisi ister, React ve Next betikleri ilk boyamadan sonra gelir ([ADR 0023](docs/adr/0023-framework-after-first-paint.md)). `DEFER_FRAMEWORK=off` atlar, `strict` düzen bilinmiyorsa derlemeyi düşürür (varsayılan: uyar ve betikleri belgede bırak) |
 | `npm run perf` | Çalışan üretim sunucusuna (ya da iki sunucuya, aralıklı A/B) Lighthouse çalıştırır ve medyanları yazdırır. Yöntem ve sonuçlar [docs/perf/faz4.md](docs/perf/faz4.md) |
 | `npm run arch:verify` · `arch:examples` | Kurumsal kanıtın **65 sözleşme testi** (`tests/arch/`, Node'un kendi test koşucusu, bağımlılık yok): yedekli kuyruk (kayıp 0, çift uygulama 0), HMAC-SHA256/AES-256-GCM zarfı, Salesforce/HubSpot/SAP/Oracle örnek eşleyicileri, belgelerin koddan üretilmiş olması. `arch:examples` `docs/architecture/examples/` dosyalarını koddan yeniden yazar ([ADR 0021](docs/adr/0021-production-performance-and-enterprise-proof.md) §5) |
-| `npm run qa:browser` · `qa:browser:quick` | **Çalışan** üretim sunucusuna karşı gerçek Chrome (`puppeteer-core`, tarayıcı indirmez): kapı ve bayraklar, çapalar (masaüstü ve telefon), kaydırmada CLS (Arapça dahil), simülatör boyları ve davranışı, entegrasyon modeli, sinema katmanı (worker yolu, ana iş parçacığı yedeği, piksel eşdeğerliği), tipografi (taşma yok, hero iki satır, tek metin yüzü), vaka incelemeleri (kart → diyalog, bağımsız sayfa, Esc ve odak), briefing (teslim bağlı değilken e-posta taslağı kipi: dört adım, taslak bağlantısı yanıtları taşır, API'ye hiçbir şey gitmez). `--only=<grup>`, `--parity` (görsel eşdeğerlik), `--full` (her dil ve genişlik) |
+| `npm run qa:browser` · `qa:browser:quick` | **Çalışan** üretim sunucusuna karşı gerçek Chrome (`puppeteer-core`, tarayıcı indirmez): kapı ve bayraklar, çapalar (masaüstü ve telefon), kaydırmada CLS (Arapça dahil), simülatör boyları ve davranışı, entegrasyon modeli, sinema katmanı (worker yolu, ana iş parçacığı yedeği, piksel eşdeğerliği), tipografi (taşma yok, hero iki satır, tek metin yüzü), vaka incelemeleri (kart → diyalog, bağımsız sayfa, Esc ve odak), briefing (teslim bağlı değilken e-posta taslağı kipi: dört adım, taslak bağlantısı yanıtları taşır, API'ye hiçbir şey gitmez). `--only=<grup>`, `--parity` (görsel eşdeğerlik), `--full` (her dil ve genişlik), `--throttle=N` (her sayfanın işlemcisi N kat yavaş: yüklü makineyi taklit eder, zamanlamaya duyarlı kontrolleri gösterir). Düşen kontroller özet satırından önce adlarıyla listelenir |
 | `npm run qa:csp` | **Çalışan** sunucuya (ya da canlıya: `-- https://syncflow.agency`) karşı 12 ziyarette (kapı, kaydırma, dil menüsü, vaka diyaloğu, form odağı, yasal sayfalar, yedi dil) her CSP ihlalini, konsol hatasını ve sayfa hatasını sayar; biri varsa 1 döner. Politika enforce olduğu için yeni dış kaynağı engeller: kaynak eklenen her değişiklikten sonra çalıştırılır ([ADR 0024](docs/adr/0024-csp-enforced.md)) |
 | `npm run perf:gate` | Mobil profilde (4× CPU, yavaş 4G) belirleyici sayaçlar (DOM, yerleşim, stil, görev, TBT tahmini, CLS) ve bütçe (`scripts/perf-budget.json`); `--baseline=<url>` eski yapıyla araya girerek A/B. **Mutlak bütçeler sessiz makine içindir**; yük altında göreli farka bakın |
 | `npm run flags:build` · `flags:check` | Bayrakları (`app/flags.css`, bayrak başına tek boş öğe) üreticiden yeniden yazar / CSS'in üreticiyle aynı olduğunu doğrular (denetim çalıştırır) |
 | `npm run audit:secrets` | `build` sonrası: sunucu sırları tarayıcıya giden dosyalara sızmış mı |
 | `npm run delivery:verify` | İsteğe bağlı SMTP teslimi: loopback'te sahte bir SMTP sunucusuyla gerçek konuşma (oturum, zarf, başlıklar, başlık enjeksiyonu, reddedilen parola) |
-| `npm run release:verify` | **Sürüm kapısı** (`-- --quick` hızlı küme): tip+lint+mesajlar, denetim `--build`, teslim ve mimari sözleşme testleri, üretim sunucusunda (:3190) smoke, CSP ve tam tarayıcı akışı; teslim değişkenleri bilerek tanımsız. Yaklaşık 13 dk. Bkz. [docs/deployment.md](docs/deployment.md) |
+| `npm run release:verify` | **Sürüm kapısı** (`-- --quick` hızlı küme): tip+lint+mesajlar, denetim `--build`, teslim ve mimari sözleşme testleri, üretim sunucusunda (:3190) smoke, CSP ve tam tarayıcı akışı; teslim değişkenleri bilerek tanımsız. Sessiz makinede yaklaşık 13 dk, yoğun makinede 15 dk ve üzeri; düşen adımın `FAIL` satırları ve tam çıktısı (geçici klasörde bir dosya) yazılır. Bkz. [docs/deployment.md](docs/deployment.md) |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
 | `npm run film:render` | Beş sahne videosunu Remotion ile `public/media/clips/` altına render eder (MP4 + WebM + poster), bkz. §6 |
 | `npm run remotion:studio` | Sahneleri Remotion Studio'da açar |
@@ -91,7 +93,7 @@ lib/
 messages/   en tr ar de fr es zh ja (.json; ja uykuda)
 i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale, dir) · launch.ts (hangi diller yayında) · request.ts
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
-docs/       adr/ (mimari kararlar 0001–0032) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı) · deployment.md (dağıtım yapılandırması ve sürüm kilidi)
+docs/       adr/ (mimari kararlar 0001–0033) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı) · deployment.md (dağıtım yapılandırması ve sürüm kilidi)
 tests/      arch/ (65 sözleşme testi)
 public/     fonts/ Inter Display (Latin + Türkçe) ve Syne alt kümeleri (OFL)   film/ sinema yedek posterleri   media/clips/ render edilmiş sahneler   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
@@ -431,6 +433,8 @@ Ayrıntı: [docs/perf/faz2b4.md](docs/perf/faz2b4.md), karar: [ADR 0011](docs/ad
 
 **Doğrulanmayanlar:** hukuki yeterlilik, gerçek şirket bilgileri, avukat onayı; p8/p9'daki işletme iddiaları; performans (ölçülmedi, mobil hâlâ "ölçülecek").
 
-## 12. Üçüncü taraf lisanslar
+## 12. Lisans ve üçüncü taraf lisanslar
+
+**Bu depo MIT lisanslıdır** ([../LICENSE](../LICENSE); telif sahibi Yusuf Sütcü, 2026). Kapsam dışı: yazı tipleri (aşağıda, SIL OFL 1.1), stüdyonun adı, logosu ve marka görselleri (`brand/`, `lib/brand-paths.ts`, `app/` ve `public/brand/` altındaki simgeler; yeniden kullanım için lisanslanmaz) ve bağımlılıklar (kendi lisanslarını taşır). Karar: [ADR 0033](docs/adr/0033-public-front-page-license-and-gate-output.md).
 
 Inter Display (Inter Project Authors, SIL OFL 1.1, `public/fonts/OFL-inter.txt`) · Syne (SIL OFL 1.1, `public/fonts/OFL-syne.txt`) · Next.js, React, next-intl, zod, DOMPurify, jsdom, lucide-react, Tailwind CSS, Lenis, Motion (MIT/Apache/MPL, bkz. paketler) · Remotion (yalnızca render için, özel lisans, §6) · Cloudflare Turnstile (yalnızca briefing'in son adımında yüklenir).

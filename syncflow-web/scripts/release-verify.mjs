@@ -11,6 +11,8 @@
  * bot-check paths run; no key of the owner is read or needed. Exit code 1 when any step fails; a server it started is always stopped.
  */
 import { spawn, spawnSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -37,7 +39,14 @@ function step(label, command, args, { env = CLEAN, shell = false } = {}) {
   const seconds = Math.round((Date.now() - started) / 1000);
   rows.push({ label, ok, seconds, summary: summary.slice(0, 120) });
   process.stdout.write(`  ${ok ? 'PASS' : 'FAIL'}  ${seconds}s  ${summary.slice(0, 120)}\n`);
-  if (!ok) process.stdout.write(`${lines.slice(-25).join('\n')}\n`);
+  if (!ok) {
+    // A failing step shows WHAT failed, not only the tail of its output: every FAIL line (first 40), the last 25 lines, and the whole output in a file.
+    const logFile = join(tmpdir(), `syncflow-release-verify-step-${rows.length}.log`);
+    writeFileSync(logFile, output);
+    const failedLines = [...new Set(lines.filter((line) => /(^|\s)(FAIL|✖)(\s|:|$)|\bFAILED\b/.test(line)))];
+    if (failedLines.length) process.stdout.write(`  failed lines (${failedLines.length}):\n${failedLines.slice(0, 40).map((line) => `    ${line.slice(0, 240)}`).join('\n')}\n`);
+    process.stdout.write(`${lines.slice(-25).join('\n')}\n  full output of this step: ${logFile}\n`);
+  }
   return ok;
 }
 

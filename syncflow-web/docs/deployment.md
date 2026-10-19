@@ -6,7 +6,7 @@ Bu belge, sitenin bugünkü **kilitli, üretime hazır** durumunu, onu nasıl ya
 
 | | |
 |---|---|
-| **Sürüm etiketi** | `release-2026-10-19` (açıklamalı git etiketi, `origin`'e gönderildi) |
+| **Sürüm etiketi** | `release-2026-10-19b` (açıklamalı git etiketi, `origin`'e gönderilir; önceki: `release-2026-10-19`, `c06f6f9`) |
 | **Canlı** | https://syncflow.agency · `https://www.syncflow.agency` → 308 → apex (yol ve sorgu korunur) |
 | **Yapı** | Next.js 16.3.8, React 19, Tailwind v4, next-intl (7 dil), `npm` + `package-lock.json`; Node `>=20.19.0` (yerel doğrulama Node 24.12) |
 | **Doğrulama** | `npm run release:verify`: **8/8 adım yeşil**, yerel, temiz derleme (aşağıda §7) |
@@ -57,7 +57,7 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 
 ## 5. Yayın akışı
 
-1. **Yerelde kapı:** `npm run release:verify` (yaklaşık 13 dakika; `-- --quick` hızlı kümedir). Hepsi yeşil olmadan commit "hazır" sayılmaz.
+1. **Yerelde kapı:** `npm run release:verify` (sessiz makinede 13–14 dakika, yoğun makinede 15 ve üzeri; `-- --quick` hızlı kümedir). Hepsi yeşil olmadan commit "hazır" sayılmaz. Bir adım düşerse kapı düşen satırları ve tam çıktının dosya yolunu yazar.
 2. **Yayın:** `git push origin main`; Vercel yaklaşık 30–60 saniyede yayınlar. Durum: `https://api.github.com/repos/yusufsutcu5441-web/syncflow-agency/commits/<sha>/status` ya da panel.
 3. **Canlıda doğrula:** `node scripts/live-check.mjs https://syncflow.agency` (beklenen: 47 geçti, 0 uyarı, 0 hata), `npm run qa:csp -- https://syncflow.agency`, `npm run qa:browser -- https://syncflow.agency`. Site her adrese dakikada 30 API isteği ve 10 dakikada 5 briefing POST'u sınırı koyar; `live-check` 3 POST yapar, art arda çok sık koşmayın (429 uyarı olarak raporlanır, hata değildir).
 4. **Değişken girdikten sonra:** panelden Redeploy ya da boş commit; `NEXT_PUBLIC_*` yeni derleme ister.
@@ -73,9 +73,29 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 | Teslim sorun çıkarırsa | SMTP/webhook değişkenlerini silmek: form dürüst taslak moduna döner |
 | Beş yeni dili kapatmak | `NEXT_PUBLIC_LAUNCHED_LOCALES=en,tr` + yeniden dağıtım |
 
-## 7. Sürüm kapısı sonuçları (`release-2026-10-19`, yerel, temiz derleme)
+## 7. Sürüm kapısı sonuçları
 
-`npm run release:verify` (`scripts/release-verify.mjs`): teslim ve bot denetimi değişkenleri **bilerek tanımsız**, sunucuda yalnızca Cloudflare'in her zaman geçen test gizli anahtarı.
+`npm run release:verify` (`scripts/release-verify.mjs`): teslim ve bot denetimi değişkenleri **bilerek tanımsız**, sunucuda yalnızca Cloudflare'in her zaman geçen test gizli anahtarı. Her sürümün sonucu kendi etiketine aittir; **farklı etiketten sayı alıntılanmaz.**
+
+### 7.1 `release-2026-10-19b` (yerel, temiz derleme, 19.10.2026, 844 sn)
+
+Önceki etikete göre fark: kök `README.md` (İngilizce), `LICENSE` (MIT), ADR 0033, kapının çıktısı ve tarayıcı akışının tipografi ölçümü (ADR 0033); **uygulama kodu aynıdır**, sayılar aynıdır.
+
+| Adım | Süre | Sonuç |
+|---|---|---|
+| Tip denetimi, lint, mesaj eşitliği (yedi dil) | 30 sn | yeşil |
+| Tasarım denetimi, üretim derlemesiyle | 60 sn | **233 geçti, 0 hata**, 1 uyarı (yer tutuculu hukuki sayfalar, kabul edildi), 4 bilgi |
+| Teslim sözleşme testleri | 1 sn | 7/7 |
+| Referans mimari sözleşme testleri | 2 sn | 65/65 |
+| HTTP duman testi (üretim sunucusu) | 9 sn | **193/193** |
+| CSP ihlali ve konsol hatası (12 ziyaret) | 95 sn | **0 / 0** |
+| Gerçek tarayıcı akışı | 646 sn | **315/315** |
+
+Canlı doğrulama ve etiketin temiz klonda doğrulanması etiketten sonra yapılır; sonuçları bu bölümün sonuna, etiketlenen commit'ten sonra gelen bir belge commit'iyle eklenir.
+
+### 7.2 `release-2026-10-19` (yerel, temiz derleme)
+
+Aynı etiketin GitHub'dan **temiz klonda** denemesi (19.10.2026): 7/8 adım yeşil, tarayıcı akışı **313/315** (düşen iki kontrolün adı o gün yakalanamadı), aynı adım tek başına tekrarlanınca 315/315; ayrıntı ve sonrasında yapılan düzeltme: [ADR 0033](adr/0033-public-front-page-license-and-gate-output.md) §1 ve §3.
 
 | Adım | Sonuç |
 |---|---|

@@ -2,6 +2,7 @@
   "name": "syncflow-agency",
   "version": "2.0.0",
   "private": true,
+  "license": "MIT",
   "description": "SyncFlow Agency: high-ticket B2B website. Next.js App Router, next-intl (en, tr), pre-rendered Remotion film (no player in the browser), nonce-based enforced CSP.",
   "engines": {
     "node": ">=20.19.0"
