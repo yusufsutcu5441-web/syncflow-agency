@@ -88,7 +88,7 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 
 ### 7.0 `main` + ADR 0035, satışa hazır sürüm ve düzeltme turu (etiketsiz; yerel, 22.10.2026, 906 sn)
 
-[ADR 0035](adr/0035-sales-ready-release.md): fiyat, form ve hukuki taslak bayraklara bağlandı, diller `en,tr`, her çağrı bir e-posta bağlantısı. Aynı günün düzeltme turu (ADR 0035 §8: getiri ve sonuç vaatleri nötrleştirildi, form kapalıyken Çizim 01 ve Numune 01 "Referans mimari" etiketli, adres düz metin de görünür, mailto kodlayıcısı birim testli) ikinci commit'tir. **Yeni etiket atılmadı; push edilmedi.** Kapı artık **iki derleme** sınar ve 11 adımdır. Aşağıdaki sayılar düzeltme turunun commit'ine aittir (ilk commit `63c231b` için: denetim 247, teslim 16/16, duman 197/197 ve 164/164, tarayıcı 315/315); `release-2026-10-19b` etiketine ait değildir (o etiketin sayıları değişmez). Süre, adım sürelerinin toplamıdır.
+[ADR 0035](adr/0035-sales-ready-release.md): fiyat, form ve hukuki taslak bayraklara bağlandı, diller `en,tr`, her çağrı bir e-posta bağlantısı. Aynı günün düzeltme turu (ADR 0035 §8: getiri ve sonuç vaatleri nötrleştirildi, form kapalıyken Çizim 01 ve Numune 01 "Referans mimari" etiketli, adres düz metin de görünür, mailto kodlayıcısı birim testli) ikinci commit'tir. **Yeni etiket atılmadı.** Kapı artık **iki derleme** sınar ve 11 adımdır. Aşağıdaki sayılar düzeltme turunun commit'ine aittir (ilk commit `63c231b` için: denetim 247, teslim 16/16, duman 197/197 ve 164/164, tarayıcı 315/315); `release-2026-10-19b` etiketine ait değildir (o etiketin sayıları değişmez). Süre, adım sürelerinin toplamıdır.
 
 | Adım | Süre | Sonuç |
 |---|---|---|
