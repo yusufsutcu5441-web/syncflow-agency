@@ -12,7 +12,7 @@ const ROMAN = ['I', 'II', 'III', 'IV'] as const;
 /**
  * Everything a breakdown shows, resolved for one language: the strings, and the figures of the impact panel formatted in that language.
  * The only numbers in a breakdown are the ones measured on syncflow.agency (lib/metrics.ts, with their date and profile); the sector texts
- * carry no figure at all, and the ROI part names what would be measured on an engagement, never a result.
+ * carry no figure at all, and the last part names how impact would be established on an engagement (baseline, target, verification), never a result.
  * Used by the page (app/[locale]/showcase/[slug]/page.tsx) and by the API the dialog reads (app/api/breakdown/route.ts).
  */
 export async function loadBreakdown(slug: BreakdownSlug, locale: AppLocale): Promise<BreakdownData> {

@@ -4,6 +4,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { BriefingDrawing } from '@/components/sections/BriefingDrawing';
 import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
@@ -23,10 +24,12 @@ export async function Studio() {
   const [t, locale, format, hero, sp] = await Promise.all([getTranslations('Studio'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Hero'), getTranslations('Specimen')]);
 
   // The architectural R&D specimens (docs/adr/0032): the studio's own engineering, each a page of its own. Cards only; the figures live on the pages.
+  // While the briefing form is switched off (lib/flags.ts) Specimen 01, the pipeline of that form, is labelled for what it is: a reference architecture,
+  // not a form a visitor can use (docs/adr/0035).
   const specimens = SPECIMEN_SLUGS.map((slug) => ({
     slug,
     number: SPECIMEN_NUMBER[slug],
-    tag: sp(`${SPECIMEN_KEY[slug]}.tag`),
+    tag: slug === 'studio-site' && !BRIEFING_ENABLED ? sp('studioSite.tagReference') : sp(`${SPECIMEN_KEY[slug]}.tag`),
     title: sp(`${SPECIMEN_KEY[slug]}.title`),
     card: sp(`${SPECIMEN_KEY[slug]}.card`),
     href: withLocale(specimenPath(slug), locale),
@@ -43,7 +46,8 @@ export async function Studio() {
   // The manifesto is a set of working rules, each one something this page or its repository does (docs/adr/0025-honest-trust-signals.md); it names
   // no client, no result and no headcount. The facts beneath it are the ones a visitor can check in their own browser.
   const manifesto = ([1, 2, 3, 4, 5] as const).map((n) => ({ title: t(`m${n}Title`), text: t(`m${n}Text`) }));
-  const facts = ([1, 2, 3] as const).map((n) => ({ name: t(`f${n}Name`), text: t(`f${n}Text`) }));
+  // The second fact names the one third party the code can load, the bot check of the briefing form; with the form off there is none to name.
+  const facts = ([1, 2, 3] as const).map((n) => ({ name: t(`f${n}Name`), text: n === 2 && !BRIEFING_ENABLED ? t('f2TextNoForm') : t(`f${n}Text`) }));
 
   const notes = [
     {
@@ -143,7 +147,8 @@ export async function Studio() {
 
           <figure className="drawing mt-14" aria-labelledby="drawing-title">
             <figcaption>
-              <p className="label">{t('drawingLabel')}</p>
+              {/* Drawing 01 shows the path of the briefing form. With the form off it is a reference architecture, and says so (docs/adr/0035). */}
+              <p className="label">{BRIEFING_ENABLED ? t('drawingLabel') : `${t('referenceLabel')} — ${t('drawingLabel')}`}</p>
               <h4 id="drawing-title" className="text-title mt-3">
                 {t('drawingTitle')}
               </h4>

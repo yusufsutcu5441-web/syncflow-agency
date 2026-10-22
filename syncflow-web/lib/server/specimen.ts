@@ -4,6 +4,7 @@ import { runScenario } from '@/lib/arch/simulate';
 import { SCENARIOS } from '@/lib/arch/scenarios';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import type { BreakdownData } from '@/lib/breakdown';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { SPECIMEN_KEY, SPECIMEN_NUMBER, type SpecimenSlug } from '@/lib/specimens';
@@ -84,7 +85,8 @@ export async function loadSpecimen(slug: SpecimenSlug, locale: AppLocale): Promi
     dir: labels.dir,
     lang: labels.hreflang,
     kicker: `${t('kicker')} ${SPECIMEN_NUMBER[slug]}`,
-    tag: t(`${key}.tag`),
+    // Specimen 01 is the pipeline of the briefing form: while the form is switched off (lib/flags.ts) it is labelled a reference architecture (docs/adr/0035).
+    tag: slug === 'studio-site' && !BRIEFING_ENABLED ? t('studioSite.tagReference') : t(`${key}.tag`),
     title: t(`${key}.title`),
     specimen: t('note'),
     briefLabel: t('briefLabel'),

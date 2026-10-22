@@ -1,12 +1,13 @@
 import 'server-only';
 import { getTranslations } from 'next-intl/server';
 import type { AppLocale } from '@/i18n/routing';
-import { writeHref } from '@/lib/contact';
+import { HAS_CONTACT, writeHref } from '@/lib/contact';
 import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
-import { SECTION_IDS } from '@/lib/site';
+import { CONTACT_EMAIL, SECTION_IDS } from '@/lib/site';
 
-export type ClosingCta = { title: string; text: string; label: string; href: string };
+/** `email` is the address as plain text, shown under a mail button for a visitor whose browser opens no mail program; empty for any other action. */
+export type ClosingCta = { title: string; text: string; label: string; href: string; email: string };
 
 /**
  * The closing call to action of an architectural breakdown and of an R&D specimen (lib/server/breakdown.ts, lib/server/specimen.ts): the briefing
@@ -21,7 +22,7 @@ export async function closingCta(locale: AppLocale): Promise<ClosingCta> {
     getTranslations({ locale, namespace: 'Closing' }),
   ]);
   if (BRIEFING_ENABLED) {
-    return { title: breakdown('ctaTitle'), text: breakdown('ctaText'), label: showcase('cta'), href: withLocale(`/#${SECTION_IDS.briefing}`, locale) };
+    return { title: breakdown('ctaTitle'), text: breakdown('ctaText'), label: showcase('cta'), href: withLocale(`/#${SECTION_IDS.briefing}`, locale), email: '' };
   }
-  return { title: contact('ctaTitle'), text: contact('ctaText'), label: closing('emailLabel'), href: writeHref() ?? '' };
+  return { title: contact('ctaTitle'), text: contact('ctaText'), label: closing('emailLabel'), href: writeHref() ?? '', email: HAS_CONTACT ? CONTACT_EMAIL : '' };
 }

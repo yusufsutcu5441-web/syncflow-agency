@@ -8,7 +8,7 @@ import { auditHref } from '@/lib/contact';
 import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
-import { SECTION_IDS } from '@/lib/site';
+import { CONTACT_EMAIL, SECTION_IDS } from '@/lib/site';
 
 /**
  * Hero (Blueprint section 1, cinematic since docs/adr/0015-entry-gate-and-hero.md): full viewport, obsidian, the B1 emblem at
@@ -22,7 +22,7 @@ import { SECTION_IDS } from '@/lib/site';
  * brightens, so scrolling feels like moving through the space. On phones and without JavaScript it is the plain one-screen hero.
  */
 export async function Hero() {
-  const [t, locale, format, contact] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Contact')]);
+  const [t, locale, format, contact, closing] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Contact'), getTranslations('Closing')]);
   // The primary action: the briefing while the form is offered, otherwise the free site audit request as a mail (lib/contact.ts).
   const audit = auditHref();
 
@@ -84,6 +84,15 @@ export async function Hero() {
               <span>{t('ctaSecondary')}</span>
             </Link>
           </div>
+          {/* The address as plain text beside the mail button: a visitor whose browser opens no mail program can still copy it (one click selects all of it). */}
+          {!BRIEFING_ENABLED && audit ? (
+            <p className="mt-4 text-sm text-faint">
+              <span>{closing('emailLabel')}:</span>{' '}
+              <bdi dir="ltr" className="select-all text-muted">
+                {CONTACT_EMAIL}
+              </bdi>
+            </p>
+          ) : null}
 
           <dl className="hero-strip">
             {strip.map(([metric, label]) => (

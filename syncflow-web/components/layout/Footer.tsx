@@ -8,7 +8,7 @@ import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { Flag } from '@/components/ui/Flag';
 import { Logo } from '@/components/ui/Logo';
-import { SECTION_IDS } from '@/lib/site';
+import { CONTACT_EMAIL, SECTION_IDS } from '@/lib/site';
 
 /**
  * Blueprint footer: four information columns (Studio, Showcase, Languages, Legal), a thin glass line with the legal row,
@@ -58,11 +58,19 @@ export async function Footer() {
                 </li>
               ) : null}
               {audit ? (
-                <li>
-                  <a href={audit} className={linkClass}>
-                    {contact('auditCta')}
-                  </a>
-                </li>
+                <>
+                  <li>
+                    <a href={audit} className={linkClass}>
+                      {contact('auditCta')}
+                    </a>
+                  </li>
+                  {/* The address as plain text under the mail link: a visitor whose browser opens no mail program can still copy it. */}
+                  <li>
+                    <bdi dir="ltr" className="select-all text-sm text-faint">
+                      {CONTACT_EMAIL}
+                    </bdi>
+                  </li>
+                </>
               ) : null}
             </ul>
           </div>

@@ -54,5 +54,6 @@ export type BreakdownData = {
   };
   note: string;
   how: { title: string; text: string; link: string; href: string };
-  cta: { title: string; text: string; label: string; href: string; back: string; backHref: string };
+  /** The closing action. `href` is empty when there is none to offer; `email` is the address as plain text under a mail button (lib/server/cta.ts). */
+  cta: { title: string; text: string; label: string; href: string; email: string; back: string; backHref: string };
 };

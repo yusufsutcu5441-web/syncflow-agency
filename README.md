@@ -25,7 +25,7 @@ To check exactly what was recorded for a release, add `--branch <tag>` to the cl
 |---|---|
 | 1 | Types, lint and translation parity across the public languages (English and Turkish by default) |
 | 2 | Design audit with a production build of the feature build (every release switch on): dependencies, design tokens, i18n, security and briefing hardening, motion, a ban on unverified claims, the first-load bundle budget |
-| 3 | Briefing delivery contract tests (an SMTP conversation and the Telegram Bot API, each against a loopback fake) |
+| 3 | Delivery contract tests (an SMTP conversation and the Telegram Bot API, each against a loopback fake) and the unit tests of the mail-link encoder (RFC 6068 encoding, `%0D%0A` line breaks) |
 | 4 | Architecture contract tests: queue, signed envelope, example mappers, generated documents |
 | 5 | The production server of the feature build starts |
 | 6 | HTTP smoke test against it |

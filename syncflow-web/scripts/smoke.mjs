@@ -178,7 +178,8 @@ check('the showcase has exactly the four sectors (real estate, clinics, corporat
 const pageText = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
 check('the showcase headline counts four industries and the footer links the logistics card', pageText.includes('Four industries.') && html.includes('href="/#show-logistics"'));
 check('the architecture section carries the two enterprise columns (fail-safe automation, deep integrations) and the note that implies no partnership', pageText.includes('Fail-Safe Enterprise Automation') && pageText.includes('Deep Enterprise Integrations') && pageText.includes('Salesforce') && pageText.includes('SAP') && pageText.includes('HubSpot') && pageText.includes('Oracle') && pageText.includes('no partnership, certification or conformance is implied'));
-check('the hero and the architecture intro carry the owner\u2019s three phrases (enterprise scale, secure workflow automation, high-ROI digital ecosystems)', /enterprise scale/i.test(pageText) && /secure workflow automation/i.test(pageText) && /high-ROI digital ecosystems/i.test(pageText));
+// "High-ROI digital ecosystems" was a return promise nobody had measured; it is gone (docs/adr/0035, correction round), and no ROI wording replaces it.
+check('the hero and the architecture intro carry the owner\u2019s phrases (enterprise scale, secure workflow automation) and promise no return (no "high-ROI", no ROI)', /enterprise scale/i.test(pageText) && /secure workflow automation/i.test(pageText) && !/high-ROI|\bROI\b|return on investment/i.test(pageText));
 check('no invented enterprise credential in the page (no SLA, SOC 2, ISO 27001, uptime percentage or partner badge)', !/\bSLA\b|SOC ?2|ISO ?27001|99\.9+ ?%|uptime|certified partner/i.test(pageText));
 check('the page makes no multi-language claim', !/seven languages|7 languages|every language|yedi dil|her dilde/i.test(html));
 check('no Lemon Squeezy and no old offer anywhere in the page', !/lemonsqueezy|lemon\.js|\$2,500|\$2\.500|Start Project/i.test(html));
@@ -186,11 +187,15 @@ check(BRIEFING_ON ? 'the briefing panel is there and opts out of smooth scrollin
 // Every mail link is built from NEXT_PUBLIC_CONTACT_EMAIL (lib/contact.ts); the address is written nowhere in the code.
 const mailLinks = (markup) =>
   [...markup.matchAll(/href="(mailto:[^"]+)"/g)].map((m) => {
-    const url = new URL(m[1].replace(/&amp;/g, '&'));
-    return { to: decodeURIComponent(url.pathname), subject: url.searchParams.get('subject'), body: url.searchParams.get('body') };
+    const raw = m[1].replace(/&amp;/g, '&');
+    const url = new URL(raw);
+    return { raw, to: decodeURIComponent(url.pathname), subject: url.searchParams.get('subject'), body: url.searchParams.get('body') };
   });
 const AUDIT = { subject: 'Free site audit request', body: 'Website URL:\n\nWhat matters most (speed / SEO / mobile / redesign):\n' };
-const isAudit = (link) => link.to === CONTACT && link.subject === AUDIT.subject && link.body === AUDIT.body;
+// The body travels with CRLF line breaks (RFC 6068, %0D%0A): compare it with the text's own LF.
+const isAudit = (link) => link.to === CONTACT && link.subject === AUDIT.subject && link.body?.replace(/\r\n/g, '\n') === AUDIT.body;
+// The exact tail of the audit link: subject and body percent-encoded, every line break %0D%0A (tests/delivery/mailto.test.mjs proves the encoder; this proves the page uses it).
+const AUDIT_QUERY = '?subject=Free%20site%20audit%20request&body=Website%20URL%3A%0D%0A%0D%0AWhat%20matters%20most%20%28speed%20%2F%20SEO%20%2F%20mobile%20%2F%20redesign%29%3A%0D%0A';
 if (CONTACT) {
   check(`the contact address comes from NEXT_PUBLIC_CONTACT_EMAIL and is published (mailto ${CONTACT})`, mailLinks(html).some((link) => link.to === CONTACT));
   const hero = /<section[^>]*id="top"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
@@ -201,6 +206,10 @@ if (CONTACT) {
     (BRIEFING_ON || mailLinks(hero).some(isAudit)) && mailLinks(footer).some(isAudit),
     `hero ${mailLinks(hero).length} mail link(s), footer ${mailLinks(footer).length}`,
   );
+  check('the audit link is percent-encoded to the letter and its line breaks are %0D%0A (a bare %0A never appears)', mailLinks(footer).filter(isAudit).every((link) => link.raw === `mailto:${CONTACT}${AUDIT_QUERY}`) && mailLinks(footer).some(isAudit), mailLinks(footer).find(isAudit)?.raw ?? 'no audit link in the footer');
+  // The address is also plain text beside the main mail calls to action, for a visitor whose browser opens no mail program (hero while the form is off, footer always).
+  const flat = (markup) => markup.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  check('the address is also plain text next to the call to action: in the hero (form off) and in the footer', (BRIEFING_ON || flat(hero).includes(CONTACT)) && flat(footer).includes(CONTACT), `hero ${flat(hero).includes(CONTACT)}, footer ${flat(footer).includes(CONTACT)}`);
   check('every mail link on the page goes to the configured address (no other address is written in the page)', mailLinks(html).every((link) => link.to === CONTACT), [...new Set(mailLinks(html).map((link) => link.to))].join(', '));
 } else {
   check('NEXT_PUBLIC_CONTACT_EMAIL is not set: the page has no mail link at all (nothing is invented)', !/mailto:/.test(html));
@@ -744,8 +753,12 @@ check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specim
         slug === 'studio-site'
           ? text.includes(`${perfDesktop} · ${perfMobile}`) && /16[.,]7 · 16[.,]9/.test(text) && /0[.,]00/.test(text)
           : new RegExp(`${queue.accepted}`).test(text) && text.includes(String(queue.n)) && new RegExp(`${queue.dropped}`).test(text) && new RegExp(`${queue.dead}\\s`).test(text);
-      const ok = res.status === 200 && /<h1\b/.test(body) && ids.every(Boolean) && canonical && ld && hreflangs >= OPEN.length + 1 && !/noindex/.test(body) && missing.length === 0 && numbers && !FORBIDDEN_IN_BREAKDOWN.test(text) && !UNMEASURED.test(text) && !UNBACKED_ON_PAGES.test(text);
-      if (!ok) problems.push(`${locale}/${slug}: status ${res.status}, parts ${ids.join('')}, canonical ${canonical}, ld ${ld}, hreflang ${hreflangs}, missing ${missing.map((w) => w.slice(0, 20)).join('|')}, numbers ${numbers}`);
+      // While the briefing form is off, Specimen 01 (the pipeline of that form) is labelled a reference architecture, not a form a visitor can use (docs/adr/0035);
+      // a language without the key shows the English label (lib/merge-messages.ts).
+      const enSpecimen = JSON.parse(fs.readFileSync(new URL('../messages/en.json', import.meta.url), 'utf8')).Specimen;
+      const labelled = BRIEFING_ON || slug !== 'studio-site' || text.includes(normalise(m.studioSite.tagReference ?? enSpecimen.studioSite.tagReference));
+      const ok = res.status === 200 && /<h1\b/.test(body) && ids.every(Boolean) && canonical && ld && hreflangs >= OPEN.length + 1 && !/noindex/.test(body) && missing.length === 0 && labelled && numbers && !FORBIDDEN_IN_BREAKDOWN.test(text) && !UNMEASURED.test(text) && !UNBACKED_ON_PAGES.test(text);
+      if (!ok) problems.push(`${locale}/${slug}: status ${res.status}, parts ${ids.join('')}, canonical ${canonical}, ld ${ld}, hreflang ${hreflangs}, missing ${missing.map((w) => w.slice(0, 20)).join('|')}, reference label ${labelled}, numbers ${numbers}`);
     }
   }
   check(`all ${OPEN.length * SPEC_SLUGS.length} R&D specimen pages (2 specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, structured data, hreflang, indexable, their translated texts, the measured or computed figures, and no unmeasured frame budget, certification or SLA claim`, problems.length === 0, problems.slice(0, 3).join(' | '));
@@ -755,7 +768,13 @@ check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specim
   check('an unknown specimen and a dormant language are 404', (await get('/specimens/nope')).status === 404 && (await get('/ja/specimens/studio-site')).status === 404);
 }
 const enBreakdown = await (await get('/showcase/law')).text();
-check('the English law breakdown names its four headings in the required order', /Challenge[\s\S]*Architectural solution[\s\S]*Integration &amp; security[\s\S]*Measured impact &amp; ROI/.test(enBreakdown));
+// The fourth heading was "Measured impact & ROI"; ROI promised a return nobody had measured, so the heading and its sub-heading no longer name one (docs/adr/0035, correction round).
+check('the English law breakdown names its four headings in the required order, and names no ROI', /Challenge[\s\S]*Architectural solution[\s\S]*Integration &amp; security[\s\S]*Measured impact/.test(enBreakdown) && !/\bROI\b|Return on investment/.test(enBreakdown.replace(/<script[\s\S]*?<\/script>/g, ' ')));
+if (CONTACT && !BRIEFING_ON) {
+  // The closing action of a case page is a mail button; the address is also plain text under it (lib/server/cta.ts, components/sections/BreakdownView.tsx).
+  const closingBlock = /<footer class="bd-cta">[\s\S]*?<\/footer>/.exec(enBreakdown)?.[0] ?? '';
+  check('a case page ends with a mail button to the configured address and the address as plain text under it', mailLinks(closingBlock).some((link) => link.to === CONTACT) && closingBlock.replace(/<[^>]+>/g, ' ').includes(CONTACT), closingBlock.slice(0, 120));
+}
 
 /* ── Trust signals that are true, and no claim the studio cannot back (docs/adr/0025-honest-trust-signals.md) ───────────────────── */
 {
@@ -768,11 +787,19 @@ check('the English law breakdown names its four headings in the required order',
   const drawing = [];
   const RATE_DRAWN = '5 req / 10 min';
   const BUDGET_DRAWN = '2 attempts, < 9.5 s';
+  // A language without a key shows the English text (lib/merge-messages.ts).
+  const enStudio = JSON.parse(fs.readFileSync(new URL('../messages/en.json', import.meta.url), 'utf8')).Studio;
   for (const locale of OPEN) {
     const messages = JSON.parse(fs.readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), 'utf8'));
     const page = await get(locale === 'en' ? '/' : `/${locale}`);
     const raw = await page.text();
     const text = normalise(decode(stripTags(raw)));
+    // With the form off, Drawing 01 (its path) is a reference architecture and says so; with the form on it is the form's own path and carries no such label (docs/adr/0035).
+    // The second fact names the bot check of the form only while the form exists.
+    const reference = text.includes(normalise(`${messages.Studio.referenceLabel ?? enStudio.referenceLabel} — ${messages.Studio.drawingLabel}`));
+    if (reference === BRIEFING_ON) drawing.push(`${locale}: the "reference architecture" label is ${reference ? 'shown' : 'missing'} while the form is ${BRIEFING_ON ? 'on' : 'off'}`);
+    if (!text.includes(normalise(BRIEFING_ON ? messages.Studio.f2Text : (messages.Studio.f2TextNoForm ?? enStudio.f2TextNoForm)))) missing.push(`${locale}: the second fact (${BRIEFING_ON ? 'with' : 'without'} the form)`);
+    if (!BRIEFING_ON && text.includes(normalise(messages.Studio.f2Text))) claims.push(`${locale}: the second fact still names the bot check of a form that is off`);
     // The founding statement (docs/adr/0031) and what each budget level typically includes (the form draws all of it, a level shown on a choice).
     // With the form off none of the form's strings is on the page. The chips about a mutual NDA and a 24-hour answer are never shown (docs/adr/0035).
     const scope = BRIEFING_ON ? ['scopeTitle', 'scopeNote', 't1s1', 't1s2', 't1s3', 't2s1', 't2s2', 't2s3', 't3s1', 't3s2', 't3s3'].map((key) => messages.Briefing.budget[key]) : [];
@@ -889,18 +916,22 @@ section('Release hygiene: no placeholder, no draft banner, no price, no promise 
   const AMOUNT = /[$€₺£]\s?\d|\d\s?[$€₺£]|\b\d[\d.,]*\s?(?:USD|EUR|AED|TRY)\b/;
   const PROMISE = /within 24 hours|24 saat içinde|mutual NDA|karşılıklı (?:bir )?NDA|\binvoiced\b|faturalı|seven languages|7 languages|yedi dil/i;
   const DEAD_CTA = /Start a [Bb]riefing|Strategic Briefing|Briefing Başlat|Stratejik Briefing|Start with a briefing|Send the briefing/;
+  // A return nobody has measured is a promise the studio cannot keep (docs/adr/0035, correction round). English and Turkish carry no ROI wording; the five dormant
+  // languages keep their old files untouched, so they are outside this check.
+  const RETURN_PROMISE = /high-ROI|\bROI\b|return on investment|yatırım getirisi|yüksek getirili|conversion (?:rate|increase|lift|uplift)|dönüşüm (?:oranı|artışı)/i;
   const pages = [];
   for (const locale of OPEN) {
     const prefix = locale === 'en' ? '' : `/${locale}`;
-    pages.push(`${prefix || '/'}?m=${MARKET_OF[locale]}`, `${prefix}/privacy`, `${prefix}/imprint`, `${prefix}/showcase/law`, `${prefix}/specimens/fail-safe-queue`);
+    for (const path of [`${prefix || '/'}?m=${MARKET_OF[locale]}`, `${prefix}/privacy`, `${prefix}/imprint`, `${prefix}/showcase/law`, `${prefix}/specimens/fail-safe-queue`]) pages.push({ path, locale });
   }
   const problems = [];
-  for (const path of pages) {
+  for (const { path, locale } of pages) {
     const res = await get(path);
     const body = await res.text();
     const shown = visibleText(body);
     const found = [
       res.status !== 200 && `status ${res.status}`,
+      (locale === 'en' || locale === 'tr') && RETURN_PROMISE.test(shown) && `return promise ${shown.match(RETURN_PROMISE)?.[0]}`,
       !BRIEFING_ON && PLACEHOLDER.test(shown) && `placeholder ${shown.match(PLACEHOLDER)?.[0]}`,
       !BRIEFING_ON && DRAFT_BANNER.test(shown) && `draft notice ${shown.match(DRAFT_BANNER)?.[0]}`,
       !PRICING_ON && AMOUNT.test(shown) && `amount ${shown.match(AMOUNT)?.[0]}`,

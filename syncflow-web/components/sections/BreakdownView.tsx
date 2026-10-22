@@ -5,7 +5,7 @@ import type { BreakdownData } from '@/lib/breakdown';
 
 /**
  * One architectural breakdown (docs/adr/0020-case-study-layer.md): the sector's brief, then the four parts every breakdown has, in this
- * order: Challenge, Architectural solution, Integration & security, Measured impact & ROI. A pure function of its data, so the same markup
+ * order: Challenge, Architectural solution, Integration & security, Measured impact. A pure function of its data, so the same markup
  * is the page (server) and the dialog (browser). No client result appears in it: the sector is a studio specimen, the scenario a design
  * brief, and the figures are the ones measured on this site (lib/metrics.ts).
  *
@@ -193,6 +193,14 @@ export function BreakdownView({ data, variant, onAnchor }: { data: BreakdownData
             </>,
           )}
         </div>
+        {/* The address as plain text under a mail button: a visitor whose browser opens no mail program can still copy it (one click selects all of it). */}
+        {data.cta.email ? (
+          <p className="mt-4 text-sm text-faint">
+            <bdi dir="ltr" className="select-all text-muted">
+              {data.cta.email}
+            </bdi>
+          </p>
+        ) : null}
       </footer>
     </article>
   );

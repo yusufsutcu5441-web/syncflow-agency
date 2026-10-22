@@ -86,7 +86,7 @@ let server;
 try {
   step('type check, lint and message parity (npm run check)', npm, ['run', 'check'], { shell: true });
   step('design audit with a production build of the FEATURE build (faz2-denetim --build; every switch on)', node, ['faz2-denetim.mjs', '--build'], { env: FEATURE_BUILD });
-  step('briefing delivery contract tests (npm run delivery:verify)', npm, ['run', 'delivery:verify'], { shell: true });
+  step('delivery contract tests and the mail-link encoder (npm run delivery:verify)', npm, ['run', 'delivery:verify'], { shell: true });
   step('reference architecture contract tests (npm run arch:verify)', npm, ['run', 'arch:verify'], { shell: true });
 
   if (rows.every((row) => row.ok)) {

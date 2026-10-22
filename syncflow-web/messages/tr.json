@@ -74,7 +74,7 @@
   "Architecture": {
     "label": "01 — Mimari",
     "title": "Süs değil, mühendislik.",
-    "intro": "Her piksel bir tolerans, her kare bir taahhüt. Yüksek getirili dijital ekosistemler burada iki katmanda kurulur: yalnızca hızlı değil, ayarlı hissettiren bir ön yüz ve arızada güvenli kalacak biçimde tasarlanmış kurumsal otomasyon.",
+    "intro": "Her piksel bir tolerans, her kare bir taahhüt. Dijital ekosistemler burada iki katmanda kurulur: yalnızca hızlı değil, ayarlı hissettiren bir ön yüz ve arızada güvenli kalacak biçimde tasarlanmış kurumsal otomasyon.",
     "c1Index": "I",
     "c1Title": "Video, kod değil. Sinema, tarayıcıda.",
     "c1Text": "Ağır render motorlarını ve kasan animasyon katmanlarını bıraktık. Hero ve vitrin akışlarınız, cihazın kendi video donanımının çözdüğü yerel MP4/WebM video olarak servis edilir; akış işlemciye çok az yük bindirir.",
@@ -454,11 +454,13 @@
     "f1Text": "Bu sayfadaki kurumsal güvenlik akışı, tarayıcınızın kendi Web Crypto’su ile bir mesajı imzalar ve mühürler: referans mimarimizle aynı ilkeller, aynı testler.",
     "f2Name": "Çerez yok · analitik yok",
     "f2Text": "Ağ sekmesini açın: cihazınızda hiçbir şey saklanmaz ve briefing formundaki Cloudflare bot denetimi dışında hiçbir şey üçüncü taraftan yüklenmez.",
+    "f2TextNoForm": "Ağ sekmesini açın: cihazınızda hiçbir şey saklanmaz ve üçüncü taraftan hiçbir şey yüklenmez.",
     "f3Name": "Engelleyen Content-Security-Policy",
     "f3Text": "Her betik tek kullanımlık bir nonce taşır, gerisini tarayıcı engeller. İhlal taraması sürüm denetimlerimizin parçasıdır.",
     "drawingLabel": "Çizim 01",
-    "drawingTitle": "Briefing’inizin yolu, önce çizildi.",
-    "drawingLead": "Yukarıdaki ilk kuralın bu sayfadaki forma uygulanmış hâli. Her kutu depomuzdaki gerçek koddur, rakamlar da o koddaki rakamlardır.",
+    "referenceLabel": "Referans mimari",
+    "drawingTitle": "Bir briefing’in yolu, önce çizildi.",
+    "drawingLead": "Yukarıdaki ilk kuralın depomuzdaki briefing formuna uygulanmış hâli. Her kutu o depodaki gerçek koddur, rakamlar da o koddaki rakamlardır.",
     "drawingAlt": "Briefing formunun sistem akışı. Tarayıcı yanıtları bir Turnstile belirteciyle tek bir rotaya gönderir; rota kaynağı ve hız sınırını denetler, şemayı doğrular, bot denetimlerini yapar, metni temizler ve bir öncelik sınıfı belirler; ardından imzalı webhook ya da TLS üzerinden SMTP ile stüdyo posta kutusuna iletir. Başarısız her adım isteği reddeder ve ziyaretçiye bir e-posta taslağı önerir.",
     "drawingLegend": "Düz çizgi: bir briefing’in yolu. Kesikli çizgi: başarısız her adım orada biter. İstek reddedilir ve yanıtlarınız e-posta taslağı olarak açılır, böylece alınmamış hiçbir şey alınmış diye gösterilmez.",
     "foundingLabel": "Kuruluş ilkeleri",
@@ -524,7 +526,7 @@
       "outRejected": "Sıfır güven kontrolünde reddedildi. İleti iş sistemine hiç ulaşmadı.",
       "outDuplicate": "Onaylandı, iki kez işlenmedi: idempotency anahtarı daha önce görülmüştü.",
       "outUnavailable": "Web Crypto bu tarayıcı bağlamında kullanılamıyor; bu yüzden canlı hesaplama çalışamıyor.",
-      "caption": "Tarayıcınızda, tek kullanımlık anahtarlarla çalışır; hiçbir veri bu sayfadan çıkmaz. Bir deseni gösterir; hiçbir üretim sistemini anlatmaz, ölçmez ya da belgelemez ve adı geçen ürünlerle bir ortaklık ima edilmez. İmzalama adımı, bu sitenin kendi briefing’lerini teslim etmek için kullandığı desenin aynısıdır."
+      "caption": "Tarayıcınızda, tek kullanımlık anahtarlarla çalışır; hiçbir veri bu sayfadan çıkmaz. Bir deseni gösterir; hiçbir üretim sistemini anlatmaz, ölçmez ya da belgelemez ve adı geçen ürünlerle bir ortaklık ima edilmez. İmzalama adımı, depomuzdaki briefing formunun kendi briefing’lerini teslim etmek için kullandığı desenin aynısıdır."
     },
     "integration": {
       "title": "Tek olay, dört sistem",
@@ -559,7 +561,7 @@
     "integrationTitle": "Entegrasyon ve güvenlik",
     "integrationLead": "Zaten çalıştırdığınız sistemlere nasıl bağlandığı ve yolda neyin onu koruduğu.",
     "integrationNote": "Salesforce, SAP, HubSpot ve Oracle entegrasyon hedeflerine örnek olarak anılır. Ürün adları sahiplerine aittir; ortaklık ya da sertifika ima edilmez.",
-    "impactTitle": "Ölçülen etki ve yatırım getirisi",
+    "impactTitle": "Ölçülen etki",
     "impactLead": "Ölçülerek gösterebildiklerimiz ve geri kalanının sizinle nasıl belirlendiği.",
     "measuredTitle": "syncflow.agency üzerinde ölçüldü",
     "measuredLead": "Bu numunenin arkasındaki ön yüz katmanı, bu siteyi çalıştıran katmandır. Aşağıdakiler yayınlanmış ve tarihli ölçümlerdir.",
@@ -570,8 +572,8 @@
     "desktop": "masaüstü",
     "mobile": "mobil",
     "metricCaption": "{tool}, {profile}, {date}.",
-    "roiTitle": "Yatırım getirisi",
-    "roiText": "Bir numune için getiri yayınlamayız ve getiri vaat etmeyiz. Gerçek bir çalışmada getiri sizinle, üç adımda belirlenir.",
+    "roiTitle": "Etki nasıl belirlenir",
+    "roiText": "Bir numune için sonuç yayınlamayız ve sonuç vaat etmeyiz. Gerçek bir çalışmada etki sizinle, üç adımda belirlenir.",
     "roi1Title": "Başlangıç",
     "roi1": "İlk hafta, operasyonunuz için bugün önemli olan sayıları kaydederiz.",
     "roi2Title": "Hedef",
@@ -600,7 +602,7 @@
       "i3": "Her teslimat HMAC-SHA256 ile imzalanır ve bir idempotency anahtarı taşır; bu yüzden bir yeniden deneme alıcı tarafından tanınır ve ikinci bir talep yaratmak yerine atılır. Sırlar sunucuda kalır.",
       "m1": "Talepten ilk kişisel yanıta kadar geçen süre",
       "m2": "Eksiksiz ve nitelikli gelen taleplerin payı",
-      "m3": "Taleplerden gezilere dönüşüm oranı",
+      "m3": "Taleplerden gezilere oran",
       "note": "Kurgusal bir konutun konsept render’ı. Hiçbir mülk sunulmaz; fiyat, müsaitlik ya da sonuç iddia edilmez."
     },
     "clinic": {
@@ -616,7 +618,7 @@
       "i3": "Her ileti imzalanır ve doğrulanır, sistemler arasında hareket etmeden önce AES-256 ile mühürlenir ve erişim en az ayrıcalık ilkesini izler.",
       "m1": "Talepten ilk kişisel yanıta kadar geçen süre",
       "m2": "Eksiksiz gelen taleplerin payı",
-      "m3": "Taleplerden randevulara dönüşüm oranı",
+      "m3": "Taleplerden randevulara oran",
       "note": "Kurgusal bir kliniğin konsept render’ı. Sağlık iletişimi kuralları geçerlidir (fiyat, indirim, sonuç galerisi ya da hasta yorumu yok); bunları uygulamak kliniğin sorumluluğudur ve her söz kliniğin onayına tabidir."
     },
     "law": {
@@ -666,6 +668,7 @@
     "metaTitle": "{title} | Mimari Ar-Ge numunesi",
     "studioSite": {
       "tag": "Referans: bu site",
+      "tagReference": "Referans mimari: bu site",
       "title": "Sıfır güvenli briefing hattı, ölçülen bir performans bütçesine bağlı",
       "card": "Stüdyonun kendi kapısı: doğrulayamadığını reddeden, çerezsiz bir hat ve bağlı olduğu bütçeler.",
       "metaDescription": "Numune 01: syncflow.agency’nin mühendisliği bir ölçüt olarak. Ölçülen Lighthouse, yerleşim kayması ve kare ritmi bütçelerine bağlı, sıfır güvenli ve çerezsiz bir briefing hattı. Araştırma ve geliştirme, müşteri işi değildir.",

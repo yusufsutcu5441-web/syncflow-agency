@@ -86,23 +86,23 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 
 `npm run release:verify` (`scripts/release-verify.mjs`): teslim ve bot denetimi değişkenleri **bilerek tanımsız**, sunucuda yalnızca Cloudflare'in her zaman geçen test gizli anahtarı. Her sürümün sonucu kendi etiketine aittir; **farklı etiketten sayı alıntılanmaz.**
 
-### 7.0 `main` + ADR 0035, satışa hazır sürüm (etiketsiz; yerel, 22.10.2026, yaklaşık 990 sn)
+### 7.0 `main` + ADR 0035, satışa hazır sürüm ve düzeltme turu (etiketsiz; yerel, 22.10.2026, 906 sn)
 
-[ADR 0035](adr/0035-sales-ready-release.md): fiyat, form ve hukuki taslak bayraklara bağlandı, diller `en,tr`, her çağrı bir e-posta bağlantısı. **Yeni etiket atılmadı; push edilmedi.** Kapı artık **iki derleme** sınar ve 11 adımdır. Aşağıdaki sayılar bu commit'e aittir, `release-2026-10-19b` etiketine değil (o etiketin sayıları değişmez).
+[ADR 0035](adr/0035-sales-ready-release.md): fiyat, form ve hukuki taslak bayraklara bağlandı, diller `en,tr`, her çağrı bir e-posta bağlantısı. Aynı günün düzeltme turu (ADR 0035 §8: getiri ve sonuç vaatleri nötrleştirildi, form kapalıyken Çizim 01 ve Numune 01 "Referans mimari" etiketli, adres düz metin de görünür, mailto kodlayıcısı birim testli) ikinci commit'tir. **Yeni etiket atılmadı; push edilmedi.** Kapı artık **iki derleme** sınar ve 11 adımdır. Aşağıdaki sayılar düzeltme turunun commit'ine aittir (ilk commit `63c231b` için: denetim 247, teslim 16/16, duman 197/197 ve 164/164, tarayıcı 315/315); `release-2026-10-19b` etiketine ait değildir (o etiketin sayıları değişmez). Süre, adım sürelerinin toplamıdır.
 
 | Adım | Süre | Sonuç |
 |---|---|---|
-| Tip denetimi, lint, mesaj eşitliği (`en`, `tr`) | 95 sn | yeşil |
-| Tasarım denetimi, özellikli derleme (her bayrak açık) | 19 sn | **247 geçti, 0 hata**, 1 uyarı, 4 bilgi |
-| Teslim sözleşme testleri | 2 sn | 16/16 |
+| Tip denetimi, lint, mesaj eşitliği (`en`, `tr`) | 21 sn | yeşil |
+| Tasarım denetimi, özellikli derleme (her bayrak açık) | 22 sn | **251 geçti, 0 hata**, 1 uyarı, 4 bilgi |
+| Teslim sözleşme testleri ve mailto kodlayıcısı | 3 sn | **26/26** (16 teslim + 10 kodlayıcı) |
 | Referans mimari sözleşme testleri | 2 sn | 65/65 |
-| HTTP duman testi, özellikli derleme (yedi dil) | 8 sn | **197/197** |
-| CSP ihlali ve konsol hatası (12 ziyaret) | 100 sn | 0 / 0 |
-| Gerçek tarayıcı akışı, özellikli derleme | 732 sn | **315/315** |
-| Varsayılan sürümün derlemesi (her bayrak kapalı) | 17 sn | yeşil |
-| HTTP duman testi, varsayılan sürüm | 11 sn | **164/164** |
+| HTTP duman testi, özellikli derleme (yedi dil) | 9 sn | **199/199** |
+| CSP ihlali ve konsol hatası (12 ziyaret) | 102 sn | 0 / 0 |
+| Gerçek tarayıcı akışı, özellikli derleme | 716 sn | **315/315** |
+| Varsayılan sürümün derlemesi (her bayrak kapalı) | 19 sn | yeşil |
+| HTTP duman testi, varsayılan sürüm | 12 sn | **167/167** |
 
-Rota taraması, aranan izler ve gerçek Chrome'da çerez/depolama/üçüncü taraf denetimi: ADR 0035 §7.
+Rota taraması, aranan izler ve gerçek Chrome'da çerez/depolama/üçüncü taraf denetimi: ADR 0035 §7. Düzeltme turunun kapsamı, dosya:satır listesi ve mailto href'i: ADR 0035 §8.
 
 ### 7.1 `release-2026-10-19b` (yerel, temiz derleme, 19.10.2026, 844 sn)
 

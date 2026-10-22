@@ -794,9 +794,9 @@ const G11 = "11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar";
     for (const l of PUBLIC_LOCALES) { const b = readJSON(`messages/${l}.json`).Breakdown ?? {}; for (const slug of SLUGS) for (const k of KEYS) if (!b[slug]?.[k]) missing.push(`${l}:${slug}.${k}`); for (const k of COMMON) if (!b[k]) missing.push(`${l}:${k}`); }
     missing.length ? add(G11, "FAIL", `inceleme metni eksik (${missing.length}): ${missing.slice(0, 4).join(", ")}`) : add(G11, "PASS", `dört sektör × ${KEYS.length} metin ve ${COMMON.length} ortak metin, yedi dilde de var`);
 
-    // 2) Dört başlık sırasıyla: Challenge, Architectural solution, Integration & security, Measured impact & ROI (ve numune etiketi).
+    // 2) Dört başlık sırasıyla: Challenge, Architectural solution, Integration & security, Measured impact (ve numune etiketi). Dördüncü başlık "Measured impact & ROI" idi; ROI ölçülmemiş bir getiri sözüydü, 22.10.2026'da (ADR 0035, düzeltme turu) kalktı.
     const en = readJSON("messages/en.json").Breakdown;
-    [en.challengeTitle, en.solutionTitle, en.integrationTitle, en.impactTitle].join("|") === "Challenge|Architectural solution|Integration & security|Measured impact & ROI" && /not client work/.test(en.specimen) ? add(G11, "PASS", "dört başlık istenen adlarla ve sırayla; her inceleme 'client work değildir' diyor") : add(G11, "FAIL", "dört başlık ya da numune ibaresi istenenle uyuşmuyor");
+    [en.challengeTitle, en.solutionTitle, en.integrationTitle, en.impactTitle].join("|") === "Challenge|Architectural solution|Integration & security|Measured impact" && /not client work/.test(en.specimen) ? add(G11, "PASS", "dört başlık istenen adlarla ve sırayla (dördüncüsü ROI'siz); her inceleme 'client work değildir' diyor") : add(G11, "FAIL", "dört başlık ya da numune ibaresi istenenle uyuşmuyor");
     const view = code("components/sections/BreakdownView.tsx"), loader = code("lib/server/breakdown.ts");
     /id="bd-impact"/.test(view) && /\bparts\.map/.test(view) && /impact\.tiles\.map/.test(view) ? add(G11, "PASS", "inceleme görünümü üç bölümü ve etki panelini sırayla çiziyor (sayfa ve diyalog aynı bileşeni kullanır)") : add(G11, "FAIL", "BreakdownView dört bölümü sırayla çizmiyor");
 
@@ -1038,11 +1038,14 @@ const G13 = "13. Satışa hazır sürüm (ADR 0035)";
     const hardcoded = files.filter((f) => address.test(stripComments(fs.readFileSync(f, "utf8")))).map(rel);
     hardcoded.length === 0 && /NEXT_PUBLIC_CONTACT_EMAIL/.test(code("lib/site.ts")) ? add(G13, "PASS", "kodda e-posta adresi yazılı değil: tek iletişim adresi NEXT_PUBLIC_CONTACT_EMAIL'dan gelir, bağlantıları lib/contact.ts kurar")
       : add(G13, "FAIL", `kodda yazılı e-posta adresi var ya da lib/site.ts NEXT_PUBLIC_CONTACT_EMAIL'ı okumuyor: ${hardcoded.join(", ")}`);
-    // 4) Çağrı bağlantıları: denetim çağrısının konusu ve gövdesi brief'teki gibi.
-    const contact = code("lib/contact.ts");
-    /AUDIT_SUBJECT = 'Free site audit request'/.test(contact) && /AUDIT_BODY = 'Website URL:\\n\\nWhat matters most \(speed \/ SEO \/ mobile \/ redesign\):\\n'/.test(contact) && ["en", "tr"].every((l) => (readJSON(`messages/${l}.json`).Contact?.auditCta ?? "").length > 0)
-      ? add(G13, "PASS", "ücretsiz site denetimi çağrısı: konu 'Free site audit request', gövde 'Website URL:' ve 'What matters most (speed / SEO / mobile / redesign):'; EN ve TR etiketi var")
-      : add(G13, "FAIL", "denetim çağrısının konusu, gövdesi ya da EN/TR etiketi eksik");
+    // 4) Çağrı bağlantıları: denetim çağrısının konusu ve gövdesi istendiği gibi; tek kodlayıcı lib/mailto.ts (satır sonları %0D%0A, RFC 6068) ve birim testi var.
+    const contact = code("lib/contact.ts"), mailto = code("lib/mailto.ts");
+    /AUDIT_SUBJECT = 'Free site audit request'/.test(mailto) && /AUDIT_BODY = 'Website URL:\\n\\nWhat matters most \(speed \/ SEO \/ mobile \/ redesign\):\\n'/.test(mailto) && /replace\(\/\\r\\n\|\\r\|\\n\/g, '\\r\\n'\)/.test(mailto) && /buildMailto\(CONTACT_EMAIL/.test(contact) && ["en", "tr"].every((l) => (readJSON(`messages/${l}.json`).Contact?.auditCta ?? "").length > 0)
+      ? add(G13, "PASS", "ücretsiz site denetimi çağrısı: konu 'Free site audit request', gövde 'Website URL:' ve 'What matters most (speed / SEO / mobile / redesign):'; EN ve TR etiketi var; bağlantıyı tek kodlayıcı kurar ve gövdenin satır sonları %0D%0A olur")
+      : add(G13, "FAIL", "denetim çağrısının konusu, gövdesi, CRLF kodlaması ya da EN/TR etiketi eksik");
+    exists("tests/delivery/mailto.test.mjs") && /\['lib', 'mailto'\]/.test(read("scripts/delivery-verify.mjs"))
+      ? add(G13, "PASS", "mailto kodlayıcısının birim testi var ve `npm run delivery:verify` onu koşar (tam href, %0D%0A, yedi özel karakter, adres kodlaması)")
+      : add(G13, "FAIL", "tests/delivery/mailto.test.mjs yok ya da delivery-verify onu koşmuyor");
     // 5) Tutamayacağımız söz yok: varsayılan sürümde görünen ad alanlarında NDA ve yanıt süresi sözü, ve kısa bildirimlerde yer tutucu yok (en, tr).
     const flat = (o, p = "", out = {}) => { for (const [k, v] of Object.entries(o)) typeof v === "object" && v ? flat(v, `${p}${k}.`, out) : (out[`${p}${k}`] = v); return out; };
     // "NDA" is matched case-sensitively: with /i it hits Turkish words ("...ında", "...ında") because JavaScript's \b does not know ı, ş, ğ.
@@ -1059,6 +1062,21 @@ const G13 = "13. Satışa hazır sürüm (ADR 0035)";
     }
     bad.length === 0 ? add(G13, "PASS", "EN ve TR'de NDA, 24 saat ve faturalı sözü yok (formun iki çipi ve eski uzun taslak hariç; onlar gösterilmez ya da yalnızca form açıkken görünür); kısa bildirimlerde yer tutucu yok")
       : add(G13, "FAIL", `tutamayacağımız söz ya da taslak izi: ${bad.slice(0, 5).join(", ")}`);
+    // 5b) Getiri sözü yok: EN ve TR metinlerinde "High-ROI", ROI, "Return on investment", "yatırım getirisi", "yüksek getirili" geçmez (ölçülmemiş getiri sözü; ADR 0035 düzeltme turu).
+    const returnPromise = /high-ROI|\bROI\b|return on investment|yatırım getirisi|yüksek getirili|conversion (?:rate|increase|lift|uplift)|dönüşüm (?:oranı|artışı)/i;
+    const returns = [];
+    for (const l of ["en", "tr"]) for (const [k, v] of Object.entries(flat(readJSON(`messages/${l}.json`)))) if (typeof v === "string" && returnPromise.test(v)) returns.push(`${l}:${k}`);
+    returns.length === 0 ? add(G13, "PASS", "EN ve TR metinlerinde getiri sözü yok (High-ROI, ROI, yatırım getirisi): vaka sayfasının dördüncü bölümü 'Measured impact' ve etkinin nasıl belirleneceğini anlatır, bir sonuç vaat etmez")
+      : add(G13, "FAIL", `ölçülmemiş getiri sözü: ${returns.slice(0, 5).join(", ")}`);
+    // 5c) Form kapalıyken Çizim 01, Numune 01 ve ikinci olgu canlı bir form varmış izlenimi vermez: "Reference architecture" etiketi ve formsuz metin bayrağa bağlıdır.
+    const studioSrc = code("components/sections/Studio.tsx"), specimenSrc = code("lib/server/specimen.ts");
+    ["en", "tr"].every((l) => { const m = readJSON(`messages/${l}.json`); return m.Studio?.referenceLabel && m.Studio?.f2TextNoForm && m.Specimen?.studioSite?.tagReference; }) && /BRIEFING_ENABLED \? t\('drawingLabel'\) : `\$\{t\('referenceLabel'\)\}/.test(studioSrc) && /slug === 'studio-site' && !BRIEFING_ENABLED \? sp\('studioSite\.tagReference'\)/.test(studioSrc) && /n === 2 && !BRIEFING_ENABLED \? t\('f2TextNoForm'\)/.test(studioSrc) && /slug === 'studio-site' && !BRIEFING_ENABLED \? t\('studioSite\.tagReference'\)/.test(specimenSrc)
+      ? add(G13, "PASS", "form kapalıyken Çizim 01 ve Numune 01 'Reference architecture' (TR 'Referans mimari') diye etiketlenir ve ikinci olgu bot denetimi olan bir form adlandırmaz")
+      : add(G13, "FAIL", "Çizim 01 / Numune 01 etiketi ya da formsuz ikinci olgu bayrağa bağlı değil");
+    // 5d) İletişim adresi, e-posta çağrısının yanında düz metin olarak da görünür (mailto açmayan tarayıcı için): hero (form kapalıyken), footer ve vaka çağrısı.
+    /select-all/.test(code("components/sections/Hero.tsx")) && /select-all/.test(code("components/layout/Footer.tsx")) && /data\.cta\.email/.test(code("components/sections/BreakdownView.tsx")) && /email: HAS_CONTACT \? CONTACT_EMAIL : ''/.test(code("lib/server/cta.ts"))
+      ? add(G13, "PASS", "adres, e-posta çağrılarının yanında düz metin olarak da görünür (hero, footer, vaka çağrısı; kapanış bölümünde zaten vardı)")
+      : add(G13, "FAIL", "iletişim adresi hero, footer ya da vaka çağrısında düz metin olarak görünmüyor");
     // 6) Fiyat bayrağı kapalıyken kapıdaki para birimi etiketi çizilmez; chip'ler (NDA, yanıt süresi) bölümde yok.
     /SHOW_PRICING \? \(\s*<span className="gate-market-currency"/.test(code("components/gate/EntryGate.tsx")) && !/chipNda|chipPerson/.test(code("components/sections/BriefingSection.tsx"))
       ? add(G13, "PASS", "kapıdaki para birimi etiketi fiyat bayrağına bağlı; NDA ve yanıt süresi çipleri sayfada çizilmez")

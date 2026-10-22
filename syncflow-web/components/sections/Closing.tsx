@@ -45,23 +45,26 @@ export async function Closing() {
               </div>
             </>
           ) : null}
-          <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-3">
-            {links.map((link) => (
-              <li key={link.id}>
-                {link.external ? (
-                  <a href={link.href} target="_blank" rel="noopener noreferrer" className="footer-link inline-flex items-center gap-1.5">
-                    {link.label}
-                    <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
-                  </a>
-                ) : (
-                  <Link href={link.href} prefetch={false} className="footer-link inline-flex items-center gap-1.5">
-                    {link.label}
-                    <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
+          {/* No empty list: with the briefing form off and no social address configured there is nothing to link. */}
+          {links.length > 0 ? (
+            <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-3">
+              {links.map((link) => (
+                <li key={link.id}>
+                  {link.external ? (
+                    <a href={link.href} target="_blank" rel="noopener noreferrer" className="footer-link inline-flex items-center gap-1.5">
+                      {link.label}
+                      <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                    </a>
+                  ) : (
+                    <Link href={link.href} prefetch={false} className="footer-link inline-flex items-center gap-1.5">
+                      {link.label}
+                      <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       </div>
     </section>
