@@ -1,7 +1,7 @@
 {
   "Meta": {
     "title": "syncflow.agency | Dijital mimari stüdyosu",
-    "description": "Adı işin kendisi olan sahipler, ortaklar ve yöneticiler için dijital mimari stüdyosu. Her çalışma bir Stratejik Briefing ile başlar.",
+    "description": "Adı işin kendisi olan sahipler, ortaklar ve yöneticiler için dijital mimari stüdyosu.",
     "ogTitle": "Karanlıkta inşa edilir. Sıvı gibi akar.",
     "ogSubtitle": "Adı işin kendisi olan yöneticiler için dijital mimari.",
     "ogDescription": "Kurumsal ölçekte dijital mimari. Sessizce tamamlanır; vaat edilmez, ölçülür.",
@@ -28,7 +28,7 @@
   "Gate": {
     "eyebrow": "Dijital mimari stüdyosu",
     "title": "Finans merkezinizi seçin.",
-    "lead": "Pazarınız dili önerir ve briefing’in para birimini belirler. Seçiminiz yalnızca sayfa adresinde saklanır; çerez ve tarayıcı depolaması kullanmayız.",
+    "lead": "Pazarınız dili önerir. Seçiminiz yalnızca sayfa adresinde saklanır; çerez ve tarayıcı depolaması kullanmayız.",
     "marketLabel": "Finans merkezi",
     "languageLabel": "Dil",
     "us": "Amerika Birleşik Devletleri ve küresel",
@@ -166,7 +166,7 @@
   "Briefing": {
     "label": "04 — Stratejik briefing",
     "title": "Bir form değil.\nNiyet taşıyan bir konuşma.",
-    "subtitle": "Dört adım, yatırımla başlar. Karşılığında 24 saat içinde kurucu ekibimizden kişisel bir geri dönüş.",
+    "subtitle": "Dört adım, yatırımla başlar.",
     "panelLabel": "Stratejik briefing, dört adım",
     "stepOf": "Adım {current} / {total}",
     "progressLabel": "İlerleme",
@@ -251,7 +251,7 @@
     "fieldConsent": "Devam etmek için lütfen onaylayın.",
     "fieldInvalid": "Lütfen desteklenmeyen karakterleri kaldırın.",
     "successTitle": "Briefing alındı.",
-    "successBody": "Kurucu ekibimiz talebinizi inceliyor. 24 saat içinde, {email} adresinden size kişisel olarak yazacağız.",
+    "successBody": "Talebiniz bize ulaştı. Size {email} adresinden yazacağız.",
     "successLink": "Bu arada vitrine bakın",
     "devOnly": "Geliştirme modu: webhook tanımlı değil, bu yüzden e-posta gönderilmedi.",
     "mailSubject": "Stratejik briefing",
@@ -323,6 +323,31 @@
     "retry": "Tekrar dene",
     "home": "Ana sayfaya dön"
   },
+  "Contact": {
+    "auditCta": "Ücretsiz 1 sayfalık site analizi isteyin",
+    "ctaTitle": "Stüdyoya yazın.",
+    "ctaText": "Ne kurduğunuzu kısa bir notla iletin."
+  },
+  "Notice": {
+    "back": "Ana sayfaya dön",
+    "updated": "Son güncelleme: {date}",
+    "imprintTitle": "Künye",
+    "imprintLead": "SyncFlow, kuruluş aşamasında bağımsız bir dijital mühendislik stüdyosudur.",
+    "contactLabel": "İletişim",
+    "registration": "Kayıt bilgileri tamamlandığında yayımlanacaktır.",
+    "privacyTitle": "Gizlilik bildirimi",
+    "privacyLead": "Bu web sitesinin veriyle ne yaptığı, sade biçimde.",
+    "hostingTitle": "Barındırma ve teknik veriler",
+    "hosting": "Site Vercel üzerinde barındırılır. Bir sayfayı açtığınızda barındırıcı, her web isteğinin taşıdığı teknik verileri alır: IP adresiniz, istediğiniz adres, tarayıcı türünüz ve zaman gibi. Barındırıcı bu verileri siteyi sunmak ve korumak için işler.",
+    "limitTitle": "Kötüye kullanım koruması",
+    "limit": "Kötü niyetli trafiği engellemek için sunucu, istekleri IP adresi başına yaklaşık bir dakika boyunca belleğinde sayar.",
+    "cookiesTitle": "Çerezler ve analitik",
+    "cookies": "Bu site çerez bırakmaz ve analitik çalıştırmaz. Üçüncü taraflardan betik, yazı tipi, görsel ya da video yüklemez. Dil ve bölge seçiminiz sayfa adresinde kalır.",
+    "emailTitle": "E-posta",
+    "email": "Bize e-posta yazarsanız mesajınızı ve adresinizi yalnızca size yanıt vermek için kullanırız.",
+    "requestTitle": "Sorular ve silme",
+    "request": "Hakkınızda ne tuttuğumuzu sormak ya da silinmesini istemek için {email} adresine yazın."
+  },
   "Legal": {
     "back": "Ana sayfaya dön",
     "draft": "Taslak: yayından önce [köşeli parantezli] alanları doldurun ve sayfayı bir avukata inceletin.",
@@ -369,7 +394,7 @@
     "p1Text": "Hata, özür dilenecek değil, tasarımdan çıkarılacak bir şeydir. Her değişiklik biz “bitti” demeden önce denetlenir, duman testinden geçer ve canlı sitede kontrol edilir; performans hakkında yayınladığımız her şey ölçülmüş, tarihli ve kaynaklıdır. Sıfır hata, çalıştığımız ölçüdür; sizin adınıza imzalayabileceğimiz bir söz değildir.",
     "p1Link": "Ölçümleri görün",
     "p2Title": "Varsayılan olarak gizli.",
-    "p2Text": "İlk çalışma oturumumuzdan önce karşılıklı bir NDA imzalanabilir. Müşteri işi yazılı onay olmadan gösterilmez; vitrinde yalnızca stüdyonun kendi numunelerinin bulunmasının nedeni budur. Bu site çerez bırakmaz, analitik çalıştırmaz ve her briefing’i bir insan okur.",
+    "p2Text": "Müşteri işi yazılı onay olmadan gösterilmez; vitrinde yalnızca stüdyonun kendi numunelerinin bulunmasının nedeni budur. Bu site çerez bırakmaz ve analitik çalıştırmaz.",
     "p2Link": "Gizlilik bildirimini okuyun",
     "p3Title": "Donanım seviyesine kadar mühendislik.",
     "p3Text": "Video cihazın kendi video donanımıyla çözülür, hareket GPU’da birleştirilir, kaydırma ekranın kare ritmini izler ve kare bütçesi ölçülür. Süs olan hiçbir şeyin ziyaretçiye tek bir kareye mal olmasına izin verilmez.",
@@ -558,7 +583,7 @@
     "howText": "Her numunenin arkasındaki mühendislik: donanımla çözülen video, kare disiplini ve yumuşak kaydırma toleransları.",
     "howLink": "Teknik notları okuyun",
     "ctaTitle": "Bir briefing ile başlayın.",
-    "ctaText": "Dört adım ve 24 saat içinde kurucu ekibimizden kişisel bir geri dönüş.",
+    "ctaText": "Ne kurduğunuzu dört adımda anlatın.",
     "back": "Tüm numuneler",
     "metaTitle": "{title} | Mimari inceleme",
     "metaDescription": "{tag} için bir stüdyo numunesi: zorluk, mimari çözüm, entegrasyon ve güvenlik ile ölçülen etki. Müşteri işi değildir.",

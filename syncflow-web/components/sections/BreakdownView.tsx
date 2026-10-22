@@ -19,8 +19,13 @@ export function BreakdownView({ data, variant, onAnchor }: { data: BreakdownData
   const hashOf = (href: string) => href.slice(href.indexOf('#') + 1);
 
   // In the dialog a link to a section of the home page closes the dialog and lets the page scroll there; on the page it is a plain link.
+  // A mail link (the closing action while the briefing form is not offered, lib/server/cta.ts) is a plain anchor in both.
   const anchor = (href: string, className: string, children: ReactNode) =>
-    variant === 'dialog' && onAnchor ? (
+    href.startsWith('mailto:') ? (
+      <a href={href} className={className}>
+        {children}
+      </a>
+    ) : variant === 'dialog' && onAnchor ? (
       <a
         href={`#${hashOf(href)}`}
         className={className}
@@ -161,17 +166,24 @@ export function BreakdownView({ data, variant, onAnchor }: { data: BreakdownData
       </aside>
 
       <footer className="bd-cta">
-        <Heading className="bd-h">{data.cta.title}</Heading>
-        <p className="body-muted mt-3 max-w-xl">{data.cta.text}</p>
+        {/* No action when none is configured (no briefing form and no contact address): only the way back is left. */}
+        {data.cta.href ? (
+          <>
+            <Heading className="bd-h">{data.cta.title}</Heading>
+            <p className="body-muted mt-3 max-w-xl">{data.cta.text}</p>
+          </>
+        ) : null}
         <div className="mt-7 flex flex-wrap items-center gap-3">
-          {anchor(
-            data.cta.href,
-            'btn btn-primary',
-            <>
-              <span>{data.cta.label}</span>
-              <ArrowUpRight size={18} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
-            </>,
-          )}
+          {data.cta.href
+            ? anchor(
+                data.cta.href,
+                'btn btn-primary',
+                <>
+                  <span>{data.cta.label}</span>
+                  <ArrowUpRight size={18} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                </>,
+              )
+            : null}
           {anchor(
             data.cta.backHref,
             'btn btn-ghost',

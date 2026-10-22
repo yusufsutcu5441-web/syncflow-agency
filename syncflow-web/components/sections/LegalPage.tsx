@@ -2,8 +2,10 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import type { AppLocale } from '@/i18n/routing';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { LEGAL_UPDATED } from '@/lib/site';
+import { LegalNotice } from './LegalNotice';
 
 /**
  * The privacy notice in the order of KVKK art. 10 / GDPR art. 13: who is responsible (p1), what is processed, why and on which
@@ -16,13 +18,23 @@ const PRIVACY = ['p1', 'p2', 'p8', 'p9', 'p3', 'p4', 'p5', 'p6', 'p7'] as const;
 const IMPRINT = ['i1', 'i2', 'i3', 'i4', 'i5'] as const;
 
 /**
- * Privacy notice / legal notice. Drafts with [BRACKETED] fields to complete and no lawyer's review yet (see README: launch checklist).
- * The seven public languages carry the text (docs/adr/0018); a language without it (the dormant Japanese draft) shows the English
- * text (lib/merge-messages.ts), marked as such.
+ * The privacy page and the legal notice. Two texts, one switch (lib/flags.ts, docs/adr/0035-sales-ready-release.md):
+ *  - the briefing form is NOT offered (the default): the short, finished notices of LegalNotice.tsx. They state only what the code and the
+ *    hosting setup show, and no placeholder, draft banner or legal conclusion appears in them;
+ *  - the briefing form IS offered: the long KVKK / GDPR notice below, which describes the form (its answers, the bot check, the delivery
+ *    processors). It still has [BRACKETED] fields and no lawyer's review (see README: launch checklist), so complete it before the form goes live.
+ */
+export function LegalPage({ kind }: { kind: 'privacy' | 'imprint' }) {
+  return BRIEFING_ENABLED ? <DraftLegalPage kind={kind} /> : <LegalNotice kind={kind} />;
+}
+
+/**
+ * The long draft (form switched on). The seven public languages carried the text (docs/adr/0018); a language without it (the dormant
+ * drafts) shows the English text (lib/merge-messages.ts), marked as such.
  */
 const LEGAL_TEXT: readonly AppLocale[] = ['en', 'tr', 'ar', 'de', 'fr', 'es', 'zh'];
 
-export async function LegalPage({ kind }: { kind: 'privacy' | 'imprint' }) {
+async function DraftLegalPage({ kind }: { kind: 'privacy' | 'imprint' }) {
   const [t, locale, format] = await Promise.all([getTranslations('Legal'), getLocale() as Promise<AppLocale>, getFormatter()]);
   const privacy = kind === 'privacy';
   const englishFallback = !LEGAL_TEXT.includes(locale);

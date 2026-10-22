@@ -9,6 +9,7 @@ import { Logo } from '@/components/ui/Logo';
 import { OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
 import { holdLayoutBefore, releaseAfterScroll } from '@/lib/cv';
+import { SHOW_PRICING } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { MARKET_DEFAULT_LOCALE, MARKETS, rememberMarket, withMarket, type Market } from '@/lib/market';
 import { PRICING } from '@/lib/pricing';
@@ -217,10 +218,12 @@ export function EntryGate({ entered, market }: { entered: boolean; market: Marke
                   </span>
                   {/* The region is in the page's language. */}
                   <span className="gate-market-note">{t[code]}</span>
-                  {/* The currency comes from the pricing config, so it needs no wording. */}
-                  <span className="gate-market-currency" dir="ltr">
-                    {currency}
-                  </span>
+                  {/* The currency comes from the pricing config, so it needs no wording. It is a price signal, so it is shown only while prices are (lib/flags.ts). */}
+                  {SHOW_PRICING ? (
+                    <span className="gate-market-currency" dir="ltr">
+                      {currency}
+                    </span>
+                  ) : null}
                 </a>
               );
             })}

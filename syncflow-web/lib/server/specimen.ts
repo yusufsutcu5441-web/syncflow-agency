@@ -6,8 +6,8 @@ import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import type { BreakdownData } from '@/lib/breakdown';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
-import { SECTION_IDS } from '@/lib/site';
 import { SPECIMEN_KEY, SPECIMEN_NUMBER, type SpecimenSlug } from '@/lib/specimens';
+import { closingCta } from './cta';
 
 const ROMAN = ['I', 'II', 'III', 'IV'] as const;
 
@@ -40,10 +40,9 @@ const figures = () => (cached ??= queueFigures());
  */
 export async function loadSpecimen(slug: SpecimenSlug, locale: AppLocale): Promise<BreakdownData> {
   const key = SPECIMEN_KEY[slug];
-  const [t, b, show, format] = await Promise.all([
+  const [t, b, format] = await Promise.all([
     getTranslations({ locale, namespace: 'Specimen' }),
     getTranslations({ locale, namespace: 'Breakdown' }),
-    getTranslations({ locale, namespace: 'Showcase' }),
     getFormatter({ locale }),
   ]);
   const number = (n: number, digits = 0) => format.number(n, { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -118,10 +117,7 @@ export async function loadSpecimen(slug: SpecimenSlug, locale: AppLocale): Promi
     note: t(`${key}.note`),
     how: { title: b('howTitle'), text: b('howText'), link: b('howLink'), href: withLocale('/#how-we-built-it', locale) },
     cta: {
-      title: b('ctaTitle'),
-      text: b('ctaText'),
-      label: show('cta'),
-      href: withLocale(`/#${SECTION_IDS.briefing}`, locale),
+      ...(await closingCta(locale)),
       back: b('back'),
       backHref: withLocale('/#specimens', locale),
     },

@@ -38,7 +38,9 @@ Değişkenler **yalnızca panelden** girilir; o yüzden ilk yayında hiçbiri ta
 | Değişken | Değer / kaynak | Gizli mi |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | **tanımlamayın**: varsayılanı `https://syncflow.agency` | hayır |
-| `NEXT_PUBLIC_LAUNCHED_LOCALES` | **tanımlamayın**: varsayılan `en,tr,ar,de,fr,es,zh` (yedi dil, [ADR 0018](adr/0018-seven-capital-centres.md)). Panelde eskiden `en,tr` kalmışsa **silin**, yoksa beş yeni dil 404 verir. Yedi dili geri almak için `en,tr` yazıp yeniden derleyin | hayır |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | **girin** (Production + Preview): sitenin tek iletişim adresi; kodda yazılı değildir, yoksa derlemede hiçbir e-posta bağlantısı olmaz ([ADR 0035](adr/0035-sales-ready-release.md)) | hayır |
+| `NEXT_PUBLIC_SHOW_PRICING`, `NEXT_PUBLIC_BRIEFING_ENABLED` | **tanımlamayın** (kapalı): tutarlar ve briefing formu yoktur; ikisi de `true` olunca geri gelir (form fiyat sorusuyla açıldığından ikisi birden gerekir) | hayır |
+| `NEXT_PUBLIC_LAUNCHED_LOCALES` | **tanımlamayın**: varsayılan `en,tr` (22.10.2026'dan beri, [ADR 0035](adr/0035-sales-ready-release.md)); diğer beş dil 404 verir. Panelde `en,tr,ar,de,fr,es,zh` kalmışsa **silin**, yoksa beş dil açık kalır. Yedi dili geri açmak için `en,tr,ar,de,fr,es,zh` yazıp yeniden derleyin ([ADR 0018](adr/0018-seven-capital-centres.md)) | hayır |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile widget site anahtarı (izinli alan adı: `syncflow.agency`) | hayır |
 | `TURNSTILE_SECRET_KEY` | aynı widget'ın gizli anahtarı | **evet** |
 | `CONTACT_WEBHOOK_URL` | n8n Webhook düğümünün Production URL'si (https) | **evet** |

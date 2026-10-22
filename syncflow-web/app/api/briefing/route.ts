@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { classify, LIMITS } from '@/lib/briefing';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { briefingSchema, toFieldErrors } from '@/lib/schemas/briefing';
 import { clientIp, rateLimit, rateLimitHeaders } from '@/lib/security/rate-limit';
 import { deliverBriefing } from '@/lib/server/deliver';
@@ -46,7 +47,22 @@ function isSameOrigin(request: Request): boolean {
   }
 }
 
+/**
+ * Release switch (lib/flags.ts, docs/adr/0035): while the briefing form is not offered this route does not exist, for every method.
+ * Offered, only POST is served and any other method is refused with 405 as before.
+ */
+const notFound = () => new Response(null, { status: 404, headers: { 'Cache-Control': 'no-store' } });
+const methodNotAllowed = () => new Response(null, { status: 405, headers: { Allow: 'POST', 'Cache-Control': 'no-store' } });
+const other = () => (BRIEFING_ENABLED ? methodNotAllowed() : notFound());
+export const GET = other;
+export const HEAD = other;
+export const PUT = other;
+export const PATCH = other;
+export const DELETE = other;
+export const OPTIONS = other;
+
 export async function POST(request: Request) {
+  if (!BRIEFING_ENABLED) return notFound();
   if (!isSameOrigin(request)) return fail('forbidden', 403);
   if (!(request.headers.get('content-type') ?? '').toLowerCase().startsWith('application/json')) return fail('unsupported', 415);
 

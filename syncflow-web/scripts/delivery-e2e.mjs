@@ -2,7 +2,8 @@
 /**
  * End-to-end check of the briefing delivery on a PRODUCTION build, against fakes on loopback (docs/adr/0034-telegram-lead-alert.md section 4).
  * The signed-webhook receiver and the Telegram Bot API are two small servers in this file; nothing real is contacted except Cloudflare, which verifies
- * its own always-pass Turnstile test secret (so the network is needed). Run `npm run build` first.
+ * its own always-pass Turnstile test secret (so the network is needed). Run the build first, with the briefing form switched on (it is off by default,
+ * lib/flags.ts, docs/adr/0035): NEXT_PUBLIC_SHOW_PRICING=true NEXT_PUBLIC_BRIEFING_ENABLED=true npm run build
  *
  *   npm run delivery:e2e
  *
@@ -120,6 +121,13 @@ async function withServer(env, run) {
     if (!up) {
       check('the production server came up', false, 'not up after 60 s');
       return;
+    }
+    // The briefing form is a release switch (lib/flags.ts, docs/adr/0035): a build with it off has no /api/briefing at all, so there is nothing to test.
+    const probe = await fetch(`${BASE}/api/briefing`, { method: 'POST', headers: { 'content-type': 'text/plain', origin: BASE } });
+    if (probe.status === 404) {
+      child.kill();
+      console.error('\nThis build has the briefing form switched OFF (POST /api/briefing answers 404). Build it with NEXT_PUBLIC_SHOW_PRICING=true NEXT_PUBLIC_BRIEFING_ENABLED=true and run this again.');
+      process.exit(2);
     }
     await run();
   } finally {

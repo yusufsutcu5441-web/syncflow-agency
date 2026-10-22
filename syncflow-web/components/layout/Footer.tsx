@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { getLocale, getNow, getTranslations } from 'next-intl/server';
 import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
+import { auditHref } from '@/lib/contact';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { Flag } from '@/components/ui/Flag';
 import { Logo } from '@/components/ui/Logo';
@@ -14,12 +16,14 @@ import { SECTION_IDS } from '@/lib/site';
  * public (i18n/launch.ts), as plain crawlable links.
  */
 export async function Footer() {
-  const [t, a11y, locale, now] = await Promise.all([
+  const [t, a11y, contact, locale, now] = await Promise.all([
     getTranslations('Footer'),
     getTranslations('A11y'),
+    getTranslations('Contact'),
     getLocale() as Promise<AppLocale>,
     getNow(),
   ]);
+  const audit = auditHref();
 
   const linkClass = 'footer-link';
   const here = (id: string) => withLocale(`/#${id}`, locale);
@@ -46,11 +50,20 @@ export async function Footer() {
                   {t('how')}
                 </Link>
               </li>
-              <li>
-                <Link href={here(SECTION_IDS.briefing)} prefetch={false} className={linkClass}>
-                  {t('briefing')}
-                </Link>
-              </li>
+              {BRIEFING_ENABLED ? (
+                <li>
+                  <Link href={here(SECTION_IDS.briefing)} prefetch={false} className={linkClass}>
+                    {t('briefing')}
+                  </Link>
+                </li>
+              ) : null}
+              {audit ? (
+                <li>
+                  <a href={audit} className={linkClass}>
+                    {contact('auditCta')}
+                  </a>
+                </li>
+              ) : null}
             </ul>
           </div>
 

@@ -1,7 +1,7 @@
 {
   "Meta": {
     "title": "syncflow.agency | Digital architecture studio",
-    "description": "A digital architecture studio for owners, partners and principals whose name is the business. Every engagement begins with a Strategic Briefing.",
+    "description": "A digital architecture studio for owners, partners and principals whose name is the business.",
     "ogTitle": "Built in the dark. Moves like liquid.",
     "ogSubtitle": "Digital architecture for principals whose name is the business.",
     "ogDescription": "Digital architecture at enterprise scale. Finished in silence, measured rather than promised.",
@@ -28,7 +28,7 @@
   "Gate": {
     "eyebrow": "Digital architecture studio",
     "title": "Choose your capital center.",
-    "lead": "Your market suggests the language and sets the currency of the briefing. Your choice stays in the page address; we set no cookies and use no browser storage.",
+    "lead": "Your market suggests the language. Your choice stays in the page address; we set no cookies and use no browser storage.",
     "marketLabel": "Capital center",
     "languageLabel": "Language",
     "us": "United States and global",
@@ -166,7 +166,7 @@
   "Briefing": {
     "label": "04 — Strategic briefing",
     "title": "Not a form.\nA conversation with intent.",
-    "subtitle": "Four steps, beginning with the investment. In return, a personal reply from our founding team within 24 hours.",
+    "subtitle": "Four steps, beginning with the investment.",
     "panelLabel": "Strategic briefing, four steps",
     "stepOf": "Step {current} of {total}",
     "progressLabel": "Progress",
@@ -251,7 +251,7 @@
     "fieldConsent": "Please confirm to continue.",
     "fieldInvalid": "Please remove unsupported characters.",
     "successTitle": "Briefing received.",
-    "successBody": "Our founding team is reviewing your request. Within 24 hours, we will write to you personally from {email}.",
+    "successBody": "Your request has been received. We will write to you from {email}.",
     "successLink": "Meanwhile, view the showcase",
     "devOnly": "Development mode: no webhook is configured, so nothing was sent by email.",
     "mailSubject": "Strategic briefing",
@@ -323,6 +323,31 @@
     "retry": "Try again",
     "home": "Back to home"
   },
+  "Contact": {
+    "auditCta": "Request a free 1-page site audit",
+    "ctaTitle": "Write to the studio.",
+    "ctaText": "Send a short note about what you are building."
+  },
+  "Notice": {
+    "back": "Back to home",
+    "updated": "Last updated: {date}",
+    "imprintTitle": "Legal Notice",
+    "imprintLead": "SyncFlow is an independent digital engineering studio in its founding stage.",
+    "contactLabel": "Contact",
+    "registration": "Registration details will be published once complete.",
+    "privacyTitle": "Privacy notice",
+    "privacyLead": "What this website does with data, in plain terms.",
+    "hostingTitle": "Hosting and technical data",
+    "hosting": "The site is hosted on Vercel. When you open a page, the host receives the technical data every web request carries, such as your IP address, the address you asked for, your browser type and the time. The host processes it to deliver and protect the site.",
+    "limitTitle": "Abuse protection",
+    "limit": "To block abusive traffic, the server counts requests per IP address in its memory for about a minute.",
+    "cookiesTitle": "Cookies and analytics",
+    "cookies": "This site sets no cookies and runs no analytics. It loads no scripts, fonts, images or videos from third parties. Your language and region choice stays in the page address.",
+    "emailTitle": "Email",
+    "email": "If you email us, we use your message and your address only to reply to you.",
+    "requestTitle": "Questions and deletion",
+    "request": "To ask what we hold about you, or to have it deleted, email {email}."
+  },
   "Legal": {
     "back": "Back to home",
     "draft": "Draft: complete the [bracketed] fields and have a lawyer review this page before launch.",
@@ -369,7 +394,7 @@
     "p1Text": "A defect is something to design out, not to apologise for. Every change is audited, smoke-tested and checked on the live site before we call it done, and what we publish about performance is measured, dated and sourced. Zero defects is the standard we work to, never a promise we could sign for you.",
     "p1Link": "See the measurements",
     "p2Title": "Confidential by default.",
-    "p2Text": "A mutual NDA can be signed before our first working session. Client work is never shown without written consent, which is why the showcase holds studio specimens only. This site sets no cookies and runs no analytics, and every briefing is read by a person.",
+    "p2Text": "Client work is never shown without written consent, which is why the showcase holds studio specimens only. This site sets no cookies and runs no analytics.",
     "p2Link": "Read the privacy notice",
     "p3Title": "Engineered down to the hardware.",
     "p3Text": "Video is decoded by the device’s own video hardware, motion is composited on the GPU, scrolling follows the display’s frame rhythm, and the frame budget is measured. Nothing decorative is allowed to cost a visitor a frame.",
@@ -558,7 +583,7 @@
     "howText": "The engineering behind every specimen: hardware-decoded video, frame discipline and smooth-scroll tolerances.",
     "howLink": "Read the technical notes",
     "ctaTitle": "Start with a briefing.",
-    "ctaText": "Four steps, and a personal reply from our founding team within 24 hours.",
+    "ctaText": "Four steps to describe what you are building.",
     "back": "All specimens",
     "metaTitle": "{title} | Architectural breakdown",
     "metaDescription": "A studio specimen for {tag}: the challenge, the architectural solution, integration and security, and the measured impact. Not client work.",

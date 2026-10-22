@@ -6,6 +6,8 @@ import { SceneVideo } from '@/components/media/SceneVideo';
 import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
 import { breakdownPath } from '@/lib/breakdown';
+import { writeHref } from '@/lib/contact';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { SECTION_IDS } from '@/lib/site';
 import { BreakdownHost } from './BreakdownHost';
@@ -26,7 +28,9 @@ const CARDS = [
  * and the visible pill is the accessible link), which BreakdownHost upgrades into a dialog over this page.
  */
 export async function Showcase() {
-  const [t, locale] = await Promise.all([getTranslations('Showcase'), getLocale() as Promise<AppLocale>]);
+  const [t, closing, locale] = await Promise.all([getTranslations('Showcase'), getTranslations('Closing'), getLocale() as Promise<AppLocale>]);
+  // The second action of a card: the briefing while the form is offered, otherwise a plain mail to the studio (lib/contact.ts).
+  const mail = writeHref();
 
   return (
     <section id={SECTION_IDS.showcase} className="section cv cv-showcase" aria-labelledby="showcase-title">
@@ -62,10 +66,17 @@ export async function Showcase() {
                     <span>{t('breakdown')}</span>
                     <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
                   </Link>
-                  <Link href={withLocale(`/#${SECTION_IDS.briefing}`, locale)} prefetch={false} className="footer-link inline-flex items-center gap-1.5 text-sm">
-                    {t('cta')}
-                    <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
-                  </Link>
+                  {BRIEFING_ENABLED ? (
+                    <Link href={withLocale(`/#${SECTION_IDS.briefing}`, locale)} prefetch={false} className="footer-link inline-flex items-center gap-1.5 text-sm">
+                      {t('cta')}
+                      <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                    </Link>
+                  ) : mail ? (
+                    <a href={mail} className="footer-link inline-flex items-center gap-1.5 text-sm">
+                      {closing('emailLabel')}
+                      <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                    </a>
+                  ) : null}
                 </div>
               </div>
             </div>

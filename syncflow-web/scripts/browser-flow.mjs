@@ -16,6 +16,11 @@
  *
  * Read-only: it only reads pages and clicks controls (the briefing form is never submitted). Chrome: CHROME_PATH or a common install path.
  * Exit code 1 when any check fails.
+ *
+ * It drives the FEATURE build: the briefing form, the investment bands and the seven capital-centre languages (docs/adr/0035-sales-ready-release.md). Build it with
+ *   NEXT_PUBLIC_SHOW_PRICING=true NEXT_PUBLIC_BRIEFING_ENABLED=true NEXT_PUBLIC_LAUNCHED_LOCALES=en,tr,ar,de,fr,es,zh NEXT_PUBLIC_CONTACT_EMAIL=<any address> npm run build
+ * (npm run release:verify does that). Run it with the same NEXT_PUBLIC_CONTACT_EMAIL in the environment: the form's draft link and its copy button name that address,
+ * and no address is written in this file. On the default release build, which ships without the form, the briefing groups have nothing to drive and fail on purpose.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -56,6 +61,14 @@ const check = (name, ok, detail = '') => {
   console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? `\n          ${detail}` : ''}`);
 };
 const group = (title) => console.log(`\n${title}`);
+
+// The mailbox the server under test was built with (NEXT_PUBLIC_CONTACT_EMAIL, lib/site.ts): the form's draft link and its copy button name it. Written nowhere in the code.
+const CONTACT = (process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? '').trim();
+if (!CONTACT) {
+  console.error('Set NEXT_PUBLIC_CONTACT_EMAIL to the address the server under test was built with (the briefing form names it); see the note at the top of this file.');
+  process.exit(2);
+}
+const CONTACT_RE = CONTACT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const DESKTOP = { width: 1440, height: 900, deviceScaleFactor: 1 };
 const PHONE = { width: 412, height: 823, deviceScaleFactor: 1.75, isMobile: true, hasTouch: true };
@@ -616,7 +629,7 @@ if (want('briefing')) {
       const link = box?.querySelector('a');
       return { shown: Boolean(box), href: link?.getAttribute('href') ?? '', text: box?.textContent ?? '', received: Boolean(document.querySelector('#briefing .panel-done')) };
     });
-    check('the draft link carries the answers (address, subject, the typed name and email)', drafted.shown && /^mailto:contact@syncflow\.agency\?subject=/.test(drafted.href) && /Test%20Person/.test(drafted.href) && /person%40example\.com/.test(drafted.href), JSON.stringify({ shown: drafted.shown, href: drafted.href.slice(0, 160) }));
+    check('the draft link carries the answers (address, subject, the typed name and email)', drafted.shown && new RegExp(`^mailto:${CONTACT_RE}\\?subject=`).test(drafted.href) && /Test%20Person/.test(drafted.href) && /person%40example\.com/.test(drafted.href), JSON.stringify({ shown: drafted.shown, href: drafted.href.slice(0, 160) }));
     check('nothing was posted to the API and nothing was announced as received', posted.length === 0 && !drafted.received, JSON.stringify({ posted, text: drafted.text.slice(0, 80) }));
 
     // ── the copy button for a visitor whose browser opens no mail app (docs/adr/0028) ────────────────────────────────────────────────
@@ -631,8 +644,8 @@ if (want('briefing')) {
     await tap(copyButton);
     await sleep(400);
     const copied = await page.evaluate(() => ({ clip: window.__clip, note: document.querySelector('#briefing [data-copied]')?.textContent ?? '', failed: Boolean(document.querySelector('#briefing [data-copy-failed]')) }));
-    check('it hands the whole briefing to the clipboard (address, subject, the answers) as plain text', typeof copied.clip === 'string' && /^To: contact@syncflow\.agency\nSubject: .+\n\n/.test(copied.clip) && /Test Person/.test(copied.clip) && /Test Company/.test(copied.clip) && /person@example\.com/.test(copied.clip) && !/[<>]/.test(copied.clip), JSON.stringify(copied.clip?.slice(0, 220)));
-    check('and tells the visitor, naming the address to paste it to', /Copied/.test(copied.note) && /contact@syncflow\.agency/.test(copied.note) && !copied.failed, copied.note);
+    check('it hands the whole briefing to the clipboard (address, subject, the answers) as plain text', typeof copied.clip === 'string' && new RegExp(`^To: ${CONTACT_RE}\\nSubject: .+\\n\\n`).test(copied.clip) && /Test Person/.test(copied.clip) && /Test Company/.test(copied.clip) && /person@example\.com/.test(copied.clip) && !/[<>]/.test(copied.clip), JSON.stringify(copied.clip?.slice(0, 220)));
+    check('and tells the visitor, naming the address to paste it to', /Copied/.test(copied.note) && new RegExp(CONTACT_RE).test(copied.note) && !copied.failed, copied.note);
     await page.evaluate(() => {
       Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => Promise.reject(new Error('blocked')) } });
       document.execCommand = () => false;
@@ -644,7 +657,7 @@ if (want('briefing')) {
       const area = box?.querySelector('textarea');
       return { shown: Boolean(box), readOnly: area?.readOnly ?? false, value: area?.value ?? '', stillCopied: Boolean(document.querySelector('#briefing [data-copied]')) };
     });
-    check('when the browser refuses, the text is shown ready to select (read-only) and the false "copied" note is gone', refused.shown && refused.readOnly && /^To: contact@syncflow\.agency\n/.test(refused.value) && /Test Person/.test(refused.value) && !refused.stillCopied, JSON.stringify(refused).slice(0, 220));
+    check('when the browser refuses, the text is shown ready to select (read-only) and the false "copied" note is gone', refused.shown && refused.readOnly && new RegExp(`^To: ${CONTACT_RE}\\n`).test(refused.value) && /Test Person/.test(refused.value) && !refused.stillCopied, JSON.stringify(refused).slice(0, 220));
   }
   check('no page or console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   await page.close();

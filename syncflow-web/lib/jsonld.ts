@@ -34,7 +34,8 @@ export function buildJsonLd({ locale, siteName, description }: Input) {
         // A raster logo: search engines do not read SVG here (scripts/build-brand.mjs writes it from the B1 monogram).
         logo: `${SITE_URL}/brand/logo-512.png`,
         description,
-        email: CONTACT_EMAIL,
+        // The address comes from the environment (lib/site.ts); with none configured the property is left out.
+        ...(CONTACT_EMAIL ? { email: CONTACT_EMAIL } : {}),
       },
       {
         '@type': 'WebSite',

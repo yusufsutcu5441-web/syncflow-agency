@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { MaskText } from '@/components/ui/MaskText';
 import type { AppLocale } from '@/i18n/routing';
+import { HAS_CONTACT } from '@/lib/contact';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { CONTACT_EMAIL, SECTION_IDS, SOCIAL } from '@/lib/site';
 import { CopyEmail } from './CopyEmail';
@@ -15,7 +17,7 @@ export async function Closing() {
   const [t, locale] = await Promise.all([getTranslations('Closing'), getLocale() as Promise<AppLocale>]);
 
   const links = [
-    { id: 'briefing', label: t('briefing'), href: withLocale(`/#${SECTION_IDS.briefing}`, locale), external: false },
+    ...(BRIEFING_ENABLED ? [{ id: 'briefing', label: t('briefing'), href: withLocale(`/#${SECTION_IDS.briefing}`, locale), external: false }] : []),
     ...(SOCIAL.linkedin ? [{ id: 'linkedin', label: t('linkedin'), href: SOCIAL.linkedin, external: true }] : []),
     ...(SOCIAL.instagram ? [{ id: 'instagram', label: t('instagram'), href: SOCIAL.instagram, external: true }] : []),
     ...(SOCIAL.whatsapp ? [{ id: 'whatsapp', label: t('whatsapp'), href: SOCIAL.whatsapp, external: true }] : []),
@@ -35,10 +37,14 @@ export async function Closing() {
           <h2 className="text-title" data-reveal="block">
             {t('contactTitle')}
           </h2>
-          <p className="label mt-8">{t('emailLabel')}</p>
-          <div className="mt-3">
-            <CopyEmail email={CONTACT_EMAIL} />
-          </div>
+          {HAS_CONTACT ? (
+            <>
+              <p className="label mt-8">{t('emailLabel')}</p>
+              <div className="mt-3">
+                <CopyEmail email={CONTACT_EMAIL} />
+              </div>
+            </>
+          ) : null}
           <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-3">
             {links.map((link) => (
               <li key={link.id}>

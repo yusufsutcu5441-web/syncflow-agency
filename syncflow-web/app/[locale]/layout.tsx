@@ -11,6 +11,7 @@ import { Header } from '@/components/layout/Header';
 import { StickyCta } from '@/components/layout/StickyCta';
 import { isOpenLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { pick } from '@/lib/pick';
 import { SITE_URL } from '@/lib/site';
 import '../globals.css';
@@ -103,7 +104,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 
         <div id="site-root">
           {/* Only the plain strings the interactive widgets read are sent to the browser (no next-intl client runtime). */}
-          <ClientI18nProvider locale={locale} messages={pick(messages, ['Switcher', 'Briefing', 'Showcase', 'Closing', 'ErrorPage', 'Gate'])}>
+          {/* The briefing's strings (Briefing) travel to the browser only while the form is offered (lib/flags.ts); the widgets that read them are not on the page otherwise. */}
+          <ClientI18nProvider locale={locale} messages={pick(messages, ['Switcher', ...(BRIEFING_ENABLED ? (['Briefing'] as const) : []), 'Showcase', 'Closing', 'ErrorPage', 'Gate'])}>
             <Header />
             {children}
             <Footer />

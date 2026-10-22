@@ -11,6 +11,7 @@ import { Hero } from '@/components/sections/Hero';
 import { Showcase } from '@/components/sections/Showcase';
 import { Studio } from '@/components/sections/Studio';
 import { isOpenLocale } from '@/i18n/launch';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { buildJsonLd, jsonLdString } from '@/lib/jsonld';
 import { isCrawler } from '@/lib/crawlers';
 import { MARKET_PARAM, parseMarket } from '@/lib/market';
@@ -45,7 +46,8 @@ export default async function HomePage({ params, searchParams }: Props) {
         <Architecture />
         <Showcase />
         <Studio />
-        <BriefingSection />
+        {/* The briefing form is a release switch (lib/flags.ts, docs/adr/0035): off, the section does not exist and nothing links to it. */}
+        {BRIEFING_ENABLED ? <BriefingSection /> : null}
         <Closing />
       </main>
 

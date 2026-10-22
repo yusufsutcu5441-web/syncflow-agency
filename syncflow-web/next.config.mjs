@@ -22,6 +22,13 @@ const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
 ];
 
+// The public mailbox is configuration, not code (lib/site.ts, docs/adr/0035-sales-ready-release.md): a build without it has no mail link, no
+// contact line and no email in the structured data. Say so loudly instead of shipping that by surprise.
+const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim() ?? '';
+if (process.argv.includes('build') && !/^[^\s@<>"',;:\\]+@[^\s@<>"',;:\\]+\.[^\s@<>"',;:\\]+$/.test(contactEmail)) {
+  console.warn(`\n   WARNING: NEXT_PUBLIC_CONTACT_EMAIL is ${contactEmail ? 'not a valid address' : 'not set'}. This build has NO mail link and NO contact address on the page. Set it on the host and rebuild.\n`);
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,

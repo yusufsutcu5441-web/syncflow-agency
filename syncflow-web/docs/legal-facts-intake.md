@@ -1,5 +1,7 @@
 # Gizlilik ve Künye sayfaları: gerçek bilgi listesi (13 yer tutucu)
 
+> **22.10.2026 güncellemesi ([ADR 0035](adr/0035-sales-ready-release.md)):** varsayılan sürümde briefing formu kapalıdır ve `/privacy` ile `/imprint` **kısa, bitmiş bildirimlerdir** (yer tutucu yok; şirket unvanı, adres ve sicil henüz verilmediği için bunu tek cümleyle söylerler). Aşağıdaki liste, **formu açmadan önce** (uzun taslak geri gelir) ve kısa bildirimleri genişletmek için hâlâ geçerlidir.
+
 `/privacy` ve `/imprint` yedi dilde, KVKK m.10 / GDPR m.13 sırasıyla (9 bölüm) kurulu ve **yapıları tamam**; geriye kalan, yalnızca **sizin bilebileceğiniz 13 olgudur** (şirket unvanı, adres, vergi numarası gibi). Bunları ben uyduramam: uydurulmuş bir unvan, adres ya da vergi numarası, bir hukuki sayfada **yanlış beyan** olur. Bilgi gelince yedi dile işlemek, `Legal.draft` uyarısını ve `noindex`'i kaldırmak, denetimi ve testleri çalıştırmak benim işim.
 
 > **Bu sayfalara "GDPR/CCPA uyumludur" yazılmaz.** Uyum bir hukuki durumdur, kod değil; denetim (`faz2-denetim.mjs`) "compliant / uyumlu / garanti" ifadelerini yasaklar ([ADR 0025](adr/0025-honest-trust-signals.md)). Sayfa, **ne topladığımızı ve neyi toplamadığımızı** doğru anlatır: çerez yok, analitik yok, Cloudflare Turnstile dışında üçüncü taraf yok. Bu doğrulanabilir ve yazılı.

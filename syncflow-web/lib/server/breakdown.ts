@@ -5,6 +5,7 @@ import { BREAKDOWN_PARTS, type BreakdownData, type BreakdownSlug } from '@/lib/b
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
+import { closingCta } from './cta';
 
 const ROMAN = ['I', 'II', 'III', 'IV'] as const;
 
@@ -87,10 +88,7 @@ export async function loadBreakdown(slug: BreakdownSlug, locale: AppLocale): Pro
     note: t(`${slug}.note`),
     how: { title: t('howTitle'), text: t('howText'), link: t('howLink'), href: withLocale('/#how-we-built-it', locale) },
     cta: {
-      title: t('ctaTitle'),
-      text: t('ctaText'),
-      label: show('cta'),
-      href: withLocale(`/#${SECTION_IDS.briefing}`, locale),
+      ...(await closingCta(locale)),
       back: t('back'),
       backHref: withLocale(`/#${SECTION_IDS.showcase}`, locale),
     },

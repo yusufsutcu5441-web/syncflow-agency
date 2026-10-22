@@ -4,6 +4,8 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { Logo } from '@/components/ui/Logo';
 import { MaskLines } from '@/components/ui/MaskText';
 import type { AppLocale } from '@/i18n/routing';
+import { auditHref } from '@/lib/contact';
+import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
@@ -20,7 +22,9 @@ import { SECTION_IDS } from '@/lib/site';
  * brightens, so scrolling feels like moving through the space. On phones and without JavaScript it is the plain one-screen hero.
  */
 export async function Hero() {
-  const [t, locale, format] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getFormatter()]);
+  const [t, locale, format, contact] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Contact')]);
+  // The primary action: the briefing while the form is offered, otherwise the free site audit request as a mail (lib/contact.ts).
+  const audit = auditHref();
 
   const performance = METRICS.lighthousePerformance;
   const cls = METRICS.cls;
@@ -64,10 +68,17 @@ export async function Hero() {
           <p className="lead mt-9 max-w-2xl">{t('subtitle')}</p>
 
           <div id="hero-cta" data-sticky-guard="" className="mt-10 flex flex-col gap-3.5 sm:flex-row sm:items-center">
-            <Link href={withLocale(`/#${SECTION_IDS.briefing}`, locale)} prefetch={false} className="btn btn-primary w-full sm:w-auto" data-magnetic="">
-              <span>{t('ctaPrimary')}</span>
-              <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
-            </Link>
+            {BRIEFING_ENABLED ? (
+              <Link href={withLocale(`/#${SECTION_IDS.briefing}`, locale)} prefetch={false} className="btn btn-primary w-full sm:w-auto" data-magnetic="">
+                <span>{t('ctaPrimary')}</span>
+                <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+              </Link>
+            ) : audit ? (
+              <a href={audit} className="btn btn-primary w-full sm:w-auto" data-magnetic="">
+                <span>{contact('auditCta')}</span>
+                <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+              </a>
+            ) : null}
             <Link href={withLocale(`/#${SECTION_IDS.showcase}`, locale)} prefetch={false} className="btn btn-ghost w-full sm:w-auto">
               <Play size={14} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
               <span>{t('ctaSecondary')}</span>

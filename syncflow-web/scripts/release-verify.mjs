@@ -9,6 +9,11 @@
  * The delivery variables are DELIBERATELY not set here: the gate proves the build that ships while the SMTP and legal variables are still placeholders
  * (the briefing in its honest email-draft mode, the legal pages noindex). The server gets Cloudflare's always-pass Turnstile secret so the smoke test's
  * bot-check paths run; no key of the owner is read or needed. Exit code 1 when any step fails; a server it started is always stopped.
+ *
+ * Two builds are proven (docs/adr/0035-sales-ready-release.md). The FEATURE build has every release switch on (the briefing form, the investment bands, the
+ * seven capital-centre languages), so the form, its API and the browser flow are proven end to end. The RELEASE build is what ships by default: every switch
+ * off, English and Turkish only, no form, every call to action a mail link; it gets the HTTP smoke test in its own mode. The mailbox is a reserved test
+ * address, never a real one.
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -26,7 +31,11 @@ const rows = [];
 
 // A build of what ships: none of the owner's delivery or bot-check variables, whatever this machine's shell has set.
 const CLEAN = { ...process.env };
-for (const name of ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_FROM', 'BRIEFING_INBOX', 'CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID', 'TELEGRAM_API_BASE', 'CSP_MODE', 'DEFER_FRAMEWORK']) delete CLEAN[name];
+for (const name of ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_FROM', 'BRIEFING_INBOX', 'CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID', 'TELEGRAM_API_BASE', 'CSP_MODE', 'DEFER_FRAMEWORK', 'NEXT_PUBLIC_CONTACT_EMAIL', 'NEXT_PUBLIC_SHOW_PRICING', 'NEXT_PUBLIC_BRIEFING_ENABLED', 'NEXT_PUBLIC_LAUNCHED_LOCALES', 'NEXT_PUBLIC_PREVIEW_LOCALES', 'EXPECT_LOCALES']) delete CLEAN[name];
+const MAILBOX = 'gate@example.test'; // a reserved test domain (RFC 2606): the gate never uses a real address
+const SEVEN = 'en,tr,ar,de,fr,es,zh';
+const FEATURE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX, NEXT_PUBLIC_SHOW_PRICING: 'true', NEXT_PUBLIC_BRIEFING_ENABLED: 'true', NEXT_PUBLIC_LAUNCHED_LOCALES: SEVEN };
+const RELEASE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX };
 
 function step(label, command, args, { env = CLEAN, shell = false } = {}) {
   const started = Date.now();
@@ -63,27 +72,40 @@ async function waitFor(url, ms) {
   return false;
 }
 
+/** Starts `next start` on a port and waits for it; the caller stops it. */
+async function serve(port, env, label) {
+  process.stdout.write(`\n▶ production server on :${port} (${label})\n`);
+  const child = spawn(node, [join(root, 'node_modules', 'next', 'dist', 'bin', 'next'), 'start', '-p', String(port)], { cwd: root, env: { ...env, TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA' }, stdio: 'ignore' });
+  const up = await waitFor(`http://localhost:${port}/?m=us`, 60_000);
+  rows.push({ label: `production server on :${port}`, ok: up, seconds: 0, summary: up ? 'up' : 'did not come up in 60 s' });
+  process.stdout.write(`  ${up ? 'PASS' : 'FAIL'}  ${up ? 'up' : 'did not come up'}\n`);
+  return { child, up };
+}
+
 let server;
 try {
   step('type check, lint and message parity (npm run check)', npm, ['run', 'check'], { shell: true });
-  step('design audit with a production build (faz2-denetim --build)', node, ['faz2-denetim.mjs', '--build']);
+  step('design audit with a production build of the FEATURE build (faz2-denetim --build; every switch on)', node, ['faz2-denetim.mjs', '--build'], { env: FEATURE_BUILD });
   step('briefing delivery contract tests (npm run delivery:verify)', npm, ['run', 'delivery:verify'], { shell: true });
   step('reference architecture contract tests (npm run arch:verify)', npm, ['run', 'arch:verify'], { shell: true });
 
   if (rows.every((row) => row.ok)) {
-    process.stdout.write(`\n▶ production server on :${PORT} (placeholders as shipped: no delivery variables)\n`);
-    server = spawn(node, [join(root, 'node_modules', 'next', 'dist', 'bin', 'next'), 'start', '-p', String(PORT)], {
-      cwd: root,
-      env: { ...CLEAN, TURNSTILE_SECRET_KEY: '1x0000000000000000000000000000000AA' },
-      stdio: 'ignore',
-    });
-    const up = await waitFor(`${BASE}/?m=us`, 60_000);
-    rows.push({ label: `production server on :${PORT}`, ok: up, seconds: 0, summary: up ? 'up' : 'did not come up in 60 s' });
-    process.stdout.write(`  ${up ? 'PASS' : 'FAIL'}  ${up ? 'up' : 'did not come up'}\n`);
-    if (up) {
-      step('HTTP smoke test (scripts/smoke.mjs)', node, ['scripts/smoke.mjs', BASE]);
-      step('CSP violations and console errors, 12 visits (scripts/qa-csp.mjs)', node, ['scripts/qa-csp.mjs', BASE]);
-      step(`real-browser flow (scripts/browser-flow.mjs${quick ? ' --quick' : ''})`, node, ['scripts/browser-flow.mjs', BASE, ...(quick ? ['--quick'] : [])]);
+    // The audit just built the FEATURE build into .next: the form, the bands and the seven languages, placeholders as shipped (no delivery variables).
+    const started = await serve(PORT, FEATURE_BUILD, 'FEATURE build, placeholders as shipped: no delivery variables');
+    server = started.child;
+    if (started.up) {
+      step('HTTP smoke test of the FEATURE build (scripts/smoke.mjs)', node, ['scripts/smoke.mjs', BASE], { env: { ...FEATURE_BUILD, EXPECT_LOCALES: SEVEN } });
+      step('CSP violations and console errors, 12 visits (scripts/qa-csp.mjs)', node, ['scripts/qa-csp.mjs', BASE], { env: FEATURE_BUILD });
+      step(`real-browser flow (scripts/browser-flow.mjs${quick ? ' --quick' : ''})`, node, ['scripts/browser-flow.mjs', BASE, ...(quick ? ['--quick'] : [])], { env: FEATURE_BUILD });
+    }
+    server.kill();
+    server = undefined;
+
+    // What ships by default: every switch off. Its own build, then the HTTP smoke test in its own mode.
+    if (step('production build of the RELEASE build (every switch off: English and Turkish, no form, no price)', npm, ['run', 'build'], { env: RELEASE_BUILD, shell: true })) {
+      const release = await serve(PORT + 1, RELEASE_BUILD, 'RELEASE build, every switch off');
+      server = release.child;
+      if (release.up) step('HTTP smoke test of the RELEASE build (scripts/smoke.mjs)', node, ['scripts/smoke.mjs', `http://localhost:${PORT + 1}`], { env: RELEASE_BUILD });
     }
   }
 } finally {

@@ -865,7 +865,7 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     stale.length || said.length ? add(G11, "FAIL", `Stüdyo toleransları kodla tutmuyor${stale.length ? ` (kodda değişmiş: ${stale.join("; ")})` : ""}${said.length ? ` (metinde yok: ${said.join(", ")})` : ""}`) : add(G11, "PASS", "Stüdyo'daki toleranslar koddaki sabitlerle tutuyor: piksel oranı 1,25, sahne 0,5→0,3, 24 ms/90 kare, Lenis 1,2 sn ve eğrisi, 88 px, ince işaretçi");
     /METRICS\.frameMedian/.test(code("components/sections/Studio.tsx")) && /METRICS\.frameP99/.test(code("components/sections/Studio.tsx")) ? add(G11, "PASS", "Stüdyo'daki tek ölçüm (kare süresi) lib/metrics.ts'ten okunur, tarihi ve profiliyle") : add(G11, "FAIL", "Stüdyo kare süresini lib/metrics.ts'ten okumuyor");
     const studio = Object.entries(flatten(readJSON("messages/en.json").Studio)).map(([, v]) => v).join(" ");
-    /Zero defects, as a method/.test(enS.p1Title) && /never a promise/.test(enS.p1Text) && !/guarantee|%\s*100|100\s*%|flawless|perfect/i.test(studio) && /mutual NDA can be signed/.test(enS.p2Text) ? add(G11, "PASS", "Stüdyo 'sıfır hata'yı yöntem olarak anlatıyor, söz vermiyor; NDA 'imzalanabilir' diyor; garanti/%100/kusursuz yok") : add(G11, "FAIL", "Stüdyo metni sıfır hatayı garanti gibi sunuyor ya da NDA ifadesi yok");
+    /Zero defects, as a method/.test(enS.p1Title) && /never a promise/.test(enS.p1Text) && !/guarantee|%\s*100|100\s*%|flawless|perfect/i.test(studio) && !/\bNDA\b/.test(enS.p2Text) && !/within 24 hours/i.test(studio) ? add(G11, "PASS", "Stüdyo 'sıfır hata'yı yöntem olarak anlatıyor, söz vermiyor; NDA ve yanıt süresi sözü vermiyor (docs/adr/0035); garanti/%100/kusursuz yok") : add(G11, "FAIL", "Stüdyo metni sıfır hatayı garanti gibi sunuyor ya da bir NDA / yanıt süresi sözü veriyor (docs/adr/0035)");
 
     // 9) Bayraklar: SVG (Windows'ta bayrak emojisi çizilmez), emoji yok, her dilin bir bayrağı var, kapı ve seçici kullanır; palette kalır.
     const regional = /[\u{1F1E6}-\u{1F1FF}]/u;
@@ -1011,6 +1011,59 @@ const G12 = "12. Üretim performansı ve kurumsal kanıt";
   /first-contentful-paint/.test(script) && /\(\?:immutable\\?\/\)\?chunks/.test(script) && /traceHashes/.test(script) && /class LayoutError/.test(script) && /--check/.test(script)
     ? add(G12, "PASS", "scripts/defer-framework.mjs: ilk boyamadan sonra başlatan yükleyici, düz ve Vercel (static/immutable) yerleşimi, düzenlenen bildirimin eski dosya özeti temizlenir, bilinmeyen düzende hiçbir şey yazılmaz (LayoutError)")
     : add(G12, "FAIL", "defer-framework.mjs yükleyici, immutable yerleşim, iz özeti temizliği ya da LayoutError eksik");
+}
+
+/* ───────── 13) Satışa hazır sürüm (docs/adr/0035): bayraklar, kodda e-posta yok, sözler yok ───────── */
+const G13 = "13. Satışa hazır sürüm (ADR 0035)";
+{
+  const need = ["lib/flags.ts", "lib/contact.ts", "lib/site.ts", "lib/server/cta.ts", "components/sections/LegalNotice.tsx", "app/api/briefing/route.ts", "app/[locale]/page.tsx"];
+  const lost = need.filter((f) => !exists(f));
+  if (lost.length) add(G13, "FAIL", `dosya yok: ${lost.join(", ")}`);
+  else {
+    const code = (f) => stripComments(read(f));
+    // 1) İki bayrak da varsayılan KAPALI (yalnızca "true" ve "1" açar); form fiyat sorusuyla başladığından briefing bayrağı fiyat bayrağına bağlıdır.
+    const flags = code("lib/flags.ts");
+    /const on = \(value: string \| undefined\): boolean => value === 'true' \|\| value === '1'/.test(flags) && /SHOW_PRICING = on\(process\.env\.NEXT_PUBLIC_SHOW_PRICING\)/.test(flags) && /BRIEFING_ENABLED = briefingRequested && SHOW_PRICING/.test(flags)
+      ? add(G13, "PASS", "fiyat ve briefing bayrakları varsayılan kapalı (yalnızca 'true' ve '1' açar); form yalnızca fiyat bayrağı da açıksa açılır")
+      : add(G13, "FAIL", "lib/flags.ts bayrakları varsayılan kapalı tutmuyor ya da briefing bayrağını fiyat bayrağına bağlamıyor");
+    // 2) Form kapalıyken bölüm sayfada yok ve API her yöntemde 404.
+    const home = code("app/[locale]/page.tsx"), route = code("app/api/briefing/route.ts");
+    /BRIEFING_ENABLED \? <BriefingSection \/> : null/.test(home) && /if \(!BRIEFING_ENABLED\) return notFound\(\)/.test(route) && ["GET", "HEAD", "PUT", "PATCH", "DELETE", "OPTIONS"].every((m) => new RegExp(`export const ${m} = other`).test(route)) && /BRIEFING_ENABLED \? methodNotAllowed\(\) : notFound\(\)/.test(route)
+      ? add(G13, "PASS", "form kapalıyken ana sayfada briefing bölümü yok ve /api/briefing her yöntemde 404; açıkken GET 405 olarak kalır")
+      : add(G13, "FAIL", "briefing bölümü ya da /api/briefing bayrağa bağlı değil");
+    // 3) Kodda e-posta adresi yok: yorumlar dışında app, components, lib, i18n ve proxy.ts'te adres kalıbı geçmez; adres NEXT_PUBLIC_CONTACT_EMAIL'dan gelir.
+    const address = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/;
+    // lib/arch/ is the reference queue's example data (events, mappers), not the site's contact: it is outside this rule.
+    const files = [...walk(abs("app"), [".ts", ".tsx"]), ...walk(abs("components"), [".tsx", ".ts"]), ...walk(abs("lib"), [".ts", ".tsx"]), ...walk(abs("i18n"), [".ts"]), abs("proxy.ts")].filter((f) => fs.existsSync(f) && !rel(f).startsWith("lib/arch/"));
+    const hardcoded = files.filter((f) => address.test(stripComments(fs.readFileSync(f, "utf8")))).map(rel);
+    hardcoded.length === 0 && /NEXT_PUBLIC_CONTACT_EMAIL/.test(code("lib/site.ts")) ? add(G13, "PASS", "kodda e-posta adresi yazılı değil: tek iletişim adresi NEXT_PUBLIC_CONTACT_EMAIL'dan gelir, bağlantıları lib/contact.ts kurar")
+      : add(G13, "FAIL", `kodda yazılı e-posta adresi var ya da lib/site.ts NEXT_PUBLIC_CONTACT_EMAIL'ı okumuyor: ${hardcoded.join(", ")}`);
+    // 4) Çağrı bağlantıları: denetim çağrısının konusu ve gövdesi brief'teki gibi.
+    const contact = code("lib/contact.ts");
+    /AUDIT_SUBJECT = 'Free site audit request'/.test(contact) && /AUDIT_BODY = 'Website URL:\\n\\nWhat matters most \(speed \/ SEO \/ mobile \/ redesign\):\\n'/.test(contact) && ["en", "tr"].every((l) => (readJSON(`messages/${l}.json`).Contact?.auditCta ?? "").length > 0)
+      ? add(G13, "PASS", "ücretsiz site denetimi çağrısı: konu 'Free site audit request', gövde 'Website URL:' ve 'What matters most (speed / SEO / mobile / redesign):'; EN ve TR etiketi var")
+      : add(G13, "FAIL", "denetim çağrısının konusu, gövdesi ya da EN/TR etiketi eksik");
+    // 5) Tutamayacağımız söz yok: varsayılan sürümde görünen ad alanlarında NDA ve yanıt süresi sözü, ve kısa bildirimlerde yer tutucu yok (en, tr).
+    const flat = (o, p = "", out = {}) => { for (const [k, v] of Object.entries(o)) typeof v === "object" && v ? flat(v, `${p}${k}.`, out) : (out[`${p}${k}`] = v); return out; };
+    // "NDA" is matched case-sensitively: with /i it hits Turkish words ("...ında", "...ında") because JavaScript's \b does not know ı, ş, ğ.
+    const promise = { test: (v) => /\bNDA\b/.test(v) || /within 24 hours|\b24 hours\b|24 saat|\binvoiced\b|faturalı/i.test(v) };
+    const bad = [];
+    for (const l of ["en", "tr"]) {
+      for (const [k, v] of Object.entries(flat(readJSON(`messages/${l}.json`)))) {
+        if (typeof v !== "string") continue;
+        // Formun iki çipi (anahtarlar silinmedi) ve eski uzun taslak (yalnızca form açıkken) bu kuralın dışındadır; geri kalan her metin sayfada görünebilir.
+        if (/^Briefing\.chip(Nda|Person)$/.test(k) || k.startsWith("Legal.")) continue;
+        if (promise.test(v)) bad.push(`${l}:${k}`);
+        if (/^(Notice|Contact)\./.test(k) && /\[[^\]]*\]|\bDraft\b|\blawyer\b|\bTODO\b|lorem/i.test(v)) bad.push(`${l}:${k} (yer tutucu ya da taslak izi)`);
+      }
+    }
+    bad.length === 0 ? add(G13, "PASS", "EN ve TR'de NDA, 24 saat ve faturalı sözü yok (formun iki çipi ve eski uzun taslak hariç; onlar gösterilmez ya da yalnızca form açıkken görünür); kısa bildirimlerde yer tutucu yok")
+      : add(G13, "FAIL", `tutamayacağımız söz ya da taslak izi: ${bad.slice(0, 5).join(", ")}`);
+    // 6) Fiyat bayrağı kapalıyken kapıdaki para birimi etiketi çizilmez; chip'ler (NDA, yanıt süresi) bölümde yok.
+    /SHOW_PRICING \? \(\s*<span className="gate-market-currency"/.test(code("components/gate/EntryGate.tsx")) && !/chipNda|chipPerson/.test(code("components/sections/BriefingSection.tsx"))
+      ? add(G13, "PASS", "kapıdaki para birimi etiketi fiyat bayrağına bağlı; NDA ve yanıt süresi çipleri sayfada çizilmez")
+      : add(G13, "FAIL", "kapıdaki para birimi etiketi fiyat bayrağına bağlı değil ya da NDA/yanıt süresi çipleri hâlâ çiziliyor");
+  }
 }
 
 /* ───────── 7) Build (isteğe bağlı) ───────── */

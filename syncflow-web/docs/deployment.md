@@ -9,7 +9,7 @@ Bu belge, sitenin bugünkü **kilitli, üretime hazır** durumunu, onu nasıl ya
 | **Sürüm etiketi** | `release-2026-10-19b` (açıklamalı git etiketi, `origin`'e gönderilir; önceki: `release-2026-10-19`, `c06f6f9`) |
 | **Canlı** | https://syncflow.agency · `https://www.syncflow.agency` → 308 → apex (yol ve sorgu korunur) |
 | **Yapı** | Next.js 16.3.8, React 19, Tailwind v4, next-intl (7 dil), `npm` + `package-lock.json`; Node `>=20.19.0` (yerel doğrulama Node 24.12; `delivery:verify` ve `arch:verify` Node 20.19.0'da da denendi, [ADR 0034](adr/0034-telegram-lead-alert.md) §6) |
-| **Doğrulama** | `npm run release:verify`: **8/8 adım yeşil**, yerel, temiz derleme (aşağıda §7) |
+| **Doğrulama** | `npm run release:verify`: etiketin anında **8/8 adım yeşil**, yerel, temiz derleme (aşağıda §7.1); 22.10.2026'dan beri kapı iki derleme sınar ve 11 adımdır (§7.0) |
 | **Canlı doğrulama** | `node scripts/live-check.mjs https://syncflow.agency`: 47 geçti, 0 uyarı, 0 hata; `qa:csp` 0 ihlal, 0 konsol hatası |
 
 ### Kabul edilen yer tutucu mantığı (sahibin kararı, 19.10.2026)
@@ -17,8 +17,12 @@ Bu belge, sitenin bugünkü **kilitli, üretime hazır** durumunu, onu nasıl ya
 Sahibi, teslim ve hukuki değişkenlerin **yer tutucu mantığıyla** yayında kalmasını kabul etti. Bunlar **kusur değil, bilinen ve kabul edilmiş durumlardır**; sürüm kapısı onları bilerek boş bırakarak çalışır ve yine de sıfır hatayla geçer:
 
 - **Teslim: yalnızca Telegram bağlı** (19.10.2026 akşamı, sahibin Production değişkenleriyle, [ADR 0034](adr/0034-telegram-lead-alert.md)); **SMTP ve webhook bağlı değil.** Form normal "gönder" modundadır ve başvuru (tek yol olduğundan tüm başvuru: ad, e-posta, mesaj) sahibin Telegram sohbetine düşer. İki Telegram değişkeni silinirse form dürüst "e-posta taslağı" moduna döner (ziyaretçi yanıtlarını kendi posta programında gönderir, "kopyala" düğmesi vardır; hiçbir şey "alındı" diye gösterilmez). API, anahtarlar ya da teslim yolu yokken kapalı düşer (403/503). Sürüm kapısı bu değişkenleri bilerek tanımsız bırakır, yani kapı hâlâ taslak modunu sınar. Diğer yollar kod değişmeden bağlanır (§3, §9).
-- **Hukuki sayfalar yer tutuculu:** `/privacy` ve `/imprint` (yedi dilde) 13 yer tutucu taşır ve `noindex`'tir; "uyumludur" yazılmaz. Gerçek olgular [legal-facts-intake.md](legal-facts-intake.md)'de listelidir.
+- **Hukuki sayfalar yer tutuculu (yalnızca form AÇIKKEN):** `/privacy` ve `/imprint` uzun KVKK/GDPR taslağını yer tutucularıyla (yedi dilde 13 yer tutucu) gösterir ve `noindex`'tir; "uyumludur" yazılmaz. Gerçek olgular [legal-facts-intake.md](legal-facts-intake.md)'de listelidir. Varsayılan sürümde (§1.1) form kapalıdır ve iki sayfa kısa, bitmiş bildirimlerdir.
 - Diğer bilinen sınırlar (kusur değil): altı çevirinin ana dil konuşuru incelemesi yok; Lighthouse son değişikliklerden sonra sakin makinede yeniden ölçülmedi (mühürlü değerler `lib/metrics.ts`'te); düzey-bileşen eşlemesi (bütçe adımı) sahibin onayına tabidir ([ADR 0031](adr/0031-founding-statement-and-budget-scope.md)).
+
+### 1.1 Satışa hazır sürüm (22.10.2026, [ADR 0035](adr/0035-sales-ready-release.md))
+
+Sahibinin isteğiyle varsayılan sürüm temizlendi: **fiyat yok, form yok, dil seçicide yalnızca İngilizce ve Türkçe, her çağrı bir e-posta bağlantısı.** Üç anahtar (hepsi `NEXT_PUBLIC_`, derlemede gömülür, yalnızca `true` ya da `1` açar): `NEXT_PUBLIC_SHOW_PRICING` (yatırım basamakları ve kapıdaki para birimi etiketleri), `NEXT_PUBLIC_BRIEFING_ENABLED` (form, bağlantıları ve `POST /api/briefing`; **form açılış sorusu fiyat olduğundan yalnızca `SHOW_PRICING` de açıksa açılır**) ve `NEXT_PUBLIC_CONTACT_EMAIL` (**tek iletişim adresi, kodda yazılı değil**; yoksa sayfada hiçbir e-posta bağlantısı olmaz ve derleme uyarır). Diller `NEXT_PUBLIC_LAUNCHED_LOCALES` varsayılanıyla `en,tr`; diğer beş dil 404 verir, mesaj dosyalarına dokunulmadı. Hepsini önceki hâline getirmek: üç değişkeni `true` / `true` / `en,tr,ar,de,fr,es,zh` yapıp yeniden dağıtmak (uzun hukuki taslak ve form geri gelir). **Telegram, Turnstile ve diğer teslim değişkenleri Production'da kalır ama form kapalıyken kullanılmaz.**
 
 ## 2. Vercel projesi
 
@@ -44,7 +48,10 @@ NEXT_PUBLIC_ önekliler **derleme anında gömülür** (değişince yeniden dağ
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (+ `TELEGRAM_API_BASE`, yalnızca test) | **Tanımlı** (yalnızca Production; jeton Sensitive; 19.10.2026) | Ücretsiz, n8n'siz üçüncü yol ([ADR 0034](adr/0034-telegram-lead-alert.md), [go-live-checklist.md](go-live-checklist.md) yol C): webhook ya da SMTP varken yalnızca uyarı (ad, e-posta, mesaj yok) ve o yol başarısız olursa tüm başvuru; tek başına tüm başvuru. Geçerli bir çift girilince form "gönder" moduna geçer. Telegram rıza satırında ve gizlilik metninde işleyici olarak adlandırılmıştır |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Tanımsız | Paylaşımlı hız sınırı; yokken örnek başına bellek (bir kez uyarır) |
 | `NEXT_PUBLIC_SITE_URL` | Tanımsız | Varsayılan `https://syncflow.agency` (canonical, hreflang, OG, site haritası) |
-| `NEXT_PUBLIC_LAUNCHED_LOCALES` | Tanımsız | Varsayılan yedi dil (`en,tr,ar,de,fr,es,zh`); `en,tr` ile beş dil kapatılır |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | **Girilmeli** (Production + Preview; 22.10.2026) | Sitenin tek iletişim adresi: her `mailto:` bağlantısı, iletişim satırı, künye ve yapılandırılmış veri bundan gelir. **Kodda yazılı değildir.** Yoksa derlemede hiçbir e-posta bağlantısı olmaz (derleme uyarır); push'tan ÖNCE girin ya da girdikten sonra yeniden dağıtın |
+| `NEXT_PUBLIC_SHOW_PRICING` | Tanımsız (= kapalı) | `true`: yatırım basamakları ve kapıdaki para birimi etiketleri görünür. Kapalıyken sitede hiçbir tutar yoktur; `lib/pricing.ts` değişmez ([ADR 0035](adr/0035-sales-ready-release.md)) |
+| `NEXT_PUBLIC_BRIEFING_ENABLED` | Tanımsız (= kapalı) | `true` **ve** `SHOW_PRICING=true`: briefing formu, bağlantıları ve `POST /api/briefing` açılır; açılınca uzun hukuki taslak (yer tutuculu) geri gelir. Kapalıyken form yoktur ve `/api/briefing` her yöntemde 404 verir |
+| `NEXT_PUBLIC_LAUNCHED_LOCALES` | Tanımsız | Varsayılan `en,tr` (22.10.2026, ADR 0035); diğer diller 404. Yedi sermaye merkezi dilini açmak: `en,tr,ar,de,fr,es,zh` |
 | `CSP_MODE` | Tanımsız | Varsayılan: uygulanan CSP; `report-only` acil geri alma anahtarı |
 | `DEFER_FRAMEWORK` | Tanımsız | `off` çerçeve ertelemesini kapatır |
 
@@ -58,9 +65,9 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 
 ## 5. Yayın akışı
 
-1. **Yerelde kapı:** `npm run release:verify` (sessiz makinede 13–14 dakika, yoğun makinede 15 ve üzeri; `-- --quick` hızlı kümedir). Hepsi yeşil olmadan commit "hazır" sayılmaz. Bir adım düşerse kapı düşen satırları ve tam çıktının dosya yolunu yazar.
+1. **Yerelde kapı:** `npm run release:verify` (iki derleme, 11 adım; sessiz makinede 16–18 dakika, yoğun makinede daha uzun; `-- --quick` hızlı kümedir). Hepsi yeşil olmadan commit "hazır" sayılmaz. Bir adım düşerse kapı düşen satırları ve tam çıktının dosya yolunu yazar.
 2. **Yayın:** `git push origin main`; Vercel yaklaşık 30–60 saniyede yayınlar. Durum: `https://api.github.com/repos/yusufsutcu5441-web/syncflow-agency/commits/<sha>/status` ya da panel.
-3. **Canlıda doğrula:** `node scripts/live-check.mjs https://syncflow.agency` (beklenen: 47 geçti, 0 uyarı, 0 hata), `npm run qa:csp -- https://syncflow.agency`, `npm run qa:browser -- https://syncflow.agency`. Site her adrese dakikada 30 API isteği ve 10 dakikada 5 briefing POST'u sınırı koyar; `live-check` 3 POST yapar, art arda çok sık koşmayın (429 uyarı olarak raporlanır, hata değildir).
+3. **Canlıda doğrula:** `NEXT_PUBLIC_CONTACT_EMAIL=<panelde girdiğiniz adres> node scripts/live-check.mjs https://syncflow.agency` (varsayılan sürümde bayraklar kapalı, diller `en,tr`; form açıkken `NEXT_PUBLIC_SHOW_PRICING=true NEXT_PUBLIC_BRIEFING_ENABLED=true EXPECT_LOCALES=…` da verilir; hata sıfır olmalı), `npm run qa:csp -- https://syncflow.agency`. `npm run qa:browser` **form açık derlemeyi** sürer (varsayılan sürümde form gruplarının sürecek bir şeyi yoktur). Site her adrese dakikada 30 API isteği ve 10 dakikada 5 briefing POST'u sınırı koyar; `live-check` 3 POST yapar, art arda çok sık koşmayın (429 uyarı olarak raporlanır, hata değildir).
 4. **Değişken girdikten sonra:** panelden Redeploy ya da boş commit; `NEXT_PUBLIC_*` yeni derleme ister.
 
 ## 6. Geri alma
@@ -72,11 +79,30 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 | Çerçeve ertelemesi sorun çıkarırsa | `DEFER_FRAMEWORK=off` + yeniden dağıtım |
 | CSP bir kaynağı engellerse | `CSP_MODE=report-only` + yeniden dağıtım |
 | Teslim sorun çıkarırsa | SMTP/webhook/Telegram değişkenlerini silmek: form dürüst taslak moduna döner |
-| Beş yeni dili kapatmak | `NEXT_PUBLIC_LAUNCHED_LOCALES=en,tr` + yeniden dağıtım |
+| Beş yeni dili açmak (varsayılan kapalı) | `NEXT_PUBLIC_LAUNCHED_LOCALES=en,tr,ar,de,fr,es,zh` + yeniden dağıtım |
+| Formu ve fiyatı geri getirmek | `NEXT_PUBLIC_SHOW_PRICING=true` ve `NEXT_PUBLIC_BRIEFING_ENABLED=true` + yeniden dağıtım (önce uzun hukuki taslağın yer tutucuları doldurulur) |
 
 ## 7. Sürüm kapısı sonuçları
 
 `npm run release:verify` (`scripts/release-verify.mjs`): teslim ve bot denetimi değişkenleri **bilerek tanımsız**, sunucuda yalnızca Cloudflare'in her zaman geçen test gizli anahtarı. Her sürümün sonucu kendi etiketine aittir; **farklı etiketten sayı alıntılanmaz.**
+
+### 7.0 `main` + ADR 0035, satışa hazır sürüm (etiketsiz; yerel, 22.10.2026, yaklaşık 990 sn)
+
+[ADR 0035](adr/0035-sales-ready-release.md): fiyat, form ve hukuki taslak bayraklara bağlandı, diller `en,tr`, her çağrı bir e-posta bağlantısı. **Yeni etiket atılmadı; push edilmedi.** Kapı artık **iki derleme** sınar ve 11 adımdır. Aşağıdaki sayılar bu commit'e aittir, `release-2026-10-19b` etiketine değil (o etiketin sayıları değişmez).
+
+| Adım | Süre | Sonuç |
+|---|---|---|
+| Tip denetimi, lint, mesaj eşitliği (`en`, `tr`) | 95 sn | yeşil |
+| Tasarım denetimi, özellikli derleme (her bayrak açık) | 19 sn | **247 geçti, 0 hata**, 1 uyarı, 4 bilgi |
+| Teslim sözleşme testleri | 2 sn | 16/16 |
+| Referans mimari sözleşme testleri | 2 sn | 65/65 |
+| HTTP duman testi, özellikli derleme (yedi dil) | 8 sn | **197/197** |
+| CSP ihlali ve konsol hatası (12 ziyaret) | 100 sn | 0 / 0 |
+| Gerçek tarayıcı akışı, özellikli derleme | 732 sn | **315/315** |
+| Varsayılan sürümün derlemesi (her bayrak kapalı) | 17 sn | yeşil |
+| HTTP duman testi, varsayılan sürüm | 11 sn | **164/164** |
+
+Rota taraması, aranan izler ve gerçek Chrome'da çerez/depolama/üçüncü taraf denetimi: ADR 0035 §7.
 
 ### 7.1 `release-2026-10-19b` (yerel, temiz derleme, 19.10.2026, 844 sn)
 
