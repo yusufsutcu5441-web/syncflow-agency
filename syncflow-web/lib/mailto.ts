@@ -16,6 +16,10 @@
 export const AUDIT_SUBJECT = 'Free site audit request';
 export const AUDIT_BODY = 'Website URL:\n\nWhat matters most (speed / SEO / mobile / redesign):\n';
 
+/** The architecture review request of /outbound (docs/adr/0036-outbound-route.md): English, like the audit request, because the inbox is read in English. */
+export const REVIEW_SUBJECT = 'Architecture review request';
+export const REVIEW_BODY = 'Who you sell to:\n\nYour sending domain (if you have one):\n\nWhat you run today:\n';
+
 const encode = (text: string): string => encodeURIComponent(text).replace(/[!'()*]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
 
 export function buildMailto(address: string, subject?: string, body?: string): string {

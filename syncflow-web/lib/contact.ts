@@ -1,4 +1,4 @@
-import { AUDIT_BODY, AUDIT_SUBJECT, buildMailto } from '@/lib/mailto';
+import { AUDIT_BODY, AUDIT_SUBJECT, buildMailto, REVIEW_BODY, REVIEW_SUBJECT } from '@/lib/mailto';
 import { CONTACT_EMAIL } from '@/lib/site';
 
 /**
@@ -17,6 +17,9 @@ export function mailtoHref(subject?: string, body?: string): string | null {
 
 /** "Request a free 1-page site audit": a mail with the subject and the two prompts already in it. */
 export const auditHref = (): string | null => mailtoHref(AUDIT_SUBJECT, AUDIT_BODY);
+
+/** "Request architecture review" on /outbound: a mail with the subject and the three prompts already in it. */
+export const reviewHref = (): string | null => mailtoHref(REVIEW_SUBJECT, REVIEW_BODY);
 
 /** A plain mail to the studio, nothing prefilled. */
 export const writeHref = (): string | null => mailtoHref();

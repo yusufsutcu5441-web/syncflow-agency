@@ -419,7 +419,9 @@ const breakdownPath = (locale, slug) => (locale === 'en' ? `/showcase/${slug}` :
 // The architectural R&D specimens (docs/adr/0032): two pages per language, each in the sitemap with its own alternates.
 const SPEC_SLUGS = ['studio-site', 'fail-safe-queue'];
 const specimenPath = (locale, slug) => (locale === 'en' ? `/specimens/${slug}` : `/${locale}/specimens/${slug}`);
-check(`sitemap lists ${OPEN.length} locale URLs, ${OPEN.length * SLUGS.length} breakdown URLs and ${OPEN.length * SPEC_SLUGS.length} R&D specimen URLs with alternates (and no closed language)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length + SPEC_SLUGS.length) && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
+// Plus one: the English-only /outbound page (docs/adr/0036), a single entry with no alternates.
+check(`sitemap lists ${OPEN.length} locale URLs, ${OPEN.length * SLUGS.length} breakdown URLs, ${OPEN.length * SPEC_SLUGS.length} R&D specimen URLs with alternates (and no closed language) and the one /outbound URL`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length + SPEC_SLUGS.length) + 1 && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
+check('/outbound is in the sitemap exactly once, with no other language of it', (sitemap.match(/\/outbound<\/loc>/g) ?? []).length === 1 && !/\/[a-z]{2}\/outbound/.test(sitemap));
 check('every public language and every specimen has its breakdown URL in the sitemap', OPEN.every((l) => SLUGS.every((slug) => sitemap.includes(`${breakdownPath(l, slug)}</loc>`))));
 check('every public language has both R&D specimen URLs in the sitemap', OPEN.every((l) => SPEC_SLUGS.every((slug) => sitemap.includes(`${specimenPath(l, slug)}</loc>`))));
 const robots = await (await get('/robots.txt')).text();

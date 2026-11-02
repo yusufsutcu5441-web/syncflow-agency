@@ -20,7 +20,8 @@ let started = false;
 
 export function CinemaStage() {
   useEffect(() => {
-    if (started || !cinemaCapable()) return;
+    // A page that hides the cinema layer (/outbound marks itself data-bare-page, docs/adr/0036) never fetches the engine either.
+    if (started || !cinemaCapable() || document.querySelector('[data-bare-page]')) return;
     let cancelled = false;
     let idleHandle = 0;
     let timeoutHandle = 0;

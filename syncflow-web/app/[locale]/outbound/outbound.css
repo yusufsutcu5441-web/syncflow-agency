@@ -1,0 +1,98 @@
+/*
+ * /outbound (docs/adr/0036-outbound-route.md). Every class is prefixed `ob-` so nothing here can reach the rest of the site, and this file is loaded only with that route.
+ * The one thing it does to the shared page: while the route is on screen it hides the studio's own header, footer, mobile call to action and cinema layer, because the
+ * route has its own (`body:has([data-bare-page])`; display: none also removes them from the tab order and the accessibility tree).
+ * Palette: charcoal with green and amber telemetry accents, approved by the owner for this route only (02.11.2026). The site-wide rules that stay: no pure black and no
+ * pure white, and no motion that ignores prefers-reduced-motion.
+ */
+body:has([data-bare-page]) .site-header,
+body:has([data-bare-page]) .cv-footer,
+body:has([data-bare-page]) .sticky-cta,
+body:has([data-bare-page]) .cinema {
+  display: none;
+}
+
+.ob {
+  --ob-bg: #0b0c0e;
+  --ob-panel: #111316;
+  --ob-raised: #171a1e;
+  --ob-line: #23272d;
+  --ob-text: #e6e8eb;
+  --ob-muted: #8b919a;
+  --ob-green: #3ddc97;
+  --ob-amber: #f5a524;
+  min-height: 100svh;
+  background: var(--ob-bg);
+  color: var(--ob-text);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.ob a { color: inherit; }
+.ob-wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+.ob-mono { font-family: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, monospace; }
+
+.ob-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }
+.ob-brand { font-weight: 600; letter-spacing: -0.01em; }
+.ob-brand span { color: var(--ob-muted); font-weight: 400; }
+
+.ob-btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 11px 18px; font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; border: 1px solid var(--ob-line); background: var(--ob-raised); color: var(--ob-text); }
+.ob-btn:hover { border-color: var(--ob-muted); }
+.ob-btn-primary { background: var(--ob-green); border-color: var(--ob-green); color: #06130d; }
+.ob-btn-primary:hover { filter: brightness(1.08); border-color: var(--ob-green); }
+.ob-btn-sm { padding: 5px 12px; font-size: 12px; }
+.ob-btn:focus-visible, .ob a:focus-visible { outline: 2px solid var(--ob-green); outline-offset: 2px; }
+
+.ob-hero { padding: 72px 0 40px; }
+.ob-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ob-muted); }
+.ob-eyebrow::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--ob-green); box-shadow: 0 0 10px var(--ob-green); }
+.ob-h1 { margin: 18px 0 0; font-size: clamp(36px, 6.4vw, 68px); line-height: 1.04; letter-spacing: -0.035em; font-weight: 600; max-width: 16ch; text-align: start; }
+.ob-h1 em { display: block; font-style: normal; color: var(--ob-green); }
+.ob-lead { margin: 22px 0 0; max-width: 60ch; font-size: clamp(16px, 2vw, 19px); color: var(--ob-muted); }
+.ob-lead b { color: var(--ob-text); font-weight: 500; }
+.ob-cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 30px; }
+
+.ob-term { margin-top: 44px; border: 1px solid var(--ob-line); border-radius: 12px; background: var(--ob-panel); overflow: hidden; }
+.ob-term-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 14px; border-bottom: 1px solid var(--ob-line); background: var(--ob-raised); font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12px; color: var(--ob-muted); }
+.ob-dots { display: inline-flex; gap: 6px; }
+.ob-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--ob-line); }
+.ob-tag { margin-inline-start: auto; padding: 2px 8px; border: 1px solid var(--ob-amber); border-radius: 999px; color: var(--ob-amber); font-size: 11px; letter-spacing: 0.06em; }
+.ob-term-body { padding: 18px 18px 12px; font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 13.5px; line-height: 1.75; }
+.ob-line { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ob-cmd { color: var(--ob-text); }
+.ob-cmd::before { content: '$ '; color: var(--ob-green); }
+.ob-out::before, .ob-ok::before { content: '> '; color: var(--ob-muted); }
+.ob-out { color: #c9ced4; }
+.ob-ok { color: var(--ob-green); }
+.ob-note { color: var(--ob-muted); font-style: italic; }
+.ob-ghost { visibility: hidden; }
+.ob-line[data-pending]::before { visibility: hidden; }
+.ob-caret { display: inline-block; width: 8px; height: 1em; margin-inline-start: 2px; background: var(--ob-green); vertical-align: -2px; animation: ob-blink 1.1s steps(1) infinite; }
+@keyframes ob-blink { 50% { opacity: 0; } }
+.ob-term-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 14px; border-top: 1px solid var(--ob-line); font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12px; color: var(--ob-muted); }
+.ob-term-foot .ob-btn { margin-inline-start: auto; }
+
+.ob-block { padding: 72px 0 8px; }
+.ob-h2 { margin: 14px 0 0; font-size: clamp(26px, 3.6vw, 38px); letter-spacing: -0.025em; line-height: 1.12; font-weight: 600; max-width: 22ch; text-align: start; }
+.ob-sub { margin: 12px 0 0; max-width: 62ch; color: var(--ob-muted); }
+.ob-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 32px; padding: 0; list-style: none; }
+@media (max-width: 860px) { .ob-grid { grid-template-columns: minmax(0, 1fr); } }
+.ob-card { border: 1px solid var(--ob-line); border-radius: 12px; background: var(--ob-panel); padding: 22px 22px 20px; }
+.ob-card-n { font-size: 12px; letter-spacing: 0.12em; color: var(--ob-green); }
+.ob-card h3 { margin: 10px 0 8px; font-size: 19px; letter-spacing: -0.015em; font-weight: 600; }
+.ob-card p { margin: 0 0 12px; color: var(--ob-muted); font-size: 15px; }
+.ob-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; font-size: 14px; }
+.ob-card li { display: flex; gap: 9px; color: #c9ced4; }
+.ob-card li::before { content: '›'; color: var(--ob-green); }
+.ob-stack { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--ob-line); font-size: 12px; color: var(--ob-muted); }
+
+.ob-truth { margin-top: 40px; border: 1px solid var(--ob-line); border-radius: 12px; padding: 20px 22px; display: grid; gap: 6px; background: var(--ob-panel); }
+.ob-truth h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.ob-truth p { margin: 0; color: var(--ob-muted); font-size: 15px; max-width: 78ch; }
+
+.ob-closing { margin: 72px 0 0; padding: 40px 0 56px; border-top: 1px solid var(--ob-line); }
+.ob-closing .ob-h2 { max-width: 26ch; }
+.ob-address { color: var(--ob-muted); font-size: 14px; }
+.ob-foot { display: flex; flex-wrap: wrap; gap: 8px 20px; padding: 18px 0 40px; border-top: 1px solid var(--ob-line); font-size: 12px; color: var(--ob-muted); }
+.ob-foot a { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) { .ob-caret { animation: none; } }

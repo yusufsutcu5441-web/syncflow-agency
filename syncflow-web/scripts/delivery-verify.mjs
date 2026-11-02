@@ -20,7 +20,7 @@ import ts from 'typescript';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // [folder, module]: each is compiled to <name>.js in the temporary folder.
-const MODULES = [['lib/server', 'smtp'], ['lib/server', 'telegram'], ['lib', 'mailto']];
+const MODULES = [['lib/server', 'smtp'], ['lib/server', 'telegram'], ['lib', 'mailto'], ['lib', 'outbound']];
 const TESTS = MODULES.map(([, name]) => join('tests', 'delivery', `${name}.test.mjs`));
 
 const cache = join(root, 'node_modules', '.cache');

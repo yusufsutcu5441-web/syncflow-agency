@@ -3,6 +3,7 @@ import { OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
 import { BREAKDOWN_SLUGS, breakdownPath } from '@/lib/breakdown';
 import { withLocale } from '@/lib/i18n-paths';
+import { OUTBOUND_PATH } from '@/lib/outbound';
 import { SITE_URL } from '@/lib/site';
 import { SPECIMEN_SLUGS, specimenPath } from '@/lib/specimens';
 
@@ -59,5 +60,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }));
   });
 
-  return [...home, ...breakdowns, ...specimens];
+  // Since docs/adr/0036: the English-only outbound page. One entry, no hreflang: no other language has it.
+  const outbound = [{ url: `${SITE_URL}${OUTBOUND_PATH}`, changeFrequency: 'monthly' as const, priority: 0.7 }];
+
+  return [...home, ...breakdowns, ...specimens, ...outbound];
 }
