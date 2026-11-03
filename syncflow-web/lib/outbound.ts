@@ -14,8 +14,12 @@ export const OUTBOUND_PATH = '/outbound';
 
 /**
  * The figures of the replay terminal, read from the outbound engine's own records on 02.11.2026 (its send log and outcome file, through the engine's own
- * pipeline report), counting outreach only: the owner's own test mails are not included. `bounceRatePct` is bounced / mailsSent, rounded to one decimal.
+ * pipeline report), counting outreach only: the owner's own test mails are not included.
  * They are a snapshot, labelled as one on the page; replace the whole record (and its date) when they are refreshed, never one number.
+ *
+ * `bounced` and `complaints` are RECORDED counts, and the page says so (03.11.2026): the engine's mailbox reader recorded no bounce notice for the first 42 sends (it
+ * recorded its first outcome after them), while 4 of the 38 follow-ups to those addresses bounced at once. So the counts can only be a floor, and no rate is printed:
+ * a percentage of a count known to be low would look like a measurement. Do not put one back until the early gap is closed or measured.
  */
 export const REPLAY_FACTS = {
   asOf: '2026-11-02',
@@ -25,7 +29,6 @@ export const REPLAY_FACTS = {
   mailsSent: 466,
   peopleContacted: 287,
   bounced: 11,
-  bounceRatePct: 2.4,
   complaints: 0,
   businessHours: '09:00-17:00',
 } as const;
@@ -46,7 +49,8 @@ export const TERMINAL_LINES: readonly TerminalLine[] = [
   { kind: 'ok', text: `${F.queued} e-mails approved and queued by a person` },
   { kind: 'out', text: `dispatch rule: one mail at a time, only inside the recipient's own business hours (${F.businessHours})` },
   { kind: 'ok', text: 'circuit breaker: closed. Pauses by itself on repeated bounces or any complaint' },
-  { kind: 'out', text: `delivery to date: ${F.mailsSent} mails to ${F.peopleContacted} people · ${F.bounced} bounced (${F.bounceRatePct}%) · ${F.complaints} complaints` },
+  { kind: 'out', text: `delivery to date: ${F.mailsSent} mails to ${F.peopleContacted} people · ${F.bounced} recorded bounces · ${F.complaints} recorded complaints` },
+  { kind: 'note', text: 'feedback is counted from recorded notices only: the earliest sends may be under-counted' },
   { kind: 'note', text: 'delivery figures only: replies depend on the offer and the list, and no result is promised' },
 ];
 

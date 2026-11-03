@@ -15,7 +15,8 @@ test('the replay figures are one dated record, and the arithmetic holds', () => 
   assert.match(F.asOf, /^\d{4}-\d{2}-\d{2}$/);
   const [y, m, d] = F.asOf.split('-');
   assert.equal(F.asOfLabel, `${d}.${m}.${y}`, 'the printed date is the recorded date');
-  assert.equal(F.bounceRatePct, Math.round((F.bounced / F.mailsSent) * 1000) / 10, 'bounced / mails sent, one decimal');
+  assert.ok(F.bounced + F.complaints <= F.mailsSent, 'recorded bounces and complaints cannot outnumber the mails');
+  assert.equal('bounceRatePct' in F, false, 'no rate is kept: a percentage of a count known to be low would look like a measurement (lib/outbound.ts)');
   assert.ok(F.peopleContacted <= F.mailsSent, 'nobody can have been mailed fewer times than there are people');
   assert.ok(F.source.length > 20, 'a source is named');
 });
@@ -23,7 +24,11 @@ test('the replay figures are one dated record, and the arithmetic holds', () => 
 test('the terminal prints exactly the recorded figures, and says it is a replay of a dated snapshot, not a live feed', () => {
   const delivery = TERMINAL_LINES.find((line) => line.text.startsWith('delivery to date'));
   assert.ok(delivery);
-  assert.equal(delivery.text, `delivery to date: ${F.mailsSent} mails to ${F.peopleContacted} people · ${F.bounced} bounced (${F.bounceRatePct}%) · ${F.complaints} complaints`);
+  assert.equal(delivery.text, `delivery to date: ${F.mailsSent} mails to ${F.peopleContacted} people · ${F.bounced} recorded bounces · ${F.complaints} recorded complaints`);
+  assert.doesNotMatch(delivery.text, /%/, 'no percentage next to a count that is only a floor');
+  assert.doesNotMatch(delivery.text, /\d+ bounced\b/, 'the figure is called "recorded bounces", never plain "bounced"');
+  const gap = TERMINAL_LINES.findIndex((line) => /recorded notices only/.test(line.text) && /under-counted/.test(line.text));
+  assert.ok(gap > TERMINAL_LINES.indexOf(delivery), 'the line that admits the early gap follows the figures, it is not hidden elsewhere');
   assert.ok(TERMINAL_LINES.some((line) => line.text.startsWith(`${F.queued} e-mails approved and queued by a person`)));
   assert.match(TERMINAL.tag, /REPLAY/);
   assert.match(TERMINAL.tag, /NOT A LIVE FEED/);
@@ -57,7 +62,7 @@ test('the page keeps saying that a person is in the loop and that nothing is pro
 
 test('every number on the page is a recorded one', () => {
   const allowed = new Set([
-    ...[F.queued, F.mailsSent, F.peopleContacted, F.bounced, F.bounceRatePct, F.complaints].map(String),
+    ...[F.queued, F.mailsSent, F.peopleContacted, F.bounced, F.complaints].map(String),
     F.businessHours,
     F.asOfLabel,
     '1-150', // the audience's headcount band
