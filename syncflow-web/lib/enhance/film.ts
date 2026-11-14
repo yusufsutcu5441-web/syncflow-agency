@@ -74,7 +74,8 @@ export function initFilm(): () => void {
       lastChapter = chapter;
       film.dataset.chapter = String(chapter);
     }
-    const code = timecode(p);
+    // Blank until the film actually moves: at p = 0 the readout would only say 00:00:00:00, a zero that looks like an unfilled placeholder.
+    const code = p > 0.0005 ? timecode(p) : '';
     if (tc && code !== lastTc) {
       lastTc = code;
       tc.textContent = code;

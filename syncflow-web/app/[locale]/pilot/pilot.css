@@ -1,0 +1,33 @@
+/*
+ * /pilot (docs/adr/0037-pilot-page.md). It wears the frame of /outbound (outbound.css: the `ob-` classes and the rule that hides the studio's own header, footer, mobile bar
+ * and cinema layer while a `data-bare-page` page is on screen) and adds only what that file does not have, every class prefixed `pilot-` so nothing here can reach the rest of
+ * the site. Same palette, same rules: no pure black or white, no motion.
+ */
+.pilot-h1 { max-width: 22ch; }
+/* On a phone the brand and the three nav items share one row: the brand keeps its line and the items wrap instead. */
+.pilot .ob-brand { white-space: nowrap; }
+
+.pilot-nav-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 18px; }
+.pilot-link { font-size: 14px; color: var(--ob-muted); text-decoration: none; }
+.pilot-link:hover { color: var(--ob-text); text-decoration: underline; text-underline-offset: 3px; }
+
+.pilot-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 40px 0 0; padding: 0; list-style: none; }
+@media (max-width: 860px) { .pilot-facts { grid-template-columns: minmax(0, 1fr); } }
+.pilot-fact { border: 1px solid var(--ob-line); border-radius: 12px; background: var(--ob-panel); padding: 18px 20px; }
+.pilot-fact b { display: block; font-size: clamp(20px, 2.6vw, 26px); line-height: 1.15; letter-spacing: -0.02em; font-weight: 600; color: var(--ob-green); }
+.pilot-fact span { display: block; margin-top: 6px; color: var(--ob-muted); font-size: 14px; }
+
+.pilot-prose { margin-top: 14px; }
+.pilot-prose p { margin: 14px 0 0; max-width: 66ch; color: #c9ced4; }
+.pilot-prose p.pilot-muted { color: var(--ob-muted); }
+
+/* The honest note ("where this stands") is outlined in amber, the palette's one cautionary colour, so it reads as a statement and not as decoration. */
+.pilot-stands { border-color: var(--ob-amber); }
+
+.pilot-steps { margin: 28px 0 0; padding: 0; list-style: none; display: grid; gap: 14px; max-width: 70ch; }
+.pilot-steps li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; border: 1px solid var(--ob-line); border-radius: 12px; background: var(--ob-panel); padding: 18px 20px; }
+.pilot-step-n { font-size: 12px; letter-spacing: 0.12em; color: var(--ob-green); padding-top: 4px; }
+.pilot-steps h3 { margin: 0 0 4px; font-size: 18px; letter-spacing: -0.015em; font-weight: 600; }
+.pilot-steps p { margin: 0; color: var(--ob-muted); font-size: 15px; }
+
+.pilot-address { color: var(--ob-text); user-select: all; }

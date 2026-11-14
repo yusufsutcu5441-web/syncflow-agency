@@ -17,7 +17,13 @@ type Module = { default: ComponentType<DialogProps>; warm: (slug: BreakdownSlug,
 let loading: Promise<Module> | null = null;
 const loadDialog = (): Promise<Module> => (loading ??= import('./BreakdownDialog') as Promise<Module>);
 
-const linkOf = (target: EventTarget | null): HTMLAnchorElement | null => (target instanceof Element ? target.closest<HTMLAnchorElement>('a[data-breakdown-link]') : null);
+const linkOf = (target: EventTarget | null): HTMLAnchorElement | null => {
+  if (!(target instanceof Element)) return null;
+  const direct = target.closest<HTMLAnchorElement>('a[data-breakdown-link]');
+  if (direct) return direct;
+  // A card's overlay (.card-hit) is a plain element, not a second link with no text: a click on it counts as a click on the card's one visible link.
+  return target.closest('[data-card-hit]') ? (target.closest('.show-card')?.querySelector<HTMLAnchorElement>('a[data-breakdown-link]') ?? null) : null;
+};
 
 export function BreakdownHost() {
   const { locale, messages } = useClientI18n();

@@ -31,6 +31,8 @@ export function SecurityView({ labels, state, actions }: { labels: SecurityLabel
     labels.outRejected,
     labels.outDuplicate,
     labels.outUnavailable,
+    labels.outInsecure,
+    labels.outNoCrypto,
   ];
   const checks = [`✓ ${labels.checkValid} · ✓ ${labels.checkFresh} · ✓ ${labels.checkNew}`, `✓ ${labels.checkValid} · ✓ ${labels.checkFresh} · ✕ ${labels.checkSeen}`, `✕ ${labels.checkMismatch}`];
 

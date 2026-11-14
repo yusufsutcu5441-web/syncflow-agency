@@ -20,6 +20,10 @@ export const AUDIT_BODY = 'Website URL:\n\nWhat matters most (speed / SEO / mobi
 export const REVIEW_SUBJECT = 'Architecture review request';
 export const REVIEW_BODY = 'Who you sell to:\n\nYour sending domain (if you have one):\n\nWhat you run today:\n';
 
+/** The pilot request of /pilot (docs/adr/0037-pilot-page.md): the subject is the one word the cold e-mail asks for ("Reply “pilot”"), the body two plain prompts. English, because the inbox is read in English. */
+export const PILOT_SUBJECT = 'pilot';
+export const PILOT_BODY = 'Company:\n\nWebsite:\n';
+
 const encode = (text: string): string => encodeURIComponent(text).replace(/[!'()*]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
 
 export function buildMailto(address: string, subject?: string, body?: string): string {

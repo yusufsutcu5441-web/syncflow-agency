@@ -6,6 +6,7 @@ import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { auditHref } from '@/lib/contact';
 import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
+import { isPilotLocale, PILOT_PATH } from '@/lib/pilot';
 import { Flag } from '@/components/ui/Flag';
 import { Logo } from '@/components/ui/Logo';
 import { CONTACT_EMAIL, SECTION_IDS } from '@/lib/site';
@@ -48,6 +49,12 @@ export async function Footer() {
               <li>
                 <Link href={here('how-we-built-it')} prefetch={false} className={linkClass}>
                   {t('how')}
+                </Link>
+              </li>
+              {/* The page behind the cold e-mail's offer (docs/adr/0037-pilot-page.md). */}
+              <li>
+                <Link href={withLocale(PILOT_PATH, isPilotLocale(locale) ? locale : 'en')} prefetch={false} className={linkClass}>
+                  {t('pilot')}
                 </Link>
               </li>
               {BRIEFING_ENABLED ? (

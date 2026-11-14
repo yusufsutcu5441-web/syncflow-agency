@@ -4,6 +4,7 @@ import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
 import { BREAKDOWN_SLUGS, breakdownPath } from '@/lib/breakdown';
 import { withLocale } from '@/lib/i18n-paths';
 import { OUTBOUND_PATH } from '@/lib/outbound';
+import { PILOT_LOCALES, PILOT_PATH } from '@/lib/pilot';
 import { SITE_URL } from '@/lib/site';
 import { SPECIMEN_SLUGS, specimenPath } from '@/lib/specimens';
 
@@ -63,5 +64,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Since docs/adr/0036: the English-only outbound page. One entry, no hreflang: no other language has it.
   const outbound = [{ url: `${SITE_URL}${OUTBOUND_PATH}`, changeFrequency: 'monthly' as const, priority: 0.7 }];
 
-  return [...home, ...breakdowns, ...specimens, ...outbound];
+  // Since docs/adr/0037: the pilot page, in English and Turkish only (the pilot languages that are public), each entry listing the other as its hreflang.
+  const pilotOpen = PILOT_LOCALES.filter((locale) => OPEN_LOCALES.includes(locale));
+  const pilotUrl = (locale: AppLocale) => `${SITE_URL}${withLocale(PILOT_PATH, locale)}`;
+  const pilotAlternates = { languages: { ...Object.fromEntries(pilotOpen.map((locale) => [LOCALE_LABELS[locale].hreflang, pilotUrl(locale)])), 'x-default': pilotUrl(routing.defaultLocale) } };
+  const pilot = pilotOpen.map((locale) => ({ url: pilotUrl(locale), changeFrequency: 'monthly' as const, priority: locale === routing.defaultLocale ? 0.8 : 0.7, alternates: pilotAlternates }));
+
+  return [...home, ...breakdowns, ...specimens, ...outbound, ...pilot];
 }

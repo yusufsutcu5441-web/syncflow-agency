@@ -87,6 +87,8 @@ export async function Architecture() {
     outRejected: sim('security.outRejected'),
     outDuplicate: sim('security.outDuplicate'),
     outUnavailable: sim('security.outUnavailable'),
+    outInsecure: sim('security.outInsecure'),
+    outNoCrypto: sim('security.outNoCrypto'),
     caption: sim('security.caption'),
   };
 

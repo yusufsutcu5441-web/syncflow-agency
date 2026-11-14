@@ -48,6 +48,9 @@
     "subtitle": "Digital architecture at enterprise scale for principals whose name is the business: secure workflow automation, machined to tight tolerances, finished in silence, and measured rather than promised.",
     "ctaPrimary": "Strategic Briefing",
     "ctaSecondary": "Showcase",
+    "pilotLabel": "Outbound pilot",
+    "pilotText": "Looking for outbound? A 30-day pilot with nothing to pay upfront, paid only if it delivers conversations. The terms and the price are on one page.",
+    "pilotCta": "See the pilot terms",
     "scroll": "Scroll",
     "metricPerformance": "Lighthouse performance, desktop",
     "metricCls": "Layout shift (CLS), desktop",
@@ -305,7 +308,8 @@
     "measured": "Measured, not promised.",
     "top": "Back to top",
     "draft": "This language is a draft translation and is not public yet.",
-    "how": "How we built it"
+    "how": "How we built it",
+    "pilot": "Outbound pilot"
   },
   "Switcher": {
     "label": "Language",
@@ -526,6 +530,8 @@
       "outRejected": "Rejected at the zero-trust check. The message never reached the business system.",
       "outDuplicate": "Acknowledged, not processed twice: the idempotency key had already been seen.",
       "outUnavailable": "Web Crypto is not available in this browser context, so the live computation cannot run.",
+      "outInsecure": "This page was opened over an insecure connection (http://), so the browser withholds Web Crypto and the live computation cannot run. Open the page over https:// and it runs.",
+      "outNoCrypto": "This browser, or the in-app viewer it is running in, does not provide Web Crypto, so the live computation cannot run. Open the page in a current Chrome, Edge, Firefox or Safari.",
       "caption": "Runs in your browser with throwaway keys; nothing leaves this page. It demonstrates the pattern; it does not describe, measure or certify any production system, and no partnership with the products named is implied. The signing step is the same pattern the briefing form in our repository uses to deliver its own briefings."
     },
     "integration": {

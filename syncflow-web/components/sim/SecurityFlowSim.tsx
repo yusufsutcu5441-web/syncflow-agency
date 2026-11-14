@@ -62,8 +62,11 @@ export default function SecurityFlowSim({ labels }: { labels: SecurityLabels }) 
       const step = (n: number) => fillText(labels.statusStep, { step: n, name: labels[STAGES[n - 1]!] });
       const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : STEP_MS;
 
+      // `crypto.subtle` exists only in a secure context (https://, or localhost) and in a browser that implements Web Crypto. The visitor is told WHICH of the two it is,
+      // because the remedy differs (open the https address / use a current browser). There is no script fallback on purpose: the card says the browser's own Web Crypto
+      // computes every number, and a hand-written substitute would make that sentence untrue.
       if (typeof crypto === 'undefined' || !crypto.subtle) {
-        patch({ outcome: 'unavailable', status: labels.outUnavailable });
+        patch({ outcome: 'unavailable', status: window.isSecureContext === false ? labels.outInsecure : labels.outNoCrypto });
         return;
       }
 

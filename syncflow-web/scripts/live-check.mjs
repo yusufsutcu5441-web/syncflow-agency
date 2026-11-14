@@ -144,7 +144,10 @@ for (const code of OPEN) {
 for (const p of ['/privacy', '/imprint', '/robots.txt', '/sitemap.xml', '/.well-known/security.txt']) await expect(p, p, 200);
 for (const code of CLOSED) await expect(`${code} is not public`, `/${code}`, 404);
 // One home page, four architectural breakdowns (docs/adr/0020) and two architectural R&D specimens (docs/adr/0032) per public language: 1 + 4 + 2 each; plus the one English-only /outbound page (docs/adr/0036).
-await expect(`sitemap lists the ${OPEN.length} languages, the ${OPEN.length * 4} breakdowns, the ${OPEN.length * 2} R&D specimen pages and /outbound`, '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === OPEN.length * 7 + 1, detail: `${n} URLs` }; });
+// Since docs/adr/0037 the pilot page too: one entry per public pilot language (English and Turkish only).
+const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
+await expect(`sitemap lists the ${OPEN.length} languages, the ${OPEN.length * 4} breakdowns, the ${OPEN.length * 2} R&D specimen pages, /outbound and ${PILOT_OPEN.length} /pilot page(s)`, '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === OPEN.length * 7 + 1 + PILOT_OPEN.length, detail: `${n} URLs` }; });
+for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot' : `/${l}/pilot`, 200);
 // What a visitor reads on the host (docs/adr/0035): the mail links go to the one configured mailbox, the legal pages carry no placeholder or draft banner
 // while the form is off (the long KVKK / GDPR draft belongs to the form), and no amount shows while prices are hidden.
 {

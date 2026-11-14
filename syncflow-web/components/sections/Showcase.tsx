@@ -24,8 +24,8 @@ const CARDS = [
  * Blueprint section 3, "Sectoral showcase": four wide cards (real estate, clinics, corporate law, and, since docs/adr/0019, logistics) in a native scroll-snap strip. A cursor-following light
  * appears inside the card under the pointer and its video plays; leaving pauses it. The videos are concept renders
  * (rendered ahead of time by npm run film:render), and the cards say so; no client results are claimed. Since docs/adr/0020 every card
- * leads to its architectural breakdown: a plain link to /showcase/<slug> (the whole card is the hit area, through an aria-hidden overlay,
- * and the visible pill is the accessible link), which BreakdownHost upgrades into a dialog over this page.
+ * leads to its architectural breakdown: a plain link to /showcase/<slug> (the whole card is the hit area, through an aria-hidden overlay element,
+ * and the visible pill is the one accessible link), which BreakdownHost upgrades into a dialog over this page.
  */
 export async function Showcase() {
   const [t, closing, locale] = await Promise.all([getTranslations('Showcase'), getTranslations('Closing'), getLocale() as Promise<AppLocale>]);
@@ -80,8 +80,9 @@ export async function Showcase() {
                 </div>
               </div>
             </div>
-            {/* The whole card is a hit area for the breakdown. Hidden from assistive technology and the tab order: the visible pill above is the link. */}
-            <Link href={withLocale(breakdownPath(key), locale)} prefetch={false} data-breakdown-link="" data-slug={key} className="card-hit" aria-hidden="true" tabIndex={-1} />
+            {/* The whole card is a hit area for the breakdown. Not a link: it used to be an anchor with no text, which a reader view or a crawler prints as an empty link "[](...)".
+                It is a plain element that BreakdownHost treats as a click on the card's one real link, the visible pill above. */}
+            <span className="card-hit" data-card-hit="" aria-hidden="true" />
           </article>
         ))}
       </ShowcaseStrip>

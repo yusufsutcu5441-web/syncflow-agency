@@ -420,8 +420,30 @@ const breakdownPath = (locale, slug) => (locale === 'en' ? `/showcase/${slug}` :
 const SPEC_SLUGS = ['studio-site', 'fail-safe-queue'];
 const specimenPath = (locale, slug) => (locale === 'en' ? `/specimens/${slug}` : `/${locale}/specimens/${slug}`);
 // Plus one: the English-only /outbound page (docs/adr/0036), a single entry with no alternates.
-check(`sitemap lists ${OPEN.length} locale URLs, ${OPEN.length * SLUGS.length} breakdown URLs, ${OPEN.length * SPEC_SLUGS.length} R&D specimen URLs with alternates (and no closed language) and the one /outbound URL`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length + SPEC_SLUGS.length) + 1 && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
+// Plus the pilot page (docs/adr/0037): one entry per public pilot language (English and Turkish only), each carrying the hreflang pair.
+const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
+const pilotPath = (locale) => (locale === 'en' ? '/pilot' : `/${locale}/pilot`);
+check(`sitemap lists ${OPEN.length} locale URLs, ${OPEN.length * SLUGS.length} breakdown URLs, ${OPEN.length * SPEC_SLUGS.length} R&D specimen URLs with alternates (and no closed language), the one /outbound URL and ${PILOT_OPEN.length} /pilot URL(s)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length + SPEC_SLUGS.length) + 1 + PILOT_OPEN.length && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
+check('every public pilot language has its /pilot URL in the sitemap', PILOT_OPEN.every((l) => sitemap.includes(`${pilotPath(l)}</loc>`)));
 check('/outbound is in the sitemap exactly once, with no other language of it', (sitemap.match(/\/outbound<\/loc>/g) ?? []).length === 1 && !/\/[a-z]{2}\/outbound/.test(sitemap));
+// The pilot page (docs/adr/0037): the offer of the cold e-mail, in the e-mail's own terms, with no invented proof; linked from the home page and the footer.
+{
+  const pilot = await get('/pilot');
+  const pilotHtml = await pilot.text();
+  check('/pilot answers 200 and states the offer of the e-mail: 30 days, nothing upfront, 3 qualified conversations, the setup fee and the monthly fee', pilot.status === 200 && /30-day outbound pilot/.test(pilotHtml) && /nothing to pay upfront/i.test(pilotHtml) && /3 qualified conversations/.test(pilotHtml) && /\$2,500/.test(pilotHtml) && /\$500/.test(pilotHtml));
+  check('/pilot carries no invented proof: no testimonial, "trusted by", guarantee or risk-free wording, and it says there are no client results yet', !/testimonial|trusted by|guarantee|risk[- ]free/i.test(pilotHtml) && /no client results to show yet/.test(pilotHtml));
+  check('/pilot hides the studio header, footer and cinema layer and has its own mail link and the address as text', /data-bare-page/.test(pilotHtml) && /href="mailto:[^"]+subject=pilot/.test(pilotHtml));
+  if (OPEN.includes('tr')) {
+    const tr = await get('/tr/pilot');
+    const trHtml = await tr.text();
+    check('/tr/pilot answers 200 in Turkish and links to the English page', tr.status === 200 && /outbound pilotu/.test(trHtml) && /href="\/pilot"/.test(trHtml));
+  }
+  for (const l of CLOSED) check(`/${l}/pilot is not public (404)`, (await get(`/${l}/pilot`)).status === 404);
+  check('the home page links to /pilot from the hero and from the footer', (html.match(/href="\/pilot"/g) ?? []).length >= 2);
+}
+// Two small honesty checks on the home page (docs/adr/0037): no placeholder timecode in the markup, and no link without any text or name (a reader view prints those as "[](...)").
+check('the film timecode is not in the HTML: it is a live scroll readout that the script fills', !/00:00:00:00/.test(html));
+check('no link on the home page is empty (every anchor has text, an image or an accessible name)', !/<a\b[^>]*>\s*<\/a>/.test(html), (html.match(/<a\b[^>]*>\s*<\/a>/g) ?? []).slice(0, 2).join(' '));
 check('every public language and every specimen has its breakdown URL in the sitemap', OPEN.every((l) => SLUGS.every((slug) => sitemap.includes(`${breakdownPath(l, slug)}</loc>`))));
 check('every public language has both R&D specimen URLs in the sitemap', OPEN.every((l) => SPEC_SLUGS.every((slug) => sitemap.includes(`${specimenPath(l, slug)}</loc>`))));
 const robots = await (await get('/robots.txt')).text();
@@ -851,13 +873,13 @@ for (const locale of OPEN) {
   const nav = (page.match(/<nav[^>]*class="[^"]*lg:flex[^"]*"[\s\S]*?<\/nav>/) ?? [''])[0];
   const ok =
     page.includes('id="studio"') && page.includes('id="how-we-built-it"') && (page.match(/<details class="note"/g) ?? []).length === 3 &&
-    page.includes('data-sim="queue"') && page.includes('data-sim="security"') && (page.match(/data-breakdown-link/g) ?? []).length === 8 &&
+    page.includes('data-sim="queue"') && page.includes('data-sim="security"') && (page.match(/data-breakdown-link/g) ?? []).length === 4 && (page.match(/data-card-hit/g) ?? []).length === 4 &&
     nav.includes('#studio') && (page.match(/data-flag=/g) ?? []).length >= OPEN.length + 1 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(page) &&
     !/\sposter="/.test(page) && (page.match(/<img[^>]+media\/clips[^>]+loading="lazy"/g) ?? []).length >= 5 &&
     !FORBIDDEN_IN_BREAKDOWN.test(normalise(stripTags(page)));
   if (!ok) homeFailures.push(locale);
 }
-check(`the home page, in every language: Studio with its three notes, both simulators drawn idle, 4 breakdown pills + 4 card hit areas, SVG flags (no emoji), a fourth nav link, lazy stills and no video poster attribute`, homeFailures.length === 0, `failing: ${homeFailures.join(', ')}`);
+check(`the home page, in every language: Studio with its three notes, both simulators drawn idle, 4 breakdown pills (the only links) + 4 card hit areas (plain elements, no empty link), SVG flags (no emoji), a fourth nav link, lazy stills and no video poster attribute`, homeFailures.length === 0, `failing: ${homeFailures.join(', ')}`);
 const enHome = normalise(stripTags((await pageAs('/?m=us')).page));
 check('the Studio text states zero defects as a method, never as a guarantee, and promises no NDA and no answer time (docs/adr/0035)', /Zero defects, as a method/.test(enHome) && /never a promise we could sign/.test(enHome) && !/\bNDA\b/.test(enHome) && !/within 24 hours/i.test(enHome) && !/guarantee/i.test(enHome.slice(enHome.indexOf('Exact by habit'), enHome.indexOf('Exact by habit') + 6000)));
 check('the Studio engineering notes state the real tolerances (pixel ratio 1.25, 24 ms, 1.2 s, 88 px, 16.7 ms)', ['1.25', '24 ms', '1.2 s', '88 px', '16.7 ms'].every((t) => enHome.includes(t)));

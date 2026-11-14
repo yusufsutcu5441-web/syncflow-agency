@@ -1,4 +1,4 @@
-import { AUDIT_BODY, AUDIT_SUBJECT, buildMailto, REVIEW_BODY, REVIEW_SUBJECT } from '@/lib/mailto';
+import { AUDIT_BODY, AUDIT_SUBJECT, buildMailto, PILOT_BODY, PILOT_SUBJECT, REVIEW_BODY, REVIEW_SUBJECT } from '@/lib/mailto';
 import { CONTACT_EMAIL } from '@/lib/site';
 
 /**
@@ -20,6 +20,9 @@ export const auditHref = (): string | null => mailtoHref(AUDIT_SUBJECT, AUDIT_BO
 
 /** "Request architecture review" on /outbound: a mail with the subject and the three prompts already in it. */
 export const reviewHref = (): string | null => mailtoHref(REVIEW_SUBJECT, REVIEW_BODY);
+
+/** "Email “pilot”" on /pilot: a mail with the one-word subject the cold e-mail asks for and two prompts already in it. */
+export const pilotHref = (): string | null => mailtoHref(PILOT_SUBJECT, PILOT_BODY);
 
 /** A plain mail to the studio, nothing prefilled. */
 export const writeHref = (): string | null => mailtoHref();

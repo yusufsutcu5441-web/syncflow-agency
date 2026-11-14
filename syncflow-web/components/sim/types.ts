@@ -87,6 +87,10 @@ export type SecurityLabels = {
   outRejected: string;
   outDuplicate: string;
   outUnavailable: string;
+  /** Web Crypto is withheld because the page was opened over an insecure connection (http:// on anything but localhost). */
+  outInsecure: string;
+  /** The browser, or an embedded in-app viewer, offers no Web Crypto at all. */
+  outNoCrypto: string;
   caption: string;
 };
 

@@ -57,9 +57,9 @@ export async function Film() {
         </div>
 
         <div className="film-hud" aria-hidden="true">
-          <span className="film-tc" data-film-tc="">
-            00:00:00:00
-          </span>
+          {/* Empty in the HTML on purpose: the readout is the scroll position, written by lib/enhance/film.ts only while the film is playing. A fixed "00:00:00:00" in the
+              markup read as a placeholder to every visitor who does not run the script (a crawler, a reader view, a screenshot before the first scroll). */}
+          <span className="film-tc" data-film-tc="" />
           <span className="film-rail" />
         </div>
       </div>

@@ -8,6 +8,7 @@ import { auditHref } from '@/lib/contact';
 import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
+import { isPilotLocale, PILOT_PATH } from '@/lib/pilot';
 import { CONTACT_EMAIL, SECTION_IDS } from '@/lib/site';
 
 /**
@@ -93,6 +94,17 @@ export async function Hero() {
               </bdi>
             </p>
           ) : null}
+
+          {/* The cold e-mails offer a 30-day outbound pilot, which this page (the studio's) does not otherwise mention: a visitor who read one finds its page from here
+              (docs/adr/0037-pilot-page.md). The page exists in English and Turkish; any other language links to the English one. */}
+          <div className="mt-9 max-w-2xl border-t border-hairline pt-5" data-pilot-note="">
+            <p className="label">{t('pilotLabel')}</p>
+            <p className="body-muted mt-2">{t('pilotText')}</p>
+            <Link href={withLocale(PILOT_PATH, isPilotLocale(locale) ? locale : 'en')} prefetch={false} className="footer-link mt-3 inline-flex items-center gap-1.5 text-sm">
+              {t('pilotCta')}
+              <ArrowRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+            </Link>
+          </div>
 
           <dl className="hero-strip">
             {strip.map(([metric, label]) => (

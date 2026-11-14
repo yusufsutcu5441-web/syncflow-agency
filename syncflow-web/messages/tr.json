@@ -48,6 +48,9 @@
     "subtitle": "Adı işin kendisi olan yöneticiler için kurumsal ölçekte dijital mimari ve güvenli iş akışı otomasyonu. Dar toleranslarla işlenir, sessizlikle bitirilir; söz verilmez, ölçülür.",
     "ctaPrimary": "Stratejik Briefing",
     "ctaSecondary": "Vitrin",
+    "pilotLabel": "Outbound pilotu",
+    "pilotText": "Outbound mu arıyorsunuz? 30 günlük pilot: peşinat yok, yalnızca konuşma üretirse ödeme. Şartlar ve fiyat tek sayfada.",
+    "pilotCta": "Pilot şartlarını gör",
     "scroll": "Kaydır",
     "metricPerformance": "Lighthouse performans, masaüstü",
     "metricCls": "Yerleşim kayması (CLS), masaüstü",
@@ -305,7 +308,8 @@
     "measured": "Söz değil, ölçüm.",
     "top": "Yukarı çık",
     "draft": "Bu dil taslak bir çeviridir ve henüz yayında değildir.",
-    "how": "Nasıl yaptık?"
+    "how": "Nasıl yaptık?",
+    "pilot": "Outbound pilotu"
   },
   "Switcher": {
     "label": "Dil",
@@ -526,6 +530,8 @@
       "outRejected": "Sıfır güven kontrolünde reddedildi. İleti iş sistemine hiç ulaşmadı.",
       "outDuplicate": "Onaylandı, iki kez işlenmedi: idempotency anahtarı daha önce görülmüştü.",
       "outUnavailable": "Web Crypto bu tarayıcı bağlamında kullanılamıyor; bu yüzden canlı hesaplama çalışamıyor.",
+      "outInsecure": "Bu sayfa güvenli olmayan bir bağlantıyla (http://) açıldı; tarayıcı bu yüzden Web Crypto’yu vermiyor ve canlı hesaplama çalışamıyor. Sayfayı https:// ile açın, çalışır.",
+      "outNoCrypto": "Bu tarayıcı ya da içinde çalıştığı uygulama içi görüntüleyici Web Crypto sağlamıyor; bu yüzden canlı hesaplama çalışamıyor. Sayfayı güncel bir Chrome, Edge, Firefox ya da Safari ile açın.",
       "caption": "Tarayıcınızda, tek kullanımlık anahtarlarla çalışır; hiçbir veri bu sayfadan çıkmaz. Bir deseni gösterir; hiçbir üretim sistemini anlatmaz, ölçmez ya da belgelemez ve adı geçen ürünlerle bir ortaklık ima edilmez. İmzalama adımı, depomuzdaki briefing formunun kendi briefing’lerini teslim etmek için kullandığı desenin aynısıdır."
     },
     "integration": {

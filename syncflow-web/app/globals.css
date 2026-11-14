@@ -1731,6 +1731,8 @@ html.lenis body {
     gap: 0.75rem;
   }
   .film-tc {
+    /* Reserves the readout's line while it is blank, so the rail below does not jump when the first value appears. */
+    min-height: 1.1em;
     font-family: var(--font-mono);
     font-size: 0.75rem;
     letter-spacing: 0.08em;
