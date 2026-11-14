@@ -212,7 +212,7 @@ for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot'
   const text = markup.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
   say(markup.includes('id="studio"') && (markup.match(/<details class="note"/g) ?? []).length === 3 && /Zero defects, as a method/.test(text) ? 'PASS' : 'FAIL', 'the Studio section is there with its three engineering notes');
   say(markup.includes('data-sim="queue"') && markup.includes('data-sim="security"') ? 'PASS' : 'FAIL', 'both simulators are on the page (drawn idle; the live chunks load when a card comes near)');
-  say((markup.match(/data-breakdown-link/g) ?? []).length === 8 && !/\sposter="/.test(markup) ? 'PASS' : 'FAIL', 'four cards lead to their breakdown (pill and hit area), and no video carries a poster attribute');
+  say((markup.match(/data-breakdown-link/g) ?? []).length === 4 && (markup.match(/data-card-hit/g) ?? []).length === 4 && !/\sposter="/.test(markup) ? 'PASS' : 'FAIL', 'four cards lead to their breakdown (one link each, plus a text-less hit area that is not a link), and no video carries a poster attribute');
   say((markup.match(/data-flag=/g) ?? []).length >= OPEN.length + 1 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(markup) ? 'PASS' : 'FAIL', 'the language menu and footer carry SVG flags (no flag emoji)');
 }
 {
