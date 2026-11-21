@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
 import { BREAKDOWN_SLUGS, breakdownPath } from '@/lib/breakdown';
+import { SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { OUTBOUND_PATH } from '@/lib/outbound';
 import { PILOT_LOCALES, PILOT_PATH } from '@/lib/pilot';
@@ -46,7 +47,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   });
 
   // Since docs/adr/0032: the architectural R&D specimens, one entry per specimen and public language, each with its own hreflang set.
-  const specimens = SPECIMEN_SLUGS.flatMap((slug) => {
+  // Since docs/adr/0038 /outbound, /pilot and the fail-safe-queue specimen belong to the enterprise layer: they are listed only while SHOW_ENTERPRISE is on (off, next.config.mjs
+  // answers them with a 301 to the home page). The studio-site specimen is the Lighthouse evidence of the performance claim and is listed in both modes.
+  const specimenSlugs = SHOW_ENTERPRISE ? SPECIMEN_SLUGS : SPECIMEN_SLUGS.filter((slug) => slug === 'studio-site');
+  const specimens = specimenSlugs.flatMap((slug) => {
     const alternates = {
       languages: {
         ...Object.fromEntries(OPEN_LOCALES.map((locale) => [LOCALE_LABELS[locale].hreflang, specimenUrl(slug, locale)])),
@@ -62,13 +66,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   });
 
   // Since docs/adr/0036: the English-only outbound page. One entry, no hreflang: no other language has it.
-  const outbound = [{ url: `${SITE_URL}${OUTBOUND_PATH}`, changeFrequency: 'monthly' as const, priority: 0.7 }];
+  const outbound = !SHOW_ENTERPRISE ? [] : [{ url: `${SITE_URL}${OUTBOUND_PATH}`, changeFrequency: 'monthly' as const, priority: 0.7 }];
 
   // Since docs/adr/0037: the pilot page, in English and Turkish only (the pilot languages that are public), each entry listing the other as its hreflang.
   const pilotOpen = PILOT_LOCALES.filter((locale) => OPEN_LOCALES.includes(locale));
   const pilotUrl = (locale: AppLocale) => `${SITE_URL}${withLocale(PILOT_PATH, locale)}`;
   const pilotAlternates = { languages: { ...Object.fromEntries(pilotOpen.map((locale) => [LOCALE_LABELS[locale].hreflang, pilotUrl(locale)])), 'x-default': pilotUrl(routing.defaultLocale) } };
-  const pilot = pilotOpen.map((locale) => ({ url: pilotUrl(locale), changeFrequency: 'monthly' as const, priority: locale === routing.defaultLocale ? 0.8 : 0.7, alternates: pilotAlternates }));
+  const pilot = !SHOW_ENTERPRISE ? [] : pilotOpen.map((locale) => ({ url: pilotUrl(locale), changeFrequency: 'monthly' as const, priority: locale === routing.defaultLocale ? 0.8 : 0.7, alternates: pilotAlternates }));
 
   return [...home, ...breakdowns, ...specimens, ...outbound, ...pilot];
 }

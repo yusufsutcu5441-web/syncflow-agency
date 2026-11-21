@@ -31,11 +31,17 @@ const rows = [];
 
 // A build of what ships: none of the owner's delivery or bot-check variables, whatever this machine's shell has set.
 const CLEAN = { ...process.env };
-for (const name of ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_FROM', 'BRIEFING_INBOX', 'CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID', 'TELEGRAM_API_BASE', 'CSP_MODE', 'DEFER_FRAMEWORK', 'NEXT_PUBLIC_CONTACT_EMAIL', 'NEXT_PUBLIC_SHOW_PRICING', 'NEXT_PUBLIC_BRIEFING_ENABLED', 'NEXT_PUBLIC_LAUNCHED_LOCALES', 'NEXT_PUBLIC_PREVIEW_LOCALES', 'EXPECT_LOCALES']) delete CLEAN[name];
+for (const name of ['NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_FROM', 'BRIEFING_INBOX', 'CONTACT_WEBHOOK_URL', 'CONTACT_WEBHOOK_SECRET', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID', 'TELEGRAM_API_BASE', 'CSP_MODE', 'DEFER_FRAMEWORK', 'NEXT_PUBLIC_CONTACT_EMAIL', 'NEXT_PUBLIC_SHOW_PRICING', 'NEXT_PUBLIC_BRIEFING_ENABLED', 'NEXT_PUBLIC_SHOW_ENTERPRISE', 'NEXT_PUBLIC_LAUNCHED_LOCALES', 'NEXT_PUBLIC_PREVIEW_LOCALES', 'EXPECT_LOCALES']) delete CLEAN[name];
 const MAILBOX = 'gate@example.test'; // a reserved test domain (RFC 2606): the gate never uses a real address
 const SEVEN = 'en,tr,ar,de,fr,es,zh';
-const FEATURE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX, NEXT_PUBLIC_SHOW_PRICING: 'true', NEXT_PUBLIC_BRIEFING_ENABLED: 'true', NEXT_PUBLIC_LAUNCHED_LOCALES: SEVEN };
+// SHOW_ENTERPRISE (docs/adr/0038-studio-only-site.md) is on in the FEATURE build too: the simulators, Drawing 01, the specimen cards, /pilot and /outbound stay proven there; the RELEASE build is
+// the studio-only site that ships.
+const FEATURE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX, NEXT_PUBLIC_SHOW_PRICING: 'true', NEXT_PUBLIC_BRIEFING_ENABLED: 'true', NEXT_PUBLIC_SHOW_ENTERPRISE: 'true', NEXT_PUBLIC_LAUNCHED_LOCALES: SEVEN };
 const RELEASE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX };
+// What a browser can prove about the shipped page (no form, no simulator, no enterprise cards, English and Turkish only): the groups of scripts/browser-flow.mjs that do not drive the briefing form, the
+// simulators, Drawing 01, the Studio specimen cards or the seven-language gate (gate, anchors and deeplink assume the FEATURE build and its #briefing link), plus 'studioonly' (the two-fact row, the Lighthouse
+// evidence link and its way back). The CLS walk, typography, the showcase dialog and pages, the framework start and the cinema layer run here on the page that ships.
+const RELEASE_BROWSER_GROUPS = 'cls,type,casestudy,studioonly,framework,cinema';
 
 function step(label, command, args, { env = CLEAN, shell = false } = {}) {
   const started = Date.now();
@@ -105,7 +111,11 @@ try {
     if (step('production build of the RELEASE build (every switch off: English and Turkish, no form, no price)', npm, ['run', 'build'], { env: RELEASE_BUILD, shell: true })) {
       const release = await serve(PORT + 1, RELEASE_BUILD, 'RELEASE build, every switch off');
       server = release.child;
-      if (release.up) step('HTTP smoke test of the RELEASE build (scripts/smoke.mjs)', node, ['scripts/smoke.mjs', `http://localhost:${PORT + 1}`], { env: RELEASE_BUILD });
+      if (release.up) {
+        step('HTTP smoke test of the RELEASE build (scripts/smoke.mjs)', node, ['scripts/smoke.mjs', `http://localhost:${PORT + 1}`], { env: RELEASE_BUILD });
+        // The page that ships is measured in a real browser too (docs/adr/0038: the gate must never prove only a build that is not the one released).
+        step(`real-browser flow of the RELEASE build, the studio-only page (scripts/browser-flow.mjs --only=${RELEASE_BROWSER_GROUPS}${quick ? ' --quick' : ''})`, node, ['scripts/browser-flow.mjs', `http://localhost:${PORT + 1}`, `--only=${RELEASE_BROWSER_GROUPS}`, ...(quick ? ['--quick'] : [])], { env: { ...RELEASE_BUILD, EXPECT_LOCALES: 'en,tr' } });
+      }
     }
   }
 } finally {

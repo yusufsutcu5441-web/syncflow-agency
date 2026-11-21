@@ -29,6 +29,23 @@ if (process.argv.includes('build') && !/^[^\s@<>"',;:\\]+@[^\s@<>"',;:\\]+\.[^\s
   console.warn(`\n   WARNING: NEXT_PUBLIC_CONTACT_EMAIL is ${contactEmail ? 'not a valid address' : 'not set'}. This build has NO mail link and NO contact address on the page. Set it on the host and rebuild.\n`);
 }
 
+// The studio-only site (docs/adr/0038-studio-only-site.md): while NEXT_PUBLIC_SHOW_ENTERPRISE is off (the default; same rule as lib/flags.ts, only "true" or "1" turns it on) the pages of the
+// old outbound identity are not deleted but answer a 301 to the home page of their own language: /pilot, /outbound and the fail-safe-queue specimen. `statusCode: 301` on purpose: `permanent: true`
+// would send a 308. The studio-site specimen is NOT redirected: it is the Lighthouse evidence of the performance claim. The language list is the routed one (i18n/routing.ts); a redirect
+// runs before the proxy, so it carries no CSP nonce and needs none. Browsers keep a 301 for a long time: turning the switch back on does not bring the pages back for a browser that has seen it.
+const showEnterprise = ['true', '1'].includes(process.env.NEXT_PUBLIC_SHOW_ENTERPRISE ?? '');
+const otherLocales = 'tr|ar|de|fr|es|zh|ja';
+const enterpriseRedirects = showEnterprise
+  ? []
+  : [
+      { source: '/pilot', destination: '/', statusCode: 301 },
+      { source: '/outbound', destination: '/', statusCode: 301 },
+      { source: '/specimens/fail-safe-queue', destination: '/', statusCode: 301 },
+      { source: '/:locale(tr)/pilot', destination: '/:locale', statusCode: 301 },
+      { source: '/:locale(tr)/outbound', destination: '/:locale', statusCode: 301 },
+      { source: `/:locale(${otherLocales})/specimens/fail-safe-queue`, destination: '/:locale', statusCode: 301 },
+    ];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -59,7 +76,7 @@ const nextConfig = {
   // the DNS record is `CNAME www cname.vercel-dns.com` at the registrar (docs/vercel-next-site.md section 10): this rule is what happens
   // once a visitor arrives, so adding the domain in Vercel as a plain domain is enough, no redirect has to be set in the dashboard.
   async redirects() {
-    return [{ source: '/:path*', has: [{ type: 'host', value: 'www.syncflow.agency' }], destination: 'https://syncflow.agency/:path*', permanent: true }];
+    return [{ source: '/:path*', has: [{ type: 'host', value: 'www.syncflow.agency' }], destination: 'https://syncflow.agency/:path*', permanent: true }, ...enterpriseRedirects];
   },
   async headers() {
     return [

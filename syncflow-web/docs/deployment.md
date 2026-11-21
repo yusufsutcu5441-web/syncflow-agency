@@ -51,6 +51,7 @@ NEXT_PUBLIC_ önekliler **derleme anında gömülür** (değişince yeniden dağ
 | `NEXT_PUBLIC_CONTACT_EMAIL` | **Girilmeli** (Production + Preview; 22.10.2026) | Sitenin tek iletişim adresi: her `mailto:` bağlantısı, iletişim satırı, künye ve yapılandırılmış veri bundan gelir. **Kodda yazılı değildir.** Yoksa derlemede hiçbir e-posta bağlantısı olmaz (derleme uyarır); push'tan ÖNCE girin ya da girdikten sonra yeniden dağıtın |
 | `NEXT_PUBLIC_SHOW_PRICING` | Tanımsız (= kapalı) | `true`: yatırım basamakları ve kapıdaki para birimi etiketleri görünür. Kapalıyken sitede hiçbir tutar yoktur; `lib/pricing.ts` değişmez ([ADR 0035](adr/0035-sales-ready-release.md)) |
 | `NEXT_PUBLIC_BRIEFING_ENABLED` | Tanımsız (= kapalı) | `true` **ve** `SHOW_PRICING=true`: briefing formu, bağlantıları ve `POST /api/briefing` açılır; açılınca uzun hukuki taslak (yer tutuculu) geri gelir. Kapalıyken form yoktur ve `/api/briefing` her yöntemde 404 verir |
+| `NEXT_PUBLIC_SHOW_ENTERPRISE` | Tanımsız (= kapalı) | `true`: kurumsal katman geri gelir (Mimari IV–VI simülatör kartları, Studio'daki Drawing 01 / HMAC-AES olgusu / beşinci manifesto satırı / numune kartları, Hero'daki "Outbound pilot" bandı, footer linki, `/pilot`, `/outbound`, `/specimens/fail-safe-queue`). Kapalıyken bunlar çizilmez ve üç sayfa ana sayfaya **301** verir (`next.config.mjs`); `/specimens/studio-site` her iki durumda yayındadır ([ADR 0038](adr/0038-studio-only-site.md)) |
 | `NEXT_PUBLIC_LAUNCHED_LOCALES` | Tanımsız | Varsayılan `en,tr` (22.10.2026, ADR 0035); diğer diller 404. Yedi sermaye merkezi dilini açmak: `en,tr,ar,de,fr,es,zh` |
 | `CSP_MODE` | Tanımsız | Varsayılan: uygulanan CSP; `report-only` acil geri alma anahtarı |
 | `DEFER_FRAMEWORK` | Tanımsız | `off` çerçeve ertelemesini kapatır |
@@ -65,7 +66,7 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 
 ## 5. Yayın akışı
 
-1. **Yerelde kapı:** `npm run release:verify` (iki derleme, 11 adım; sessiz makinede 16–18 dakika, yoğun makinede daha uzun; `-- --quick` hızlı kümedir). Hepsi yeşil olmadan commit "hazır" sayılmaz. Bir adım düşerse kapı düşen satırları ve tam çıktının dosya yolunu yazar.
+1. **Yerelde kapı:** `npm run release:verify` (iki derleme, 12 adım: gönderilen kapalı derleme artık gerçek tarayıcıyla da ölçülür, [ADR 0038](adr/0038-studio-only-site.md); sessiz makinede 16–18 dakika, yoğun makinede daha uzun; `-- --quick` hızlı kümedir). Hepsi yeşil olmadan commit "hazır" sayılmaz. Bir adım düşerse kapı düşen satırları ve tam çıktının dosya yolunu yazar.
 2. **Yayın:** `git push origin main`; Vercel yaklaşık 30–60 saniyede yayınlar. Durum: `https://api.github.com/repos/yusufsutcu5441-web/syncflow-agency/commits/<sha>/status` ya da panel.
 3. **Canlıda doğrula:** `NEXT_PUBLIC_CONTACT_EMAIL=<panelde girdiğiniz adres> node scripts/live-check.mjs https://syncflow.agency` (varsayılan sürümde bayraklar kapalı, diller `en,tr`; form açıkken `NEXT_PUBLIC_SHOW_PRICING=true NEXT_PUBLIC_BRIEFING_ENABLED=true EXPECT_LOCALES=…` da verilir; hata sıfır olmalı), `npm run qa:csp -- https://syncflow.agency`. `npm run qa:browser` **form açık derlemeyi** sürer (varsayılan sürümde form gruplarının sürecek bir şeyi yoktur). Site her adrese dakikada 30 API isteği ve 10 dakikada 5 briefing POST'u sınırı koyar; `live-check` 3 POST yapar, art arda çok sık koşmayın (429 uyarı olarak raporlanır, hata değildir).
 4. **Değişken girdikten sonra:** panelden Redeploy ya da boş commit; `NEXT_PUBLIC_*` yeni derleme ister.
@@ -80,6 +81,7 @@ Hiçbir gizli değer depoya girmez (`.env*` yoksayılır, yalnızca `.env.exampl
 | CSP bir kaynağı engellerse | `CSP_MODE=report-only` + yeniden dağıtım |
 | Teslim sorun çıkarırsa | SMTP/webhook/Telegram değişkenlerini silmek: form dürüst taslak moduna döner |
 | Beş yeni dili açmak (varsayılan kapalı) | `NEXT_PUBLIC_LAUNCHED_LOCALES=en,tr,ar,de,fr,es,zh` + yeniden dağıtım |
+| Kurumsal katmanı, `/pilot` ve `/outbound`'u geri getirmek | `NEXT_PUBLIC_SHOW_ENTERPRISE=true` + yeniden dağıtım ([ADR 0038](adr/0038-studio-only-site.md); 301'i görmüş tarayıcılar yönlendirmeyi bir süre hatırlar) |
 | Formu ve fiyatı geri getirmek | `NEXT_PUBLIC_SHOW_PRICING=true` ve `NEXT_PUBLIC_BRIEFING_ENABLED=true` + yeniden dağıtım (önce uzun hukuki taslağın yer tutucuları doldurulur) |
 
 ## 7. Sürüm kapısı sonuçları

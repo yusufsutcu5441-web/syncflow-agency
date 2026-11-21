@@ -1,3 +1,5 @@
+import { ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { SceneVideo } from '@/components/media/SceneVideo';
@@ -8,8 +10,11 @@ import { SecurityView } from '@/components/sim/SecurityView';
 import { IDLE_QUEUE, IDLE_SECURITY, type IntegrationLabels, type QueueLabels, type SecurityLabels } from '@/components/sim/types';
 import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
+import { SHOW_ENTERPRISE } from '@/lib/flags';
+import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, FRAME_SERIES, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
+import { specimenPath } from '@/lib/specimens';
 
 type Formatter = Awaited<ReturnType<typeof getFormatter>>;
 
@@ -117,10 +122,10 @@ export async function Architecture() {
   ] as const;
 
   return (
-    <section id={SECTION_IDS.architecture} className="section cv cv-architecture" aria-labelledby="architecture-title">
+    <section id={SECTION_IDS.architecture} className="section cv cv-architecture" data-lean={SHOW_ENTERPRISE ? undefined : ''} aria-labelledby="architecture-title">
       <div className="container-x grid gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
         <div className="lg:sticky lg:top-32 lg:self-start">
-          <SectionHead id="architecture-title" label={t('label')} title={t('title')} subtitle={t('intro')} />
+          <SectionHead id="architecture-title" label={t('label')} title={t('title')} subtitle={SHOW_ENTERPRISE ? t('intro') : t('introFront')} />
         </div>
 
         <div className="grid gap-6">
@@ -199,10 +204,21 @@ export async function Architecture() {
                     {t('c3Caption', { tool: 'Lighthouse', profile: `${METRICS.lighthouseAccessibility.profile}; ${METRICS.lighthousePerformanceMobile.profile}`, date: date(METRICS.lighthouseAccessibility.measuredAt) })}
                   </p>
                 ) : null}
+                {/* Studio-only site (docs/adr/0038): the Studio's specimen cards are gone, so the Lighthouse evidence page is linked from the Lighthouse numbers themselves. With the enterprise layer on, the Studio cards lead there. */}
+                {!SHOW_ENTERPRISE ? (
+                  <Link href={withLocale(specimenPath('studio-site'), locale)} prefetch={false} className="footer-link mt-5 inline-flex items-center gap-1.5 text-sm" data-lighthouse-evidence="">
+                    {t('c3Link')}
+                    <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                  </Link>
+                ) : null}
               </div>
             </div>
           </article>
 
+          {/* Cards IV to VI are the enterprise layer (docs/adr/0038): they are drawn only while SHOW_ENTERPRISE is on (lib/flags.ts). Off (the default) the section is cards I to III:
+              native video, frame time and the four Lighthouse rings. */}
+          {SHOW_ENTERPRISE ? (
+            <>
           {/* IV: fail-safe enterprise automation. The same card shell as I to III but without the Border Beam: the page keeps at most three. */}
           <article className="beam-card" data-maskframe="">
             <div className="beam-body p-6 md:p-8">
@@ -256,6 +272,8 @@ export async function Architecture() {
               </div>
             </div>
           </article>
+            </>
+          ) : null}
         </div>
       </div>
     </section>

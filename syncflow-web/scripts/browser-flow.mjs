@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, framework, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, studioonly, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *   npm run qa:browser -- --throttle=4               every page runs its CPU 4x slower (QA_CPU_THROTTLE=4 does the same): a loaded machine, to show which checks depend on timing
@@ -69,6 +69,13 @@ if (!CONTACT) {
   process.exit(2);
 }
 const CONTACT_RE = CONTACT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// The enterprise layer (docs/adr/0038) is a build switch: the groups that drive its simulators, drawing and specimen cards need a build with it on (release:verify's FEATURE build);
+// the 'studioonly' group needs one with it off (the shipped site). Run with the same NEXT_PUBLIC_SHOW_ENTERPRISE the server was built with.
+const ENTERPRISE_ON = ['true', '1'].includes(process.env.NEXT_PUBLIC_SHOW_ENTERPRISE ?? '');
+// The public languages of the server under test. Default: the seven capital-centre languages of the FEATURE build (what every group below was written for); the shipped RELEASE build has English and
+// Turkish only, and release:verify runs the groups that suit it with EXPECT_LOCALES=en,tr (docs/adr/0038). A language list in a group is cut to the public ones; a closed language answers 404 by design.
+const PUBLIC_LANGS = (process.env.EXPECT_LOCALES ?? 'en,tr,ar,de,fr,es,zh').split(',').map((s) => s.trim()).filter(Boolean);
+const publicLangs = (list) => list.filter((l) => PUBLIC_LANGS.includes(l));
 
 const DESKTOP = { width: 1440, height: 900, deviceScaleFactor: 1 };
 const PHONE = { width: 412, height: 823, deviceScaleFactor: 1.75, isMobile: true, hasTouch: true };
@@ -239,8 +246,8 @@ if (want('deeplink')) {
 if (want('cls')) {
   group('Nothing shifts while the page is scrolled top to bottom and back (including right to left)');
   const runs = QUICK
-    ? [['ar', 'phone', PHONE]]
-    : [['en', 'desktop', DESKTOP], ['en', 'phone', PHONE], ['ar', 'desktop', DESKTOP], ['ar', 'phone', PHONE], ['de', 'phone', PHONE]];
+    ? PUBLIC_LANGS.includes('ar') ? [['ar', 'phone', PHONE]] : [['en', 'phone', PHONE], ['tr', 'phone', PHONE]]
+    : [['en', 'desktop', DESKTOP], ['en', 'phone', PHONE], ['ar', 'desktop', DESKTOP], ['ar', 'phone', PHONE], ['de', 'phone', PHONE]].filter(([lang]) => PUBLIC_LANGS.includes(lang));
   for (const [lang, label, viewport] of runs) {
     const scrollThrough = async (noCv) => {
       const { page } = await open(url(lang), { viewport, noCv });
@@ -485,7 +492,7 @@ if (want('type')) {
       family: getComputedStyle(hero ?? document.body).fontFamily.split(',')[0].replace(/"/g, ''),
     };
   };
-  for (const lang of ['en', 'tr', 'de', 'fr', 'es', 'ar', 'zh']) {
+  for (const lang of publicLangs(['en', 'tr', 'de', 'fr', 'es', 'ar', 'zh'])) {
     const latin = !['ar', 'zh'].includes(lang);
     const problems = [];
     let fonts = null;
@@ -524,7 +531,7 @@ if (want('type')) {
 // ── the case studies: reachable from the showcase cards, in a dialog and as pages, in the languages that read differently ─────────────
 if (want('casestudy')) {
   group('The case studies open from the showcase cards (dialog), stand alone as pages, and keep their four headings (docs/adr/0020)');
-  for (const lang of ['en', 'tr', 'ar']) {
+  for (const lang of publicLangs(['en', 'tr', 'ar'])) {
     const { page, errors } = await open(url(lang));
     await page.evaluate(() => document.querySelector('#showcase')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
     await sleep(1200);
@@ -554,7 +561,7 @@ if (want('casestudy')) {
     check(`${lang}: no page or console errors on the home page`, errors.length === 0, errors.slice(0, 3).join(' | '));
     await page.close();
   }
-  for (const [lang, slug] of [['en', 'estate'], ['tr', 'clinic'], ['de', 'law'], ['ar', 'logistics']]) {
+  for (const [lang, slug] of [['en', 'estate'], ['tr', 'clinic'], ['de', 'law'], ['ar', 'logistics']].filter(([l]) => PUBLIC_LANGS.includes(l))) {
     const { page, errors } = await open(url(lang, `/showcase/${slug}`));
     const view = await page.evaluate(() => ({
       title: document.querySelector('#bd-title')?.textContent?.trim() ?? '',
@@ -888,6 +895,54 @@ if (want('specimens')) {
     await sleep(500);
     await Promise.all([page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => undefined), page.evaluate(() => document.querySelector('#specimens .spec-card')?.click())]);
     check(`${label}: a click on a card opens its specimen page`, page.url().includes('/specimens/studio-site') && (await page.evaluate(() => document.querySelector('[data-breakdown="studio-site"]') !== null)), page.url());
+    check(`${label}: no page or console errors on the way`, errors.length === 0, errors.slice(0, 2).join(' | '));
+    await page.close();
+  }
+}
+
+// ── the studio-only site (docs/adr/0038): what replaced the enterprise parts must work in a real browser ───────────────────────────
+// Runs only against a build with NEXT_PUBLIC_SHOW_ENTERPRISE off (the shipped site); with it on, these elements do not exist and the specimens group above covers the Studio cards.
+if (want('studioonly') && !ENTERPRISE_ON) {
+  group('Studio-only site: two facts fill their row, the Lighthouse card leads to the evidence page and back, nothing of the enterprise layer is left (docs/adr/0038)');
+  for (const [label, viewport] of QUICK ? [['desktop', DESKTOP]] : [['desktop', DESKTOP], ['phone', PHONE]]) {
+    const { page, errors } = await open('/?m=us', { viewport });
+    const layout = await page.evaluate(() => {
+      const facts = document.querySelector('.facts');
+      const items = [...document.querySelectorAll('.facts .fact')];
+      const box = facts?.getBoundingClientRect();
+      const last = items.at(-1)?.getBoundingClientRect();
+      return {
+        count: items.length,
+        tracks: facts ? getComputedStyle(facts).gridTemplateColumns.split(' ').length : 0,
+        gap: box && last ? Math.round(box.right - last.right) : null,
+        sims: document.querySelectorAll('.sim').length,
+        specimens: document.querySelectorAll('#specimens, .spec-card, figure.drawing').length,
+        pilot: document.querySelectorAll('[data-pilot-note], a[href*="/pilot"], a[href*="/outbound"]').length,
+      };
+    });
+    check(`${label}: two facts, ${viewport.width >= 1024 ? 'two even columns with no empty third column' : 'stacked'}`, layout.count === 2 && layout.tracks === (viewport.width >= 1024 ? 2 : 1) && (viewport.width < 1024 || (layout.gap !== null && layout.gap <= 2)), JSON.stringify(layout));
+    check(`${label}: no simulator, no Drawing 01, no specimen card, no pilot band or link in the DOM`, layout.sims === 0 && layout.specimens === 0 && layout.pilot === 0, JSON.stringify(layout));
+    // The Lighthouse card's link: below the four rings, one click opens the evidence page, and its way back lands on the Architecture section.
+    const link = await page.evaluate(() => {
+      const a = document.querySelector('#architecture a[data-lighthouse-evidence]');
+      const rings = document.querySelector('#architecture [data-rings]');
+      return a ? { href: a.getAttribute('href'), belowRings: Boolean(rings && rings.compareDocumentPosition(a) & Node.DOCUMENT_POSITION_FOLLOWING) } : null;
+    });
+    check(`${label}: the Lighthouse card carries one link to /specimens/studio-site, below its rings`, link?.href === '/specimens/studio-site' && link.belowRings === true, JSON.stringify(link));
+    await page.evaluate(() => document.querySelector('a[data-lighthouse-evidence]')?.scrollIntoView({ block: 'center', behavior: 'instant' }));
+    await sleep(500);
+    await page.evaluate(() => document.querySelector('a[data-lighthouse-evidence]')?.click());
+    await page.waitForFunction(() => location.pathname === '/specimens/studio-site' && document.querySelector('[data-breakdown="studio-site"]'), { timeout: 30000 }).catch(() => undefined);
+    check(`${label}: a click on it opens the studio-site specimen`, page.url().includes('/specimens/studio-site') && (await page.evaluate(() => document.querySelector('[data-breakdown="studio-site"]') !== null)), page.url());
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await sleep(300);
+    const back = await page.evaluate(() => document.querySelector('main a.footer-link[href="/#architecture"]')?.getAttribute('href') ?? null);
+    check(`${label}: the specimen's way back points at the Architecture section, not at a Studio block that is gone`, back === '/#architecture', String(back));
+    await page.evaluate(() => document.querySelector('main a.footer-link[href="/#architecture"]')?.click());
+    await page.waitForFunction(() => location.pathname === '/' && location.hash === '#architecture', { timeout: 30000 }).catch(() => undefined);
+    await settle(page);
+    const landed = await page.evaluate(() => ({ path: location.pathname, hash: location.hash, top: Math.round(document.getElementById('architecture')?.getBoundingClientRect().top ?? 9999) }));
+    check(`${label}: the way back lands on the Architecture section, under the header`, landed.path === '/' && landed.hash === '#architecture' && landed.top >= 0 && landed.top <= 240, JSON.stringify(landed));
     check(`${label}: no page or console errors on the way`, errors.length === 0, errors.slice(0, 2).join(' | '));
     await page.close();
   }

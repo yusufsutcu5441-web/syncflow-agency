@@ -407,6 +407,31 @@ html[lang='ar'] ::after {
       --cv: 750px;
     }
   }
+  /* The studio-only site (docs/adr/0038) draws shorter Architecture and Studio sections (no simulator cards, no Drawing 01, no specimen cards): components/sections/Architecture.tsx and Studio.tsx set
+     data-lean on them while SHOW_ENTERPRISE is off, and their placeholders are the heights measured on that page (English, content-visibility off, 412 / 820 / 1440 px wide), so the page does not change
+     length when they are drawn. The values above stay for the build with the enterprise layer on. (An attribute, not a class: faz2-denetim.mjs reads the literal `cv cv-<name>` class string.) */
+  .cv-architecture[data-lean] {
+    --cv: 2687px;
+  }
+  .cv-studio[data-lean] {
+    --cv: 5082px;
+  }
+  @media (min-width: 48rem) {
+    .cv-architecture[data-lean] {
+      --cv: 2302px;
+    }
+    .cv-studio[data-lean] {
+      --cv: 4036px;
+    }
+  }
+  @media (min-width: 64rem) {
+    .cv-architecture[data-lean] {
+      --cv: 2179px;
+    }
+    .cv-studio[data-lean] {
+      --cv: 3260px;
+    }
+  }
   /* A jump to an anchor needs the real height of everything above its target. lib/cv.ts sets data-cv-prime on those sections for the length
      of the scroll; a page opened on a deep link (/#studio) is laid out in full from the first paint until the script marks it ready. */
   .cv[data-cv-prime],
@@ -1327,6 +1352,10 @@ html[lang='ar'] ::after {
   @media (min-width: 64rem) {
     .facts {
       grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    /* Two facts (the studio-only site, docs/adr/0038, drops the HMAC / AES one): two even columns, not two thirds of a row. */
+    .facts[data-count='2'] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   .fact {

@@ -21,8 +21,9 @@
  *
  * Release switches (lib/flags.ts, docs/adr/0035-sales-ready-release.md). The server under test was BUILT with some values of these; run the smoke with
  * the same ones (NEXT_PUBLIC_ values are inlined at build time), or the checks below describe a different site:
- *   NEXT_PUBLIC_CONTACT_EMAIL, NEXT_PUBLIC_SHOW_PRICING, NEXT_PUBLIC_BRIEFING_ENABLED
- * Default (all unset): no price, no briefing form, /api/briefing answers 404, every call to action is a mail link to the configured address.
+ *   NEXT_PUBLIC_CONTACT_EMAIL, NEXT_PUBLIC_SHOW_PRICING, NEXT_PUBLIC_BRIEFING_ENABLED, NEXT_PUBLIC_SHOW_ENTERPRISE (docs/adr/0038-studio-only-site.md)
+ * Default (all unset): no price, no briefing form, /api/briefing answers 404, every call to action is a mail link to the configured address, and the site is the
+ * studio only: no enterprise cards, no "Outbound pilot" band, /pilot, /outbound and the fail-safe-queue specimen answer a 301 to the home page.
  * Both switches "true": the form, the bands, the long privacy notice and the API checks of the earlier releases (the full set, including the mock webhook).
  */
 import { createHmac } from 'node:crypto';
@@ -38,6 +39,8 @@ const CLOSED = ALL_LOCALES.filter((l) => !OPEN.includes(l));
 const flagOn = (value) => value === 'true' || value === '1';
 const PRICING_ON = flagOn(process.env.NEXT_PUBLIC_SHOW_PRICING);
 const BRIEFING_ON = flagOn(process.env.NEXT_PUBLIC_BRIEFING_ENABLED) && PRICING_ON;
+// The enterprise layer (docs/adr/0038): ON (the FEATURE build) every earlier check below runs unchanged; OFF (the shipped site) the same places check the opposite.
+const ENTERPRISE_ON = flagOn(process.env.NEXT_PUBLIC_SHOW_ENTERPRISE);
 const CONTACT = (process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? '').trim();
 // The capital centre (market) each language suggests, and the market's own gate link (components/gate/EntryGate.tsx).
 const MARKET_OF = { en: 'us', tr: 'tr', ar: 'me', de: 'dach', fr: 'fr', es: 'wealth', zh: 'asia' };
@@ -177,7 +180,8 @@ check('the showcase has exactly the four sectors (real estate, clinics, corporat
 // The words of a heading may sit in separate masked spans, so phrases are compared against the page's text with the tags removed.
 const pageText = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
 check('the showcase headline counts four industries and the footer links the logistics card', pageText.includes('Four industries.') && html.includes('href="/#show-logistics"'));
-check('the architecture section carries the two enterprise columns (fail-safe automation, deep integrations) and the note that implies no partnership', pageText.includes('Fail-Safe Enterprise Automation') && pageText.includes('Deep Enterprise Integrations') && pageText.includes('Salesforce') && pageText.includes('SAP') && pageText.includes('HubSpot') && pageText.includes('Oracle') && pageText.includes('no partnership, certification or conformance is implied'));
+const enterpriseCards = pageText.includes('Fail-Safe Enterprise Automation') && pageText.includes('Deep Enterprise Integrations') && pageText.includes('Salesforce') && pageText.includes('SAP') && pageText.includes('HubSpot') && pageText.includes('Oracle') && pageText.includes('no partnership, certification or conformance is implied');
+check(ENTERPRISE_ON ? 'the architecture section carries the two enterprise columns (fail-safe automation, deep integrations) and the note that implies no partnership' : 'the architecture section is the front end only: no enterprise column, no queue / integration / zero-trust simulator, and none of their names on the home page (docs/adr/0038)', ENTERPRISE_ON ? enterpriseCards : !/Fail-Safe Enterprise Automation|Deep Enterprise Integrations|Zero-Trust Security Flow|Salesforce|HubSpot|Oracle|\bSAP\b/.test(pageText) && !/q-parcel/.test(html));
 // "High-ROI digital ecosystems" was a return promise nobody had measured; it is gone (docs/adr/0035, correction round), and no ROI wording replaces it.
 check('the hero and the architecture intro carry the owner\u2019s phrases (enterprise scale, secure workflow automation) and promise no return (no "high-ROI", no ROI)', /enterprise scale/i.test(pageText) && /secure workflow automation/i.test(pageText) && !/high-ROI|\bROI\b|return on investment/i.test(pageText));
 check('no invented enterprise credential in the page (no SLA, SOC 2, ISO 27001, uptime percentage or partner badge)', !/\bSLA\b|SOC ?2|ISO ?27001|99\.9+ ?%|uptime|certified partner/i.test(pageText));
@@ -423,11 +427,35 @@ const specimenPath = (locale, slug) => (locale === 'en' ? `/specimens/${slug}` :
 // Plus the pilot page (docs/adr/0037): one entry per public pilot language (English and Turkish only), each carrying the hreflang pair.
 const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
 const pilotPath = (locale) => (locale === 'en' ? '/pilot' : `/${locale}/pilot`);
-check(`sitemap lists ${OPEN.length} locale URLs, ${OPEN.length * SLUGS.length} breakdown URLs, ${OPEN.length * SPEC_SLUGS.length} R&D specimen URLs with alternates (and no closed language), the one /outbound URL and ${PILOT_OPEN.length} /pilot URL(s)`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length + SPEC_SLUGS.length) + 1 + PILOT_OPEN.length && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
-check('every public pilot language has its /pilot URL in the sitemap', PILOT_OPEN.every((l) => sitemap.includes(`${pilotPath(l)}</loc>`)));
-check('/outbound is in the sitemap exactly once, with no other language of it', (sitemap.match(/\/outbound<\/loc>/g) ?? []).length === 1 && !/\/[a-z]{2}\/outbound/.test(sitemap));
+// Since docs/adr/0038 the enterprise layer is a release switch: ON the sitemap lists both specimens, /outbound and /pilot as before; OFF it lists only the studio-site specimen (the Lighthouse evidence).
+const SPEC_LISTED = ENTERPRISE_ON ? SPEC_SLUGS : ['studio-site'];
+const EXTRA_LISTED = ENTERPRISE_ON ? 1 + PILOT_OPEN.length : 0;
+check(`sitemap lists ${OPEN.length} locale URLs, ${OPEN.length * SLUGS.length} breakdown URLs, ${OPEN.length * SPEC_LISTED.length} R&D specimen URLs with alternates (and no closed language)${ENTERPRISE_ON ? `, the one /outbound URL and ${PILOT_OPEN.length} /pilot URL(s)` : ', and neither /outbound nor /pilot'}`, (sitemap.match(/<loc>/g) ?? []).length === OPEN.length * (1 + SLUGS.length + SPEC_LISTED.length) + EXTRA_LISTED && /hreflang="x-default"/.test(sitemap) && !CLOSED.some((l) => new RegExp(`hreflang="${l}"`).test(sitemap)), `${(sitemap.match(/<loc>/g) ?? []).length} entries`);
+if (ENTERPRISE_ON) {
+  check('every public pilot language has its /pilot URL in the sitemap', PILOT_OPEN.every((l) => sitemap.includes(`${pilotPath(l)}</loc>`)));
+  check('/outbound is in the sitemap exactly once, with no other language of it', (sitemap.match(/\/outbound<\/loc>/g) ?? []).length === 1 && !/\/[a-z]{2}\/outbound/.test(sitemap));
+} else {
+  check('the sitemap lists neither /pilot, /outbound nor the fail-safe-queue specimen', !/\/pilot<\/loc>|\/outbound<\/loc>|fail-safe-queue<\/loc>/.test(sitemap));
+  check('the studio-site specimen stays in the sitemap in every public language (the Lighthouse evidence is not redirected)', OPEN.every((l) => sitemap.includes(`${specimenPath(l, 'studio-site')}</loc>`)));
+}
+// The old outbound identity is not deleted: while the switch is off its pages answer a 301 (not the 308 of `permanent: true`) to the home page of their own language, query string dropped by the destination.
+if (!ENTERPRISE_ON) {
+  const moved = [['/pilot', '/'], ['/outbound', '/'], ['/specimens/fail-safe-queue', '/'], ...(OPEN.includes('tr') ? [['/tr/pilot', '/tr'], ['/tr/outbound', '/tr'], ['/tr/specimens/fail-safe-queue', '/tr']] : [])];
+  const answers = await Promise.all(moved.map(async ([from, to]) => {
+    const res = await get(from);
+    const location = (res.headers.get('location') ?? '').replace(ORIGIN, '');
+    return { from, to, status: res.status, location, ok: res.status === 301 && location === to };
+  }));
+  check('docs/adr/0038: /pilot, /outbound and /specimens/fail-safe-queue (and the Turkish ones) answer 301 to the home page of their language', answers.every((a) => a.ok), answers.filter((a) => !a.ok).map((a) => `${a.from} -> ${a.status} ${a.location} (wanted ${a.to})`).join(' | '));
+  const kept = await get('/specimens/studio-site');
+  check('docs/adr/0038: /specimens/studio-site is NOT redirected: it answers 200 (the Lighthouse evidence of the performance claim)', kept.status === 200);
+  const noMoreHtml = await Promise.all(['/pilot', '/outbound'].map(async (p) => (await (await get(p)).text()).includes('data-bare-page')));
+  check('the redirected pages serve no page of their own (no bare outbound / pilot page behind the 301)', noMoreHtml.every((x) => !x));
+  for (const l of CLOSED) check(`/${l}/pilot is still not public (404, never redirected)`, (await get(`/${l}/pilot`)).status === 404);
+  check('the home page has no "Outbound pilot" band, no data-pilot-note and no link to /pilot or /outbound (hero, footer, anywhere)', !/data-pilot-note/.test(html) && !/href="\/(pilot|outbound)\b/.test(html) && !/Outbound pilot/i.test(pageText));
+}
 // The pilot page (docs/adr/0037): the offer of the cold e-mail, in the e-mail's own terms, with no invented proof; linked from the home page and the footer.
-{
+if (ENTERPRISE_ON) {
   const pilot = await get('/pilot');
   const pilotHtml = await pilot.text();
   check('/pilot answers 200 and states the offer of the e-mail: 30 days, nothing upfront, 3 qualified conversations, the setup fee and the monthly fee', pilot.status === 200 && /30-day outbound pilot/.test(pilotHtml) && /nothing to pay upfront/i.test(pilotHtml) && /3 qualified conversations/.test(pilotHtml) && /\$2,500/.test(pilotHtml) && /\$500/.test(pilotHtml));
@@ -445,7 +473,7 @@ check('/outbound is in the sitemap exactly once, with no other language of it', 
 check('the film timecode is not in the HTML: it is a live scroll readout that the script fills', !/00:00:00:00/.test(html));
 check('no link on the home page is empty (every anchor has text, an image or an accessible name)', !/<a\b[^>]*>\s*<\/a>/.test(html), (html.match(/<a\b[^>]*>\s*<\/a>/g) ?? []).slice(0, 2).join(' '));
 check('every public language and every specimen has its breakdown URL in the sitemap', OPEN.every((l) => SLUGS.every((slug) => sitemap.includes(`${breakdownPath(l, slug)}</loc>`))));
-check('every public language has both R&D specimen URLs in the sitemap', OPEN.every((l) => SPEC_SLUGS.every((slug) => sitemap.includes(`${specimenPath(l, slug)}</loc>`))));
+check(ENTERPRISE_ON ? 'every public language has both R&D specimen URLs in the sitemap' : 'every public language has the studio-site specimen URL in the sitemap (and not the fail-safe-queue one, which is redirected)', OPEN.every((l) => SPEC_LISTED.every((slug) => sitemap.includes(`${specimenPath(l, slug)}</loc>`))) && (ENTERPRISE_ON || !sitemap.includes('fail-safe-queue')));
 const robots = await (await get('/robots.txt')).text();
 check('robots.txt disallows /api/ and links the sitemap', /Disallow: \/api\//.test(robots) && /Sitemap:/.test(robots));
 check('manifest + icon served', (await get('/manifest.webmanifest')).status === 200 && (await get('/icon.svg')).status === 200);
@@ -755,7 +783,8 @@ check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specim
   const problems = [];
   for (const locale of OPEN) {
     const m = JSON.parse(fs.readFileSync(new URL(`../messages/${locale}.json`, import.meta.url), 'utf8')).Specimen;
-    for (const [slug, key] of [['studio-site', 'studioSite'], ['fail-safe-queue', 'failSafeQueue']]) {
+    // Off (docs/adr/0038) the fail-safe-queue specimen is a 301 (checked above); the studio-site one stays a full page.
+    for (const [slug, key] of [['studio-site', 'studioSite'], ['fail-safe-queue', 'failSafeQueue']].filter(([s]) => SPEC_LISTED.includes(s))) {
       const path = specimenPath(locale, slug);
       const res = await get(path);
       const body = await res.text();
@@ -785,10 +814,19 @@ check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specim
       if (!ok) problems.push(`${locale}/${slug}: status ${res.status}, parts ${ids.join('')}, canonical ${canonical}, ld ${ld}, hreflang ${hreflangs}, missing ${missing.map((w) => w.slice(0, 20)).join('|')}, reference label ${labelled}, numbers ${numbers}`);
     }
   }
-  check(`all ${OPEN.length * SPEC_SLUGS.length} R&D specimen pages (2 specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, structured data, hreflang, indexable, their translated texts, the measured or computed figures, and no unmeasured frame budget, certification or SLA claim`, problems.length === 0, problems.slice(0, 3).join(' | '));
+  check(`all ${OPEN.length * SPEC_LISTED.length} R&D specimen pages (${SPEC_LISTED.length} specimen${SPEC_LISTED.length === 1 ? '' : 's'} x ${OPEN.length} languages): 200, one h1, the four parts, canonical, structured data, hreflang, indexable, their translated texts, the measured or computed figures, and no unmeasured frame budget, certification or SLA claim`, problems.length === 0, problems.slice(0, 3).join(' | '));
   const home = await (await get('/?m=us')).text();
   const cards = [...home.matchAll(/data-specimen="([a-z-]+)"/g)].map((x) => x[1]);
-  check('the home page (Studio) links to both R&D specimens', SPEC_SLUGS.every((slug) => cards.includes(slug)) && SPEC_SLUGS.every((slug) => home.includes(`href="/specimens/${slug}"`)), cards.join(','));
+  if (ENTERPRISE_ON) check('the home page (Studio) links to both R&D specimens', SPEC_SLUGS.every((slug) => cards.includes(slug)) && SPEC_SLUGS.every((slug) => home.includes(`href="/specimens/${slug}"`)), cards.join(','));
+  else {
+    // Owner decision on D2 (docs/adr/0038): the Studio cards are gone, but the studio-site page, the Lighthouse evidence, must not be an orphan: the Lighthouse card links to it.
+    const evidence = [...home.matchAll(/<a\b[^>]*data-lighthouse-evidence[^>]*>/g)].map((m) => m[0]);
+    check('the home page has no R&D specimen card, and the Lighthouse card links to the studio-site specimen (its only link on the page)', cards.length === 0 && !home.includes('id="specimens"') && !home.includes('/specimens/fail-safe-queue') && evidence.length === 1 && /href="\/specimens\/studio-site"/.test(evidence[0]) && (home.match(/href="\/specimens\/studio-site"/g) ?? []).length === 1, `${cards.join(',')} ${evidence.join(' ')}`);
+    const archSection = /<section[^>]*id="architecture"[\s\S]*?<\/section>/.exec(home)?.[0] ?? '';
+    check('that link sits inside the Architecture (Lighthouse) section, after the four Lighthouse rings', archSection.includes('data-lighthouse-evidence') && archSection.indexOf('data-rings') !== -1 && archSection.indexOf('data-rings') < archSection.indexOf('data-lighthouse-evidence'));
+    const evidencePage = await (await get('/specimens/studio-site')).text();
+    check('the studio-site specimen leads back to the Lighthouse card (#architecture), not to a Studio block that no longer exists', evidencePage.includes('href="/#architecture"') && !evidencePage.includes('href="/#specimens"'));
+  }
   check('an unknown specimen and a dormant language are 404', (await get('/specimens/nope')).status === 404 && (await get('/ja/specimens/studio-site')).status === 404);
 }
 const enBreakdown = await (await get('/showcase/law')).text();
@@ -809,6 +847,7 @@ if (CONTACT && !BRIEFING_ON) {
   const missing = [];
   const claims = [];
   const drawing = [];
+  const gone = [];
   const RATE_DRAWN = '5 req / 10 min';
   const BUDGET_DRAWN = '2 attempts, < 9.5 s';
   // A language without a key shows the English text (lib/merge-messages.ts).
@@ -821,25 +860,37 @@ if (CONTACT && !BRIEFING_ON) {
     // With the form off, Drawing 01 (its path) is a reference architecture and says so; with the form on it is the form's own path and carries no such label (docs/adr/0035).
     // The second fact names the bot check of the form only while the form exists.
     const reference = text.includes(normalise(`${messages.Studio.referenceLabel ?? enStudio.referenceLabel} — ${messages.Studio.drawingLabel}`));
-    if (reference === BRIEFING_ON) drawing.push(`${locale}: the "reference architecture" label is ${reference ? 'shown' : 'missing'} while the form is ${BRIEFING_ON ? 'on' : 'off'}`);
+    if (ENTERPRISE_ON && reference === BRIEFING_ON) drawing.push(`${locale}: the "reference architecture" label is ${reference ? 'shown' : 'missing'} while the form is ${BRIEFING_ON ? 'on' : 'off'}`);
     if (!text.includes(normalise(BRIEFING_ON ? messages.Studio.f2Text : (messages.Studio.f2TextNoForm ?? enStudio.f2TextNoForm)))) missing.push(`${locale}: the second fact (${BRIEFING_ON ? 'with' : 'without'} the form)`);
     if (!BRIEFING_ON && text.includes(normalise(messages.Studio.f2Text))) claims.push(`${locale}: the second fact still names the bot check of a form that is off`);
     // The founding statement (docs/adr/0031) and what each budget level typically includes (the form draws all of it, a level shown on a choice).
     // With the form off none of the form's strings is on the page. The chips about a mutual NDA and a 24-hour answer are never shown (docs/adr/0035).
     const scope = BRIEFING_ON ? ['scopeTitle', 'scopeNote', 't1s1', 't1s2', 't1s3', 't2s1', 't2s2', 't2s3', 't3s1', 't3s2', 't3s3'].map((key) => messages.Briefing.budget[key]) : [];
-    const wanted = [...['manifestoTitle', 'm1Title', 'm3Title', 'm5Title', 'f1Name', 'f2Name', 'f3Name', 'foundingLabel', 'founding'].map((key) => messages.Studio[key]), ...(BRIEFING_ON ? [messages.Briefing.chipPrivacy] : []), ...scope];
+    // Studio-only site (docs/adr/0038): the manifesto has four lines (no m5, "Four lines" title) and the facts are two (no f1, the HMAC / AES one); with the switch on it is the earlier five lines and three facts.
+    const studioKeys = ENTERPRISE_ON ? ['manifestoTitle', 'm1Title', 'm3Title', 'm5Title', 'f1Name', 'f2Name', 'f3Name', 'foundingLabel', 'founding'] : ['manifestoTitleFour', 'm1Title', 'm2Title', 'm3Title', 'm4Title', 'f2Name', 'f3Name', 'foundingLabel', 'founding'];
+    const wanted = [...studioKeys.map((key) => messages.Studio[key] ?? enStudio[key]), ...(BRIEFING_ON ? [messages.Briefing.chipPrivacy] : []), ...scope];
     for (const line of wanted) if (!text.includes(normalise(line))) missing.push(`${locale}: ${line.slice(0, 30)}`);
     for (const key of ['chipNda', 'chipPerson']) if (text.includes(normalise(messages.Briefing[key]))) claims.push(`${locale}: ${key}`);
     if (UNBACKED.test(text)) claims.push(locale);
-    // Drawing 01 (docs/adr/0028): its translated frame, both layouts named for assistive technology, and the annotations the sheet is made of.
-    for (const key of ['drawingLabel', 'drawingTitle', 'drawingLead', 'drawingLegend']) if (!text.includes(normalise(messages.Studio[key]))) drawing.push(`${locale}: ${key}`);
-    const named = decode(raw).split(`aria-label="${messages.Studio.drawingAlt}"`).length - 1;
-    if (named !== 2) drawing.push(`${locale}: ${named} svg(s) carry the translated description (want 2: wide and narrow)`);
-    for (const piece of ['ONE ROUTE · /api/briefing', 'FAILS CLOSED', RATE_DRAWN, BUDGET_DRAWN]) if (!text.includes(piece)) drawing.push(`${locale}: "${piece}" missing from the sheet`);
+    if (ENTERPRISE_ON) {
+      // Drawing 01 (docs/adr/0028): its translated frame, both layouts named for assistive technology, and the annotations the sheet is made of.
+      for (const key of ['drawingLabel', 'drawingTitle', 'drawingLead', 'drawingLegend']) if (!text.includes(normalise(messages.Studio[key]))) drawing.push(`${locale}: ${key}`);
+      const named = decode(raw).split(`aria-label="${messages.Studio.drawingAlt}"`).length - 1;
+      if (named !== 2) drawing.push(`${locale}: ${named} svg(s) carry the translated description (want 2: wide and narrow)`);
+      for (const piece of ['ONE ROUTE · /api/briefing', 'FAILS CLOSED', RATE_DRAWN, BUDGET_DRAWN]) if (!text.includes(piece)) drawing.push(`${locale}: "${piece}" missing from the sheet`);
+    } else {
+      // The same pieces, checked the other way round: none of Drawing 01, the HMAC / AES fact, the fifth line, the five-lines title or the specimens block is on the page.
+      for (const key of ['drawingTitle', 'drawingLegend', 'f1Name', 'm5Title', 'manifestoTitle', 'specimensTitle']) if (text.includes(normalise(messages.Studio[key] ?? enStudio[key]))) gone.push(`${locale}: ${key} is still on the page`);
+      for (const piece of ['ONE ROUTE · /api/briefing', 'FAILS CLOSED']) if (text.includes(piece)) gone.push(`${locale}: "${piece}" (Drawing 01) is still on the page`);
+      if (raw.includes('data-specimen=') || raw.includes('id="specimens"')) gone.push(`${locale}: the specimens block is still on the page`);
+      if ((raw.match(/<li class="fact"/g) ?? []).length !== 2 || !/class="facts mt-5" data-count="2"/.test(raw)) gone.push(`${locale}: the facts are not two (data-count="2")`);
+      if (reference) gone.push(`${locale}: the "reference architecture" label is on a Drawing 01 that is not drawn`);
+    }
   }
-  check(`the manifesto and the three checkable facts${BRIEFING_ON ? ', the briefing chip and its budget scope' : ''} are on the home page in all ${OPEN.length} languages`, missing.length === 0, missing.slice(0, 3).join(' | '));
+  check(ENTERPRISE_ON ? `the manifesto and the three checkable facts${BRIEFING_ON ? ', the briefing chip and its budget scope' : ''} are on the home page in all ${OPEN.length} languages` : `the four-line manifesto and the two checkable facts${BRIEFING_ON ? ', the briefing chip and its budget scope' : ''} are on the home page in all ${OPEN.length} languages (docs/adr/0038)`, missing.length === 0, missing.slice(0, 3).join(' | '));
+  if (!ENTERPRISE_ON) check(`the enterprise parts of the Studio are gone in all ${OPEN.length} languages: no Drawing 01, no HMAC / AES fact, no fifth manifesto line, no "five lines" title, no specimen cards, two facts in two columns`, gone.length === 0, gone.slice(0, 3).join(' | '));
   check('no home page carries a SOC 2, ISO 27001, GDPR-compliant, 99.9 % or SLA claim, a mutual NDA or a 24-hour answer (a studio cannot back them from code)', claims.length === 0, claims.join(', '));
-  check(`Drawing 01 (the briefing path) is on the home page in all ${OPEN.length} languages: translated heading, legend and description on both layouts, English sheet annotations`, drawing.length === 0, drawing.slice(0, 3).join(' | '));
+  if (ENTERPRISE_ON) check(`Drawing 01 (the briefing path) is on the home page in all ${OPEN.length} languages: translated heading, legend and description on both layouts, English sheet annotations`, drawing.length === 0, drawing.slice(0, 3).join(' | '));
 }
 check('every breakdown says it is a specimen, not client work', (await Promise.all(SLUGS.map(async (slug) => (await (await get(breakdownPath('en', slug))).text()).includes('not client work')))).every(Boolean));
 const clinicEn = normalise(stripTags(await (await get('/showcase/clinic')).text()));
@@ -873,18 +924,18 @@ for (const locale of OPEN) {
   const nav = (page.match(/<nav[^>]*class="[^"]*lg:flex[^"]*"[\s\S]*?<\/nav>/) ?? [''])[0];
   const ok =
     page.includes('id="studio"') && page.includes('id="how-we-built-it"') && (page.match(/<details class="note"/g) ?? []).length === 3 &&
-    page.includes('data-sim="queue"') && page.includes('data-sim="security"') && (page.match(/data-breakdown-link/g) ?? []).length === 4 && (page.match(/data-card-hit/g) ?? []).length === 4 &&
+    (ENTERPRISE_ON ? page.includes('data-sim="queue"') && page.includes('data-sim="security"') : !page.includes('data-sim=')) && (page.match(/data-breakdown-link/g) ?? []).length === 4 && (page.match(/data-card-hit/g) ?? []).length === 4 &&
     nav.includes('#studio') && (page.match(/data-flag=/g) ?? []).length >= OPEN.length + 1 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(page) &&
     !/\sposter="/.test(page) && (page.match(/<img[^>]+media\/clips[^>]+loading="lazy"/g) ?? []).length >= 5 &&
     !FORBIDDEN_IN_BREAKDOWN.test(normalise(stripTags(page)));
   if (!ok) homeFailures.push(locale);
 }
-check(`the home page, in every language: Studio with its three notes, both simulators drawn idle, 4 breakdown pills (the only links) + 4 card hit areas (plain elements, no empty link), SVG flags (no emoji), a fourth nav link, lazy stills and no video poster attribute`, homeFailures.length === 0, `failing: ${homeFailures.join(', ')}`);
+check(`the home page, in every language: Studio with its three notes, ${ENTERPRISE_ON ? 'both simulators drawn idle' : 'no simulator at all (docs/adr/0038)'}, 4 breakdown pills (the only links) + 4 card hit areas (plain elements, no empty link), SVG flags (no emoji), a fourth nav link, lazy stills and no video poster attribute`, homeFailures.length === 0, `failing: ${homeFailures.join(', ')}`);
 const enHome = normalise(stripTags((await pageAs('/?m=us')).page));
 check('the Studio text states zero defects as a method, never as a guarantee, and promises no NDA and no answer time (docs/adr/0035)', /Zero defects, as a method/.test(enHome) && /never a promise we could sign/.test(enHome) && !/\bNDA\b/.test(enHome) && !/within 24 hours/i.test(enHome) && !/guarantee/i.test(enHome.slice(enHome.indexOf('Exact by habit'), enHome.indexOf('Exact by habit') + 6000)));
 check('the Studio engineering notes state the real tolerances (pixel ratio 1.25, 24 ms, 1.2 s, 88 px, 16.7 ms)', ['1.25', '24 ms', '1.2 s', '88 px', '16.7 ms'].every((t) => enHome.includes(t)));
-check('the old still failover schematic is gone: the card holds the live simulator instead', !enHome.includes('A schematic of the pattern, not a measurement') && enHome.includes('A model of the pattern, not a measurement of a real system'));
-check('the security simulator says it uses throwaway keys, names no certification and no partnership', /throwaway keys/.test(enHome) && /no partnership with the products named is implied/.test(enHome));
+check(ENTERPRISE_ON ? 'the old still failover schematic is gone: the card holds the live simulator instead' : 'the old still failover schematic is gone, and no simulator card says "a model of the pattern" (the enterprise cards are not drawn)', !enHome.includes('A schematic of the pattern, not a measurement') && enHome.includes('A model of the pattern, not a measurement of a real system') === ENTERPRISE_ON);
+check(ENTERPRISE_ON ? 'the security simulator says it uses throwaway keys, names no certification and no partnership' : 'no security simulator text on the page: no throwaway keys, no partnership disclaimer of a product list', ENTERPRISE_ON ? /throwaway keys/.test(enHome) && /no partnership with the products named is implied/.test(enHome) : !/throwaway keys/.test(enHome) && !/no partnership with the products named is implied/.test(enHome));
 
 section('Production performance and enterprise proof (docs/adr/0021)');
 {
@@ -903,18 +954,19 @@ section('Production performance and enterprise proof (docs/adr/0021)');
     // One flag per public language in the footer, plus the one on the header's language trigger.
     if (!((raw.match(/<span class="flag" data-flag="/g) ?? []).length >= OPEN.length + 1 && !/<svg[^>]*data-flag/.test(raw))) bad.flags.push(locale);
     // The integration model: drawn for the first system on the server, in the page's language, with the first event id in its payload.
-    if (!(raw.includes('data-sim="integration"') && raw.includes(INTEGRATION_TITLE[locale]) && raw.includes('SyncflowEventId__c') && raw.includes('3f2a9c1e-7b4d-4e0a-9d51-6c8b2a7e1f40') && (locale === 'en' || !raw.includes('One event, four systems')))) bad.integration.push(locale);
+    if (ENTERPRISE_ON ? !(raw.includes('data-sim="integration"') && raw.includes(INTEGRATION_TITLE[locale]) && raw.includes('SyncflowEventId__c') && raw.includes('3f2a9c1e-7b4d-4e0a-9d51-6c8b2a7e1f40') && (locale === 'en' || !raw.includes('One event, four systems'))) : raw.includes('data-sim=') || raw.includes('SyncflowEventId__c') || raw.includes(INTEGRATION_TITLE[locale])) bad.integration.push(locale);
     // The language menu is built on first interest, so it is not in the server's page, and the trigger names no menu that does not exist yet.
     if (raw.includes('class="lang-menu"') || /class="lang-trigger"[^>]*aria-controls/.test(raw)) bad.menu.push(locale);
     // Every simulator line that changes keeps the room of its longest alternative: the invisible alternatives are out of the accessibility tree.
     const ghosts = raw.match(/<span class="reserve-ghost"[^>]*>/g) ?? [];
-    if (!(ghosts.length >= 30 && ghosts.every((g) => g.includes('aria-hidden="true"')))) bad.ghosts.push(locale);
+    // Off (docs/adr/0038) there is no simulator, so the "at least 30" count is an ON-only assertion; what stays for every build is that no reserved alternative is ever read out.
+    if (!((!ENTERPRISE_ON || ghosts.length >= 30) && ghosts.every((g) => g.includes('aria-hidden="true"')))) bad.ghosts.push(locale);
   }
   const all = (list) => (list.length === 0 ? '' : `failed in: ${list.join(', ')}`);
   check(`every language: the hero and the film are drawn at once, the ${SECTIONS.length} blocks below them (${SECTIONS.join(', ')}) are skipped until near`, bad.skipped.length === 0, all(bad.skipped));
   check('every language: the page is complete in the first response (no section streamed into a hidden block that a script reveals)', bad.complete.length === 0, all(bad.complete));
   check('every language: flags are one empty element each with a data-flag, none is an inline SVG', bad.flags.length === 0, all(bad.flags));
-  check('every language: the integration model is drawn on the server for the first system, in that language, carrying the event id', bad.integration.length === 0, all(bad.integration));
+  check(ENTERPRISE_ON ? 'every language: the integration model is drawn on the server for the first system, in that language, carrying the event id' : 'every language: no integration model and no simulator is in the server page (docs/adr/0038)', bad.integration.length === 0, all(bad.integration));
   check('every language: the header language menu is not in the server page (built on first interest) and its trigger points at nothing yet', bad.menu.length === 0, all(bad.menu));
   check('every language: the simulators reserve the room of their longest line with invisible alternatives hidden from assistive technology', bad.ghosts.length === 0, all(bad.ghosts));
 
@@ -927,8 +979,12 @@ section('Production performance and enterprise proof (docs/adr/0021)');
   check('the stylesheet skips below-fold blocks (content-visibility: auto with a remembered size), lets anchors and deep links draw what they pass, and carries the eight flags', /content-visibility:auto/.test(css) && /contain-intrinsic-block-size:auto/.test(css) && /\.cv\[data-cv-prime\]/.test(css) && /:has\(:target\)/.test(css) && (css.match(/\.flag\[data-flag=/g) ?? []).length === 8, `stylesheet ${href}`);
   check('the media frame and the cards that hold it clip with overflow: clip (a scroll container counted its zoom as layout shift on right-to-left pages)', /\.frame\{[^}]*overflow:clip/.test(css) && /\.beam-card\{[^}]*overflow:clip/.test(css));
   const enHomeText = normalise(stripTags(home));
-  check('the integration model says what it is: illustrative shapes, not generated from or validated against a vendor system, no partnership, certification or conformance', /Illustrative shapes/.test(enHomeText) && /not generated from, or validated against, a vendor system/.test(enHomeText) && /no partnership, certification or conformance is implied/.test(enHomeText));
-  check('the integration model draws the first system: Salesforce lead, id carried in SyncflowEventId__c, the other three systems named in its tabs', /Salesforce/.test(enHomeText) && /HubSpot/.test(enHomeText) && /Receivables invoice/.test(enHomeText) && /Fields mapped: 10/.test(enHomeText));
+  if (ENTERPRISE_ON) {
+    check('the integration model says what it is: illustrative shapes, not generated from or validated against a vendor system, no partnership, certification or conformance', /Illustrative shapes/.test(enHomeText) && /not generated from, or validated against, a vendor system/.test(enHomeText) && /no partnership, certification or conformance is implied/.test(enHomeText));
+    check('the integration model draws the first system: Salesforce lead, id carried in SyncflowEventId__c, the other three systems named in its tabs', /Salesforce/.test(enHomeText) && /HubSpot/.test(enHomeText) && /Receivables invoice/.test(enHomeText) && /Fields mapped: 10/.test(enHomeText));
+  } else {
+    check('the home page carries no integration model text at all (docs/adr/0038): no illustrative shapes, no field mapping, no vendor tab', !/Illustrative shapes/.test(enHomeText) && !/Fields mapped/.test(enHomeText) && !/Receivables invoice/.test(enHomeText) && !/SyncflowEventId__c/.test(home));
+  }
 }
 
 /* ── Release hygiene (docs/adr/0035-sales-ready-release.md): what a visitor reads, in every public language ─────────────────────────── */
@@ -946,7 +1002,7 @@ section('Release hygiene: no placeholder, no draft banner, no price, no promise 
   const pages = [];
   for (const locale of OPEN) {
     const prefix = locale === 'en' ? '' : `/${locale}`;
-    for (const path of [`${prefix || '/'}?m=${MARKET_OF[locale]}`, `${prefix}/privacy`, `${prefix}/imprint`, `${prefix}/showcase/law`, `${prefix}/specimens/fail-safe-queue`]) pages.push({ path, locale });
+    for (const path of [`${prefix || '/'}?m=${MARKET_OF[locale]}`, `${prefix}/privacy`, `${prefix}/imprint`, `${prefix}/showcase/law`, `${prefix}/specimens/${ENTERPRISE_ON ? 'fail-safe-queue' : 'studio-site'}`]) pages.push({ path, locale });
   }
   const problems = [];
   for (const { path, locale } of pages) {

@@ -15,6 +15,8 @@
  *   NEXT_PUBLIC_SHOW_PRICING        "true" when the host shows the investment bands (default: hidden)
  *   NEXT_PUBLIC_BRIEFING_ENABLED    "true" (with SHOW_PRICING) when the host offers the briefing form (default: no form, /api/briefing is 404)
  *   NEXT_PUBLIC_CONTACT_EMAIL       the mailbox the host was built with, to check every mail link goes to it (optional)
+ *   NEXT_PUBLIC_SHOW_ENTERPRISE     "true" when the host still shows the enterprise layer (default: the studio-only site of docs/adr/0038-studio-only-site.md: no simulators,
+ *                                   no "Outbound pilot" band, /pilot, /outbound and /specimens/fail-safe-queue answer 301 to the home page)
  */
 import { Resolver } from 'node:dns/promises';
 import tls from 'node:tls';
@@ -27,6 +29,7 @@ const CLOSED = [...Object.keys(LANG_META), 'ja'].filter((l) => !OPEN.includes(l)
 const flagOn = (value) => value === 'true' || value === '1';
 const PRICING_ON = flagOn(process.env.NEXT_PUBLIC_SHOW_PRICING);
 const BRIEFING_ON = flagOn(process.env.NEXT_PUBLIC_BRIEFING_ENABLED) && PRICING_ON;
+const ENTERPRISE_ON = flagOn(process.env.NEXT_PUBLIC_SHOW_ENTERPRISE);
 const CONTACT = (process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? '').trim();
 const results = [];
 const say = (level, name, detail = '') => {
@@ -146,8 +149,22 @@ for (const code of CLOSED) await expect(`${code} is not public`, `/${code}`, 404
 // One home page, four architectural breakdowns (docs/adr/0020) and two architectural R&D specimens (docs/adr/0032) per public language: 1 + 4 + 2 each; plus the one English-only /outbound page (docs/adr/0036).
 // Since docs/adr/0037 the pilot page too: one entry per public pilot language (English and Turkish only).
 const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
-await expect(`sitemap lists the ${OPEN.length} languages, the ${OPEN.length * 4} breakdowns, the ${OPEN.length * 2} R&D specimen pages, /outbound and ${PILOT_OPEN.length} /pilot page(s)`, '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === OPEN.length * 7 + 1 + PILOT_OPEN.length, detail: `${n} URLs` }; });
-for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot' : `/${l}/pilot`, 200);
+// Since docs/adr/0038 the enterprise layer is a release switch. ON: everything above as before. OFF (the studio-only site): one specimen page per language (studio-site, the Lighthouse evidence), no /outbound,
+// no /pilot, and those pages, with the fail-safe-queue specimen, answer a 301 to the home page of their language.
+const SPEC_LIVE = ENTERPRISE_ON ? ['studio-site', 'fail-safe-queue'] : ['studio-site'];
+await expect(`sitemap lists the ${OPEN.length} languages, the ${OPEN.length * 4} breakdowns, the ${OPEN.length * SPEC_LIVE.length} R&D specimen page(s)${ENTERPRISE_ON ? `, /outbound and ${PILOT_OPEN.length} /pilot page(s)` : ' and neither /outbound nor /pilot'}`, '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === OPEN.length * (5 + SPEC_LIVE.length) + (ENTERPRISE_ON ? 1 + PILOT_OPEN.length : 0), detail: `${n} URLs` }; });
+if (ENTERPRISE_ON) for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot' : `/${l}/pilot`, 200);
+else {
+  const sitemapText = await (await get('/sitemap.xml')).text();
+  say(!/\/pilot<\/loc>|\/outbound<\/loc>|fail-safe-queue<\/loc>/.test(sitemapText) ? 'PASS' : 'FAIL', 'the sitemap lists neither /pilot, /outbound nor the fail-safe-queue specimen');
+  const moved = [['/pilot', '/'], ['/outbound', '/'], ['/specimens/fail-safe-queue', '/'], ...(OPEN.includes('tr') ? [['/tr/pilot', '/tr'], ['/tr/outbound', '/tr'], ['/tr/specimens/fail-safe-queue', '/tr']] : [])];
+  for (const [from, to] of moved) {
+    const res = await get(from);
+    const location = (res.headers.get('location') ?? '').replace(ORIGIN, '');
+    say(res.status === 301 && location === to ? 'PASS' : 'FAIL', `${from} answers 301 to ${to}`, `-> ${res.status || res.error} ${location}`);
+  }
+  for (const l of CLOSED) await expect(`/${l}/pilot is still not public`, `/${l}/pilot`, 404);
+}
 // What a visitor reads on the host (docs/adr/0035): the mail links go to the one configured mailbox, the legal pages carry no placeholder or draft banner
 // while the form is off (the long KVKK / GDPR draft belongs to the form), and no amount shows while prices are hidden.
 {
@@ -172,7 +189,7 @@ for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot'
 {
   const bad = [];
   for (const lang of OPEN) {
-    for (const slug of ['studio-site', 'fail-safe-queue']) {
+    for (const slug of SPEC_LIVE) {
       const path = `${lang === 'en' ? '' : `/${lang}`}/specimens/${slug}`;
       const res = await get(path);
       const html = res.status === 200 ? await res.text() : '';
@@ -181,7 +198,7 @@ for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot'
       if (!(res.status === 200 && /<h1\b/.test(html) && parts && html.includes(`rel="canonical" href="${ORIGIN}${path}"`) && !/noindex/.test(html) && !/\b14\s?ms\b/i.test(text))) bad.push(`${path} (${res.status || res.error})`);
     }
   }
-  say(bad.length === 0 ? 'PASS' : 'FAIL', `both R&D specimen pages answer 200 in all ${OPEN.length} public languages with an h1, the four parts, their canonical and no noindex`, bad.slice(0, 3).join(', '));
+  say(bad.length === 0 ? 'PASS' : 'FAIL', `${ENTERPRISE_ON ? 'both R&D specimen pages' : 'the studio-site specimen page (the Lighthouse evidence)'} answer${ENTERPRISE_ON ? '' : 's'} 200 in all ${OPEN.length} public languages with an h1, the four parts, their canonical and no noindex`, bad.slice(0, 3).join(', '));
 }
 
 // The enterprise tier (docs/adr/0019): four showcase cards, the USD 50,000 floor with the three new bands and no USD 25,000 left, the two
@@ -196,7 +213,9 @@ for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot'
     const floorOk = text.includes('$50,000 – $100,000') && text.includes('$100,000 – $250,000') && text.includes('$250,000 +') && !text.includes('$25,000');
     say(floorOk ? 'PASS' : 'FAIL', 'the briefing opens at $50,000 with the three new bands and no $25,000 left');
   }
-  say(/Fail-Safe Enterprise Automation/.test(text) && /Deep Enterprise Integrations/.test(text) ? 'PASS' : 'FAIL', 'the architecture section carries the two enterprise columns');
+  const enterpriseColumns = /Fail-Safe Enterprise Automation/.test(text) && /Deep Enterprise Integrations/.test(text);
+  say(enterpriseColumns === ENTERPRISE_ON && (ENTERPRISE_ON || !/Salesforce|HubSpot|Oracle|\bSAP\b|Zero-Trust Security Flow/.test(text)) ? 'PASS' : 'FAIL', ENTERPRISE_ON ? 'the architecture section carries the two enterprise columns' : 'the architecture section is the front end only: no enterprise column, no vendor names, no zero-trust card (docs/adr/0038)');
+  if (!ENTERPRISE_ON) say(!/data-pilot-note/.test(html) && !/href="\/(pilot|outbound)\b/.test(html) && !/Outbound pilot/i.test(text) ? 'PASS' : 'FAIL', 'the home page has no "Outbound pilot" band and no link to /pilot or /outbound');
   for (const [ext, type] of [['mp4', 'video/mp4'], ['webm', 'video/webm'], ['webp', 'image/webp']]) {
     const clip = await get(`/media/clips/logistics.${ext}`, { headers: { range: 'bytes=0-0' } });
     say([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/logistics.${ext} is served as ${type}`, `-> ${clip.status || clip.error} ${clip.headers.get('content-type') ?? ''}`);
@@ -211,7 +230,7 @@ for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot'
   const markup = html.replace(/<script[\s\S]*?<\/script>/g, '');
   const text = markup.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
   say(markup.includes('id="studio"') && (markup.match(/<details class="note"/g) ?? []).length === 3 && /Zero defects, as a method/.test(text) ? 'PASS' : 'FAIL', 'the Studio section is there with its three engineering notes');
-  say(markup.includes('data-sim="queue"') && markup.includes('data-sim="security"') ? 'PASS' : 'FAIL', 'both simulators are on the page (drawn idle; the live chunks load when a card comes near)');
+  say((ENTERPRISE_ON ? markup.includes('data-sim="queue"') && markup.includes('data-sim="security"') : !markup.includes('data-sim=') && /<a\b[^>]*data-lighthouse-evidence[^>]*href="\/specimens\/studio-site"|<a\b[^>]*href="\/specimens\/studio-site"[^>]*data-lighthouse-evidence/.test(markup)) ? 'PASS' : 'FAIL', ENTERPRISE_ON ? 'both simulators are on the page (drawn idle; the live chunks load when a card comes near)' : 'no simulator is on the page, and the Lighthouse card links to the studio-site specimen (docs/adr/0038)');
   say((markup.match(/data-breakdown-link/g) ?? []).length === 4 && (markup.match(/data-card-hit/g) ?? []).length === 4 && !/\sposter="/.test(markup) ? 'PASS' : 'FAIL', 'four cards lead to their breakdown (one link each, plus a text-less hit area that is not a link), and no video carries a poster attribute');
   say((markup.match(/data-flag=/g) ?? []).length >= OPEN.length + 1 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(markup) ? 'PASS' : 'FAIL', 'the language menu and footer carry SVG flags (no flag emoji)');
 }

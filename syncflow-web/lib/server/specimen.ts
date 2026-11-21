@@ -4,7 +4,7 @@ import { runScenario } from '@/lib/arch/simulate';
 import { SCENARIOS } from '@/lib/arch/scenarios';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import type { BreakdownData } from '@/lib/breakdown';
-import { BRIEFING_ENABLED } from '@/lib/flags';
+import { BRIEFING_ENABLED, SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { SPECIMEN_KEY, SPECIMEN_NUMBER, type SpecimenSlug } from '@/lib/specimens';
@@ -121,7 +121,8 @@ export async function loadSpecimen(slug: SpecimenSlug, locale: AppLocale): Promi
     cta: {
       ...(await closingCta(locale)),
       back: b('back'),
-      backHref: withLocale('/#specimens', locale),
+      // Off (docs/adr/0038) the Studio has no specimens block: the way back is the Lighthouse card, where the studio-site specimen is linked from.
+      backHref: withLocale(SHOW_ENTERPRISE ? '/#specimens' : '/#architecture', locale),
     },
   };
 }

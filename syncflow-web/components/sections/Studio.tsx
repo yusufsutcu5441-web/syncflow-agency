@@ -4,7 +4,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { BriefingDrawing } from '@/components/sections/BriefingDrawing';
 import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
-import { BRIEFING_ENABLED } from '@/lib/flags';
+import { BRIEFING_ENABLED, SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
@@ -26,14 +26,18 @@ export async function Studio() {
   // The architectural R&D specimens (docs/adr/0032): the studio's own engineering, each a page of its own. Cards only; the figures live on the pages.
   // While the briefing form is switched off (lib/flags.ts) Specimen 01, the pipeline of that form, is labelled for what it is: a reference architecture,
   // not a form a visitor can use (docs/adr/0035).
-  const specimens = SPECIMEN_SLUGS.map((slug) => ({
-    slug,
-    number: SPECIMEN_NUMBER[slug],
-    tag: slug === 'studio-site' && !BRIEFING_ENABLED ? sp('studioSite.tagReference') : sp(`${SPECIMEN_KEY[slug]}.tag`),
-    title: sp(`${SPECIMEN_KEY[slug]}.title`),
-    card: sp(`${SPECIMEN_KEY[slug]}.card`),
-    href: withLocale(specimenPath(slug), locale),
-  }));
+  // Since docs/adr/0038 the cards are part of the enterprise layer (lib/flags.ts): off, there is no card here and the studio-site specimen, the Lighthouse evidence, is reached from the
+  // Lighthouse card of the Architecture section instead.
+  const specimens = !SHOW_ENTERPRISE
+    ? []
+    : SPECIMEN_SLUGS.map((slug) => ({
+        slug,
+        number: SPECIMEN_NUMBER[slug],
+        tag: slug === 'studio-site' && !BRIEFING_ENABLED ? sp('studioSite.tagReference') : sp(`${SPECIMEN_KEY[slug]}.tag`),
+        title: sp(`${SPECIMEN_KEY[slug]}.title`),
+        card: sp(`${SPECIMEN_KEY[slug]}.card`),
+        href: withLocale(specimenPath(slug), locale),
+      }));
 
   const ms = (value: number | null) => (value === null ? hero('pending') : `${format.number(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ms`);
 
@@ -45,9 +49,11 @@ export async function Studio() {
 
   // The manifesto is a set of working rules, each one something this page or its repository does (docs/adr/0025-honest-trust-signals.md); it names
   // no client, no result and no headcount. The facts beneath it are the ones a visitor can check in their own browser.
-  const manifesto = ([1, 2, 3, 4, 5] as const).map((n) => ({ title: t(`m${n}Title`), text: t(`m${n}Text`) }));
+  // Since docs/adr/0038 the fifth line (security and integration claims backed by signed messages and a reference queue) and the first fact (the HMAC / AES flow "on this page") describe the
+  // enterprise layer; with it off they would point at something that is not there, so the manifesto has four lines and there are two facts.
+  const manifesto = ([1, 2, 3, 4, 5] as const).filter((n) => SHOW_ENTERPRISE || n !== 5).map((n) => ({ title: t(`m${n}Title`), text: t(`m${n}Text`) }));
   // The second fact names the one third party the code can load, the bot check of the briefing form; with the form off there is none to name.
-  const facts = ([1, 2, 3] as const).map((n) => ({ name: t(`f${n}Name`), text: n === 2 && !BRIEFING_ENABLED ? t('f2TextNoForm') : t(`f${n}Text`) }));
+  const facts = ([1, 2, 3] as const).filter((n) => SHOW_ENTERPRISE || n !== 1).map((n) => ({ name: t(`f${n}Name`), text: n === 2 && !BRIEFING_ENABLED ? t('f2TextNoForm') : t(`f${n}Text`) }));
 
   const notes = [
     {
@@ -97,7 +103,7 @@ export async function Studio() {
   ];
 
   return (
-    <section id={SECTION_IDS.studio} className="section cv cv-studio" aria-labelledby="studio-title">
+    <section id={SECTION_IDS.studio} className="section cv cv-studio" data-lean={SHOW_ENTERPRISE ? undefined : ''} aria-labelledby="studio-title">
       <div className="container-x">
         <SectionHead id="studio-title" label={t('label')} title={t('title')} subtitle={t('lead')} />
 
@@ -127,7 +133,7 @@ export async function Studio() {
           <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
             <div className="lg:sticky lg:top-32 lg:self-start">
               <p className="label">{t('manifestoLabel')}</p>
-              <h3 className="display mt-5 how-title">{t('manifestoTitle')}</h3>
+              <h3 className="display mt-5 how-title">{SHOW_ENTERPRISE ? t('manifestoTitle') : t('manifestoTitleFour')}</h3>
               <p className="body-muted mt-5 max-w-md">{t('manifestoLead')}</p>
             </div>
             <ol className="note-steps">
@@ -145,22 +151,25 @@ export async function Studio() {
             </ol>
           </div>
 
-          <figure className="drawing mt-14" aria-labelledby="drawing-title">
-            <figcaption>
-              {/* Drawing 01 shows the path of the briefing form. With the form off it is a reference architecture, and says so (docs/adr/0035). */}
-              <p className="label">{BRIEFING_ENABLED ? t('drawingLabel') : `${t('referenceLabel')} — ${t('drawingLabel')}`}</p>
-              <h4 id="drawing-title" className="text-title mt-3">
-                {t('drawingTitle')}
-              </h4>
-              <p className="body-muted mt-3 max-w-2xl">{t('drawingLead')}</p>
-            </figcaption>
-            <BriefingDrawing label={t('drawingAlt')} />
-            <p className="body-muted mt-6 max-w-3xl text-sm">{t('drawingLegend')}</p>
-          </figure>
+          {/* Drawing 01 is the enterprise layer's (docs/adr/0038): the path of a signed, queued briefing. Off, it is not drawn. */}
+          {SHOW_ENTERPRISE ? (
+            <figure className="drawing mt-14" aria-labelledby="drawing-title">
+              <figcaption>
+                {/* Drawing 01 shows the path of the briefing form. With the form off it is a reference architecture, and says so (docs/adr/0035). */}
+                <p className="label">{BRIEFING_ENABLED ? t('drawingLabel') : `${t('referenceLabel')} — ${t('drawingLabel')}`}</p>
+                <h4 id="drawing-title" className="text-title mt-3">
+                  {t('drawingTitle')}
+                </h4>
+                <p className="body-muted mt-3 max-w-2xl">{t('drawingLead')}</p>
+              </figcaption>
+              <BriefingDrawing label={t('drawingAlt')} />
+              <p className="body-muted mt-6 max-w-3xl text-sm">{t('drawingLegend')}</p>
+            </figure>
+          ) : null}
 
           <div className="mt-14">
             <p className="label">{t('factsLabel')}</p>
-            <ul className="facts mt-5">
+            <ul className="facts mt-5" data-count={facts.length}>
               {facts.map(({ name, text }) => (
                 <li key={name} className="fact">
                   <p className="fact-name metric-value" dir="ltr">
@@ -219,30 +228,32 @@ export async function Studio() {
           </div>
         </div>
 
-        <div id="specimens" className="mt-24 scroll-mt-28 md:mt-32">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
-            <div className="lg:sticky lg:top-32 lg:self-start">
-              <p className="label">{t('specimensLabel')}</p>
-              <h3 className="display mt-5 how-title">{t('specimensTitle')}</h3>
-              <p className="body-muted mt-5 max-w-md">{t('specimensLead')}</p>
-            </div>
-            <div className="grid gap-4">
-              {specimens.map(({ slug, number, tag, title, card, href }) => (
-                <Link key={slug} href={href} prefetch={false} className="spec-card" data-specimen={slug}>
-                  <p className="label">
-                    {number} — {tag}
-                  </p>
-                  <h4 className="text-title mt-3">{title}</h4>
-                  <p className="body-muted mt-3">{card}</p>
-                  <span className="footer-link mt-5 inline-flex items-center gap-1.5 text-sm">
-                    {t('specimenRead')}
-                    <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
-                  </span>
-                </Link>
-              ))}
+        {SHOW_ENTERPRISE ? (
+          <div id="specimens" className="mt-24 scroll-mt-28 md:mt-32">
+            <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+              <div className="lg:sticky lg:top-32 lg:self-start">
+                <p className="label">{t('specimensLabel')}</p>
+                <h3 className="display mt-5 how-title">{t('specimensTitle')}</h3>
+                <p className="body-muted mt-5 max-w-md">{t('specimensLead')}</p>
+              </div>
+              <div className="grid gap-4">
+                {specimens.map(({ slug, number, tag, title, card, href }) => (
+                  <Link key={slug} href={href} prefetch={false} className="spec-card" data-specimen={slug}>
+                    <p className="label">
+                      {number} — {tag}
+                    </p>
+                    <h4 className="text-title mt-3">{title}</h4>
+                    <p className="body-muted mt-3">{card}</p>
+                    <span className="footer-link mt-5 inline-flex items-center gap-1.5 text-sm">
+                      {t('specimenRead')}
+                      <ArrowUpRight size={15} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </section>
   );

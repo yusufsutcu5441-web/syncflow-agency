@@ -4,7 +4,7 @@ import { getLocale, getNow, getTranslations } from 'next-intl/server';
 import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { auditHref } from '@/lib/contact';
-import { BRIEFING_ENABLED } from '@/lib/flags';
+import { BRIEFING_ENABLED, SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { isPilotLocale, PILOT_PATH } from '@/lib/pilot';
 import { Flag } from '@/components/ui/Flag';
@@ -51,12 +51,14 @@ export async function Footer() {
                   {t('how')}
                 </Link>
               </li>
-              {/* The page behind the cold e-mail's offer (docs/adr/0037-pilot-page.md). */}
-              <li>
-                <Link href={withLocale(PILOT_PATH, isPilotLocale(locale) ? locale : 'en')} prefetch={false} className={linkClass}>
-                  {t('pilot')}
-                </Link>
-              </li>
+              {/* The page behind the cold e-mail's offer (docs/adr/0037-pilot-page.md); off unless SHOW_ENTERPRISE is on (docs/adr/0038). */}
+              {SHOW_ENTERPRISE ? (
+                <li>
+                  <Link href={withLocale(PILOT_PATH, isPilotLocale(locale) ? locale : 'en')} prefetch={false} className={linkClass}>
+                    {t('pilot')}
+                  </Link>
+                </li>
+              ) : null}
               {BRIEFING_ENABLED ? (
                 <li>
                   <Link href={here(SECTION_IDS.briefing)} prefetch={false} className={linkClass}>
