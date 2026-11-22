@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const [{ title, description }, meta] = await Promise.all([specimenMetadata(slug, locale), getTranslations({ locale, namespace: 'Meta' })]);
   const path = (code: AppLocale) => withLocale(specimenPath(slug), code);
-  const image = `/og?locale=${locale}&v=4`;
+  const image = `/og?locale=${locale}&v=5`;
 
   return {
     title,

@@ -1,12 +1,12 @@
 {
   "Meta": {
     "title": "syncflow.agency | Digital architecture studio",
-    "description": "A digital architecture studio for owners, partners and principals whose name is the business.",
-    "ogTitle": "Built in the dark. Moves like liquid.",
+    "description": "SyncFlow is a studio for luxury, high-performance websites. Concept studies for real industries, hand-coded for speed.",
+    "ogTitle": "Luxury websites, engineered for speed.",
     "ogSubtitle": "Digital architecture for principals whose name is the business.",
-    "ogDescription": "Digital architecture at enterprise scale. Finished in silence, measured rather than promised.",
+    "ogDescription": "SyncFlow is a studio for luxury, high-performance websites. Concept studies for real industries, hand-coded for speed.",
     "siteName": "syncflow.agency",
-    "ogAlt": "syncflow.agency: Built in the dark. Moves like liquid.",
+    "ogAlt": "syncflow.agency: Luxury websites, engineered for speed.",
     "organizationDescription": "syncflow.agency is a digital architecture studio that builds cinematic, high-performance websites for owners, partners and principals whose name is the business."
   },
   "A11y": {
@@ -43,11 +43,12 @@
   },
   "Hero": {
     "eyebrow": "Digital architecture studio — est. 2026",
-    "title1": "Built in the dark.",
-    "title2": "Moves like liquid.",
-    "subtitle": "Digital architecture at enterprise scale for principals whose name is the business: secure workflow automation, machined to tight tolerances, finished in silence, and measured rather than promised.",
+    "title1": "Luxury websites,",
+    "title2": "engineered for speed.",
+    "subtitle": "SyncFlow is a studio for luxury, high-performance websites. Hand-coded, built for brands that cannot afford to look ordinary.",
+    "proof": "Lighthouse {score} across all four categories (desktop), measured on this site.",
     "ctaPrimary": "Strategic Briefing",
-    "ctaSecondary": "Showcase",
+    "ctaSecondary": "See the work",
     "pilotLabel": "Outbound pilot",
     "pilotText": "Looking for outbound? A 30-day pilot with nothing to pay upfront, paid only if it delivers conversations. The terms and the price are on one page.",
     "pilotCta": "See the pilot terms",

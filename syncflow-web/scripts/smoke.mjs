@@ -56,7 +56,19 @@ function check(name, ok, detail = '') {
   console.log(`${ok ? '  PASS' : '  FAIL'}  ${name}${!ok && detail ? `\n          ${detail}` : ''}`);
 }
 const section = (title) => console.log(`\n${title}`);
-const get = (path, init = {}) => fetch(BASE + path, { redirect: 'manual', ...init });
+// A keep-alive socket that the server closes at its idle timeout can be picked up by the client in the same instant; the request then dies with
+// "fetch failed" / ECONNRESET before the server ever sees it (22.11.2026: twice in the RELEASE run, at the six parallel /api/briefing calls, while
+// the same calls pass on their own). Exactly that error is retried once on a fresh socket; any other failure, or a second reset, still throws.
+const isResetSocket = (err) => err instanceof TypeError && /fetch failed/.test(String(err.message)) && /ECONNRESET|UND_ERR_SOCKET|other side closed|socket hang up/i.test(`${err.cause?.code ?? ''} ${err.cause?.message ?? ''}`);
+const fetchOnce = async (url, init) => {
+  try {
+    return await fetch(url, init);
+  } catch (err) {
+    if (!isResetSocket(err)) throw err;
+    return fetch(url, init);
+  }
+};
+const get = (path, init = {}) => fetchOnce(BASE + path, { redirect: 'manual', ...init });
 // Documentation addresses (RFC 5737), randomised per run: the limiter remembers an address for 10 minutes, so
 // reusing the same fake addresses on a second run would (correctly) be rate limited from the start.
 const runSalt = Math.floor(Math.random() * 250) + 1;
@@ -66,7 +78,7 @@ const uniqueIp = (() => {
 })();
 
 const post = (body, { ip = uniqueIp(), headers = {}, raw = false } = {}) =>
-  fetch(`${BASE}/api/briefing`, {
+  fetchOnce(`${BASE}/api/briefing`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', origin: ORIGIN, 'x-forwarded-for': ip, ...headers },
     body: raw ? body : JSON.stringify(body),
@@ -173,7 +185,7 @@ check('nonce changes on every request', Boolean(second) && second !== csp);
 
 check('<html lang="en" dir="ltr">', /<html[^>]*\blang="en"/.test(html) && /<html[^>]*\bdir="ltr"/.test(html));
 check('title is the studio title (no price)', /<title>syncflow\.agency \| Digital architecture studio<\/title>/.test(html));
-check('one <h1> with the two hero lines', (html.match(/<h1\b/g) ?? []).length === 1 && html.includes('Built in the dark.') && html.includes('Moves like liquid.'));
+check('one <h1> with the two hero lines (the 22.11.2026 headline)', (html.match(/<h1\b/g) ?? []).length === 1 && html.includes('Luxury websites,') && html.includes('engineered for speed.'));
 check('the sections are there (architecture, showcase, studio) and the language section is gone', ['architecture', 'showcase', 'studio'].every((id) => new RegExp(`<section[^>]*id="${id}"`).test(html)) && !/<section[^>]*id="reach"/.test(html));
 check(BRIEFING_ON ? 'the briefing section is there (the form is switched on)' : 'there is no briefing section and nothing links to #briefing (the form is switched off)', /<section[^>]*id="briefing"/.test(html) === BRIEFING_ON && (BRIEFING_ON || !/#briefing/.test(html)));
 check('the showcase has exactly the four sectors (real estate, clinics, corporate law, logistics) and no SaaS', ['show-estate', 'show-clinic', 'show-law', 'show-logistics'].every((id) => html.includes(`id="${id}"`)) && !/show-saas|SaaS/.test(html));
@@ -183,7 +195,13 @@ check('the showcase headline counts four industries and the footer links the log
 const enterpriseCards = pageText.includes('Fail-Safe Enterprise Automation') && pageText.includes('Deep Enterprise Integrations') && pageText.includes('Salesforce') && pageText.includes('SAP') && pageText.includes('HubSpot') && pageText.includes('Oracle') && pageText.includes('no partnership, certification or conformance is implied');
 check(ENTERPRISE_ON ? 'the architecture section carries the two enterprise columns (fail-safe automation, deep integrations) and the note that implies no partnership' : 'the architecture section is the front end only: no enterprise column, no queue / integration / zero-trust simulator, and none of their names on the home page (docs/adr/0038)', ENTERPRISE_ON ? enterpriseCards : !/Fail-Safe Enterprise Automation|Deep Enterprise Integrations|Zero-Trust Security Flow|Salesforce|HubSpot|Oracle|\bSAP\b/.test(pageText) && !/q-parcel/.test(html));
 // "High-ROI digital ecosystems" was a return promise nobody had measured; it is gone (docs/adr/0035, correction round), and no ROI wording replaces it.
-check('the hero and the architecture intro carry the owner\u2019s phrases (enterprise scale, secure workflow automation) and promise no return (no "high-ROI", no ROI)', /enterprise scale/i.test(pageText) && /secure workflow automation/i.test(pageText) && !/high-ROI|\bROI\b|return on investment/i.test(pageText));
+// 22.11.2026 (docs/adr/0038 §10): the hero names the studio's three sectors instead of "enterprise scale / secure workflow automation"; with the enterprise switch off those two
+// phrases may appear nowhere on the home page (with it on, "enterprise scale" is still in Architecture card IV).
+check(ENTERPRISE_ON ? 'the hero carries the owner\u2019s phrases (luxury, high-performance websites; cannot afford to look ordinary) and promises no return (no "high-ROI", no ROI)' : 'the hero carries the owner\u2019s phrases (luxury, high-performance websites; cannot afford to look ordinary), the retired "enterprise scale" and "workflow automation" are gone, and the page promises no return (no "high-ROI", no ROI)', /luxury, high-performance websites/i.test(pageText) && /cannot afford to look ordinary/i.test(pageText) && (ENTERPRISE_ON || !/enterprise scale|workflow automation/i.test(pageText)) && !/high-ROI|\bROI\b|return on investment/i.test(pageText));
+// The owner's word list for the hero (22.11.2026): enterprise, workflow automation, audit, pilot may not appear in the hero section. With the enterprise switch on the pilot band is part of the hero by design.
+const heroMarkup = /<section[^>]*id="top"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
+const heroText = heroMarkup.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
+check(ENTERPRISE_ON ? 'the hero names no audit and no workflow automation (the pilot band is part of it while the enterprise switch is on)' : 'the hero carries none of the retired words: enterprise, workflow automation, audit, pilot', ENTERPRISE_ON ? !/workflow automation|\baudit\b/i.test(heroText) : !/enterprise|workflow automation|\baudit\b|\bpilot\b/i.test(heroText), heroText.match(/enterprise|workflow automation|\baudit\b|\bpilot\b/i)?.[0] ?? '');
 check('no invented enterprise credential in the page (no SLA, SOC 2, ISO 27001, uptime percentage or partner badge)', !/\bSLA\b|SOC ?2|ISO ?27001|99\.9+ ?%|uptime|certified partner/i.test(pageText));
 check('the page makes no multi-language claim', !/seven languages|7 languages|every language|yedi dil|her dilde/i.test(html));
 check('no Lemon Squeezy and no old offer anywhere in the page', !/lemonsqueezy|lemon\.js|\$2,500|\$2\.500|Start Project/i.test(html));
@@ -204,10 +222,11 @@ if (CONTACT) {
   check(`the contact address comes from NEXT_PUBLIC_CONTACT_EMAIL and is published (mailto ${CONTACT})`, mailLinks(html).some((link) => link.to === CONTACT));
   const hero = /<section[^>]*id="top"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
   const footer = /<footer[\s\S]*?<\/footer>/.exec(html)?.[0] ?? '';
-  // While the form is on, the hero's primary action is the briefing (components/sections/Hero.tsx); the audit request is then in the footer.
+  // While the form is on, the hero's primary action is the briefing (components/sections/Hero.tsx); the audit request is then in the footer. While it is off
+  // (22.11.2026, docs/adr/0038 §10), the hero's primary action scrolls to the showcase and its mail link is the plain address; the audit request stays in the footer and the phone bar.
   check(
-    BRIEFING_ON ? 'the footer carries the free site audit request (the hero keeps the briefing as its primary action while the form is on)' : 'the hero and the footer carry the free site audit request: a mail with the subject "Free site audit request" and the two prompts in the body',
-    (BRIEFING_ON || mailLinks(hero).some(isAudit)) && mailLinks(footer).some(isAudit),
+    BRIEFING_ON ? 'the footer carries the free site audit request (the hero keeps the briefing as its primary action while the form is on)' : 'the hero carries a plain mail link to the address (its quiet second action) and the footer carries the free site audit request: a mail with the subject "Free site audit request" and the two prompts in the body',
+    (BRIEFING_ON || mailLinks(hero).some((link) => link.to === CONTACT)) && mailLinks(footer).some(isAudit),
     `hero ${mailLinks(hero).length} mail link(s), footer ${mailLinks(footer).length}`,
   );
   check('the audit link is percent-encoded to the letter and its line breaks are %0D%0A (a bare %0A never appears)', mailLinks(footer).filter(isAudit).every((link) => link.raw === `mailto:${CONTACT}${AUDIT_QUERY}`) && mailLinks(footer).some(isAudit), mailLinks(footer).find(isAudit)?.raw ?? 'no audit link in the footer');
@@ -277,7 +296,7 @@ if (BRIEFING_ON) {
   const shown = visibleText(gateHome.page);
   check('no price is shown: no currency sign or code next to a number in the text a visitor reads, and no budget option', !/[$€₺£]\s?\d|\d\s?[$€₺£]|\b\d[\d.,]*\s?(?:USD|EUR|AED|TRY)\b/.test(shown) && !/name="budget"/.test(gateHome.page) && !/₺/.test(gateHome.page), shown.match(/.{20}[$€₺£]\s?\d.{10}/)?.[0] ?? '');
 }
-check('the gate is a dialog with a heading, and the page behind it is still in the HTML', /role="dialog"/.test(gateHome.page) && /aria-modal="true"/.test(gateHome.page) && /id="gate-title"/.test(gateHome.page) && gateHome.page.includes('Built in the dark.'));
+check('the gate is a dialog with a heading, and the page behind it is still in the HTML', /role="dialog"/.test(gateHome.page) && /aria-modal="true"/.test(gateHome.page) && /id="gate-title"/.test(gateHome.page) && gateHome.page.includes('Luxury websites,'));
 check('the gate offers only the public languages', (gateHome.page.match(/class="gate-lang"/g) ?? []).length === OPEN.length, `${(gateHome.page.match(/class="gate-lang"/g) ?? []).length} chips, ${OPEN.length} public languages`);
 check('the gate sets no cookie (the choice lives in the address only)', gateHome.res.headers.get('set-cookie') === null);
 for (const path of ['/?m=us', '/tr?m=tr', '/ar?m=me', '/de?m=dach', '/fr?m=fr', '/es?m=wealth', '/zh?m=asia', '/?m=int', '/?m=eu', '/de?m=fr']) {
@@ -298,7 +317,7 @@ if (BRIEFING_ON) check('/tr: the briefing names the minimum in lira and offers t
 else check('/tr: prices are hidden, so there is no lira amount anywhere in the page', !trGate.page.includes('₺') && !/\d\s?TRY\b/.test(visibleText(trGate.page)));
 for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
   const bot = await pageAs('/', ua);
-  check(`${name} gets the page without the gate, with the same content (h1${BRIEFING_ON ? ', briefing section' : ''})`, bot.res.status === 200 && !hasGate(bot.page) && bot.page.includes('Built in the dark.') && /<section[^>]*id="briefing"/.test(bot.page) === BRIEFING_ON);
+  check(`${name} gets the page without the gate, with the same content (h1${BRIEFING_ON ? ', briefing section' : ''})`, bot.res.status === 200 && !hasGate(bot.page) && bot.page.includes('Luxury websites,') && /<section[^>]*id="briefing"/.test(bot.page) === BRIEFING_ON);
 }
 const botTr = await pageAs('/tr', UA.googlebot);
 check('Googlebot on /tr gets no gate either', botTr.res.status === 200 && !hasGate(botTr.page) && /<html[^>]*lang="tr"/.test(botTr.page));
@@ -351,12 +370,13 @@ if (OPEN.includes('de')) {
 section('Locales');
 const MARKERS = {
   // The second marker is the header's call to action: the briefing while the form is switched on, otherwise "write to us" (a mail link, so only with an address).
-  tr: ['Karanlıkta inşa edilir.', ...(BRIEFING_ON ? ['Briefing Başlat'] : CONTACT ? ['Bize yazın'] : [])],
-  ar: ['بُني في العتمة.', 'ينساب كالسائل.'],
-  de: ['Im Dunkeln gebaut.', 'Bewegt sich wie Flüssigkeit.'],
-  fr: ['Bâti dans l’ombre.', 'Glisse comme un liquide.'],
-  es: ['Construido en la oscuridad.', 'Fluye como un líquido.'],
-  zh: ['筑于暗处。', '流动如液。'],
+  // 22.11.2026 (docs/adr/0038 §10): the hero headline is the owner's "Luxury websites, engineered for speed." in the two public languages and, as a draft translation, in the five dormant ones.
+  tr: ['Hızı mühendislikle kurulmuş', ...(BRIEFING_ON ? ['Briefing Başlat'] : CONTACT ? ['Bize yazın'] : [])],
+  ar: ['مواقع فاخرة،', 'مهندَسة للسرعة.'],
+  de: ['Luxuriöse Websites,', 'gebaut für Geschwindigkeit.'],
+  fr: ['Des sites web de luxe,', 'conçus pour la vitesse.'],
+  es: ['Sitios web de lujo,', 'hechos para la velocidad.'],
+  zh: ['奢华网站，', '为速度而造。'],
   ja: ['闇の中で築く。', '液体のように動く。'],
 };
 for (const code of OPEN.filter((l) => l !== 'en')) {
@@ -365,6 +385,15 @@ for (const code of OPEN.filter((l) => l !== 'en')) {
   const dir = code === 'ar' ? 'rtl' : 'ltr';
   const htmlLang = HTML_LANG[code] ?? code;
   check(`/${code} renders in ${code} (lang attr, dir="${dir}", translated hero)`, res.status === 200 && new RegExp(`<html[^>]*\\blang="${htmlLang}"`).test(body) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(body) && (MARKERS[code] ?? []).every((w) => body.includes(w)), `status ${res.status}`);
+}
+// The hero's proof line (owner's brief 22.11.2026, docs/adr/0038 §10): one sentence under the metric strip whose number comes from lib/metrics.ts
+// (the one desktop Lighthouse score all four sealed categories share), so it must be a resolved number, never the "to be measured" fallback.
+const PROOF = { en: /^Lighthouse \d+ across all four categories \(desktop\), measured on this site\.$/, tr: /^Dört kategoride Lighthouse \d+ \(masaüstü\), bu sitede ölçüldü\.$/ };
+for (const [code, want] of Object.entries(PROOF)) {
+  if (!OPEN.includes(code)) continue;
+  const body = await (await get(code === 'en' ? '/' : `/${code}`)).text();
+  const line = /<p[^>]*data-hero-proof=""[^>]*>([^<]*)<\/p>/.exec(body)?.[1] ?? '';
+  check(`${code === 'en' ? '/' : `/${code}`}: the hero proof line is under the metric strip with its score resolved from lib/metrics.ts`, want.test(line), line || 'no data-hero-proof paragraph');
 }
 // The URL alone decides the language (docs/adr/0002): no redirect from Accept-Language, no cookie.
 for (const code of [...CLOSED, 'it', 'pt']) {
@@ -478,8 +507,9 @@ const robots = await (await get('/robots.txt')).text();
 check('robots.txt disallows /api/ and links the sitemap', /Disallow: \/api\//.test(robots) && /Sitemap:/.test(robots));
 check('manifest + icon served', (await get('/manifest.webmanifest')).status === 200 && (await get('/icon.svg')).status === 200);
 const ogUrls = [...html.matchAll(/<meta[^>]+(?:property="og:image"|name="twitter:image")[^>]*content="([^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
-check('og:image and twitter:image use the explicit, redirect-free /og?locale= URL', ogUrls.length >= 2 && ogUrls.every((u) => /\/og\?locale=en&v=4$/.test(u)), ogUrls.join(' '));
-check('og:image:alt is localized', /property="og:image:alt"[^>]*content="syncflow\.agency: Built in the dark\. Moves like liquid\./.test(html));
+// v=5 since 22.11.2026: the card draws the headline (Hero.title1/title2), which changed; the edge caches a card for a year, so the version moves with it (docs/adr/0026).
+check('og:image and twitter:image use the explicit, redirect-free /og?locale= URL (card version 5)', ogUrls.length >= 2 && ogUrls.every((u) => /\/og\?locale=en&v=5$/.test(u)), ogUrls.join(' '));
+check('og:image:alt is localized (the 22.11.2026 headline)', /property="og:image:alt"[^>]*content="syncflow\.agency: Luxury websites, engineered for speed\./.test(html));
 {
   // The share preview (LinkedIn, X, Slack, WhatsApp) in every language: its own description line, the title, the card type, and the card's size.
   const fs = await import('node:fs');
@@ -509,7 +539,7 @@ check('og:image:alt is localized', /property="og:image:alt"[^>]*content="syncflo
 }
 const cards = new Map();
 for (const loc of OPEN) {
-  const r = await get(`/og?locale=${loc}&v=4`);
+  const r = await get(`/og?locale=${loc}&v=5`);
   const bytes = Buffer.from(await r.arrayBuffer());
   cards.set(loc, bytes);
   check(`/og?locale=${loc}: 200 image/png, 1200x630, > 10 KB`, r.status === 200 && r.headers.get('content-type') === 'image/png' && bytes.length > 10_000 && bytes.readUInt32BE(16) === 1200 && bytes.readUInt32BE(20) === 630, `${r.status} ${r.headers.get('content-type')} ${bytes.length}`);

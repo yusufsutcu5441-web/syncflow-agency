@@ -4,7 +4,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { Logo } from '@/components/ui/Logo';
 import { MaskLines } from '@/components/ui/MaskText';
 import type { AppLocale } from '@/i18n/routing';
-import { auditHref } from '@/lib/contact';
+import { writeHref } from '@/lib/contact';
 import { BRIEFING_ENABLED, SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { formatMeasuredAt, METRICS } from '@/lib/metrics';
@@ -23,13 +23,19 @@ import { CONTACT_EMAIL, SECTION_IDS } from '@/lib/site';
  * brightens, so scrolling feels like moving through the space. On phones and without JavaScript it is the plain one-screen hero.
  */
 export async function Hero() {
-  const [t, locale, format, contact, closing] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Contact'), getTranslations('Closing')]);
-  // The primary action: the briefing while the form is offered, otherwise the free site audit request as a mail (lib/contact.ts).
-  const audit = auditHref();
+  const [t, locale, format, closing] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Closing')]);
+  // The actions (owner's brief, 22.11.2026, docs/adr/0038 §10): the work first. While the form is off, the primary action scrolls to the showcase and the
+  // quiet second one is the plain contact mail (lib/contact.ts, no subject); the free site audit request stays in the footer and the phone bar. While the
+  // form is on, the briefing is the primary action and the showcase the second, as before.
+  const write = writeHref();
 
   const performance = METRICS.lighthousePerformance;
   const cls = METRICS.cls;
   const lcp = METRICS.lcpDesktop;
+  // The proof line names one Lighthouse score for all four categories, so it is drawn only while the four sealed desktop scores are the same number.
+  const fourScores: Array<number | null> = [performance, METRICS.lighthouseAccessibility, METRICS.lighthouseBestPractices, METRICS.lighthouseSeo].map((m) => m.value);
+  const firstScore = fourScores[0] ?? null;
+  const fourAlike = firstScore !== null && fourScores.every((v) => v === firstScore) ? firstScore : null;
   // The note under the strip carries the date and profile of the numbers it shows. The score is "to be measured" (lib/metrics.ts),
   // so the note comes from a metric that is shown with a value.
   const measuredAt = lcp.measuredAt;
@@ -74,21 +80,26 @@ export async function Hero() {
                 <span>{t('ctaPrimary')}</span>
                 <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
               </Link>
-            ) : audit ? (
-              <a href={audit} className="btn btn-primary w-full sm:w-auto" data-magnetic="">
-                <span>{contact('auditCta')}</span>
+            ) : (
+              <Link href={withLocale(`/#${SECTION_IDS.showcase}`, locale)} prefetch={false} className="btn btn-primary w-full sm:w-auto" data-magnetic="">
+                <span>{t('ctaSecondary')}</span>
                 <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+              </Link>
+            )}
+            {BRIEFING_ENABLED ? (
+              <Link href={withLocale(`/#${SECTION_IDS.showcase}`, locale)} prefetch={false} className="btn btn-ghost w-full sm:w-auto">
+                <Play size={14} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
+                <span>{t('ctaSecondary')}</span>
+              </Link>
+            ) : write ? (
+              <a href={write} className="btn btn-ghost w-full sm:w-auto">
+                <span>{closing('emailLabel')}</span>
               </a>
             ) : null}
-            <Link href={withLocale(`/#${SECTION_IDS.showcase}`, locale)} prefetch={false} className="btn btn-ghost w-full sm:w-auto">
-              <Play size={14} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />
-              <span>{t('ctaSecondary')}</span>
-            </Link>
           </div>
           {/* The address as plain text beside the mail button: a visitor whose browser opens no mail program can still copy it (one click selects all of it). */}
-          {!BRIEFING_ENABLED && audit ? (
+          {!BRIEFING_ENABLED && write ? (
             <p className="mt-4 text-sm text-faint">
-              <span>{closing('emailLabel')}:</span>{' '}
               <bdi dir="ltr" className="select-all text-muted">
                 {CONTACT_EMAIL}
               </bdi>
@@ -117,6 +128,14 @@ export async function Hero() {
               </div>
             ))}
           </dl>
+          {/* The proof line (owner's brief, 22.11.2026, docs/adr/0038 §10): one small sentence directly under the numbers it sums up and above the
+              dated note that qualifies them. Its figure is not typed into the copy: {score} is the sealed desktop Lighthouse score, and the line is
+              drawn only while all four sealed categories (performance, accessibility, best practices, SEO) carry that same number. */}
+          {fourAlike !== null ? (
+            <p className="mt-4 text-sm text-faint" data-hero-proof="">
+              {t('proof', { score: value(fourAlike) })}
+            </p>
+          ) : null}
           {measuredAt ? (
             <p className="mt-4 text-xs text-faint">
               {t('measured', { date: formatMeasuredAt(measuredAt, locale), tool: 'Lighthouse', profile: lcp.profile })}

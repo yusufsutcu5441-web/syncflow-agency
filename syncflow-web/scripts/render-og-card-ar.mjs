@@ -72,7 +72,16 @@ try {
   await page.setViewport({ width: 1200, height: 630, deviceScaleFactor: 1 });
   await page.setContent(html, { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
-  const png = await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: 1200, height: 630 } });
+  // Chrome 157 (new headless) answers a screenshot taken right after fonts.ready with an unpainted, all-obsidian frame (22.11.2026: 3.7 KB instead
+  // of 80 KB). Two animation frames later the card is drawn, so the capture waits for them and refuses a frame that is still blank.
+  let png;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    png = await page.screenshot({ type: 'png' });
+    if (png.length > 10_000) break;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  if (!png || png.length <= 10_000) throw new Error(`the card came out blank (${png?.length ?? 0} bytes) five times: the page did not paint`);
   writeFileSync(join(root, 'assets', 'og-ar.png'), png);
   const sha256 = createHash('sha256').update(strings.join('\n')).digest('hex');
   writeFileSync(join(root, 'assets', 'og-ar.json'), `${JSON.stringify({ sha256, strings }, null, 2)}\n`);

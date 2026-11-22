@@ -18,7 +18,8 @@ import { SITE_URL } from '@/lib/site';
  *  - Arabic: a PNG (assets/og-ar.png) rendered once by a browser (scripts/render-og-card-ar.mjs), because satori joins Arabic letters but does
  *    not reorder a right-to-left line, so a headline would come out mirrored. scripts/check-fonts.py fails if messages/ar.json changed since.
  *  - Japanese is not public yet and uses the English card.
- * The response is cacheable for a year at the edge (the "v" query value is bumped when a card changes: v=4 since the Arabic and Chinese cards),
+ * The response is cacheable for a year at the edge (the "v" query value is bumped when a card changes: v=4 since the Arabic and Chinese cards,
+ * v=5 since the 22.11.2026 headline "Built like architecture. Loads like nothing."),
  * and /og is rate limited in proxy.ts because rendering an image costs real CPU.
  *
  * Colours are the palette's (obsidian canvas, platin type, docs/adr/0007), the logo is the drawn B1 horizontal lockup.

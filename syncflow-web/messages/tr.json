@@ -1,12 +1,12 @@
 {
   "Meta": {
     "title": "syncflow.agency | Dijital mimari stüdyosu",
-    "description": "Adı işin kendisi olan sahipler, ortaklar ve yöneticiler için dijital mimari stüdyosu.",
-    "ogTitle": "Karanlıkta inşa edilir. Sıvı gibi akar.",
+    "description": "SyncFlow, lüks ve yüksek performanslı web siteleri tasarlayan bir stüdyo. Gerçek sektörler için konsept çalışmalar, hız için elle kodlanır.",
+    "ogTitle": "Hızı mühendislikle kurulmuş lüks web siteleri.",
     "ogSubtitle": "Adı işin kendisi olan yöneticiler için dijital mimari.",
-    "ogDescription": "Kurumsal ölçekte dijital mimari. Sessizce tamamlanır; vaat edilmez, ölçülür.",
+    "ogDescription": "SyncFlow, lüks ve yüksek performanslı web siteleri tasarlayan bir stüdyo. Gerçek sektörler için konsept çalışmalar, hız için elle kodlanır.",
     "siteName": "syncflow.agency",
-    "ogAlt": "syncflow.agency: Karanlıkta inşa edilir. Sıvı gibi akar.",
+    "ogAlt": "syncflow.agency: Hızı mühendislikle kurulmuş lüks web siteleri.",
     "organizationDescription": "syncflow.agency, adı işin kendisi olan sahipler, ortaklar ve yöneticiler için sinematik, yüksek performanslı web siteleri kuran bir dijital mimari stüdyosudur."
   },
   "A11y": {
@@ -43,11 +43,12 @@
   },
   "Hero": {
     "eyebrow": "Dijital mimari stüdyosu — 2026’dan beri",
-    "title1": "Karanlıkta inşa edilir.",
-    "title2": "Sıvı gibi akar.",
-    "subtitle": "Adı işin kendisi olan yöneticiler için kurumsal ölçekte dijital mimari ve güvenli iş akışı otomasyonu. Dar toleranslarla işlenir, sessizlikle bitirilir; söz verilmez, ölçülür.",
+    "title1": "Hızı mühendislikle kurulmuş",
+    "title2": "lüks web siteleri.",
+    "subtitle": "SyncFlow, lüks ve yüksek performanslı web siteleri tasarlayan bir stüdyo. Elle kodlanır, sıradan görünmeyi göze alamayan markalar için yapılır.",
+    "proof": "Dört kategoride Lighthouse {score} (masaüstü), bu sitede ölçüldü.",
     "ctaPrimary": "Stratejik Briefing",
-    "ctaSecondary": "Vitrin",
+    "ctaSecondary": "Çalışmaları gör",
     "pilotLabel": "Outbound pilotu",
     "pilotText": "Outbound mu arıyorsunuz? 30 günlük pilot: peşinat yok, yalnızca konuşma üretirse ödeme. Şartlar ve fiyat tek sayfada.",
     "pilotCta": "Pilot şartlarını gör",

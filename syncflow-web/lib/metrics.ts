@@ -24,7 +24,8 @@ const FRAME_PROFILE = '1280x800, headless Chrome, 60 Hz, no CPU throttling';
 // measurement is that build's), so the entries keep that source and date.
 const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 build)';
 
-// The numbers below are the medians of Lighthouse runs against the LIVE site (https://syncflow.agency, the deployment of 6db4007: React and
+// The seal of 17.10.2026 (replaced by the 22.11.2026 measurement further down, kept here as the record of that session): medians of Lighthouse
+// runs against the LIVE site (https://syncflow.agency, the deployment of 6db4007: React and
 // Next start after the first paint, on top of the case studies, the worker-driven cinema layer and the single text face Inter Display), taken
 // on 17.10.2026. Raw runs and the spread: docs/perf/live-2026-10-17.md. They are what was measured, not what was hoped for. Desktop: eight runs,
 // score 97-100 (median 100; the 97 is one run with a single 144 ms long task), TBT 0 ms in most runs, CLS 0 in every run. Mobile: four sessions on
@@ -34,19 +35,26 @@ const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 bu
 // median, and the profile below says how far the score moves under load; a run on a loaded machine is not published as 100. Accessibility, best
 // practices and SEO were 100 in every run of both presets. The measurement before this one (94f3490) is docs/perf/live-2026-10-16.md (mobile 96,
 // LCP 2.43 s). Re-measure after every visual change, on a quiet machine, and put the new medians here.
-const LIVE = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency, docs/perf/live-2026-10-17.md';
-const LIVE_DESKTOP = 'desktop preset, live production (syncflow.agency), median of 5 runs';
-const LIVE_MOBILE = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 14 runs in two sessions on a quiet machine (99-100)';
+// 22.11.2026: both profiles were measured again against the live deployment of the studio-only site (docs/adr/0038 hid the enterprise sections,
+// a visual change; deployment 7fda82e, same code as f8bdebe). Desktop, five runs of "/": performance 100 in every run, LCP 402, 392, 394, 387,
+// 387 ms (median 392), TBT 0 ms (one run 1 ms), CLS 0 in every run; accessibility, best practices and SEO 100. Mobile, a second session on a
+// quiet host (14 % CPU before, 9 % after), five runs each of "/" and "/tr": 93, 100, 100, 100, 100 and 100, 100, 100, 100, 100 (median 100;
+// the 93 was the first run of the session, TBT 178 ms, the other nine 26-53 ms), LCP 1.55 s in every run. An earlier mobile session that day
+// ran while other work loaded the host (one run 90 with TBT 227 ms) and is recorded but not sealed. Raw runs and the spread:
+// docs/perf/live-2026-11-22.md; the previous seal (17.10.2026) is docs/perf/live-2026-10-17.md.
+const LIVE_NOV = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency, docs/perf/live-2026-11-22.md';
+const LIVE_DESKTOP_NOV = 'desktop preset, live production (syncflow.agency), median of 5 runs';
+const LIVE_MOBILE_NOV = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 10 runs on two pages in one session on a quiet machine (93-100)';
 
 export const METRICS = {
-  lighthousePerformance: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
-  lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
-  lighthouseBestPractices: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
-  lighthouseSeo: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
-  lighthousePerformanceMobile: { value: 100, unit: 'score', measuredAt: '2026-10-17', profile: LIVE_MOBILE, source: LIVE },
-  cls: { value: 0, unit: 'cls', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
-  lcpDesktop: { value: 425, unit: 'ms', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
-  tbtDesktop: { value: 0, unit: 'ms', measuredAt: '2026-10-17', profile: LIVE_DESKTOP, source: LIVE },
+  lighthousePerformance: { value: 100, unit: 'score', measuredAt: '2026-11-22', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },
+  lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-11-22', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },
+  lighthouseBestPractices: { value: 100, unit: 'score', measuredAt: '2026-11-22', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },
+  lighthouseSeo: { value: 100, unit: 'score', measuredAt: '2026-11-22', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },
+  lighthousePerformanceMobile: { value: 100, unit: 'score', measuredAt: '2026-11-22', profile: LIVE_MOBILE_NOV, source: LIVE_NOV },
+  cls: { value: 0, unit: 'cls', measuredAt: '2026-11-22', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },
+  lcpDesktop: { value: 392, unit: 'ms', measuredAt: '2026-11-22', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },
+  tbtDesktop: { value: 0, unit: 'ms', measuredAt: '2026-11-22', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },
   frameMedian: { value: 16.7, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
   frameP99: { value: 16.9, unit: 'ms', measuredAt: '2026-10-08', profile: FRAME_PROFILE, source: FRAME_SOURCE },
 } as const satisfies Record<string, Metric>;
