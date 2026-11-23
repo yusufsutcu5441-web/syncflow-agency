@@ -24,7 +24,7 @@ Kapı dört pazar sunuyordu (ABD, Avrupa, Orta Doğu, Türkiye) ve yalnızca İn
 | 06 | Español | `wealth` | Küresel servet | USD | 25.000 | `/es` |
 | 07 | 中文 | `asia` | Asya merkezleri | USD | 25.000 | `/zh` (`zh-Hans`) |
 
-Sıra ve numaralar sahibinin listesidir. Kapının başlığı her dilde o dilin sermaye terimiyle yazıldı: *capital center* (en), *sermaye merkezi* (tr), *المركز المالي* (ar), *Finanzplatz* (de), *place financière* (fr), *plaza financiera* (es), *资本中心* (zh).
+Sıra ve numaralar sahibinin listesidir. Kapının başlığı her dilde o dilin sermaye terimiyle yazıldı: *capital center* (en), *sermaye merkezi* (tr), *المركز المالي* (ar), *Finanzplatz* (de), *place financière* (fr), *plaza financiera* (es), *资本中心* (zh). **Güncelleme (23.11.2026, [ADR 0038 bölüm 11](0038-studio-only-site.md)):** site yalnızca stüdyo olunca kapı bir dil seçimi olarak yazıldı ("Choose your language." / "Dilinizi seçin.", etiket "Language and region" / "Dil ve bölge", `us` notu "International" / "Uluslararası"); pazar mekanizması (`?m=`, para birimi, asgari tutar) değişmedi, yalnızca metin. Kapının kaldırılması ya da bayrağa alınması sahibin ertelediği ayrı bir karardır.
 
 ### 2. Dil altyapısı
 

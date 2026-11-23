@@ -312,7 +312,7 @@ const markup = unknown.page.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
 const injected = await pageAs('/?m=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E');
 check('an unknown market is ignored (the gate shows) and never reaches the document markup', hasGate(unknown.page) && !markup.includes('ZZtopmarket') && !injected.page.includes('<img src=x onerror'));
 const trGate = await pageAs('/tr');
-check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Finans merkezinizi seçin.'));
+check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Dilinizi seçin.'));
 if (BRIEFING_ON) check('/tr: the briefing names the minimum in lira and offers the lira bands', trGate.page.includes('₺2.475.000') && trGate.page.includes('₺4.950.000') && trGate.page.includes('₺12.375.000 +'));
 else check('/tr: prices are hidden, so there is no lira amount anywhere in the page', !trGate.page.includes('₺') && !/\d\s?TRY\b/.test(visibleText(trGate.page)));
 for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
@@ -331,13 +331,14 @@ section('Seven capital centres: each page speaks its language, names its currenc
 const normalise = (text) => text.replace(/[\s\u00a0\u202f]+/g, ' ');
 const CENTRES = [
   // [language, path, gate title, the briefing's floor as that page formats it, a word of the briefing in that language]
-  ['en', '/', 'Choose your capital center.', '$50,000', 'Investment'],
-  ['tr', '/tr', 'Finans merkezinizi seçin.', '₺2.475.000', 'Yatırım'],
-  ['ar', '/ar', 'اختر مركزك المالي.', '184,000', 'الاستثمار'],
-  ['de', '/de', 'Wählen Sie Ihren Finanzplatz.', '45.000 €', 'Investition'],
-  ['fr', '/fr', 'Choisissez votre place financière.', '45 000 €', 'Investissement'],
-  ['es', '/es', 'Elija su plaza financiera.', '$50,000', 'Inversión'],
-  ['zh', '/zh', '选择您的金融中心。', '$50,000', '投资'],
+  // 23.11.2026 (docs/adr/0038 §11): the gate asks for a language, not a capital centre; the titles below are the new ones in all seven files.
+  ['en', '/', 'Choose your language.', '$50,000', 'Investment'],
+  ['tr', '/tr', 'Dilinizi seçin.', '₺2.475.000', 'Yatırım'],
+  ['ar', '/ar', 'اختر لغتك.', '184,000', 'الاستثمار'],
+  ['de', '/de', 'Wählen Sie Ihre Sprache.', '45.000 €', 'Investition'],
+  ['fr', '/fr', 'Choisissez votre langue.', '45 000 €', 'Investissement'],
+  ['es', '/es', 'Elija su idioma.', '$50,000', 'Inversión'],
+  ['zh', '/zh', '选择您的语言。', '$50,000', '投资'],
 ];
 for (const [code, path, title, floor, word] of CENTRES) {
   if (!OPEN.includes(code)) continue;
