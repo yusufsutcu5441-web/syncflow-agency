@@ -48,8 +48,12 @@ export async function loadSpecimen(slug: SpecimenSlug, locale: AppLocale): Promi
   ]);
   const number = (n: number, digits = 0) => format.number(n, { minimumFractionDigits: digits, maximumFractionDigits: digits });
   const labels = LOCALE_LABELS[locale];
-  /** The frame figures named in the constraint text of specimen 01 (ignored by the texts that do not carry the placeholders). */
-  const frame = { median: number(METRICS.frameMedian.value, 1), p99: number(METRICS.frameP99.value, 1) };
+  /**
+   * The frame figures named in the constraint text of specimen 01, with the date they were measured (ignored by the texts that do not carry the
+   * placeholders). The date travels with the figures since 24.11.2026 (docs/adr/0038 §13): the sampler has not been re-run since 08.10.2026 and
+   * there is no script in the repository to re-run it, so every sentence that quotes it says when it was measured.
+   */
+  const frame = { median: number(METRICS.frameMedian.value, 1), p99: number(METRICS.frameP99.value, 1), date: formatMeasuredAt(METRICS.frameMedian.measuredAt, locale) };
 
   const tiles =
     slug === 'studio-site'
