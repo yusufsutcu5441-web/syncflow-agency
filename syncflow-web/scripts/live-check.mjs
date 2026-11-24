@@ -151,18 +151,22 @@ for (const code of CLOSED) await expect(`${code} is not public`, `/${code}`, 404
 const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
 // Since docs/adr/0038 the enterprise layer is a release switch. ON: everything above as before. OFF (the studio-only site): one specimen page per language (studio-site, the Lighthouse evidence), no /outbound,
 // no /pilot, and those pages, with the fail-safe-queue specimen, answer a 301 to the home page of their language.
+// Since docs/adr/0038 section 12 the logistics breakdown is part of that layer too: four breakdowns with the switch on, three (estate, clinic, law) on the shipped site, where
+// /showcase/logistics answers a 301 to the showcase of its language.
 const SPEC_LIVE = ENTERPRISE_ON ? ['studio-site', 'fail-safe-queue'] : ['studio-site'];
-await expect(`sitemap lists the ${OPEN.length} languages, the ${OPEN.length * 4} breakdowns, the ${OPEN.length * SPEC_LIVE.length} R&D specimen page(s)${ENTERPRISE_ON ? `, /outbound and ${PILOT_OPEN.length} /pilot page(s)` : ' and neither /outbound nor /pilot'}`, '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === OPEN.length * (5 + SPEC_LIVE.length) + (ENTERPRISE_ON ? 1 + PILOT_OPEN.length : 0), detail: `${n} URLs` }; });
+const SLUGS_LIVE = ENTERPRISE_ON ? ['estate', 'clinic', 'law', 'logistics'] : ['estate', 'clinic', 'law'];
+await expect(`sitemap lists the ${OPEN.length} languages, the ${OPEN.length * SLUGS_LIVE.length} breakdowns, the ${OPEN.length * SPEC_LIVE.length} R&D specimen page(s)${ENTERPRISE_ON ? `, /outbound and ${PILOT_OPEN.length} /pilot page(s)` : ' and neither /outbound nor /pilot'}`, '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === OPEN.length * (1 + SLUGS_LIVE.length + SPEC_LIVE.length) + (ENTERPRISE_ON ? 1 + PILOT_OPEN.length : 0), detail: `${n} URLs` }; });
 if (ENTERPRISE_ON) for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot' : `/${l}/pilot`, 200);
 else {
   const sitemapText = await (await get('/sitemap.xml')).text();
-  say(!/\/pilot<\/loc>|\/outbound<\/loc>|fail-safe-queue<\/loc>/.test(sitemapText) ? 'PASS' : 'FAIL', 'the sitemap lists neither /pilot, /outbound nor the fail-safe-queue specimen');
-  const moved = [['/pilot', '/'], ['/outbound', '/'], ['/specimens/fail-safe-queue', '/'], ...(OPEN.includes('tr') ? [['/tr/pilot', '/tr'], ['/tr/outbound', '/tr'], ['/tr/specimens/fail-safe-queue', '/tr']] : [])];
+  say(!/\/pilot<\/loc>|\/outbound<\/loc>|fail-safe-queue<\/loc>|\/showcase\/logistics<\/loc>/.test(sitemapText) ? 'PASS' : 'FAIL', 'the sitemap lists neither /pilot, /outbound, the fail-safe-queue specimen nor /showcase/logistics (docs/adr/0038 section 12)');
+  const moved = [['/pilot', '/'], ['/outbound', '/'], ['/specimens/fail-safe-queue', '/'], ['/showcase/logistics', '/#showcase'], ...(OPEN.includes('tr') ? [['/tr/pilot', '/tr'], ['/tr/outbound', '/tr'], ['/tr/specimens/fail-safe-queue', '/tr'], ['/tr/showcase/logistics', '/tr#showcase']] : [])];
   for (const [from, to] of moved) {
     const res = await get(from);
     const location = (res.headers.get('location') ?? '').replace(ORIGIN, '');
     say(res.status === 301 && location === to ? 'PASS' : 'FAIL', `${from} answers 301 to ${to}`, `-> ${res.status || res.error} ${location}`);
   }
+  await expect('/api/breakdown?slug=logistics is 404 while the switch is off (docs/adr/0038 section 12)', '/api/breakdown?slug=logistics&locale=en', 404);
   for (const l of CLOSED) await expect(`/${l}/pilot is still not public`, `/${l}/pilot`, 404);
 }
 // What a visitor reads on the host (docs/adr/0035): the mail links go to the one configured mailbox, the legal pages carry no placeholder or draft banner
@@ -208,7 +212,9 @@ else {
   const html = res.status === 200 ? await res.text() : '';
   const text = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
   const cards = [...html.matchAll(/<article[^>]*\bid="(show-[a-z]+)"/g)].map((m) => m[1]);
-  say(cards.join(',') === 'show-estate,show-clinic,show-law,show-logistics' ? 'PASS' : 'FAIL', 'the showcase has the four cards (estate, clinic, law, logistics)', cards.join(', ') || `-> ${res.status || res.error}`);
+  const CARD_IDS = SLUGS_LIVE.map((slug) => `show-${slug}`);
+  say(cards.join(',') === CARD_IDS.join(',') ? 'PASS' : 'FAIL', ENTERPRISE_ON ? 'the showcase has the four cards (estate, clinic, law, logistics)' : 'the showcase has the three studio cards (estate, clinic, law) and no logistics card (docs/adr/0038 section 12)', cards.join(', ') || `-> ${res.status || res.error}`);
+  say((ENTERPRISE_ON ? text.includes('Four industries.') && /href="\/#show-logistics"/.test(html) : text.includes('Three industries.') && !text.includes('Four industries.') && !/href="\/#show-logistics"/.test(html)) ? 'PASS' : 'FAIL', ENTERPRISE_ON ? 'the showcase headline counts four industries and the footer links the logistics card' : 'the showcase headline counts three industries and the footer has no logistics link (docs/adr/0038 section 12)');
   if (BRIEFING_ON) {
     const floorOk = text.includes('$50,000 – $100,000') && text.includes('$100,000 – $250,000') && text.includes('$250,000 +') && !text.includes('$25,000');
     say(floorOk ? 'PASS' : 'FAIL', 'the briefing opens at $50,000 with the three new bands and no $25,000 left');
@@ -231,11 +237,11 @@ else {
   const text = markup.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
   say(markup.includes('id="studio"') && (markup.match(/<details class="note"/g) ?? []).length === 3 && /Zero defects, as a method/.test(text) ? 'PASS' : 'FAIL', 'the Studio section is there with its three engineering notes');
   say((ENTERPRISE_ON ? markup.includes('data-sim="queue"') && markup.includes('data-sim="security"') : !markup.includes('data-sim=') && /<a\b[^>]*data-lighthouse-evidence[^>]*href="\/specimens\/studio-site"|<a\b[^>]*href="\/specimens\/studio-site"[^>]*data-lighthouse-evidence/.test(markup)) ? 'PASS' : 'FAIL', ENTERPRISE_ON ? 'both simulators are on the page (drawn idle; the live chunks load when a card comes near)' : 'no simulator is on the page, and the Lighthouse card links to the studio-site specimen (docs/adr/0038)');
-  say((markup.match(/data-breakdown-link/g) ?? []).length === 4 && (markup.match(/data-card-hit/g) ?? []).length === 4 && !/\sposter="/.test(markup) ? 'PASS' : 'FAIL', 'four cards lead to their breakdown (one link each, plus a text-less hit area that is not a link), and no video carries a poster attribute');
+  say((markup.match(/data-breakdown-link/g) ?? []).length === SLUGS_LIVE.length && (markup.match(/data-card-hit/g) ?? []).length === SLUGS_LIVE.length && !/\sposter="/.test(markup) ? 'PASS' : 'FAIL', `${SLUGS_LIVE.length} cards lead to their breakdown (one link each, plus a text-less hit area that is not a link), and no video carries a poster attribute`);
   say((markup.match(/data-flag=/g) ?? []).length >= OPEN.length + 1 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(markup) ? 'PASS' : 'FAIL', 'the language menu and footer carry SVG flags (no flag emoji)');
 }
 {
-  const SLUGS = ['estate', 'clinic', 'law', 'logistics'];
+  const SLUGS = SLUGS_LIVE;
   const LANGS = OPEN;
   const bad = [];
   for (const lang of LANGS) {
@@ -253,7 +259,7 @@ else {
   const apiBad = [];
   for (const slug of SLUGS) { const r = await get(`/api/breakdown?slug=${slug}&locale=en`); const j = r.status === 200 ? await r.json() : null; if (!(j?.ok && j.data?.parts?.length === 3 && j.data?.impact?.tiles?.length === 4)) apiBad.push(`en/${slug} ${r.status}`); }
   for (const lang of LANGS.filter((l) => l !== 'en')) { const r = await get(`/api/breakdown?slug=law&locale=${lang}`); const j = r.status === 200 ? await r.json() : null; if (!(j?.ok && j.data?.locale === lang)) apiBad.push(`${lang}/law ${r.status}`); }
-  say(apiBad.length === 0 ? 'PASS' : 'FAIL', '/api/breakdown answers JSON for the four specimens and for every language', apiBad.join(', '));
+  say(apiBad.length === 0 ? 'PASS' : 'FAIL', `/api/breakdown answers JSON for the ${SLUGS.length} specimens and for every language`, apiBad.join(', '));
   const notFound = [(await get('/showcase/saas')).status, (await get('/ja/showcase/estate')).status, (await get('/api/breakdown?slug=saas&locale=en')).status];
   say(notFound.every((n) => n === 404) ? 'PASS' : 'FAIL', 'an unknown specimen, a dormant language and a bad API request are all 404', notFound.join(', '));
   const sizes = [];
@@ -262,7 +268,7 @@ else {
     const total = Number(/\/(\d+)$/.exec(clip.headers.get('content-range') ?? '')?.[1] ?? 0);
     if (!([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) && total >= min)) sizes.push(`${slug}.${ext} ${clip.status} ${total}`);
   }
-  say(sizes.length === 0 ? 'PASS' : 'FAIL', 'the four 1080p sector clips (mp4, webm, webp) are served with the right type and a 1080p-sized body', sizes.slice(0, 3).join(', '));
+  say(sizes.length === 0 ? 'PASS' : 'FAIL', `the ${SLUGS.length} 1080p sector clips (mp4, webm, webp) are served with the right type and a 1080p-sized body`, sizes.slice(0, 3).join(', '));
 }
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });
 const home = await get(OPEN.includes('tr') ? '/tr' : '/');

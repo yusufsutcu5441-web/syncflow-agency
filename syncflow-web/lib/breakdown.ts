@@ -1,4 +1,5 @@
 import type { AppLocale } from '@/i18n/routing';
+import { SHOW_ENTERPRISE } from '@/lib/flags';
 import type { SpecimenSlug } from '@/lib/specimens';
 
 /**
@@ -11,7 +12,17 @@ import type { SpecimenSlug } from '@/lib/specimens';
 export const BREAKDOWN_SLUGS = ['estate', 'clinic', 'law', 'logistics'] as const;
 export type BreakdownSlug = (typeof BREAKDOWN_SLUGS)[number];
 
-export const isBreakdownSlug = (value: string): value is BreakdownSlug => (BREAKDOWN_SLUGS as readonly string[]).includes(value);
+/**
+ * Since docs/adr/0038 section 12 (24.11.2026) the logistics specimen belongs to the enterprise layer: its card, its footer link, its page, its API answer
+ * and its sitemap entries exist only while SHOW_ENTERPRISE is on (lib/flags.ts). Off (the shipped site) the showcase is the three studio sectors and
+ * next.config.mjs answers /showcase/logistics with a 301 to the showcase of its language. Nothing is deleted: the files, the scene and the texts stay,
+ * and BREAKDOWN_SLUGS above remains the full list (the design audit reads it as the locked set of the FEATURE build).
+ */
+export const ENTERPRISE_BREAKDOWN_SLUGS: readonly BreakdownSlug[] = ['logistics'];
+export const SHOWN_BREAKDOWN_SLUGS: readonly BreakdownSlug[] = SHOW_ENTERPRISE ? BREAKDOWN_SLUGS : BREAKDOWN_SLUGS.filter((slug) => !ENTERPRISE_BREAKDOWN_SLUGS.includes(slug));
+
+/** True for a specimen that is public in this build: the page, the API, the dialog and the sitemap all ask this one question. */
+export const isBreakdownSlug = (value: string): value is BreakdownSlug => (SHOWN_BREAKDOWN_SLUGS as readonly string[]).includes(value);
 
 /** The address of a breakdown page, before the locale prefix is added. */
 export const breakdownPath = (slug: BreakdownSlug): string => `/showcase/${slug}`;

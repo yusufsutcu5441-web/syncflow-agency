@@ -33,6 +33,8 @@ if (process.argv.includes('build') && !/^[^\s@<>"',;:\\]+@[^\s@<>"',;:\\]+\.[^\s
 // old outbound identity are not deleted but answer a 301 to the home page of their own language: /pilot, /outbound and the fail-safe-queue specimen. `statusCode: 301` on purpose: `permanent: true`
 // would send a 308. The studio-site specimen is NOT redirected: it is the Lighthouse evidence of the performance claim. The language list is the routed one (i18n/routing.ts); a redirect
 // runs before the proxy, so it carries no CSP nonce and needs none. Browsers keep a 301 for a long time: turning the switch back on does not bring the pages back for a browser that has seen it.
+// Since docs/adr/0038 section 12 (24.11.2026) the logistics breakdown is part of the same layer: off, /showcase/logistics goes to the showcase of its language (the home page's
+// showcase section; there is no /showcase index page), and lib/breakdown.ts leaves the slug out of the cards, the API and the sitemap.
 const showEnterprise = ['true', '1'].includes(process.env.NEXT_PUBLIC_SHOW_ENTERPRISE ?? '');
 const otherLocales = 'tr|ar|de|fr|es|zh|ja';
 const enterpriseRedirects = showEnterprise
@@ -41,9 +43,11 @@ const enterpriseRedirects = showEnterprise
       { source: '/pilot', destination: '/', statusCode: 301 },
       { source: '/outbound', destination: '/', statusCode: 301 },
       { source: '/specimens/fail-safe-queue', destination: '/', statusCode: 301 },
+      { source: '/showcase/logistics', destination: '/#showcase', statusCode: 301 },
       { source: '/:locale(tr)/pilot', destination: '/:locale', statusCode: 301 },
       { source: '/:locale(tr)/outbound', destination: '/:locale', statusCode: 301 },
       { source: `/:locale(${otherLocales})/specimens/fail-safe-queue`, destination: '/:locale', statusCode: 301 },
+      { source: `/:locale(${otherLocales})/showcase/logistics`, destination: '/:locale#showcase', statusCode: 301 },
     ];
 
 /** @type {import('next').NextConfig} */

@@ -537,7 +537,9 @@ if (want('casestudy')) {
     await sleep(1200);
     const home = new URL(page.url()).pathname;
     const slugs = await page.$$eval('a[data-breakdown-link].btn', (links) => links.map((a) => a.dataset.slug));
-    check(`${lang}: four showcase cards, each with a breakdown link`, slugs.length === 4 && new Set(slugs).size === 4, JSON.stringify(slugs));
+    // Since docs/adr/0038 section 12 the logistics card is drawn only while the enterprise switch is on: four cards there, three on the shipped site.
+    const wantCards = ENTERPRISE_ON ? 4 : 3;
+    check(`${lang}: ${wantCards} showcase cards, each with a breakdown link${ENTERPRISE_ON ? '' : ', none of them logistics (docs/adr/0038 section 12)'}`, slugs.length === wantCards && new Set(slugs).size === wantCards && slugs.includes('logistics') === ENTERPRISE_ON, JSON.stringify(slugs));
     // A visitor's click focuses the link first; a scripted click() does not, and the dialog returns focus to what had it.
     await page.evaluate(() => {
       const link = document.querySelector('a[data-breakdown-link].btn');
@@ -561,7 +563,7 @@ if (want('casestudy')) {
     check(`${lang}: no page or console errors on the home page`, errors.length === 0, errors.slice(0, 3).join(' | '));
     await page.close();
   }
-  for (const [lang, slug] of [['en', 'estate'], ['tr', 'clinic'], ['de', 'law'], ['ar', 'logistics']].filter(([l]) => PUBLIC_LANGS.includes(l))) {
+  for (const [lang, slug] of [['en', 'estate'], ['tr', 'clinic'], ['de', 'law'], ['ar', 'logistics']].filter(([l, s]) => PUBLIC_LANGS.includes(l) && (ENTERPRISE_ON || s !== 'logistics'))) {
     const { page, errors } = await open(url(lang, `/showcase/${slug}`));
     const view = await page.evaluate(() => ({
       title: document.querySelector('#bd-title')?.textContent?.trim() ?? '',

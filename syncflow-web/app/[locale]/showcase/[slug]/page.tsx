@@ -16,7 +16,8 @@ type Props = { params: Promise<{ locale: string; slug: string }> };
 /**
  * The architectural breakdown of one showcase specimen as a page of its own (docs/adr/0020-case-study-layer.md): indexable, listed in the
  * sitemap, with hreflang to every public language, readable without JavaScript. On the home page the same content opens in a dialog
- * (components/sections/BreakdownDialog.tsx), which reads it from /api/breakdown. An unknown slug, like an unknown language, is a 404.
+ * (components/sections/BreakdownDialog.tsx), which reads it from /api/breakdown. An unknown slug, like an unknown language, is a 404. While the enterprise switch is
+ * off the logistics slug is not a breakdown of this build either (lib/breakdown.ts, docs/adr/0038 section 12); next.config.mjs answers it with a 301 before this page runs.
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;

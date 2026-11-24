@@ -5,7 +5,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { SceneVideo } from '@/components/media/SceneVideo';
 import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
-import { breakdownPath } from '@/lib/breakdown';
+import { breakdownPath, isBreakdownSlug } from '@/lib/breakdown';
 import { writeHref } from '@/lib/contact';
 import { BRIEFING_ENABLED } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
@@ -21,7 +21,9 @@ const CARDS = [
 ] as const;
 
 /**
- * Blueprint section 3, "Sectoral showcase": four wide cards (real estate, clinics, corporate law, and, since docs/adr/0019, logistics) in a native scroll-snap strip. A cursor-following light
+ * Blueprint section 3, "Sectoral showcase": wide cards (real estate, clinics, corporate law, and, since docs/adr/0019, logistics) in a native scroll-snap strip. Since
+ * docs/adr/0038 section 12 the logistics card belongs to the enterprise layer: lib/breakdown.ts draws it only while SHOW_ENTERPRISE is on, and the headline counts the
+ * cards that are drawn (four, or three on the shipped site). A cursor-following light
  * appears inside the card under the pointer and its video plays; leaving pauses it. The videos are concept renders
  * (rendered ahead of time by npm run film:render), and the cards say so; no client results are claimed. Since docs/adr/0020 every card
  * leads to its architectural breakdown: a plain link to /showcase/<slug> (the whole card is the hit area, through an aria-hidden overlay element,
@@ -31,15 +33,17 @@ export async function Showcase() {
   const [t, closing, locale] = await Promise.all([getTranslations('Showcase'), getTranslations('Closing'), getLocale() as Promise<AppLocale>]);
   // The second action of a card: the briefing while the form is offered, otherwise a plain mail to the studio (lib/contact.ts).
   const mail = writeHref();
+  // The cards of this build (docs/adr/0038 section 12): the logistics card only while the enterprise switch is on. The headline counts what is drawn.
+  const cards = CARDS.filter(({ key }) => isBreakdownSlug(key));
 
   return (
     <section id={SECTION_IDS.showcase} className="section cv cv-showcase" aria-labelledby="showcase-title">
       <div className="container-x">
-        <SectionHead id="showcase-title" label={t('label')} title={t('title')} subtitle={t('subtitle')} />
+        <SectionHead id="showcase-title" label={t('label')} title={cards.length === CARDS.length ? t('title') : t('titleThree')} subtitle={t('subtitle')} />
       </div>
 
       <ShowcaseStrip>
-        {CARDS.map(({ key, id, overlay }) => (
+        {cards.map(({ key, id, overlay }) => (
           <article key={key} id={id} className="show-card" data-video-host="" data-spotlight="" style={{ '--spot-size': '420px', '--spot-alpha': 0.07 } as CSSProperties}>
             <div className="spot" aria-hidden="true" />
             <div className="frame" data-maskframe="">

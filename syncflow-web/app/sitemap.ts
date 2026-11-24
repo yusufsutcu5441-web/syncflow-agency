@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, routing, type AppLocale } from '@/i18n/routing';
-import { BREAKDOWN_SLUGS, breakdownPath } from '@/lib/breakdown';
+import { type BreakdownSlug, breakdownPath, SHOWN_BREAKDOWN_SLUGS } from '@/lib/breakdown';
 import { SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { OUTBOUND_PATH } from '@/lib/outbound';
@@ -10,7 +10,7 @@ import { SITE_URL } from '@/lib/site';
 import { SPECIMEN_SLUGS, specimenPath } from '@/lib/specimens';
 
 const urlFor = (locale: AppLocale) => (locale === routing.defaultLocale ? `${SITE_URL}/` : `${SITE_URL}/${locale}`);
-const breakdownUrl = (slug: (typeof BREAKDOWN_SLUGS)[number], locale: AppLocale) => `${SITE_URL}${withLocale(breakdownPath(slug), locale)}`;
+const breakdownUrl = (slug: BreakdownSlug, locale: AppLocale) => `${SITE_URL}${withLocale(breakdownPath(slug), locale)}`;
 const specimenUrl = (slug: (typeof SPECIMEN_SLUGS)[number], locale: AppLocale) => `${SITE_URL}${withLocale(specimenPath(slug), locale)}`;
 
 /**
@@ -31,7 +31,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     alternates: { languages },
   }));
 
-  const breakdowns = BREAKDOWN_SLUGS.flatMap((slug) => {
+  // The breakdowns of this build (lib/breakdown.ts): since docs/adr/0038 section 12 the logistics one is listed only while SHOW_ENTERPRISE is on (off, next.config.mjs
+  // answers its addresses with a 301 to the showcase).
+  const breakdowns = SHOWN_BREAKDOWN_SLUGS.flatMap((slug) => {
     const alternates = {
       languages: {
         ...Object.fromEntries(OPEN_LOCALES.map((locale) => [LOCALE_LABELS[locale].hreflang, breakdownUrl(slug, locale)])),

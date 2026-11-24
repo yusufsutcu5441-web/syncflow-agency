@@ -188,10 +188,12 @@ check('title is the studio title (no price)', /<title>syncflow\.agency \| Digita
 check('one <h1> with the two hero lines (the 22.11.2026 headline)', (html.match(/<h1\b/g) ?? []).length === 1 && html.includes('Luxury websites,') && html.includes('engineered for speed.'));
 check('the sections are there (architecture, showcase, studio) and the language section is gone', ['architecture', 'showcase', 'studio'].every((id) => new RegExp(`<section[^>]*id="${id}"`).test(html)) && !/<section[^>]*id="reach"/.test(html));
 check(BRIEFING_ON ? 'the briefing section is there (the form is switched on)' : 'there is no briefing section and nothing links to #briefing (the form is switched off)', /<section[^>]*id="briefing"/.test(html) === BRIEFING_ON && (BRIEFING_ON || !/#briefing/.test(html)));
-check('the showcase has exactly the four sectors (real estate, clinics, corporate law, logistics) and no SaaS', ['show-estate', 'show-clinic', 'show-law', 'show-logistics'].every((id) => html.includes(`id="${id}"`)) && !/show-saas|SaaS/.test(html));
+// Since docs/adr/0038 section 12 the logistics card belongs to the enterprise layer: it, its footer link and the "Four industries." headline exist only while the switch is on.
+const CARD_IDS = ['show-estate', 'show-clinic', 'show-law', ...(ENTERPRISE_ON ? ['show-logistics'] : [])];
+check(ENTERPRISE_ON ? 'the showcase has exactly the four sectors (real estate, clinics, corporate law, logistics) and no SaaS' : 'the showcase has exactly the three studio sectors (real estate, clinics, corporate law): no logistics card (docs/adr/0038 section 12) and no SaaS', CARD_IDS.every((id) => html.includes(`id="${id}"`)) && (ENTERPRISE_ON || !html.includes('id="show-logistics"')) && !/show-saas|SaaS/.test(html));
 // The words of a heading may sit in separate masked spans, so phrases are compared against the page's text with the tags removed.
 const pageText = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
-check('the showcase headline counts four industries and the footer links the logistics card', pageText.includes('Four industries.') && html.includes('href="/#show-logistics"'));
+check(ENTERPRISE_ON ? 'the showcase headline counts four industries and the footer links the logistics card' : 'the showcase headline counts three industries and the footer has no logistics link (docs/adr/0038 section 12)', ENTERPRISE_ON ? pageText.includes('Four industries.') && html.includes('href="/#show-logistics"') : pageText.includes('Three industries.') && !pageText.includes('Four industries.') && !html.includes('href="/#show-logistics"'));
 const enterpriseCards = pageText.includes('Fail-Safe Enterprise Automation') && pageText.includes('Deep Enterprise Integrations') && pageText.includes('Salesforce') && pageText.includes('SAP') && pageText.includes('HubSpot') && pageText.includes('Oracle') && pageText.includes('no partnership, certification or conformance is implied');
 check(ENTERPRISE_ON ? 'the architecture section carries the two enterprise columns (fail-safe automation, deep integrations) and the note that implies no partnership' : 'the architecture section is the front end only: no enterprise column, no queue / integration / zero-trust simulator, and none of their names on the home page (docs/adr/0038)', ENTERPRISE_ON ? enterpriseCards : !/Fail-Safe Enterprise Automation|Deep Enterprise Integrations|Zero-Trust Security Flow|Salesforce|HubSpot|Oracle|\bSAP\b/.test(pageText) && !/q-parcel/.test(html));
 // "High-ROI digital ecosystems" was a return promise nobody had measured; it is gone (docs/adr/0035, correction round), and no ROI wording replaces it.
@@ -448,7 +450,8 @@ section('Metadata routes and error pages');
   check('www.syncflow.agency answers 308 to the apex with path and query kept', www.status === 308 && www.location === 'https://syncflow.agency/tr/showcase?m=tr&x=1', `${www.status} ${www.location}`);
 }
 const sitemap = await (await get('/sitemap.xml')).text();
-const SLUGS = ['estate', 'clinic', 'law', 'logistics'];
+// The breakdowns of this build: since docs/adr/0038 section 12 the logistics one exists only while the enterprise switch is on (lib/breakdown.ts).
+const SLUGS = ENTERPRISE_ON ? ['estate', 'clinic', 'law', 'logistics'] : ['estate', 'clinic', 'law'];
 const breakdownPath = (locale, slug) => (locale === 'en' ? `/showcase/${slug}` : `/${locale}/showcase/${slug}`);
 // The architectural R&D specimens (docs/adr/0032): two pages per language, each in the sitemap with its own alternates.
 const SPEC_SLUGS = ['studio-site', 'fail-safe-queue'];
@@ -470,19 +473,20 @@ if (ENTERPRISE_ON) {
 }
 // The old outbound identity is not deleted: while the switch is off its pages answer a 301 (not the 308 of `permanent: true`) to the home page of their own language, query string dropped by the destination.
 if (!ENTERPRISE_ON) {
-  const moved = [['/pilot', '/'], ['/outbound', '/'], ['/specimens/fail-safe-queue', '/'], ...(OPEN.includes('tr') ? [['/tr/pilot', '/tr'], ['/tr/outbound', '/tr'], ['/tr/specimens/fail-safe-queue', '/tr']] : [])];
+  const moved = [['/pilot', '/'], ['/outbound', '/'], ['/specimens/fail-safe-queue', '/'], ['/showcase/logistics', '/#showcase'], ...(OPEN.includes('tr') ? [['/tr/pilot', '/tr'], ['/tr/outbound', '/tr'], ['/tr/specimens/fail-safe-queue', '/tr'], ['/tr/showcase/logistics', '/tr#showcase']] : [])];
   const answers = await Promise.all(moved.map(async ([from, to]) => {
     const res = await get(from);
     const location = (res.headers.get('location') ?? '').replace(ORIGIN, '');
     return { from, to, status: res.status, location, ok: res.status === 301 && location === to };
   }));
-  check('docs/adr/0038: /pilot, /outbound and /specimens/fail-safe-queue (and the Turkish ones) answer 301 to the home page of their language', answers.every((a) => a.ok), answers.filter((a) => !a.ok).map((a) => `${a.from} -> ${a.status} ${a.location} (wanted ${a.to})`).join(' | '));
+  check('docs/adr/0038: /pilot, /outbound, /specimens/fail-safe-queue and (section 12) /showcase/logistics, with the Turkish ones, answer 301 to the home page, or its showcase, of their language', answers.every((a) => a.ok), answers.filter((a) => !a.ok).map((a) => `${a.from} -> ${a.status} ${a.location} (wanted ${a.to})`).join(' | '));
   const kept = await get('/specimens/studio-site');
   check('docs/adr/0038: /specimens/studio-site is NOT redirected: it answers 200 (the Lighthouse evidence of the performance claim)', kept.status === 200);
   const noMoreHtml = await Promise.all(['/pilot', '/outbound'].map(async (p) => (await (await get(p)).text()).includes('data-bare-page')));
   check('the redirected pages serve no page of their own (no bare outbound / pilot page behind the 301)', noMoreHtml.every((x) => !x));
   for (const l of CLOSED) check(`/${l}/pilot is still not public (404, never redirected)`, (await get(`/${l}/pilot`)).status === 404);
   check('the home page has no "Outbound pilot" band, no data-pilot-note and no link to /pilot or /outbound (hero, footer, anywhere)', !/data-pilot-note/.test(html) && !/href="\/(pilot|outbound)\b/.test(html) && !/Outbound pilot/i.test(pageText));
+  check('docs/adr/0038 section 12: the logistics breakdown is not served while the switch is off: /api/breakdown?slug=logistics is 404 and the sitemap has no /showcase/logistics', (await get('/api/breakdown?slug=logistics&locale=en')).status === 404 && !/\/showcase\/logistics<\/loc>/.test(sitemap));
 }
 // The pilot page (docs/adr/0037): the offer of the cold e-mail, in the e-mail's own terms, with no invented proof; linked from the home page and the footer.
 if (ENTERPRISE_ON) {
@@ -498,6 +502,7 @@ if (ENTERPRISE_ON) {
   }
   for (const l of CLOSED) check(`/${l}/pilot is not public (404)`, (await get(`/${l}/pilot`)).status === 404);
   check('the home page links to /pilot from the hero and from the footer', (html.match(/href="\/pilot"/g) ?? []).length >= 2);
+  check('docs/adr/0038 section 12: while the switch is on the logistics breakdown is public: /showcase/logistics answers 200, /api/breakdown?slug=logistics answers JSON and the sitemap lists it', (await get('/showcase/logistics')).status === 200 && (await get('/api/breakdown?slug=logistics&locale=en')).status === 200 && /\/showcase\/logistics<\/loc>/.test(sitemap));
 }
 // Two small honesty checks on the home page (docs/adr/0037): no placeholder timecode in the markup, and no link without any text or name (a reader view prints those as "[](...)").
 check('the film timecode is not in the HTML: it is a live scroll readout that the script fills', !/00:00:00:00/.test(html));
@@ -955,13 +960,13 @@ for (const locale of OPEN) {
   const nav = (page.match(/<nav[^>]*class="[^"]*lg:flex[^"]*"[\s\S]*?<\/nav>/) ?? [''])[0];
   const ok =
     page.includes('id="studio"') && page.includes('id="how-we-built-it"') && (page.match(/<details class="note"/g) ?? []).length === 3 &&
-    (ENTERPRISE_ON ? page.includes('data-sim="queue"') && page.includes('data-sim="security"') : !page.includes('data-sim=')) && (page.match(/data-breakdown-link/g) ?? []).length === 4 && (page.match(/data-card-hit/g) ?? []).length === 4 &&
+    (ENTERPRISE_ON ? page.includes('data-sim="queue"') && page.includes('data-sim="security"') : !page.includes('data-sim=')) && (page.match(/data-breakdown-link/g) ?? []).length === SLUGS.length && (page.match(/data-card-hit/g) ?? []).length === SLUGS.length &&
     nav.includes('#studio') && (page.match(/data-flag=/g) ?? []).length >= OPEN.length + 1 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(page) &&
     !/\sposter="/.test(page) && (page.match(/<img[^>]+media\/clips[^>]+loading="lazy"/g) ?? []).length >= 5 &&
     !FORBIDDEN_IN_BREAKDOWN.test(normalise(stripTags(page)));
   if (!ok) homeFailures.push(locale);
 }
-check(`the home page, in every language: Studio with its three notes, ${ENTERPRISE_ON ? 'both simulators drawn idle' : 'no simulator at all (docs/adr/0038)'}, 4 breakdown pills (the only links) + 4 card hit areas (plain elements, no empty link), SVG flags (no emoji), a fourth nav link, lazy stills and no video poster attribute`, homeFailures.length === 0, `failing: ${homeFailures.join(', ')}`);
+check(`the home page, in every language: Studio with its three notes, ${ENTERPRISE_ON ? 'both simulators drawn idle' : 'no simulator at all (docs/adr/0038)'}, ${SLUGS.length} breakdown pills (the only links) + ${SLUGS.length} card hit areas (plain elements, no empty link), SVG flags (no emoji), a fourth nav link, lazy stills and no video poster attribute`, homeFailures.length === 0, `failing: ${homeFailures.join(', ')}`);
 const enHome = normalise(stripTags((await pageAs('/?m=us')).page));
 check('the Studio text states zero defects as a method, never as a guarantee, and promises no NDA and no answer time (docs/adr/0035)', /Zero defects, as a method/.test(enHome) && /never a promise we could sign/.test(enHome) && !/\bNDA\b/.test(enHome) && !/within 24 hours/i.test(enHome) && !/guarantee/i.test(enHome.slice(enHome.indexOf('Exact by habit'), enHome.indexOf('Exact by habit') + 6000)));
 check('the Studio engineering notes state the real tolerances (pixel ratio 1.25, 24 ms, 1.2 s, 88 px, 16.7 ms)', ['1.25', '24 ms', '1.2 s', '88 px', '16.7 ms'].every((t) => enHome.includes(t)));

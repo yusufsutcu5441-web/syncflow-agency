@@ -4,6 +4,7 @@ import { getLocale, getNow, getTranslations } from 'next-intl/server';
 import { isDraftLocale, OPEN_LOCALES } from '@/i18n/launch';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { auditHref } from '@/lib/contact';
+import { isBreakdownSlug } from '@/lib/breakdown';
 import { BRIEFING_ENABLED, SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
 import { isPilotLocale, PILOT_PATH } from '@/lib/pilot';
@@ -102,11 +103,14 @@ export async function Footer() {
                   {t('law')}
                 </Link>
               </li>
-              <li>
-                <Link href={here('show-logistics')} prefetch={false} className={linkClass}>
-                  {t('logistics')}
-                </Link>
-              </li>
+              {/* The logistics card is part of the enterprise layer (docs/adr/0038 section 12): its link exists only while the card is drawn. */}
+              {isBreakdownSlug('logistics') ? (
+                <li>
+                  <Link href={here('show-logistics')} prefetch={false} className={linkClass}>
+                    {t('logistics')}
+                  </Link>
+                </li>
+              ) : null}
             </ul>
           </div>
 
