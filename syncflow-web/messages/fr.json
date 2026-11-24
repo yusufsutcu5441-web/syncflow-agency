@@ -383,7 +383,7 @@
     "n1Title": "Vidéo décodée par le matériel et couche cinéma GPU",
     "n1Summary": "Le mouvement de ce site est une vidéo que l’appareil décode en matériel, plus une couche WebGL qui se retire dès qu’elle coûte une image.",
     "n1s1t": "Préparé une fois, à l’avance.",
-    "n1s1": "Chaque scène est une boucle de huit secondes, préparée une seule fois à 30 images par seconde (les scènes de secteur en 1920 × 1080, la scène d’architecture en 1280 × 720), puis encodée en H.264 (MP4) avec VP9 (WebM) en secours. Aucun moteur d’animation n’est livré au navigateur.",
+    "n1s1": "Chaque scène est une boucle de huit secondes, préparée une seule fois en 1920 × 1080 à 30 images par seconde, puis encodée en H.264 (MP4) avec VP9 (WebM) en secours. Aucun moteur d’animation n’est livré au navigateur.",
     "n1s2t": "Décodé par l’appareil.",
     "n1s2": "Le navigateur confie le flux au décodeur vidéo de l’appareil, qui sur la plupart des téléphones et ordinateurs portables est un composant dédié, de sorte que le processeur reste libre pour la page.",
     "n1s3t": "Chargé et lu seulement quand il est vu.",

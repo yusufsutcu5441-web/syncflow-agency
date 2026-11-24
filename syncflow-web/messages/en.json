@@ -414,7 +414,7 @@
     "n1Title": "Hardware-decoded video and a GPU cinema layer",
     "n1Summary": "The motion on this site is video the device decodes in hardware, plus one WebGL layer that backs off the moment it costs a frame.",
     "n1s1t": "Prepared once, ahead of time.",
-    "n1s1": "Each scene is an eight-second loop prepared once at 30 frames per second (the sector scenes at 1920 × 1080, the architecture scene at 1280 × 720), then encoded as H.264 (MP4) with VP9 (WebM) as the fallback. No animation engine is shipped to the browser.",
+    "n1s1": "Each scene is an eight-second loop prepared once at 1920 × 1080 and 30 frames per second, then encoded as H.264 (MP4) with VP9 (WebM) as the fallback. No animation engine is shipped to the browser.",
     "n1s2t": "Decoded by the device.",
     "n1s2": "The browser hands the stream to the device’s own video decoder, which on most phones and laptops is dedicated hardware, so the processor stays free for the page.",
     "n1s3t": "Loaded and played only when seen.",

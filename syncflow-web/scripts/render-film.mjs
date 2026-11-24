@@ -33,9 +33,10 @@ const { version } = JSON.parse(readFileSync(join(root, 'node_modules', 'remotion
 // Mirrors remotion/config.ts (kept in plain JS here so this script needs no TypeScript runtime).
 const CLIPS = ['monolith', 'estate', 'clinic', 'law', 'logistics'];
 const POSTER_FRAME = { monolith: 36, estate: 120, clinic: 70, law: 90, logistics: 70 };
-// The compositions are drawn at 1280 x 720; --scale renders them larger without touching a coordinate. The four sector scenes of the
-// showcase are rendered at 1.5 (1920 x 1080), the architecture monolith stays at 1 (docs/adr/0020-case-study-layer.md).
-const SCALE = { monolith: 1, estate: 1.5, clinic: 1.5, law: 1.5, logistics: 1.5 };
+// The compositions are drawn at 1280 x 720; --scale renders them larger without touching a coordinate. Every scene is rendered at 1.5
+// (1920 x 1080). The architecture monolith was the exception until 24.11.2026 (docs/adr/0038 section 15): it stayed at 1 and shipped at
+// 1280 x 720, which made the site's "every scene at 1920 x 1080" sentence need a parenthesis. It renders at 1.5 now, like the rest.
+const SCALE = { monolith: 1.5, estate: 1.5, clinic: 1.5, law: 1.5, logistics: 1.5 };
 
 /** Frames go through PNG, not the default JPEG, so thin lines and small text reach the encoder undamaged. */
 const COMMON = ['--muted', '--overwrite', '--image-format=png', '--log=error'];
