@@ -123,6 +123,17 @@ for (const code of OPEN) {
     return { ok: new RegExp(`<html[^>]*\\blang="${lang}"`).test(html) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(html) && cards === OPEN.length, detail: `${cards} cards` };
   });
 }
+// 24.11.2026 (docs/adr/0038 §13, the owner's claim audit): the site says it sets no cookies (Studio.p2Text, Privacy.cookies, Specimen.studioSite.c2).
+// Measured here on the live pages that carry the claim, on the gate page too, because a platform can add a cookie the repository never writes.
+{
+  const cookied = [];
+  for (const path of ['/', ...(OPEN.includes('tr') ? ['/tr'] : []), '/privacy', '/specimens/studio-site']) {
+    const res = await get(path);
+    const raw = res.headers.get('set-cookie');
+    if (raw) cookied.push(`${path}: ${raw.replace(/\s+/g, ' ').slice(0, 60)}`);
+  }
+  say(cookied.length === 0 ? 'PASS' : 'FAIL', 'no live page sets a cookie (the language and market choice lives in the address only)', cookied.join(' | '));
+}
 // docs/adr/0023: React and Next start behind one small loader after the first paint. A document that still names the framework scripts itself is
 // slower (mobile Lighthouse about 96, not 100), not broken: WARN. A loader, or a script it names, that does not exist would leave the page
 // without JavaScript: FAIL.

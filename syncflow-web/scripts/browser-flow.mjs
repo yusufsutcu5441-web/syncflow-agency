@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, studioonly, framework, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, studioonly, accname, privacy, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *   npm run qa:browser -- --throttle=4               every page runs its CPU 4x slower (QA_CPU_THROTTLE=4 does the same): a loaded machine, to show which checks depend on timing
@@ -1103,6 +1103,109 @@ if (want('cinema')) {
     check(`a fixed monolith frame from the worker and from the main thread differ in ${result.pct.toFixed(3)} % of pixels (limit 0.05 %) and are not blank (mean brightness ${result.brightness.toFixed(1)} / 255)`, result.pct <= 0.05 && result.brightness > 8, JSON.stringify({ ...result, sceneScale: [viaWorker.stats?.sceneScale, viaMain.stats?.sceneScale] }));
   } else check('both modes produced a frame to compare', false, JSON.stringify({ worker: !!viaWorker.png, main: !!viaMain.png }));
   check('no page or console errors in either mode', viaWorker.errors.length === 0 && viaMain.errors.length === 0, [...viaWorker.errors, ...viaMain.errors].slice(0, 3).join(' | '));
+}
+
+// ── accessible names: what a screen reader reads where two blocks meet ──────────────────────────────────────────────────────────
+// 24.11.2026 (docs/adr/0038 §13, the owner's claim audit): the headline is two block lines, the closing manifesto's last sentence is a
+// block of its own, and each "how we built it" note starts with a Roman numeral in its own grid cell. Read as one string those junctions
+// could glue two words together ("kurulmuşlüks", "unutulmayan.Gerisi", "IDonanımla"). Measured on the live site they do not: Chrome puts a
+// space at a block boundary both in innerText and in the accessible name. These checks hold that, in every public language of the build, and
+// they are written without any language's words: the accessible name must be exactly the visible text with its line breaks turned into spaces.
+if (want('accname')) {
+  group('Accessible names: headline, closing manifesto and the three notes read with a space where their blocks meet, nothing glued, nothing lost (docs/adr/0038 §13)');
+  // Chrome builds the full accessibility tree only for a browser that asks for it; the shared browser above does not, and turning it on there
+  // would measure every other check with accessibility instrumentation running. This group gets a browser of its own.
+  const axBrowser = await puppeteer.launch({ executablePath: chrome, headless: true, args: ['--no-sandbox', '--force-renderer-accessibility=complete'] });
+  const norm = (s) => (s ?? '').replace(/\s+/g, ' ').trim();
+  // Spacing inside a line is not what is asked: the name may hold whitespace the visible text does not. French writes a no-break space before a
+  // colon, and a Chinese run is split into word boxes (MaskText), which Chrome joins with spaces. What must hold is that the name carries the same
+  // characters in the same order AND at least one space where two blocks meet, so none of the owner's glued readings ("IDonanımla",
+  // "kurulmuşlüks", "unutulmayan.Gerisi") can occur. This builds exactly that pattern out of the visible text, in any language.
+  const sameWithBreaks = (text) => {
+    const lines = (text ?? '').split('\n').map((line) => line.trim()).filter(Boolean);
+    const loose = (line) => [...line.replace(/\s+/g, '')].map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*');
+    return new RegExp(`^\\s*${lines.map(loose).join('\\s+')}\\s*$`);
+  };
+  for (const lang of publicLangs(['en', 'tr', 'de', 'fr', 'es', 'ar', 'zh'])) {
+    const page = await axBrowser.newPage();
+    await page.setViewport(DESKTOP);
+    // The market is in the address, so the entry gate is not open: while it is, the rest of the page is inert and out of the accessibility
+    // tree on purpose (docs/adr/0015), and nothing here could be read.
+    await page.goto(url(lang), { waitUntil: 'networkidle2', timeout: 60000 });
+    await sleep(900);
+    const client = await page.createCDPSession();
+    await client.send('Accessibility.enable');
+    await client.send('DOM.enable');
+    /** The name Chrome computes for one element, after the element has been drawn (content-visibility: auto skips what is far away). */
+    const read = async (selector) => {
+      const there = await page.$eval(selector, (el) => { el.scrollIntoView({ block: 'center', behavior: 'instant' }); return true; }).catch(() => false);
+      if (!there) return { text: null, name: null };
+      await sleep(900);
+      const text = await page.$eval(selector, (el) => el.innerText);
+      const { root } = await client.send('DOM.getDocument', { depth: -1 });
+      const { nodeId } = await client.send('DOM.querySelector', { nodeId: root.nodeId, selector });
+      const { nodes } = nodeId ? await client.send('Accessibility.getPartialAXTree', { nodeId, fetchRelatives: false }) : { nodes: [] };
+      return { text, name: nodes[0]?.name?.value ?? null, role: nodes[0]?.role?.value ?? null };
+    };
+    const places = [
+      ['the headline', 'h1#hero-title'],
+      ['the closing manifesto', 'section[aria-labelledby="closing-title"]', '#closing-title'],
+      ['note I', '#how-we-built-it details.note:nth-of-type(1) summary'],
+      ['note II', '#how-we-built-it details.note:nth-of-type(2) summary'],
+      ['note III', '#how-we-built-it details.note:nth-of-type(3) summary'],
+    ];
+    for (const [what, selector, textSelector] of places) {
+      const node = await read(selector);
+      // A region takes its name from the element that labels it, so the text to compare is that element's.
+      const visible = textSelector ? (await read(textSelector)).text : node.text;
+      const ok = Boolean(node.name) && Boolean(visible) && sameWithBreaks(visible).test(node.name);
+      check(`${lang}: ${what} is read with a space where its blocks meet, and with none of its text lost`, ok, `name=${JSON.stringify(norm(node.name).slice(0, 110))} text=${JSON.stringify(norm(visible).slice(0, 110))}`);
+    }
+    // The numerals are part of what is read, so they must be separated from the title; nothing here hides them.
+    const first = await read('#how-we-built-it details.note:nth-of-type(1) summary');
+    check(`${lang}: the note's numeral is read as its own word (never glued to the title)`, /^(I|II|III)\s\S/.test(norm(first.name)), JSON.stringify(norm(first.name).slice(0, 60)));
+    await page.close();
+  }
+  await axBrowser.close();
+}
+
+// ── no cookie, no storage, no third party ───────────────────────────────────────────────────────────────────────────────────────
+// 24.11.2026 (docs/adr/0038 §13): the site claims it sets no cookie, runs no analytics, stores nothing on the device and loads nothing from a
+// third party (Studio.p2Text, Studio.f2TextNoForm, Privacy.cookies, Specimen.studioSite.c2). Those are claims a browser can settle, so it does.
+if (want('privacy')) {
+  group('No cookie, no analytics, nothing stored on the device, nothing from a third party: the privacy claims, measured (docs/adr/0038 §13)');
+  const page = await newPage();
+  const host = new URL(BASE).host;
+  const foreign = [];
+  const setCookies = [];
+  page.on('request', (r) => {
+    const target = r.url();
+    if (/^(?:data|blob):/.test(target)) return; // an inline SVG or an object URL is this document, not another host
+    try { if (new URL(target).host !== host) foreign.push(`${r.resourceType()} ${target.slice(0, 120)}`); } catch { /* not an absolute URL */ }
+  });
+  page.on('response', (r) => { const raw = r.headers()['set-cookie']; if (raw) setCookies.push(`${r.url().slice(0, 80)} -> ${raw.replace(/\s+/g, ' ').slice(0, 80)}`); });
+  await page.goto(`${BASE}/?m=us`, { waitUntil: 'networkidle2', timeout: 60000 });
+  // A visitor's whole page: the films, the rings, the smooth scroll and every lazy chunk get their chance to store something.
+  const height = await page.evaluate(() => document.body.scrollHeight);
+  for (let y = 0; y < height; y += 800) { await page.evaluate((top) => window.scrollTo(0, top), y); await sleep(150); }
+  await sleep(1500);
+  const stored = await page.evaluate(async () => {
+    const safe = (fn) => { try { return fn(); } catch { return 'blocked'; } };
+    let dbs = [];
+    try { dbs = (await indexedDB.databases()).map((d) => d.name); } catch { dbs = ['unreadable']; }
+    let workers = 0;
+    try { workers = (await navigator.serviceWorker.getRegistrations()).length; } catch { workers = 0; }
+    return { cookie: safe(() => document.cookie), local: safe(() => Object.keys(localStorage)), session: safe(() => Object.keys(sessionStorage)), dbs, workers };
+  });
+  const empty = stored.cookie === '' && Array.isArray(stored.local) && stored.local.length === 0 && Array.isArray(stored.session) && stored.session.length === 0 && stored.dbs.length === 0 && stored.workers === 0;
+  check('the page stores nothing on the device: no cookie, no localStorage, no sessionStorage, no database, no service worker', empty, JSON.stringify(stored));
+  // With the briefing form on, its bot check is the one third party the site may load, and only at the last step of the form, which this group never reaches.
+  const hasForm = Boolean(await page.$('#briefing form'));
+  const allowed = hasForm ? ['challenges.cloudflare.com'] : [];
+  const unexpected = foreign.filter((entry) => !allowed.some((a) => entry.includes(a)));
+  check(`nothing loads from a third party${hasForm ? " (the form's bot check is the only one allowed, and it is not loaded before the last step)" : ''}`, unexpected.length === 0, unexpected.slice(0, 3).join(' | '));
+  check('no response sets a cookie', setCookies.length === 0, setCookies.slice(0, 2).join(' | '));
+  await page.close();
 }
 
 await browser.close();

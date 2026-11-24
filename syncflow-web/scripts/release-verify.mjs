@@ -41,7 +41,9 @@ const RELEASE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX };
 // What a browser can prove about the shipped page (no form, no simulator, no enterprise cards, English and Turkish only): the groups of scripts/browser-flow.mjs that do not drive the briefing form, the
 // simulators, Drawing 01, the Studio specimen cards or the seven-language gate (gate, anchors and deeplink assume the FEATURE build and its #briefing link), plus 'studioonly' (the two-fact row, the Lighthouse
 // evidence link and its way back). The CLS walk, typography, the showcase dialog and pages, the framework start and the cinema layer run here on the page that ships.
-const RELEASE_BROWSER_GROUPS = 'cls,type,casestudy,studioonly,framework,cinema';
+// 24.11.2026 (docs/adr/0038 §13): 'accname' (what a screen reader reads where two blocks meet) and 'privacy' (no cookie, nothing stored, nothing from a third party) are claims about the page that
+// ships, so they run against the RELEASE build as well, not only the FEATURE one.
+const RELEASE_BROWSER_GROUPS = 'cls,type,casestudy,studioonly,accname,privacy,framework,cinema';
 
 function step(label, command, args, { env = CLEAN, shell = false } = {}) {
   const started = Date.now();
