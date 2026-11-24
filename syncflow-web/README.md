@@ -54,7 +54,7 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 | `npm run telegram:check` | Sahibin Telegram denetimi: botun kim olduğu, `-- --find-chat` (sohbet kimliği), `-- --dry-run` (iki mesajı yazdırır), `-- --send` (telefona iki TEST mesajı). Jetonu ve sohbet kimliğini yalnızca o kabuğun ortamından okur, hiçbir yere yazdırmaz |
 | `npm run release:verify` | **Sürüm kapısı** (`-- --quick` hızlı küme): tip+lint+mesajlar, denetim `--build`, teslim ve mimari sözleşme testleri, üretim sunucusunda (:3190) smoke, CSP ve tam tarayıcı akışı; teslim değişkenleri bilerek tanımsız. Sessiz makinede yaklaşık 13 dk, yoğun makinede 15 dk ve üzeri; düşen adımın `FAIL` satırları ve tam çıktısı (geçici klasörde bir dosya) yazılır. Bkz. [docs/deployment.md](docs/deployment.md) |
 | `npm run dev:inbox` | Yerel taklit "gelen kutusu" (`127.0.0.1:4011`): briefing kayıtlarını ekrana yazar ve imzayı doğrular, bkz. [docs/n8n-briefing.md](docs/n8n-briefing.md) |
-| `npm run film:render` | Remotion sahne videolarını `public/media/clips/` altına render eder (MP4 + WebM + poster; varsayılan dört sahne, estate yalnızca `--only=estate` ile: sitedeki estate filmi 24.11.2026'dan beri fotoğraf tabanlı `estate-2`, bkz. §6) |
+| `npm run film:render` | Remotion sahne videolarını `public/media/clips/` altına render eder (MP4 + WebM + poster; varsayılan koşu yalnızca monolit ve lojistik: estate, clinic ve law 24.11.2026'dan beri fotoğraf tabanlıdır ve ancak `--only=<ad>` ile işlenir, bkz. §6) |
 | `npm run remotion:studio` | Sahneleri Remotion Studio'da açar |
 | `node scripts/render-posters.mjs` | Filmin yedek posterlerini (`public/film/`, yatay ve dikey) canlı motorun shader'larından render eder; Chrome ve Node ≥ 22.18 ister (başlığa bakın). Shader değişince yeniden çalıştırıp çıkan dosyaları commit'leyin |
 
@@ -98,7 +98,7 @@ i18n/       routing.ts (altyapıda 7 dil, LOCALE_LABELS: ad, hreflang, og:locale
 proxy.ts    hız sınırı + CSP nonce + dil yönlendirmesi (Next 16'da "middleware" yeni adıyla "proxy")
 docs/       adr/ (mimari kararlar 0001–0033) · architecture/ (kurumsal kanıt: şema, yedekli kuyruk, zarf, entegrasyonlar, örnekler; referanstır) · perf/ (ölçümler) · n8n-briefing.md (teslimat akışı) · deployment.md (dağıtım yapılandırması ve sürüm kilidi)
 tests/      arch/ (65 sözleşme testi)
-public/     fonts/ Inter Display (Latin + Türkçe) ve Syne alt kümeleri (OFL)   film/ sinema yedek posterleri   media/clips/ sahne videoları (dört Remotion render'ı + fotoğraf tabanlı estate-2)   brand/logo-512.png
+public/     fonts/ Inter Display (Latin + Türkçe) ve Syne alt kümeleri (OFL)   film/ sinema yedek posterleri   media/clips/ sahne videoları (iki Remotion render'ı + fotoğraf tabanlı estate-2, clinic-2, law-2)   brand/logo-512.png
 brand/      B1 monogram + özel çizim v2 wordmark (SVG, tek renk, eğri) · README.md (kurallar) · tools/outline_wordmark.py
 assets/     og-instrument-sans-600.ttf (paylaşım kartı yazı tipi)
 remotion/   Render kaynağı, siteye girmez: config.ts, fonts.ts, Root.tsx, scenes/ (Monolith, Estate, Clinic, Law, Logistics, fx: ortak bitiriş)
@@ -202,18 +202,18 @@ Atmosfer katmanıdır; içerik ve erişilebilirlik onsuz da eksiksizdir.
 Sitede **Remotion çalışma zamanı yok**: videolar önceden render edilmiş dosyalardır ([ADR 0003](docs/adr/0003-showcase-film-static-render.md)). `remotion` yalnızca geliştirme bağımlılığıdır; `remotion/scenes/` altındaki sahneleri `scripts/render-film.mjs` ile render etmek içindir.
 
 - **Sahneler** (1280×720 tuvalde çizilir, 30 kare/sn, 8 sn kusursuz döngü, her biri tamamen kareden hesaplanır; dört sektör sahnesi `--scale=1.5` ile **1920×1080** işlenir, monolit 1280×720 kalır, [ADR 0020](docs/adr/0020-case-study-layer.md)): `Monolith` (yavaşça dönen cam monolit; "mimari" kartı), `Estate` (gün batımında cam cepheli villa), `Clinic` (soluk klinik koridoru), `Law` (tek ışıklı kapıya doğru uzanan karanlık sütunlu koridor; hukuk kartı), `Logistics` (yüksek açıdan yük koridoru: paralel şeritler, kapılar, akan koliler; bir kapı sessizleşince şampanya ışıklı yedek şerit devralır; lojistik kartı). Konsept çalışmalarıdır, gerçek müşteri işi değildir; kartlarda "Concept study / Konsept çalışma" yazar. Sahnelerde okunabilir metin yoktur: altyazı HTML'dir, tek render her dile yeter. **24.11.2026 ([ADR 0038 §12](docs/adr/0038-studio-only-site.md)):** sitedeki estate filmi artık bu `Estate` sahnesinin render'ı değil, sahibin teslim ettiği, Unsplash lisanslı fotoğraflar üzerinde bir kamera hareketidir (aydınlık salon, sonra altın saatte liman; kesintisiz döngü değil); dosya adı `estate-2` (`lib/clips.ts` eşler), `Estate` sahnesi depoda durur ama varsayılan render dışındadır.
-- **Çıktı:** `public/media/clips/<ad>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (yedek) ve WebP poster. Toplam 15 dosya, ≈ 10,6 MB (24.11.2026 ölçümü: Remotion sektör klipleri 0,37–0,67 MB, posterleri 14–27 KB; `estate-2` 3,60 MB mp4, 3,10 MB webm, 225 KB poster).
+- **Çıktı:** `public/media/clips/<ad>.{mp4,webm,webp}`: H.264 MP4 (tercih edilen), VP9 WebM (yedek) ve WebP poster. Toplam 15 dosya, ≈ 15,9 MB (24.11.2026 ölçümü: lojistik Remotion klibi 0,67 MB ve posteri 27 KB, monolit 0,14 MB; fotoğraf tabanlılar `estate-2` 3,60/3,10 MB + 225 KB, `clinic-2` 1,83/0,78 MB + 97 KB, `law-2` 2,75/1,59 MB + 291 KB).
 - **Oynatma** (`components/media/SceneVideo.tsx`): Poster, kartın içindeki **tembel `<img>`**'dir (`<video poster>` değil: poster sayfa yüklenirken iner, 1080p posterler ilk yüke binerdi); video `preload="none"`. Ince işaretçide, görünürken (mimari kartı) ya da kartın üstüne gelince/odaklanınca (vitrin) oynar; **dokunmatikte, azaltılmış hareket ve Save-Data'da otomatik oynamaz** ve hiçbir şey indirilmez; ziyaretçi düğmeye basınca yüklenir. Ekran dışına çıkınca ve sekme gizlenince durur. Her videoda görünür bir oynat/duraklat düğmesi vardır (WCAG 2.2.2). Çerçeve oranı sabittir (CLS 0).
 - **Lisans:** Remotion yalnızca ≤ 3 kişilik kâr amaçlı şirketlerde/bireylerde ücretsizdir; **4+ kişilik şirketler için ücretli Company License gerekir** (remotion.pro). Render almak da lisans kapsamındadır.
 
 ```bash
-npm run film:render                       # dört sahne × (MP4 + WebM + poster), ~8 dk; estate varsayılanda yok (sitede fotoğraf tabanlı estate-2 oynar)
+npm run film:render                       # monolit ve lojistik × (MP4 + WebM + poster); estate, clinic ve law varsayılanda yok (sitede fotoğraf tabanlı -2 dosyaları oynar)
 npm run film:render -- --posters          # yalnızca posterler (hızlı)
-npm run film:render -- --only=clinic      # tek sahne (--only=estate eski estate.* dosyalarını yazar; hiçbir sayfa sunmaz, commit'lenmez)
+npm run film:render -- --only=clinic      # tek sahne (fotoğraf tabanlı üçü eski adlarıyla yazılır; hiçbir sayfa sunmaz, commit'lenmez)
 npm run film:render -- --formats=mp4       # yalnızca bazı biçimler (boyutu hızlı görmek için)
 npm run remotion:studio                   # sahneleri tarayıcıda düzenle
 ```
-Sahne değişince komutu çalıştırıp çıkan dosyaları commit'leyin (estate hariç: sitedeki estate filmi `estate-2`, bkz. yukarıdaki not). Remotion CLI her seferinde `npx` ile, kurulu `remotion` sürümüyle getirilir (projeye eklenmez); "zod sürüm uyuşmazlığı" uyarısı zararsızdır.
+Sahne değişince komutu çalıştırıp çıkan dosyaları commit'leyin (estate, clinic ve law hariç: sitedeki filmleri fotoğraf tabanlı `-2` dosyalarıdır, kaynakları [docs/media-sources.md](docs/media-sources.md)). Remotion CLI her seferinde `npx` ile, kurulu `remotion` sürümüyle getirilir (projeye eklenmez); "zod sürüm uyuşmazlığı" uyarısı zararsızdır.
 
 ---
 

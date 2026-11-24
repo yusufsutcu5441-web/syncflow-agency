@@ -147,14 +147,14 @@
       "title": "Güven, ilk saniyede kurulur.",
       "text": "Estetik, diş ve longevity klinikleri için: satış reyonu değil, sakin bir dijital karşılama. Hekim profilleri ve ürkütmeden yönlendiren, hastanın başlattığı bir randevu.",
       "overlay": "Özel görüşme planlayın",
-      "videoLabel": "Yavaş çekimde soluk bir klinik koridoru, tavanda gezinen yumuşak ışık"
+      "videoLabel": "Çerçeveli baskıların asıldığı sıcak bir klinik koridoru, ardından hasır ve deriden sakin bir oturma köşesi"
     },
     "law": {
       "tag": "Kurumsal hukuk ve danışmanlık",
       "title": "Müvekkilin ilk okuduğu şey ketumluktur.",
       "text": "Hukuk büroları, danışmanlık yapıları ve özel sermaye (private equity) kuruluşları için: ölçülü, kesin bir varlık. Çalışma alanı ve ortak sayfaları, gizli bir talep ve her kelimesini sizin onayladığınız bir yapı; çünkü mesleğinizi düzenleyen reklam ve iletişim kurallarını uygulamak sizin sorumluluğunuzdadır.",
       "overlay": "Gizli talep",
-      "videoLabel": "Aydınlık bir kapıya uzanan karanlık bir sütunlu koridor, kamera yavaşça ilerliyor"
+      "videoLabel": "Eski ahşap bir kütüphanenin rafları, ardından ceviz ve taba deriden bir toplantı masası"
     },
     "logistics": {
       "tag": "Küresel lojistik ve B2B tedarik zinciri mimarisi",
@@ -621,7 +621,7 @@
       "c1": "Site, klinik kadar sakin hissettirmelidir. Yavaş yüklenen, yüklenirken zıplayan ya da bannerlarla bağıran sayfalar ilk saniyede güveni bozar.",
       "c2": "Talepler telefonla ya da yapısız açık formlarla gelir; personel yardım edebilmek için günün çoğunu hastanın ne demek istediğini netleştirmekle geçirir.",
       "c3": "Sağlık iletişimi düzenlenmiştir: fiyat, indirim, sonuç galerileri, hasta yorumları ve üstünlük iddiaları yasaktır; bunları ima eden sayfa bir yükümlülüktür.",
-      "s1": "Sakin, önceden işlenmiş bir resepsiyon filmi ve ölçülü hareket: hiçbir şey sesle başlamaz, ziyaretçi seçmedikçe hiçbir şey hareket etmez ve her şey azaltılmış hareket ayarına uyar.",
+      "s1": "Önceden hazırlanmış sakin bir resepsiyon filmi ve ölçülü hareket: hiçbir şey sesle başlamaz, ziyaretçi seçmedikçe hiçbir şey hareket etmez ve her şey azaltılmış hareket ayarına uyar.",
       "s2": "Hekim ve hizmet sayfaları sade, hızlı ve doğrudur. İletişimi hasta başlatır; sayfa ürkütmeden yol gösterir.",
       "s3": "Hasta tarafından başlatılan randevu talebi, resepsiyonun tek yanıtla cevaplayabileceği biçimde yapılandırılır ve site, üzerinde hiçbir klinik bilgi toplanmayacak şekilde tasarlanır.",
       "i1": "Talep, muayenehane yönetim ya da CRM sisteminize (Oracle, SAP veya Salesforce tipik hedeflerdir) yapılı bir kayıt olarak ulaşır; ortak bir gelen kutusundaki ileti olarak değil.",
@@ -630,7 +630,7 @@
       "m1": "Talepten ilk kişisel yanıta kadar geçen süre",
       "m2": "Eksiksiz gelen taleplerin payı",
       "m3": "Taleplerden randevulara oran",
-      "note": "Kurgusal bir kliniğin konsept render’ı. Sağlık iletişimi kuralları geçerlidir (fiyat, indirim, sonuç galerisi ya da hasta yorumu yok); bunları uygulamak kliniğin sorumluluğudur ve her söz kliniğin onayına tabidir."
+      "note": "Kurgusal bir kliniğin konsept çalışması; filmi lisanslı fotoğraflar üzerinde bir kamera hareketidir. Sağlık iletişimi kuralları geçerlidir (fiyat, indirim, sonuç galerisi ya da hasta yorumu yok); bunları uygulamak kliniğin sorumluluğudur ve her söz kliniğin onayına tabidir."
     },
     "law": {
       "scenario": "Kurumsal hukuk ve danışmanlık yapan bir büro, ölçülü ve kesin bir görünüm istiyor: uzmanlık ve ortak sayfaları ile olası bir müvekkilin ilk teması kurabileceği gizli bir yol.",
@@ -646,7 +646,7 @@
       "m1": "Talepten ilk ortak düzeyinde yanıta kadar geçen süre",
       "m2": "Talepleri ilk seferde doğru uzmanlık grubuna yönlendirme payı",
       "m3": "Çıkar çatışması kontrolünün süresi",
-      "note": "Kurgusal bir büronun konsept render’ı. Mesleğin reklam ve iletişim kurallarını uygulamak büronun sorumluluğudur; hiçbir müvekkil çekilmeye çalışılmaz ve her söz büronun onayına tabidir."
+      "note": "Kurgusal bir büronun konsept çalışması; filmi lisanslı fotoğraflar üzerinde bir kamera hareketidir. Mesleğin reklam ve iletişim kurallarını uygulamak büronun sorumluluğudur; hiçbir müvekkil çekilmeye çalışılmaz ve her söz büronun onayına tabidir."
     },
     "logistics": {
       "scenario": "Birkaç ülkede tesisi olan bir lojistik operatörü, siparişleri, rıhtım olaylarını ve faturaları birçok sistem üzerinden yürütüyor. Bir hat sustuğunda diğerlerinin akmaya devam etmesi gerekiyor ve bunu kimse bir müşteriden öğrenmemeli.",

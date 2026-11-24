@@ -142,14 +142,14 @@
       "title": "La confiance se construit dès la première seconde.",
       "text": "Pour les cliniques esthétiques, dentaires et de longévité : un accueil numérique composé, jamais un espace de vente. Des profils de praticiens et une prise de rendez-vous à l’initiative du patient, qui guide sans alarmer.",
       "overlay": "Réserver une consultation privée",
-      "videoLabel": "Un couloir de clinique pâle au ralenti, une lumière douce glisse le long du plafond"
+      "videoLabel": "Un couloir de clinique chaleureux aux estampes encadrées, puis un coin salon paisible en cannage et cuir"
     },
     "law": {
       "tag": "Droit des affaires et conseil",
       "title": "La discrétion est la première chose que lit un client.",
       "text": "Pour les cabinets d’avocats, les cabinets de conseil et les maisons de capital-investissement : une présence retenue et exacte. Pages de domaines d’activité et d’associés, demande confidentielle, et une structure où chaque mot est validé par vous, car l’application des règles de publicité et de communication de votre profession relève de votre responsabilité.",
       "overlay": "Demande confidentielle",
-      "videoLabel": "Une colonnade sombre qui s’éloigne vers une porte éclairée, la caméra avance lentement"
+      "videoLabel": "Les travées d’une ancienne bibliothèque en bois, puis une table de conseil en noyer et cuir fauve"
     },
     "logistics": {
       "tag": "Logistique mondiale et architecture de chaîne d’approvisionnement B2B",
@@ -585,7 +585,7 @@
       "c1": "Le site doit sembler aussi calme que la clinique. Des pages qui chargent lentement, sautent pendant le chargement ou crient avec des bannières brisent la confiance dès la première seconde.",
       "c2": "Les demandes arrivent par téléphone ou par des formulaires ouverts sans structure, et le personnel passe la journée à clarifier ce que le patient voulait dire avant de pouvoir l’aider.",
       "c3": "La communication en santé est réglementée : prix, remises, galeries de résultats, témoignages de patients et affirmations de supériorité sont interdits, et une page qui les suggère est une responsabilité.",
-      "s1": "Un film d’accueil pré-rendu et paisible et un mouvement retenu : rien ne démarre avec du son, rien ne bouge sans que le visiteur le choisisse, et tout respecte le réglage de mouvement réduit.",
+      "s1": "Un film d’accueil paisible, préparé à l’avance, et un mouvement retenu : rien ne démarre avec du son, rien ne bouge sans que le visiteur le choisisse, et tout respecte le réglage de mouvement réduit.",
       "s2": "Les pages de praticiens et de services sont sobres, rapides et exactes. Le patient engage le contact, et la page guide sans alarmer.",
       "s3": "Une demande de rendez-vous initiée par le patient est structurée pour que l’accueil puisse y répondre en une seule réponse, et le site est conçu pour qu’aucune information clinique n’y soit recueillie.",
       "i1": "La demande atteint votre système de gestion de cabinet ou votre CRM (Oracle, SAP ou Salesforce sont des cibles typiques) comme un enregistrement structuré, jamais comme un message dans une boîte partagée.",
@@ -594,7 +594,7 @@
       "m1": "Délai entre la demande et la première réponse personnelle",
       "m2": "Part des demandes qui arrivent complètes",
       "m3": "Taux de demande à rendez-vous",
-      "note": "Un rendu conceptuel d’une clinique fictive. Les règles de la communication en santé s’appliquent (ni prix, ni remises, ni galeries de résultats, ni témoignages de patients) ; les appliquer relève de la responsabilité de la clinique, et chaque mot est à valider par elle."
+      "note": "Une étude conceptuelle d’une clinique fictive ; son film est un mouvement de caméra sur des photographies sous licence. Les règles de la communication en santé s’appliquent (ni prix, ni remises, ni galeries de résultats, ni témoignages de patients) ; les appliquer relève de la responsabilité de la clinique, et chaque mot est à valider par elle."
     },
     "law": {
       "scenario": "Un cabinet de droit des affaires et de conseil a besoin d’une présence sobre et exacte : des pages de domaines et d’associés, et un moyen confidentiel pour un client potentiel de prendre un premier contact.",
@@ -610,7 +610,7 @@
       "m1": "Délai entre la demande et la première réponse au niveau d’un associé",
       "m2": "Part des demandes orientées du premier coup vers le bon groupe de pratique",
       "m3": "Délai du contrôle des conflits d’intérêts",
-      "note": "Un rendu conceptuel d’un cabinet fictif. Appliquer les règles de publicité et de communication de la profession relève de la responsabilité du cabinet ; aucun client n’est sollicité et chaque mot est à valider par le cabinet."
+      "note": "Une étude conceptuelle d’un cabinet fictif ; son film est un mouvement de caméra sur des photographies sous licence. Appliquer les règles de publicité et de communication de la profession relève de la responsabilité du cabinet ; aucun client n’est sollicité et chaque mot est à valider par le cabinet."
     },
     "logistics": {
       "scenario": "Un opérateur logistique présent dans plusieurs pays fait circuler commandes, événements de quai et factures dans de nombreux systèmes. Quand une voie se tait, les autres doivent continuer, et personne ne devrait l’apprendre d’un client.",

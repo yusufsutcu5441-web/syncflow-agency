@@ -25,7 +25,7 @@ type Mode = 'visible' | 'hover';
 export function SceneVideo({ name, label, mode }: { name: SceneName; label: string; mode: Mode }) {
   const { messages } = useClientI18n();
   const t = messages.Showcase;
-  // The sector films are 1920 x 1080 (three Remotion renders at --scale=1.5, scripts/render-film.mjs; the estate film as delivered), the architecture monolith 1280 x 720.
+  // The sector films are 1920 x 1080 (the logistics scene a Remotion render at --scale=1.5, scripts/render-film.mjs; estate, clinic and law camera moves over licensed photographs), the architecture monolith 1280 x 720.
   const [width, height] = name === 'monolith' ? [1280, 720] : [1920, 1080];
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);

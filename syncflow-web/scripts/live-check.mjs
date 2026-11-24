@@ -166,8 +166,9 @@ const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
 // /showcase/logistics answers a 301 to the showcase of its language.
 const SPEC_LIVE = ENTERPRISE_ON ? ['studio-site', 'fail-safe-queue'] : ['studio-site'];
 const SLUGS_LIVE = ENTERPRISE_ON ? ['estate', 'clinic', 'law', 'logistics'] : ['estate', 'clinic', 'law'];
-// The clip file of a sector (lib/clips.ts): the estate film is estate-2 since docs/adr/0038 section 12 (photo-based, a new name because /media is cached for a week).
-const CLIP_FILE = { estate: 'estate-2' };
+// The clip file of a sector (lib/clips.ts): estate is estate-2 since docs/adr/0038 section 12, clinic and law are clinic-2 and law-2 since section 14
+// (all three photo-based, each under a new name because /media is cached for a week).
+const CLIP_FILE = { estate: 'estate-2', clinic: 'clinic-2', law: 'law-2' };
 // 24.11.2026 (docs/adr/0038 section 12): the estate film shows neither Istanbul nor the Bosphorus, so the card says "above the water" and no city, strait or district
 // name may appear on the home pages or the estate breakdown pages (the Arabic, Chinese and Japanese spellings are in the list for the seven-language build).
 const PLACE_WORDS = /Bosph|Bospor|Boğaz|Bogaz|Bósforo|Bosforo|البوسفور|博斯普鲁斯|ボスポラス|Istanbul|İstanbul|Estambul|إسطنبول|伊斯坦布尔|イスタンブール/i;
@@ -290,7 +291,7 @@ else {
     if (!([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) && total >= min)) sizes.push(`${file}.${ext} ${clip.status} ${total}`);
   }
   say(sizes.length === 0 ? 'PASS' : 'FAIL', `the ${SLUGS.length} 1080p sector clips (mp4, webm, webp) are served with the right type and a 1080p-sized body`, sizes.slice(0, 3).join(', '));
-  for (const ext of ['mp4', 'webm', 'webp']) await expect('the old estate clip name is gone (docs/adr/0038 section 12: the photo-based film is estate-2)', `/media/clips/estate.${ext}`, 404);
+  for (const name of ['estate', 'clinic', 'law']) for (const ext of ['mp4', 'webm', 'webp']) await expect(`the old ${name} clip name is gone (docs/adr/0038 sections 12 and 14: the photo-based films carry new names)`, `/media/clips/${name}.${ext}`, 404);
 }
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });
 const home = await get(OPEN.includes('tr') ? '/tr' : '/');

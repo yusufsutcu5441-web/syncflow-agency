@@ -142,14 +142,14 @@
       "title": "La confianza se construye en el primer segundo.",
       "text": "Para clínicas estéticas, dentales y de longevidad: una recepción digital serena, nunca un mostrador de ventas. Perfiles de los médicos y una cita iniciada por el paciente que orienta sin alarmar.",
       "overlay": "Reservar una consulta privada",
-      "videoLabel": "Un pasillo de clínica pálido en cámara lenta, con una luz suave recorriendo el techo"
+      "videoLabel": "Un pasillo de clínica cálido con láminas enmarcadas y, después, un rincón de espera sereno en ratán y cuero"
     },
     "law": {
       "tag": "Derecho corporativo y asesoría",
       "title": "La discreción es lo primero que lee un cliente.",
       "text": "Para despachos de abogados, firmas de asesoría y casas de capital privado: una presencia contenida y exacta. Páginas de áreas de práctica y de socios, una consulta confidencial y una estructura en la que usted aprueba cada palabra, porque aplicar las normas de publicidad y comunicación de su profesión es responsabilidad suya.",
       "overlay": "Consulta confidencial",
-      "videoLabel": "Una columnata oscura que se aleja hacia una puerta iluminada, con la cámara avanzando despacio"
+      "videoLabel": "Las calles de una antigua biblioteca de madera y, después, una mesa de juntas en nogal y cuero claro"
     },
     "logistics": {
       "tag": "Logística global y arquitectura de cadena de suministro B2B",
@@ -585,7 +585,7 @@
       "c1": "El sitio debe sentirse tan sereno como la clínica. Las páginas que cargan despacio, saltan al cargar o gritan con banners rompen la confianza en el primer segundo.",
       "c2": "Las solicitudes llegan por teléfono o por formularios abiertos sin estructura, y el personal pasa el día aclarando qué quiso decir el paciente antes de poder ayudarlo.",
       "c3": "La comunicación sanitaria está regulada: precios, descuentos, galerías de resultados, testimonios de pacientes y afirmaciones de superioridad no están permitidos, y una página que los sugiere es una responsabilidad.",
-      "s1": "Una película de recepción prerrenderizada y tranquila y un movimiento contenido: nada se reproduce con sonido, nada se mueve si el visitante no lo elige, y todo respeta el ajuste de movimiento reducido.",
+      "s1": "Una película de recepción tranquila, preparada de antemano, y un movimiento contenido: nada se reproduce con sonido, nada se mueve si el visitante no lo elige, y todo respeta el ajuste de movimiento reducido.",
       "s2": "Las páginas de médicos y servicios son sobrias, rápidas y exactas. El paciente inicia el contacto, y la página guía sin alarmar.",
       "s3": "Una solicitud de cita iniciada por el paciente se estructura para que recepción pueda responderla en una sola respuesta, y el sitio está diseñado para que no se recoja en él ninguna información clínica.",
       "i1": "La solicitud llega a su sistema de gestión de la consulta o a su CRM (Oracle, SAP o Salesforce son destinos típicos) como un registro estructurado, nunca como un mensaje en un buzón compartido.",
@@ -594,7 +594,7 @@
       "m1": "Tiempo desde la solicitud hasta la primera respuesta personal",
       "m2": "Proporción de solicitudes que llegan completas",
       "m3": "Tasa de solicitud a cita",
-      "note": "Un render conceptual de una clínica ficticia. Se aplican las normas de comunicación sanitaria (sin precios, descuentos, galerías de resultados ni testimonios de pacientes); aplicarlas es responsabilidad de la clínica, y cada palabra debe ser aprobada por ella."
+      "note": "Un estudio conceptual de una clínica ficticia; su película es un movimiento de cámara sobre fotografías con licencia. Se aplican las normas de comunicación sanitaria (sin precios, descuentos, galerías de resultados ni testimonios de pacientes); aplicarlas es responsabilidad de la clínica, y cada palabra debe ser aprobada por ella."
     },
     "law": {
       "scenario": "Un despacho de derecho corporativo y asesoría necesita una presencia sobria y exacta: páginas de áreas y de socios, y una vía confidencial para que un cliente potencial haga el primer contacto.",
@@ -610,7 +610,7 @@
       "m1": "Tiempo desde la consulta hasta la primera respuesta a nivel de socio",
       "m2": "Proporción de consultas dirigidas al grupo de práctica correcto a la primera",
       "m3": "Plazo del control de conflictos",
-      "note": "Un render conceptual de un despacho ficticio. Aplicar las normas de publicidad y comunicación de la profesión es responsabilidad del despacho; no se capta a ningún cliente y cada palabra debe ser aprobada por el despacho."
+      "note": "Un estudio conceptual de un despacho ficticio; su película es un movimiento de cámara sobre fotografías con licencia. Aplicar las normas de publicidad y comunicación de la profesión es responsabilidad del despacho; no se capta a ningún cliente y cada palabra debe ser aprobada por el despacho."
     },
     "logistics": {
       "scenario": "Un operador logístico con sedes en varios países gestiona pedidos, eventos de muelle y facturas en muchos sistemas. Cuando un carril se queda en silencio, los demás deben seguir moviéndose, y nadie debería enterarse por un cliente.",

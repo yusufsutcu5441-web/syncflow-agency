@@ -757,8 +757,9 @@ section('Scene videos (docs/adr/0003, 0006)');
 const mediaTypes = { mp4: 'video/mp4', webm: 'video/webm', webp: 'image/webp' };
 let mediaOk = true;
 let mediaDetail = '';
-// File names, not scene names: the estate film is estate-2 since docs/adr/0038 section 12 (a photo-based clip under a new name, because /media is cached for a week).
-const CLIP_FILES = ['monolith', 'estate-2', 'clinic', 'law', 'logistics'];
+// File names, not scene names: estate is estate-2 since docs/adr/0038 section 12 and clinic and law are clinic-2 and law-2 since section 14
+// (photo-based clips under new names, because /media is cached for a week).
+const CLIP_FILES = ['monolith', 'estate-2', 'clinic-2', 'law-2', 'logistics'];
 for (const name of CLIP_FILES) {
   for (const [ext, type] of Object.entries(mediaTypes)) {
     const res = await get(`/media/clips/${name}.${ext}`, { headers: { range: 'bytes=0-0' } });
@@ -771,8 +772,9 @@ for (const name of CLIP_FILES) {
   }
 }
 check('all 15 scene files are served with the right content type (5 scenes x mp4/webm/webp)', mediaOk, mediaDetail);
-const oldEstate = await Promise.all(['mp4', 'webm', 'webp'].map((ext) => get(`/media/clips/estate.${ext}`)));
-check('docs/adr/0038 section 12: the old estate files are gone (404 under the old name; the photo-based film is estate-2)', oldEstate.every((r) => r.status === 404), oldEstate.map((r) => r.status).join(','));
+// The three films that were replaced by photography must be gone under their old names, or a browser with a week-old cache would keep the old one.
+const oldNames = await Promise.all(['estate', 'clinic', 'law'].flatMap((name) => ['mp4', 'webm', 'webp'].map(async (ext) => `${name}.${ext}:${(await get(`/media/clips/${name}.${ext}`)).status}`)));
+check('docs/adr/0038 sections 12 and 14: the old estate, clinic and law files are gone (404 under the old names)', oldNames.every((r) => r.endsWith(':404')), oldNames.filter((r) => !r.endsWith(':404')).join(' '));
 const ranged = await get('/media/clips/estate-2.mp4', { headers: { range: 'bytes=0-99' } });
 check('the mp4 answers byte-range requests (preload="none" needs it)', ranged.status === 206 && /^bytes 0-99\//.test(ranged.headers.get('content-range') ?? '') && ranged.headers.get('accept-ranges') === 'bytes', `${ranged.status} ${ranged.headers.get('content-range')} ${ranged.headers.get('accept-ranges')}`);
 await ranged.arrayBuffer();

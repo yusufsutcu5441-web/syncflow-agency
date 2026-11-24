@@ -1,0 +1,4 @@
+# The clip workshop: source photographs, mezzanine renders and the scripts that build the scene films from them.
+# The finished files live in syncflow-web/public/media/clips; their sources and photographers are recorded in
+# syncflow-web/docs/media-sources.md. Nothing here belongs in the repository (ADR 0038 sections 14 and 15).
+_klip-isi/

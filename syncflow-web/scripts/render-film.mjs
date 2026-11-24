@@ -63,9 +63,11 @@ const cli = (parts, { quiet = true } = {}) => {
 if (args.includes('--studio')) process.exit(cli(['studio', 'remotion/index.ts'], { quiet: false }));
 
 mkdirSync(outDir, { recursive: true });
-// A plain run leaves the estate scene out (docs/adr/0038 section 12): the site plays the photo-based estate-2 files, and the checks require the old
-// estate.* names to be absent, so rendering it by default would write files that nothing serves. It can still be rendered on purpose with --only=estate.
-const targets = CLIPS.filter((name) => (only ? name === only : name !== 'estate'));
+// A plain run leaves the estate, clinic and law scenes out (docs/adr/0038 sections 12 and 14): the site plays the photo-based estate-2, clinic-2 and
+// law-2 files, and the checks require the old estate.*, clinic.* and law.* names to be absent, so rendering them by default would write files that
+// nothing serves. Each can still be rendered on purpose with --only=<name>; the scenes themselves are untouched in remotion/scenes.
+const PHOTO_BASED = ['estate', 'clinic', 'law'];
+const targets = CLIPS.filter((name) => (only ? name === only : !PHOTO_BASED.includes(name)));
 if (targets.length === 0) {
   console.error(`No scene matches --only=${only}. Choose one of: ${CLIPS.join(', ')}`);
   process.exit(1);

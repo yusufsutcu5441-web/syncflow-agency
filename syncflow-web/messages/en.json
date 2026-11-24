@@ -147,14 +147,14 @@
       "title": "Trust is built in the first second.",
       "text": "For aesthetic, dental and longevity clinics: a composed digital reception, never a sales floor. Physician profiles and a patient-initiated appointment that guides without alarming.",
       "overlay": "Book a private consultation",
-      "videoLabel": "A pale clinic corridor in slow motion, soft light moving along the ceiling"
+      "videoLabel": "A warm clinic corridor hung with framed prints, then a quiet seating nook in cane and leather"
     },
     "law": {
       "tag": "Corporate law & advisory",
       "title": "Discretion is the first thing a client reads.",
       "text": "For law firms, advisory practices and private equity houses: a restrained, exact presence. Practice and partner pages, a confidential enquiry, and a structure in which every word is yours to approve, because applying the advertising and communications rules of your profession is your responsibility.",
       "overlay": "Confidential enquiry",
-      "videoLabel": "A dark colonnade receding towards a lit doorway, the camera moving slowly forward"
+      "videoLabel": "The bays of an old wooden library, then a board table in walnut and tan leather"
     },
     "logistics": {
       "tag": "Global logistics & B2B supply chain architecture",
@@ -621,7 +621,7 @@
       "c1": "The site has to feel as calm as the clinic. Pages that load slowly, jump while loading or shout with banners break trust in the first second.",
       "c2": "Requests arrive by phone or through open forms with no structure, so staff spend the day clarifying what a patient meant before they can help.",
       "c3": "Health communication is regulated: prices, discounts, galleries of results, patient testimonials and claims of superiority are not allowed, and a page that implies them is a liability.",
-      "s1": "A quiet, pre-rendered reception film and restrained motion: nothing autoplays with sound, nothing moves unless the visitor chooses, and everything respects reduced-motion settings.",
+      "s1": "A quiet reception film prepared ahead of time and restrained motion: nothing autoplays with sound, nothing moves unless the visitor chooses, and everything respects reduced-motion settings.",
       "s2": "Physician and service pages are plain, fast and exact. The patient starts the contact, and the page guides without alarming.",
       "s3": "A patient-initiated appointment request is structured so reception can answer it in one reply, and the site is designed so that no clinical information is collected on it.",
       "i1": "The request reaches your practice-management or CRM system (Oracle, SAP or Salesforce are typical targets) as a structured record, never as a message in a shared inbox.",
@@ -630,7 +630,7 @@
       "m1": "Time from request to the first personal reply",
       "m2": "Share of requests that arrive complete",
       "m3": "Request-to-appointment rate",
-      "note": "A concept render of a fictional clinic. Health communication rules apply (no prices, discounts, galleries of results or patient testimonials); applying them is the clinic’s responsibility, and every word is the clinic’s to approve."
+      "note": "A concept study of a fictional clinic; its film is a camera move over licensed photographs. Health communication rules apply (no prices, discounts, galleries of results or patient testimonials); applying them is the clinic’s responsibility, and every word is the clinic’s to approve."
     },
     "law": {
       "scenario": "A corporate law and advisory practice needs a presence that is restrained and exact: practice and partner pages, and a confidential way for a prospective client to make first contact.",
@@ -646,7 +646,7 @@
       "m1": "Time from enquiry to the first partner-level reply",
       "m2": "Share of enquiries routed to the right practice group first time",
       "m3": "Conflict-check turnaround",
-      "note": "A concept render of a fictional practice. Applying the advertising and communication rules of the profession is the practice’s responsibility; no client is solicited and every word is the practice’s to approve."
+      "note": "A concept study of a fictional practice; its film is a camera move over licensed photographs. Applying the advertising and communication rules of the profession is the practice’s responsibility; no client is solicited and every word is the practice’s to approve."
     },
     "logistics": {
       "scenario": "A logistics operator with sites in several countries runs orders, dock events and invoices across many systems. When one lane goes quiet, the others have to keep moving, and nobody should learn of it from a customer.",

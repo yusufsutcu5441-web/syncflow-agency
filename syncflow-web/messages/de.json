@@ -142,14 +142,14 @@
       "title": "Vertrauen entsteht in der ersten Sekunde.",
       "text": "Für ästhetische, dentale und Longevity-Kliniken: ein gefasster digitaler Empfang, nie ein Verkaufsraum. Arztprofile und eine vom Patienten ausgelöste Terminanfrage, die führt, ohne zu beunruhigen.",
       "overlay": "Private Beratung vereinbaren",
-      "videoLabel": "Ein heller Klinikflur in Zeitlupe, weiches Licht wandert an der Decke entlang"
+      "videoLabel": "Ein warmer Klinikflur mit gerahmten Drucken, dann eine ruhige Sitzecke aus Rohrgeflecht und Leder"
     },
     "law": {
       "tag": "Wirtschaftsrecht & Beratung",
       "title": "Diskretion ist das Erste, was ein Mandant liest.",
       "text": "Für Kanzleien, Beratungspraxen und Private-Equity-Häuser: ein zurückhaltender, präziser Auftritt. Tätigkeits- und Partnerseiten, eine vertrauliche Anfrage und eine Struktur, in der jedes Wort von Ihnen freigegeben wird – denn die Anwendung der Werbe- und Kommunikationsregeln Ihres Berufsstands liegt in Ihrer Verantwortung.",
       "overlay": "Vertrauliche Anfrage",
-      "videoLabel": "Eine dunkle Kolonnade, die auf eine beleuchtete Tür zuläuft, die Kamera fährt langsam vor"
+      "videoLabel": "Die Regalnischen einer alten Holzbibliothek, dann ein Konferenztisch aus Nussbaum und hellbraunem Leder"
     },
     "logistics": {
       "tag": "Globale Logistik und B2B-Lieferkettenarchitektur",
@@ -585,7 +585,7 @@
       "c1": "Die Seite muss so ruhig wirken wie die Klinik. Seiten, die langsam laden, beim Laden springen oder mit Bannern schreien, zerstören das Vertrauen in der ersten Sekunde.",
       "c2": "Anfragen kommen per Telefon oder über offene Formulare ohne Struktur, sodass das Personal den Tag damit verbringt zu klären, was ein Patient meinte, bevor es helfen kann.",
       "c3": "Gesundheitskommunikation ist reguliert: Preise, Rabatte, Ergebnisgalerien, Patientenbewertungen und Überlegenheitsbehauptungen sind nicht erlaubt, und eine Seite, die sie nahelegt, ist ein Haftungsrisiko.",
-      "s1": "Ein ruhiger, vorab gerenderter Empfangsfilm und zurückhaltende Bewegung: nichts startet mit Ton, nichts bewegt sich, wenn der Besucher es nicht wählt, und alles respektiert die Einstellung für reduzierte Bewegung.",
+      "s1": "Ein ruhiger, im Voraus vorbereiteter Empfangsfilm und zurückhaltende Bewegung: nichts startet mit Ton, nichts bewegt sich, wenn der Besucher es nicht wählt, und alles respektiert die Einstellung für reduzierte Bewegung.",
       "s2": "Arzt- und Leistungsseiten sind schlicht, schnell und exakt. Der Patient eröffnet den Kontakt, und die Seite führt, ohne zu beunruhigen.",
       "s3": "Eine vom Patienten initiierte Terminanfrage ist so strukturiert, dass der Empfang sie mit einer Antwort beantworten kann, und die Seite ist so gestaltet, dass auf ihr keine klinischen Informationen erhoben werden.",
       "i1": "Die Anfrage erreicht Ihr Praxisverwaltungs- oder CRM-System (Oracle, SAP oder Salesforce sind typische Ziele) als strukturierter Datensatz, nie als Nachricht in einem gemeinsamen Postfach.",
@@ -594,7 +594,7 @@
       "m1": "Zeit von der Anfrage bis zur ersten persönlichen Antwort",
       "m2": "Anteil der Anfragen, die vollständig eingehen",
       "m3": "Quote von Anfrage zu Termin",
-      "note": "Ein Konzept-Rendering einer fiktiven Klinik. Die Regeln der Gesundheitskommunikation gelten (keine Preise, Rabatte, Ergebnisgalerien oder Patientenbewertungen); ihre Anwendung liegt in der Verantwortung der Klinik, und jedes Wort bedarf ihrer Freigabe."
+      "note": "Eine Konzeptstudie einer fiktiven Klinik; ihr Film ist eine Kamerafahrt über lizenzierte Fotografien. Die Regeln der Gesundheitskommunikation gelten (keine Preise, Rabatte, Ergebnisgalerien oder Patientenbewertungen); ihre Anwendung liegt in der Verantwortung der Klinik, und jedes Wort bedarf ihrer Freigabe."
     },
     "law": {
       "scenario": "Eine Kanzlei für Wirtschaftsrecht und Beratung braucht einen Auftritt, der zurückhaltend und exakt ist: Seiten zu Tätigkeitsfeldern und Partnern und einen vertraulichen Weg für die erste Kontaktaufnahme eines potenziellen Mandanten.",
@@ -610,7 +610,7 @@
       "m1": "Zeit von der Anfrage bis zur ersten Antwort auf Partnerebene",
       "m2": "Anteil der Anfragen, die gleich beim ersten Mal an die richtige Praxisgruppe gehen",
       "m3": "Durchlaufzeit der Kollisionsprüfung",
-      "note": "Ein Konzept-Rendering einer fiktiven Kanzlei. Die Anwendung der Werbe- und Kommunikationsregeln des Berufsstands liegt in der Verantwortung der Kanzlei; es werden keine Mandanten umworben, und jedes Wort bedarf der Freigabe der Kanzlei."
+      "note": "Eine Konzeptstudie einer fiktiven Kanzlei; ihr Film ist eine Kamerafahrt über lizenzierte Fotografien. Die Anwendung der Werbe- und Kommunikationsregeln des Berufsstands liegt in der Verantwortung der Kanzlei; es werden keine Mandanten umworben, und jedes Wort bedarf der Freigabe der Kanzlei."
     },
     "logistics": {
       "scenario": "Ein Logistikbetreiber mit Standorten in mehreren Ländern führt Aufträge, Rampenereignisse und Rechnungen über viele Systeme. Wenn ein Strang verstummt, müssen die anderen weiterlaufen, und niemand soll davon von einem Kunden erfahren.",
