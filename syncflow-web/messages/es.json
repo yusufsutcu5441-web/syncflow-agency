@@ -135,7 +135,7 @@
       "title": "No es una propiedad. Es un escenario para vivir.",
       "text": "Una residencia sobre el Bósforo no se compra desde una pantalla: se siente. Una llegada lenta y cinematográfica, la luz del día estudiada a lo largo de la planta y una consulta que llega directamente a sus directivos.",
       "overlay": "Precio bajo consulta",
-      "videoLabel": "Una villa de fachada acristalada al anochecer, con la cámara avanzando despacio"
+      "videoLabel": "Un salón luminoso recorrido por un lento movimiento de cámara, después un puerto a la hora dorada"
     },
     "clinic": {
       "tag": "Clínicas privadas",
@@ -382,8 +382,8 @@
     "tolerances": "Tolerancias",
     "n1Title": "Vídeo decodificado por hardware y una capa de cine en GPU",
     "n1Summary": "El movimiento de este sitio es vídeo que el dispositivo decodifica en hardware, más una capa WebGL que se retira en cuanto cuesta un fotograma.",
-    "n1s1t": "Renderizado una vez, por adelantado.",
-    "n1s1": "Cada escena es un bucle continuo de ocho segundos renderizado una sola vez a 30 fotogramas por segundo (las escenas de sector en 1920 × 1080, la escena de arquitectura en 1280 × 720) y codificado en H.264 (MP4), con VP9 (WebM) como respaldo. No se envía ningún motor de animación al navegador.",
+    "n1s1t": "Preparado una vez, por adelantado.",
+    "n1s1": "Cada escena es un bucle de ocho segundos preparado una sola vez a 30 fotogramas por segundo (las escenas de sector en 1920 × 1080, la escena de arquitectura en 1280 × 720) y codificado en H.264 (MP4), con VP9 (WebM) como respaldo. No se envía ningún motor de animación al navegador.",
     "n1s2t": "Decodificado por el dispositivo.",
     "n1s2": "El navegador entrega el flujo al decodificador de vídeo del propio dispositivo, que en la mayoría de teléfonos y portátiles es hardware dedicado, de modo que el procesador queda libre para la página.",
     "n1s3t": "Cargado y reproducido solo cuando se ve.",
@@ -569,7 +569,7 @@
       "c1": "Las galerías pesadas y los medios de reproducción automática vuelven lenta la primera impresión justo donde la marca debe sentirse sin esfuerzo, sobre todo en el teléfono.",
       "c2": "Las consultas llegan como correos sin estructura, sin origen, idioma ni presupuesto, así que calificar a un comprador empieza con una ronda de preguntas.",
       "c3": "La disponibilidad y los precios viven en varios sitios, y una página que afirma algo que ventas no ha aprobado es un riesgo comercial y legal.",
-      "s1": "La llegada es un vídeo cinematográfico prerrenderizado, decodificado por el hardware del dispositivo y cargado bajo demanda, de modo que la página abre al instante y la película solo arranca cuando se ve.",
+      "s1": "La llegada es un vídeo cinematográfico preparado de antemano, decodificado por el hardware del dispositivo y cargado bajo demanda, de modo que la página abre al instante y la película solo arranca cuando se ve.",
       "s2": "El movimiento se compone en la GPU y se limita a transform y opacity, y el diseño se reserva de antemano, de modo que nada se desplaza mientras la página carga.",
       "s3": "La consulta es un briefing de cuatro pasos que califica por diseño: franja de inversión, proyecto, plazos y rol llegan estructurados, con el idioma y el mercado del visitante.",
       "i1": "Cada consulta se entrega a su CRM (Salesforce, HubSpot u Oracle son destinos típicos) como un registro estructurado con su origen, idioma y mercado, no como un correo que hay que volver a teclear.",
@@ -578,7 +578,7 @@
       "m1": "Tiempo desde la consulta hasta la primera respuesta personal",
       "m2": "Proporción de consultas que llegan completas y calificadas",
       "m3": "Tasa de consulta a visita",
-      "note": "Un render conceptual de una residencia ficticia. No se ofrece ningún inmueble, y no se afirma ningún precio, disponibilidad ni resultado."
+      "note": "Un estudio conceptual de una residencia ficticia; su película es un movimiento de cámara sobre fotografías con licencia. No se ofrece ningún inmueble, y no se afirma ningún precio, disponibilidad ni resultado."
     },
     "clinic": {
       "scenario": "Una clínica privada quiere una recepción digital serena: perfiles de médicos, una explicación tranquila de lo que ofrece y una forma de que el paciente pida una cita, sin zona de ventas.",

@@ -3,10 +3,12 @@
 import { Pause, Play } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useClientI18n } from '@/components/i18n/ClientI18n';
+import { clipSrc, type SceneName } from '@/lib/clips';
 
 /**
- * A looping, silent, native video of a scene that was rendered ahead of time (public/media/clips, npm run film:render;
- * docs/adr/0003 and 0006). No animation engine runs in the browser: the file is decoded by the device's own video hardware.
+ * A looping, silent, native video of a scene that was prepared ahead of time (public/media/clips: four Remotion renders, npm run film:render,
+ * docs/adr/0003 and 0006; the estate film is a camera move over licensed photographs since docs/adr/0038 section 12, see lib/clips.ts).
+ * No animation engine runs in the browser: the file is decoded by the device's own video hardware.
  *
  *  - The still (a WebP) is a lazy <img> under the video, not the video's `poster`: a poster is fetched at page load whatever its
  *    distance from the screen, a lazy image only when its card is near (docs/adr/0020: the stills are 1920 x 1080 now, so
@@ -20,10 +22,10 @@ import { useClientI18n } from '@/components/i18n/ClientI18n';
  */
 type Mode = 'visible' | 'hover';
 
-export function SceneVideo({ name, label, mode }: { name: 'monolith' | 'estate' | 'clinic' | 'law' | 'logistics'; label: string; mode: Mode }) {
+export function SceneVideo({ name, label, mode }: { name: SceneName; label: string; mode: Mode }) {
   const { messages } = useClientI18n();
   const t = messages.Showcase;
-  // The four sector scenes are rendered at 1920 x 1080, the architecture monolith at 1280 x 720 (scripts/render-film.mjs).
+  // The sector films are 1920 x 1080 (three Remotion renders at --scale=1.5, scripts/render-film.mjs; the estate film as delivered), the architecture monolith 1280 x 720.
   const [width, height] = name === 'monolith' ? [1280, 720] : [1920, 1080];
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -118,7 +120,7 @@ export function SceneVideo({ name, label, mode }: { name: 'monolith' | 'estate' 
     <>
       {/* A plain lazy <img>, not next/image: a decorative still from public/, already a WebP at its display size (docs/adr/0020). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`/media/clips/${name}.webp`} alt="" width={width} height={height} loading="lazy" decoding="async" />
+      <img src={clipSrc(name, 'webp')} alt="" width={width} height={height} loading="lazy" decoding="async" />
       <video
         ref={video}
         muted
@@ -134,8 +136,8 @@ export function SceneVideo({ name, label, mode }: { name: 'monolith' | 'estate' 
           event.currentTarget.dataset.on = '';
         }}
       >
-        <source src={`/media/clips/${name}.mp4`} type="video/mp4" />
-        <source src={`/media/clips/${name}.webm`} type="video/webm" />
+        <source src={clipSrc(name, 'mp4')} type="video/mp4" />
+        <source src={clipSrc(name, 'webm')} type="video/webm" />
       </video>
       <button type="button" className="frame-control" onClick={toggle} aria-label={playing ? t.pause : t.play}>
         {playing ? <Pause size={14} strokeWidth={1.75} aria-hidden="true" /> : <Play size={14} strokeWidth={1.75} aria-hidden="true" className="icon-dir" />}

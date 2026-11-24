@@ -24,8 +24,9 @@ const CARDS = [
  * Blueprint section 3, "Sectoral showcase": wide cards (real estate, clinics, corporate law, and, since docs/adr/0019, logistics) in a native scroll-snap strip. Since
  * docs/adr/0038 section 12 the logistics card belongs to the enterprise layer: lib/breakdown.ts draws it only while SHOW_ENTERPRISE is on, and the headline counts the
  * cards that are drawn (four, or three on the shipped site). A cursor-following light
- * appears inside the card under the pointer and its video plays; leaving pauses it. The videos are concept renders
- * (rendered ahead of time by npm run film:render), and the cards say so; no client results are claimed. Since docs/adr/0020 every card
+ * appears inside the card under the pointer and its video plays; leaving pauses it. The videos are concept films: three rendered ahead of time
+ * by npm run film:render, the estate one a camera move over licensed photographs (lib/clips.ts, docs/adr/0038 section 12); the cards say
+ * "concept study" and no client results are claimed. Since docs/adr/0020 every card
  * leads to its architectural breakdown: a plain link to /showcase/<slug> (the whole card is the hit area, through an aria-hidden overlay element,
  * and the visible pill is the one accessible link), which BreakdownHost upgrades into a dialog over this page.
  */

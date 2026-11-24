@@ -155,6 +155,8 @@ const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
 // /showcase/logistics answers a 301 to the showcase of its language.
 const SPEC_LIVE = ENTERPRISE_ON ? ['studio-site', 'fail-safe-queue'] : ['studio-site'];
 const SLUGS_LIVE = ENTERPRISE_ON ? ['estate', 'clinic', 'law', 'logistics'] : ['estate', 'clinic', 'law'];
+// The clip file of a sector (lib/clips.ts): the estate film is estate-2 since docs/adr/0038 section 12 (photo-based, a new name because /media is cached for a week).
+const CLIP_FILE = { estate: 'estate-2' };
 await expect(`sitemap lists the ${OPEN.length} languages, the ${OPEN.length * SLUGS_LIVE.length} breakdowns, the ${OPEN.length * SPEC_LIVE.length} R&D specimen page(s)${ENTERPRISE_ON ? `, /outbound and ${PILOT_OPEN.length} /pilot page(s)` : ' and neither /outbound nor /pilot'}`, '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === OPEN.length * (1 + SLUGS_LIVE.length + SPEC_LIVE.length) + (ENTERPRISE_ON ? 1 + PILOT_OPEN.length : 0), detail: `${n} URLs` }; });
 if (ENTERPRISE_ON) for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot' : `/${l}/pilot`, 200);
 else {
@@ -264,11 +266,13 @@ else {
   say(notFound.every((n) => n === 404) ? 'PASS' : 'FAIL', 'an unknown specimen, a dormant language and a bad API request are all 404', notFound.join(', '));
   const sizes = [];
   for (const slug of SLUGS) for (const [ext, type, min] of [['mp4', 'video/mp4', 300_000], ['webm', 'video/webm', 200_000], ['webp', 'image/webp', 8_000]]) {
-    const clip = await get(`/media/clips/${slug}.${ext}`, { headers: { range: 'bytes=0-0' } });
+    const file = CLIP_FILE[slug] ?? slug;
+    const clip = await get(`/media/clips/${file}.${ext}`, { headers: { range: 'bytes=0-0' } });
     const total = Number(/\/(\d+)$/.exec(clip.headers.get('content-range') ?? '')?.[1] ?? 0);
-    if (!([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) && total >= min)) sizes.push(`${slug}.${ext} ${clip.status} ${total}`);
+    if (!([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) && total >= min)) sizes.push(`${file}.${ext} ${clip.status} ${total}`);
   }
   say(sizes.length === 0 ? 'PASS' : 'FAIL', `the ${SLUGS.length} 1080p sector clips (mp4, webm, webp) are served with the right type and a 1080p-sized body`, sizes.slice(0, 3).join(', '));
+  for (const ext of ['mp4', 'webm', 'webp']) await expect('the old estate clip name is gone (docs/adr/0038 section 12: the photo-based film is estate-2)', `/media/clips/estate.${ext}`, 404);
 }
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });
 const home = await get(OPEN.includes('tr') ? '/tr' : '/');

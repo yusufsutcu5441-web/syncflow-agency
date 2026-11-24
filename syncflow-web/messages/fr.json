@@ -135,7 +135,7 @@
       "title": "Pas un bien. Une scène pour vivre.",
       "text": "On n’achète pas une résidence au-dessus du Bosphore sur un écran : on la ressent. Une arrivée lente et cinématographique, une lumière du jour étudiée sur tout le plan, et une demande qui parvient directement à vos dirigeants.",
       "overlay": "Prix sur demande",
-      "videoLabel": "Une villa à façade vitrée au crépuscule, la caméra avance lentement"
+      "videoLabel": "Un salon lumineux traversé par un lent mouvement de caméra, puis un port à l’heure dorée"
     },
     "clinic": {
       "tag": "Cliniques privées",
@@ -382,8 +382,8 @@
     "tolerances": "Tolérances",
     "n1Title": "Vidéo décodée par le matériel et couche cinéma GPU",
     "n1Summary": "Le mouvement de ce site est une vidéo que l’appareil décode en matériel, plus une couche WebGL qui se retire dès qu’elle coûte une image.",
-    "n1s1t": "Rendu une fois, à l’avance.",
-    "n1s1": "Chaque scène est une boucle continue de huit secondes, rendue une seule fois à 30 images par seconde (les scènes de secteur en 1920 × 1080, la scène d’architecture en 1280 × 720), puis encodée en H.264 (MP4) avec VP9 (WebM) en secours. Aucun moteur d’animation n’est livré au navigateur.",
+    "n1s1t": "Préparé une fois, à l’avance.",
+    "n1s1": "Chaque scène est une boucle de huit secondes, préparée une seule fois à 30 images par seconde (les scènes de secteur en 1920 × 1080, la scène d’architecture en 1280 × 720), puis encodée en H.264 (MP4) avec VP9 (WebM) en secours. Aucun moteur d’animation n’est livré au navigateur.",
     "n1s2t": "Décodé par l’appareil.",
     "n1s2": "Le navigateur confie le flux au décodeur vidéo de l’appareil, qui sur la plupart des téléphones et ordinateurs portables est un composant dédié, de sorte que le processeur reste libre pour la page.",
     "n1s3t": "Chargé et lu seulement quand il est vu.",
@@ -569,7 +569,7 @@
       "c1": "Des galeries lourdes et des médias à lecture automatique ralentissent la première impression, là où la marque doit sembler sans effort, surtout sur téléphone.",
       "c2": "Les demandes arrivent sous forme de courriels non structurés, sans source, sans langue ni budget, si bien que qualifier un acheteur commence par une série de questions.",
       "c3": "Disponibilités et prix vivent à plusieurs endroits, et une page qui affirme ce que les ventes n’ont pas validé est un risque commercial et juridique.",
-      "s1": "L’arrivée est une vidéo cinématographique pré-rendue, décodée par le matériel de l’appareil et chargée à la demande, de sorte que la page s’ouvre aussitôt et que le film ne démarre que lorsqu’il est vu.",
+      "s1": "L’arrivée est une vidéo cinématographique préparée à l’avance, décodée par le matériel de l’appareil et chargée à la demande, de sorte que la page s’ouvre aussitôt et que le film ne démarre que lorsqu’il est vu.",
       "s2": "Le mouvement est composé sur le GPU et limité à transform et opacity, et la mise en page est réservée d’avance, si bien que rien ne bouge pendant le chargement.",
       "s3": "La demande est un briefing en quatre étapes qui qualifie par conception : tranche d’investissement, projet, calendrier et rôle arrivent structurés, avec la langue et le marché du visiteur.",
       "i1": "Chaque demande est livrée à votre CRM (Salesforce, HubSpot ou Oracle sont des cibles typiques) comme un enregistrement structuré avec sa source, sa langue et son marché, et non comme un courriel à ressaisir.",
@@ -578,7 +578,7 @@
       "m1": "Délai entre la demande et la première réponse personnelle",
       "m2": "Part des demandes qui arrivent complètes et qualifiées",
       "m3": "Taux de demande à visite",
-      "note": "Un rendu conceptuel d’une résidence fictive. Aucun bien n’est proposé, et aucun prix, aucune disponibilité ni aucun résultat n’est affirmé."
+      "note": "Une étude de concept d’une résidence fictive ; son film est un mouvement de caméra sur des photographies sous licence. Aucun bien n’est proposé, et aucun prix, aucune disponibilité ni aucun résultat n’est affirmé."
     },
     "clinic": {
       "scenario": "Une clinique privée souhaite un accueil numérique sobre : des profils de praticiens, une explication posée de ce qu’elle propose et un moyen pour un patient de demander un rendez-vous, sans surface de vente.",

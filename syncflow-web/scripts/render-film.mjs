@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Renders the five scene videos from the Remotion compositions (remotion/) into public/media/clips/.
+ * Renders the scene videos from the Remotion compositions (remotion/) into public/media/clips/: four by default, the estate scene only on request (see below).
  * For every scene it writes three files:
  *   <name>.mp4   H.264, played wherever the browser can decode it (smaller here, hardware-decoded on phones)
  *   <name>.webm  VP9, the fallback for browsers without H.264
@@ -8,10 +8,12 @@
  * The scenes contain no readable marketing text (captions on the site are HTML over the video), so one render serves every
  * language. The site serves these as static files and ships no Remotion code (docs/adr/0003, 0006).
  * Re-run it whenever a scene in remotion/scenes changes, then commit the files.
+ * Since 24.11.2026 (docs/adr/0038 section 12) the estate film on the site is NOT this render: it is a camera move over licensed photographs,
+ * shipped as estate-2.* (lib/clips.ts). Rendering the estate scene writes estate.* files that nothing serves; leave them out of a commit.
  *
  *   npm run film:render                    everything
  *   npm run film:render -- --posters       posters only (fast)
- *   npm run film:render -- --only=estate   one scene
+ *   npm run film:render -- --only=clinic   one scene
  *   npm run film:render -- --formats=mp4   only some formats (mp4, webm), e.g. to check a file size quickly
  *   npm run remotion:studio                open Remotion Studio to edit the scenes
  *
@@ -61,7 +63,9 @@ const cli = (parts, { quiet = true } = {}) => {
 if (args.includes('--studio')) process.exit(cli(['studio', 'remotion/index.ts'], { quiet: false }));
 
 mkdirSync(outDir, { recursive: true });
-const targets = CLIPS.filter((name) => !only || name === only);
+// A plain run leaves the estate scene out (docs/adr/0038 section 12): the site plays the photo-based estate-2 files, and the checks require the old
+// estate.* names to be absent, so rendering it by default would write files that nothing serves. It can still be rendered on purpose with --only=estate.
+const targets = CLIPS.filter((name) => (only ? name === only : name !== 'estate'));
 if (targets.length === 0) {
   console.error(`No scene matches --only=${only}. Choose one of: ${CLIPS.join(', ')}`);
   process.exit(1);

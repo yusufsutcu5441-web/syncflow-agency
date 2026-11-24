@@ -517,7 +517,8 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
 
 /* ───────── 5) Sahne videoları (önceden render edilmiş, docs/adr/0003 ve 0006) ───────── */
 const G5 = "5. Sahne videoları (önceden render edilmiş)";
-const CLIPS = ["monolith", "estate", "clinic", "law", "logistics"];
+// Dosya adları (sahne adı değil): estate filmi 24.11.2026'dan beri estate-2 (fotoğraf tabanlı; /media bir hafta önbelleklendiği için yeni ad; docs/adr/0038 bölüm 12, lib/clips.ts).
+const CLIPS = ["monolith", "estate-2", "clinic", "law", "logistics"];
 const clipMissing = [];
 for (const name of CLIPS) for (const ext of ["mp4", "webm", "webp"]) {
   const p = `public/media/clips/${name}.${ext}`;
@@ -888,11 +889,11 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     const flagsCheck = spawnSync(process.execPath, ["scripts/build-flags.mjs", "--check"], { cwd: ROOT, encoding: "utf8" });
     flagsCheck.status === 0 ? add(G11, "PASS", "app/flags.css üreticisiyle (scripts/build-flags.mjs) aynı") : add(G11, "FAIL", "app/flags.css üreticisinden sapmış: npm run flags:build", (flagsCheck.stderr || flagsCheck.stdout || "").trim());
 
-    // 10) Sahne videoları: dört sektör sahnesi 1920 × 1080 (Remotion --scale=1.5), posterler tembel <img>; şampanya dışında yeni renk yok.
+    // 10) Sahne videoları: dört sektör klibi 1920 × 1080 (üçü Remotion --scale=1.5, estate-2 fotoğraf tabanlı teslim dosyası), posterler tembel <img>; şampanya dışında yeni renk yok.
     const webp = (f) => { const b = fs.readFileSync(abs(f)); const t = b.toString("ascii", 12, 16); return t === "VP8 " ? [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff] : t === "VP8L" ? [1 + (((b[22] & 0x3f) << 8) | b[21]), 1 + (((b[24] & 0x0f) << 10) | (b[23] << 2) | ((b[22] & 0xc0) >> 6))] : t === "VP8X" ? [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)] : [0, 0]; };
     const mp4 = (f) => { const b = fs.readFileSync(abs(f)); const at = b.indexOf("tkhd"); if (at < 0) return [0, 0]; const v = b[at + 4]; const o = at + (v === 1 ? 92 : 80); return [b.readUInt32BE(o) / 65536, b.readUInt32BE(o + 4) / 65536]; };
     const wrong = [];
-    for (const name of ["estate", "clinic", "law", "logistics", "monolith"]) {
+    for (const name of ["estate-2", "clinic", "law", "logistics", "monolith"]) {
       const want = name === "monolith" ? [1280, 720] : [1920, 1080];
       for (const [f, size] of [[`public/media/clips/${name}.webp`, webp(`public/media/clips/${name}.webp`)], [`public/media/clips/${name}.mp4`, mp4(`public/media/clips/${name}.mp4`)]]) if (size[0] !== want[0] || size[1] !== want[1]) wrong.push(`${f} ${size.join("x")} (beklenen ${want.join("x")})`);
     }
@@ -900,6 +901,9 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     /SCALE\s*=\s*\{[^}]*estate:\s*1\.5[^}]*clinic:\s*1\.5[^}]*law:\s*1\.5[^}]*logistics:\s*1\.5/.test(read("scripts/render-film.mjs")) ? add(G11, "PASS", "render betiği dört sektör sahnesini --scale=1.5 ile işliyor (sahne koordinatları değişmeden)") : add(G11, "FAIL", "scripts/render-film.mjs sektör sahneleri için ölçek 1,5 taşımıyor");
     const sv = code("components/media/SceneVideo.tsx");
     /loading="lazy"/.test(sv) && !/\bposter=/.test(sv) ? add(G11, "PASS", "klip görüntüsü tembel <img> (video poster'ı sayfa yüklenirken indirilirdi); video preload=none") : add(G11, "FAIL", "SceneVideo hâlâ poster= kullanıyor ya da tembel <img> yok");
+    // 24.11.2026 (docs/adr/0038 bölüm 12): estate filmi Remotion render'ı değil, lisanslı fotoğraflar üzerinde kamera hareketi; dosya adı estate-2 (lib/clips.ts eşler), eski estate.* depoda yok.
+    const clipsSrc = code("lib/clips.ts");
+    /estate:\s*'estate-2'/.test(clipsSrc) && /clipSrc\(name, 'webp'\)/.test(sv) && /clipSrc\(name, 'mp4'\)/.test(sv) && /clipSrc\(name, 'webm'\)/.test(sv) && !/media\/clips\/\$\{name\}/.test(sv) && ["mp4", "webm", "webp"].every((e) => exists(`public/media/clips/estate-2.${e}`) && !exists(`public/media/clips/estate.${e}`)) ? add(G11, "PASS", "estate filmi fotoğraf tabanlı estate-2 dosyalarından oynar (lib/clips.ts eşlemesi, SceneVideo clipSrc); eski estate.* yok (ADR 0038 bölüm 12)") : add(G11, "FAIL", "estate eşlemesi eksik: lib/clips.ts estate -> estate-2, SceneVideo clipSrc, public/media/clips/estate-2.* var ve estate.* yok olmalı");
   }
 }
 

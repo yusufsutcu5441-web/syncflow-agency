@@ -140,7 +140,7 @@
       "title": "Not a property. A stage for living.",
       "text": "A residence above the Bosphorus is not bought from a screen; it is felt. A slow cinematic arrival, daylight studied across the plan, and an enquiry that reaches your principals directly.",
       "overlay": "Price on request",
-      "videoLabel": "A glass-fronted villa at dusk, the camera moving slowly in"
+      "videoLabel": "A bright living room, the camera moving slowly through it, then a harbour at golden hour"
     },
     "clinic": {
       "tag": "Private clinics",
@@ -413,8 +413,8 @@
     "tolerances": "Tolerances",
     "n1Title": "Hardware-decoded video and a GPU cinema layer",
     "n1Summary": "The motion on this site is video the device decodes in hardware, plus one WebGL layer that backs off the moment it costs a frame.",
-    "n1s1t": "Rendered once, ahead of time.",
-    "n1s1": "Each scene is a seamless eight-second loop rendered once at 30 frames per second (the sector scenes at 1920 × 1080, the architecture scene at 1280 × 720), then encoded as H.264 (MP4) with VP9 (WebM) as the fallback. No animation engine is shipped to the browser.",
+    "n1s1t": "Prepared once, ahead of time.",
+    "n1s1": "Each scene is an eight-second loop prepared once at 30 frames per second (the sector scenes at 1920 × 1080, the architecture scene at 1280 × 720), then encoded as H.264 (MP4) with VP9 (WebM) as the fallback. No animation engine is shipped to the browser.",
     "n1s2t": "Decoded by the device.",
     "n1s2": "The browser hands the stream to the device’s own video decoder, which on most phones and laptops is dedicated hardware, so the processor stays free for the page.",
     "n1s3t": "Loaded and played only when seen.",
@@ -605,7 +605,7 @@
       "c1": "Heavy galleries and autoplaying media make the first impression slow exactly where the brand needs to feel effortless, above all on a phone.",
       "c2": "Enquiries arrive as unstructured emails with no source, language or budget attached, so qualifying a buyer starts with a round of questions.",
       "c3": "Availability and pricing live in several places, and a page that states something sales has not approved is a commercial and legal risk.",
-      "s1": "The arrival is a pre-rendered cinematic video, decoded by the device’s own hardware and loaded on demand, so the page opens instantly and the film starts only when it is seen.",
+      "s1": "The arrival is a cinematic video prepared ahead of time, decoded by the device’s own hardware and loaded on demand, so the page opens instantly and the film starts only when it is seen.",
       "s2": "Motion is composited on the GPU and limited to transform and opacity, and the layout is reserved up front, so nothing shifts while the page loads.",
       "s3": "The enquiry is a four-step briefing that qualifies by design: investment band, project, timing and role arrive structured, with the visitor’s language and market attached.",
       "i1": "Each enquiry is delivered to your CRM (Salesforce, HubSpot or Oracle are typical targets) as a structured record with its source, language and market, not as an email to be re-keyed.",
@@ -614,7 +614,7 @@
       "m1": "Time from enquiry to the first personal reply",
       "m2": "Share of enquiries that arrive complete and qualified",
       "m3": "Enquiry-to-viewing rate",
-      "note": "A concept render of a fictional residence. No property is offered, and no price, availability or result is claimed."
+      "note": "A concept study of a fictional residence; its film is a camera move over licensed photographs. No property is offered, and no price, availability or result is claimed."
     },
     "clinic": {
       "scenario": "A private clinic wants a composed digital reception: physician profiles, a calm explanation of what it offers and a way for a patient to ask for an appointment, without a sales floor.",

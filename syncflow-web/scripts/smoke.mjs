@@ -752,7 +752,9 @@ section('Scene videos (docs/adr/0003, 0006)');
 const mediaTypes = { mp4: 'video/mp4', webm: 'video/webm', webp: 'image/webp' };
 let mediaOk = true;
 let mediaDetail = '';
-for (const name of ['monolith', 'estate', 'clinic', 'law', 'logistics']) {
+// File names, not scene names: the estate film is estate-2 since docs/adr/0038 section 12 (a photo-based clip under a new name, because /media is cached for a week).
+const CLIP_FILES = ['monolith', 'estate-2', 'clinic', 'law', 'logistics'];
+for (const name of CLIP_FILES) {
   for (const [ext, type] of Object.entries(mediaTypes)) {
     const res = await get(`/media/clips/${name}.${ext}`, { headers: { range: 'bytes=0-0' } });
     const good = [200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type);
@@ -764,10 +766,12 @@ for (const name of ['monolith', 'estate', 'clinic', 'law', 'logistics']) {
   }
 }
 check('all 15 scene files are served with the right content type (5 scenes x mp4/webm/webp)', mediaOk, mediaDetail);
-const ranged = await get('/media/clips/estate.mp4', { headers: { range: 'bytes=0-99' } });
+const oldEstate = await Promise.all(['mp4', 'webm', 'webp'].map((ext) => get(`/media/clips/estate.${ext}`)));
+check('docs/adr/0038 section 12: the old estate files are gone (404 under the old name; the photo-based film is estate-2)', oldEstate.every((r) => r.status === 404), oldEstate.map((r) => r.status).join(','));
+const ranged = await get('/media/clips/estate-2.mp4', { headers: { range: 'bytes=0-99' } });
 check('the mp4 answers byte-range requests (preload="none" needs it)', ranged.status === 206 && /^bytes 0-99\//.test(ranged.headers.get('content-range') ?? '') && ranged.headers.get('accept-ranges') === 'bytes', `${ranged.status} ${ranged.headers.get('content-range')} ${ranged.headers.get('accept-ranges')}`);
 await ranged.arrayBuffer();
-const cached = (await get('/media/clips/estate.webp')).headers.get('cache-control') ?? '';
+const cached = (await get('/media/clips/estate-2.webp')).headers.get('cache-control') ?? '';
 check('scene files are cacheable for a week with background revalidation', /max-age=604800/.test(cached) && /stale-while-revalidate/.test(cached), cached);
 check('the old architecture film is gone (404)', (await get('/media/showcase/architecture-en-wide.mp4')).status === 404);
 

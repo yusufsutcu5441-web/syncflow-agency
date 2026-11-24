@@ -135,7 +135,7 @@
       "title": "Keine Immobilie. Eine Bühne zum Leben.",
       "text": "Eine Residenz über dem Bosporus kauft man nicht am Bildschirm, man spürt sie. Eine langsame, filmische Ankunft, über den Grundriss hinweg studiertes Tageslicht und eine Anfrage, die direkt Ihre Verantwortlichen erreicht.",
       "overlay": "Preis auf Anfrage",
-      "videoLabel": "Eine Villa mit Glasfront in der Dämmerung, die Kamera fährt langsam hinein"
+      "videoLabel": "Ein helles Wohnzimmer, die Kamera fährt langsam hindurch, dann ein Hafen zur goldenen Stunde"
     },
     "clinic": {
       "tag": "Private Kliniken",
@@ -382,8 +382,8 @@
     "tolerances": "Toleranzen",
     "n1Title": "Hardware-dekodiertes Video und eine GPU-Kinoebene",
     "n1Summary": "Die Bewegung auf dieser Seite ist Video, das das Gerät in Hardware dekodiert, plus eine WebGL-Ebene, die sich zurückzieht, sobald sie ein Bild kostet.",
-    "n1s1t": "Einmal vorab gerendert.",
-    "n1s1": "Jede Szene ist eine nahtlose Schleife von acht Sekunden, einmal mit 30 Bildern pro Sekunde gerendert (die Branchenszenen in 1920 × 1080, die Architekturszene in 1280 × 720) und als H.264 (MP4) kodiert, mit VP9 (WebM) als Ersatz. Keine Animations-Engine wird an den Browser ausgeliefert.",
+    "n1s1t": "Einmal vorab vorbereitet.",
+    "n1s1": "Jede Szene ist eine Schleife von acht Sekunden, einmal mit 30 Bildern pro Sekunde vorbereitet (die Branchenszenen in 1920 × 1080, die Architekturszene in 1280 × 720) und als H.264 (MP4) kodiert, mit VP9 (WebM) als Ersatz. Keine Animations-Engine wird an den Browser ausgeliefert.",
     "n1s2t": "Vom Gerät dekodiert.",
     "n1s2": "Der Browser übergibt den Stream an den eigenen Videodekoder des Geräts, auf den meisten Telefonen und Laptops eigene Hardware, sodass der Prozessor für die Seite frei bleibt.",
     "n1s3t": "Nur geladen und abgespielt, wenn gesehen.",
@@ -569,7 +569,7 @@
       "c1": "Schwere Galerien und automatisch startende Medien machen den ersten Eindruck langsam, genau dort, wo die Marke mühelos wirken muss, vor allem auf dem Telefon.",
       "c2": "Anfragen kommen als unstrukturierte E-Mails ohne Quelle, Sprache oder Budget, sodass die Qualifizierung eines Käufers mit einer Fragerunde beginnt.",
       "c3": "Verfügbarkeit und Preise liegen an mehreren Stellen, und eine Seite, die etwas behauptet, das der Vertrieb nicht freigegeben hat, ist ein kommerzielles und rechtliches Risiko.",
-      "s1": "Der Auftakt ist ein vorab gerendertes Kinovideo, von der Hardware des Geräts dekodiert und bei Bedarf geladen, sodass die Seite sofort öffnet und der Film erst startet, wenn er gesehen wird.",
+      "s1": "Der Auftakt ist ein vorab produziertes Kinovideo, von der Hardware des Geräts dekodiert und bei Bedarf geladen, sodass die Seite sofort öffnet und der Film erst startet, wenn er gesehen wird.",
       "s2": "Bewegung wird auf der GPU zusammengesetzt und auf transform und opacity beschränkt, und das Layout ist von Anfang an reserviert, sodass sich beim Laden nichts verschiebt.",
       "s3": "Die Anfrage ist ein vierstufiges Briefing, das von Haus aus qualifiziert: Investitionsrahmen, Projekt, Zeitrahmen und Rolle kommen strukturiert an, mit Sprache und Markt des Besuchers.",
       "i1": "Jede Anfrage wird als strukturierter Datensatz mit Quelle, Sprache und Markt an Ihr CRM zugestellt (Salesforce, HubSpot oder Oracle sind typische Ziele), nicht als E-Mail, die neu erfasst werden muss.",
@@ -578,7 +578,7 @@
       "m1": "Zeit von der Anfrage bis zur ersten persönlichen Antwort",
       "m2": "Anteil der Anfragen, die vollständig und qualifiziert eingehen",
       "m3": "Quote von Anfrage zu Besichtigung",
-      "note": "Ein Konzept-Rendering einer fiktiven Residenz. Es wird keine Immobilie angeboten, und kein Preis, keine Verfügbarkeit und kein Ergebnis wird behauptet."
+      "note": "Eine Konzeptstudie einer fiktiven Residenz; ihr Film ist eine Kamerafahrt über lizenzierte Fotografien. Es wird keine Immobilie angeboten, und kein Preis, keine Verfügbarkeit und kein Ergebnis wird behauptet."
     },
     "clinic": {
       "scenario": "Eine Privatklinik wünscht einen ruhigen digitalen Empfang: Arztprofile, eine gelassene Erklärung ihres Angebots und eine Möglichkeit für Patienten, einen Termin anzufragen, ohne Verkaufsfläche.",
