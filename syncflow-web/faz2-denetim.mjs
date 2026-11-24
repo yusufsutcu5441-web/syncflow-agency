@@ -563,7 +563,7 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
 const G5 = "5. Sahne videoları (önceden render edilmiş)";
 // Dosya adları (sahne adı değil): estate filmi 24.11.2026'dan beri estate-2 (bölüm 12), clinic ve law aynı gün clinic-2 ve law-2 oldu (bölüm 14);
 // üçü de fotoğraf tabanlıdır ve /media bir hafta önbelleklendiği için yeni ad taşır (docs/adr/0038, lib/clips.ts).
-const CLIPS = ["monolith-2", "estate-2", "clinic-2", "law-2", "logistics"];
+const CLIPS = ["monolith-3", "estate-2", "clinic-2", "law-2", "logistics"];
 const clipMissing = [];
 for (const name of CLIPS) for (const ext of ["mp4", "webm", "webp"]) {
   const p = `public/media/clips/${name}.${ext}`;
@@ -959,7 +959,7 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     const webp = (f) => { const b = fs.readFileSync(abs(f)); const t = b.toString("ascii", 12, 16); return t === "VP8 " ? [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff] : t === "VP8L" ? [1 + (((b[22] & 0x3f) << 8) | b[21]), 1 + (((b[24] & 0x0f) << 10) | (b[23] << 2) | ((b[22] & 0xc0) >> 6))] : t === "VP8X" ? [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)] : [0, 0]; };
     const mp4 = (f) => { const b = fs.readFileSync(abs(f)); const at = b.indexOf("tkhd"); if (at < 0) return [0, 0]; const v = b[at + 4]; const o = at + (v === 1 ? 92 : 80); return [b.readUInt32BE(o) / 65536, b.readUInt32BE(o + 4) / 65536]; };
     const wrong = [];
-    for (const name of ["estate-2", "clinic-2", "law-2", "logistics", "monolith-2"]) {
+    for (const name of ["estate-2", "clinic-2", "law-2", "logistics", "monolith-3"]) {
       const want = [1920, 1080];
       for (const [f, size] of [[`public/media/clips/${name}.webp`, webp(`public/media/clips/${name}.webp`)], [`public/media/clips/${name}.mp4`, mp4(`public/media/clips/${name}.mp4`)]]) if (size[0] !== want[0] || size[1] !== want[1]) wrong.push(`${f} ${size.join("x")} (beklenen ${want.join("x")})`);
     }
@@ -970,10 +970,14 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     // 24.11.2026 (docs/adr/0038 bölüm 12 ve 14): estate, clinic ve law filmleri Remotion render'ı değil, lisanslı fotoğraflar üzerinde kamera hareketidir;
     //     dosya adları estate-2, clinic-2, law-2 (lib/clips.ts eşler) ve eski adlar depoda yoktur (bir haftalık /media önbelleği eski filmi gösterirdi).
     const clipsSrc = code("lib/clips.ts");
-    // monolith is still a Remotion render; it carries a new name because it is rendered at 1920 x 1080 since 24.11.2026 and /media is cached for a week.
-    const photoClips = [["estate", "estate-2"], ["clinic", "clinic-2"], ["law", "law-2"], ["monolith", "monolith-2"]];
-    const mapped = photoClips.every(([scene, file]) => new RegExp(`${scene}:\\s*'${file}'`).test(clipsSrc) && ["mp4", "webm", "webp"].every((e) => exists(`public/media/clips/${file}.${e}`) && !exists(`public/media/clips/${scene}.${e}`)));
-    mapped && /clipSrc\(name, 'webp'\)/.test(sv) && /clipSrc\(name, 'mp4'\)/.test(sv) && /clipSrc\(name, 'webm'\)/.test(sv) && !/media\/clips\/\$\{name\}/.test(sv) ? add(G11, "PASS", "estate, clinic, law ve monolit filmleri -2 dosyalarından oynar (lib/clips.ts eşlemesi, SceneVideo clipSrc); eski adlar depoda yok (ADR 0038 bölüm 12, 14, 15)") : add(G11, "FAIL", "klip eşlemesi eksik: lib/clips.ts estate -> estate-2, clinic -> clinic-2, law -> law-2, monolith -> monolith-2, SceneVideo clipSrc, yeni dosyalar var ve eski adlar yok olmalı");
+    // monolith is still a Remotion render; it carries a new name each time it changes, because /media is cached for a week: monolith-2 at
+    // 1920 x 1080 (bölüm 15) and monolith-3 after the contrast grade of bölüm 19. Every superseded name must be gone from the repository.
+    const photoClips = [["estate", "estate-2"], ["clinic", "clinic-2"], ["law", "law-2"], ["monolith", "monolith-3"]];
+    const superseded = ["estate", "clinic", "law", "monolith", "monolith-2"];
+    const mapped =
+      photoClips.every(([scene, file]) => new RegExp(`${scene}:\\s*'${file}'`).test(clipsSrc) && ["mp4", "webm", "webp"].every((e) => exists(`public/media/clips/${file}.${e}`))) &&
+      superseded.every((name) => ["mp4", "webm", "webp"].every((e) => !exists(`public/media/clips/${name}.${e}`)));
+    mapped && /clipSrc\(name, 'webp'\)/.test(sv) && /clipSrc\(name, 'mp4'\)/.test(sv) && /clipSrc\(name, 'webm'\)/.test(sv) && !/media\/clips\/\$\{name\}/.test(sv) ? add(G11, "PASS", "estate, clinic, law ve monolit filmleri -2 dosyalarından oynar (lib/clips.ts eşlemesi, SceneVideo clipSrc); eski adlar depoda yok (ADR 0038 bölüm 12, 14, 15)") : add(G11, "FAIL", "klip eşlemesi eksik: lib/clips.ts estate -> estate-2, clinic -> clinic-2, law -> law-2, monolith -> monolith-3, SceneVideo clipSrc, yeni dosyalar var ve eski adlar yok olmalı");
     // Kaynak kaydı: her fotoğrafın adresi ve fotoğrafçısı depoda durur (ücretsiz Unsplash lisansı; brief 24.11.2026).
     exists("docs/media-sources.md") && /unsplash\.com\/photos\//.test(read("docs/media-sources.md")) ? add(G11, "PASS", "docs/media-sources.md fotoğraf kaynaklarını (adres ve fotoğrafçı) kayıt altında tutuyor") : add(G11, "FAIL", "docs/media-sources.md yok ya da fotoğraf adresi taşımıyor");
   }

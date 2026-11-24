@@ -308,11 +308,11 @@ else {
     if (!([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) && total >= min)) sizes.push(`${file}.${ext} ${clip.status} ${total}`);
   }
   say(sizes.length === 0 ? 'PASS' : 'FAIL', `the ${SLUGS.length} 1080p sector clips (mp4, webm, webp) are served with the right type and a 1080p-sized body`, sizes.slice(0, 3).join(', '));
-  for (const name of ['estate', 'clinic', 'law', 'monolith']) for (const ext of ['mp4', 'webm', 'webp']) await expect(`the old ${name} clip name is gone (docs/adr/0038 sections 12, 14 and 15: the replaced films carry new names)`, `/media/clips/${name}.${ext}`, 404);
+  for (const name of ['estate', 'clinic', 'law', 'monolith', 'monolith-2']) for (const ext of ['mp4', 'webm', 'webp']) await expect(`the old ${name} clip name is gone (docs/adr/0038 sections 12, 14, 15 and 19: every replaced film carries a new name)`, `/media/clips/${name}.${ext}`, 404);
   // The architecture monolith is not a sector card, so the loop above does not reach it: its new files are checked here.
   for (const [ext, type] of [['mp4', 'video/mp4'], ['webm', 'video/webm'], ['webp', 'image/webp']]) {
-    const res = await get(`/media/clips/monolith-2.${ext}`, { headers: { range: 'bytes=0-0' } });
-    say([200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/monolith-2.${ext} is served as ${type}`, `-> ${res.status || res.error} ${res.headers.get('content-type') ?? ''}`);
+    const res = await get(`/media/clips/monolith-3.${ext}`, { headers: { range: 'bytes=0-0' } });
+    say([200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/monolith-3.${ext} is served as ${type}`, `-> ${res.status || res.error} ${res.headers.get('content-type') ?? ''}`);
   }
 }
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });
