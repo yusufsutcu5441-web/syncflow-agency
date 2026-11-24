@@ -157,6 +157,9 @@ const SPEC_LIVE = ENTERPRISE_ON ? ['studio-site', 'fail-safe-queue'] : ['studio-
 const SLUGS_LIVE = ENTERPRISE_ON ? ['estate', 'clinic', 'law', 'logistics'] : ['estate', 'clinic', 'law'];
 // The clip file of a sector (lib/clips.ts): the estate film is estate-2 since docs/adr/0038 section 12 (photo-based, a new name because /media is cached for a week).
 const CLIP_FILE = { estate: 'estate-2' };
+// 24.11.2026 (docs/adr/0038 section 12): the estate film shows neither Istanbul nor the Bosphorus, so the card says "above the water" and no city, strait or district
+// name may appear on the home pages or the estate breakdown pages (the Arabic, Chinese and Japanese spellings are in the list for the seven-language build).
+const PLACE_WORDS = /Bosph|Bospor|Boğaz|Bogaz|Bósforo|Bosforo|البوسفور|博斯普鲁斯|ボスポラス|Istanbul|İstanbul|Estambul|إسطنبول|伊斯坦布尔|イスタンブール/i;
 await expect(`sitemap lists the ${OPEN.length} languages, the ${OPEN.length * SLUGS_LIVE.length} breakdowns, the ${OPEN.length * SPEC_LIVE.length} R&D specimen page(s)${ENTERPRISE_ON ? `, /outbound and ${PILOT_OPEN.length} /pilot page(s)` : ' and neither /outbound nor /pilot'}`, '/sitemap.xml', 200, async (r) => { const n = ((await r.text()).match(/<loc>/g) ?? []).length; return { ok: n === OPEN.length * (1 + SLUGS_LIVE.length + SPEC_LIVE.length) + (ENTERPRISE_ON ? 1 + PILOT_OPEN.length : 0), detail: `${n} URLs` }; });
 if (ENTERPRISE_ON) for (const l of PILOT_OPEN) await expect(`/pilot in ${l}`, l === 'en' ? '/pilot' : `/${l}/pilot`, 200);
 else {
@@ -217,6 +220,7 @@ else {
   const CARD_IDS = SLUGS_LIVE.map((slug) => `show-${slug}`);
   say(cards.join(',') === CARD_IDS.join(',') ? 'PASS' : 'FAIL', ENTERPRISE_ON ? 'the showcase has the four cards (estate, clinic, law, logistics)' : 'the showcase has the three studio cards (estate, clinic, law) and no logistics card (docs/adr/0038 section 12)', cards.join(', ') || `-> ${res.status || res.error}`);
   say((ENTERPRISE_ON ? text.includes('Four industries.') && /href="\/#show-logistics"/.test(html) : text.includes('Three industries.') && !text.includes('Four industries.') && !/href="\/#show-logistics"/.test(html)) ? 'PASS' : 'FAIL', ENTERPRISE_ON ? 'the showcase headline counts four industries and the footer links the logistics card' : 'the showcase headline counts three industries and the footer has no logistics link (docs/adr/0038 section 12)');
+  say(!PLACE_WORDS.test(text) ? 'PASS' : 'FAIL', 'the home page claims no location for the estate card: no Bosphorus, Istanbul or district name (docs/adr/0038 section 12)', text.match(PLACE_WORDS)?.[0] ?? '');
   if (BRIEFING_ON) {
     const floorOk = text.includes('$50,000 – $100,000') && text.includes('$100,000 – $250,000') && text.includes('$250,000 +') && !text.includes('$25,000');
     say(floorOk ? 'PASS' : 'FAIL', 'the briefing opens at $50,000 with the three new bands and no $25,000 left');
@@ -246,15 +250,18 @@ else {
   const SLUGS = SLUGS_LIVE;
   const LANGS = OPEN;
   const bad = [];
+  const placeHits = [];
   for (const lang of LANGS) {
     for (const slug of SLUGS) {
       const res = await get(lang === 'en' ? `/showcase/${slug}` : `/${lang}/showcase/${slug}`);
       const html = res.status === 200 ? await res.text() : '';
+      if (slug === 'estate') { const plain = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' '); if (PLACE_WORDS.test(plain)) placeHits.push(`${lang}: ${plain.match(PLACE_WORDS)[0]}`); }
       const parts = ['challenge', 'solution', 'integration', 'impact'].every((id) => html.includes(`id="bd-${id}"`));
       if (!(res.status === 200 && /<h1\b/.test(html) && parts && !/noindex/.test(html))) bad.push(`${lang}/${slug} (${res.status || res.error})`);
     }
   }
   say(bad.length === 0 ? 'PASS' : 'FAIL', `all ${SLUGS.length * LANGS.length} breakdown pages (${SLUGS.length} specimens x ${LANGS.length} languages) answer 200 with an h1 and the four parts`, bad.slice(0, 3).join(', '));
+  say(placeHits.length === 0 ? 'PASS' : 'FAIL', `the estate breakdown pages name no location in the ${LANGS.length} public languages (docs/adr/0038 section 12: the film shows neither Istanbul nor the Bosphorus)`, placeHits.join(', '));
   const en = await (await get('/showcase/law')).text();
   const plainText = en.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
   say(/Challenge[\s\S]*Architectural solution[\s\S]*Integration & security[\s\S]*Measured impact/.test(plainText) && /not client work/.test(plainText) && !/zero.latency|photo.?real/i.test(plainText) && !/\bROI\b|Return on investment/.test(plainText) ? 'PASS' : 'FAIL', 'the English law breakdown has the four headings in order, says "not client work", and makes no zero-latency, photorealism or ROI claim');
@@ -277,6 +284,9 @@ else {
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });
 const home = await get(OPEN.includes('tr') ? '/tr' : '/');
 const h = (n) => home.headers.get(n);
+// The second home page (Turkish when it is open) carries the same estate card; its text names no place either (docs/adr/0038 section 12).
+const homeText = home.status === 200 ? (await home.text()).replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ') : '';
+say(home.status === 200 && !PLACE_WORDS.test(homeText) ? 'PASS' : 'FAIL', `${OPEN.includes('tr') ? '/tr' : '/'} claims no location for the estate card (no Bosphorus, Istanbul or district name)`, home.status === 200 ? homeText.match(PLACE_WORDS)?.[0] ?? '' : `-> ${home.status || home.error}`);
 say(h('strict-transport-security') ? 'PASS' : 'FAIL', 'Strict-Transport-Security present');
 // docs/adr/0024: the policy is enforced. Report-only (CSP_MODE=report-only set on the platform) still protects nothing: WARN. No header at all: FAIL.
 say(h('content-security-policy') ? 'PASS' : h('content-security-policy-report-only') ? 'WARN' : 'FAIL', 'the CSP is enforced (Content-Security-Policy, not Report-Only)', h('content-security-policy') ? 'enforcing' : h('content-security-policy-report-only') ? 'report-only: blocks nothing (CSP_MODE=report-only?)' : 'no CSP header');

@@ -812,6 +812,12 @@ const G11 = "11. Vaka incelemeleri, Stüdyo, simülatörler ve bayraklar";
     const claims = [];
     for (const l of PUBLIC_LOCALES) for (const [k, v] of Object.entries(flatten(readJSON(`messages/${l}.json`)))) if (/^(Breakdown|Sim|Studio|Briefing|Closing|Hero|Showcase|Architecture|Meta)\./.test(k) && typeof v === "string" && FORBIDDEN.test(v)) claims.push(`${l}:${k}`);
     claims.length ? add(G11, "FAIL", `yasak iddia (zero latency, fotogerçekçi, SLA, sertifika, GDPR uyumlu, çalışma süresi, yüzde ROI): ${claims.slice(0, 4).join(", ")}`) : add(G11, "PASS", "herkese açık bölümlerin metinlerinde 'zero latency', 'photorealistic', SLA, SOC 2 / ISO 27001, 'GDPR compliant', %99,9 çalışma süresi ya da yüzde ROI iddiası yok (docs/adr/0025)");
+    // 24.11.2026 (docs/adr/0038 bölüm 12): estate filmi fotoğraf tabanlıdır ve gösterdiği yer İstanbul ya da Boğaz değildir; kart "Boğaz üstünde" derdi, artık "denize bakan" der.
+    //     Vitrin kartı ve estate incelemesi yedi dilde hiçbir şehir, boğaz ya da semt adı anmaz (Arapça, Çince ve Japonca yazımlar da listede).
+    const PLACE_WORDS = /Bosph|Bospor|Boğaz|Bogaz|Bósforo|Bosforo|البوسفور|博斯普鲁斯|ボスポラス|Istanbul|İstanbul|Estambul|إسطنبول|伊斯坦布尔|イスタンブール/i;
+    const places = [];
+    for (const l of PUBLIC_LOCALES) { const m = readJSON(`messages/${l}.json`); for (const [k, v] of Object.entries(flatten({ Showcase: { estate: m.Showcase?.estate ?? {} }, Breakdown: { estate: m.Breakdown?.estate ?? {} } }))) if (typeof v === "string" && PLACE_WORDS.test(v)) places.push(`${l}:${k}`); }
+    places.length ? add(G11, "FAIL", `estate metni filmde görünmeyen bir yer adı anıyor (Boğaz, İstanbul ya da semt): ${places.slice(0, 4).join(", ")}`) : add(G11, "PASS", "estate kartı ve incelemesi yedi dilde yer adı anmaz: Boğaz, İstanbul ya da semt yok, film bunları göstermez (docs/adr/0038 bölüm 12)");
 
     // 4) Sağlık ve hukuk incelemeleri meslek reklam kurallarını söyler (müşteri adına uygulama sorumluluğu müşteridir).
     const clinic = en.clinic.note + en.clinic.c3;

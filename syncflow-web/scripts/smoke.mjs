@@ -204,6 +204,11 @@ check(ENTERPRISE_ON ? 'the hero carries the owner\u2019s phrases (luxury, high-p
 const heroMarkup = /<section[^>]*id="top"[\s\S]*?<\/section>/.exec(html)?.[0] ?? '';
 const heroText = heroMarkup.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
 check(ENTERPRISE_ON ? 'the hero names no audit and no workflow automation (the pilot band is part of it while the enterprise switch is on)' : 'the hero carries none of the retired words: enterprise, workflow automation, audit, pilot', ENTERPRISE_ON ? !/workflow automation|\baudit\b/i.test(heroText) : !/enterprise|workflow automation|\baudit\b|\bpilot\b/i.test(heroText), heroText.match(/enterprise|workflow automation|\baudit\b|\bpilot\b/i)?.[0] ?? '');
+// 24.11.2026 (docs/adr/0038 section 12): the estate film is a camera move over photographs of a bright living room and a harbour at golden hour, and the place it shows is
+// neither Istanbul nor the Bosphorus. The card used to open with "A residence above the Bosphorus"; it now says "above the water", and no city, strait or district name
+// may appear anywhere in the page (seven languages, so the Arabic, Chinese and Japanese spellings are in the list too).
+const PLACE_WORDS = /Bosph|Bospor|Boğaz|Bogaz|Bósforo|Bosforo|البوسفور|博斯普鲁斯|ボスポラス|Istanbul|İstanbul|Estambul|إسطنبول|伊斯坦布尔|イスタンブール/i;
+check('the estate card claims no location: no Bosphorus, Istanbul or district name anywhere in the page (docs/adr/0038 section 12)', !PLACE_WORDS.test(pageText), pageText.match(PLACE_WORDS)?.[0] ?? '');
 check('no invented enterprise credential in the page (no SLA, SOC 2, ISO 27001, uptime percentage or partner badge)', !/\bSLA\b|SOC ?2|ISO ?27001|99\.9+ ?%|uptime|certified partner/i.test(pageText));
 check('the page makes no multi-language claim', !/seven languages|7 languages|every language|yedi dil|her dilde/i.test(html));
 check('no Lemon Squeezy and no old offer anywhere in the page', !/lemonsqueezy|lemon\.js|\$2,500|\$2\.500|Start Project/i.test(html));
@@ -785,6 +790,8 @@ const lcpSeconds = (metric('lcpDesktop') / 1000).toFixed(1);
 const stripTags = (markup) => markup.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
 const FORBIDDEN_IN_BREAKDOWN = /zero[- ]latency|sıfır gecikme|photo-?real|fotogerçek|SOC ?2|ISO ?27001|certified partner|sertifikalı ortak|\b99\.\d+ ?%|\b(?:uptime|SLA)\s*(?:of|:)\s*\d/i;
 let breakdownFailures = [];
+// The estate breakdown pages, like the card, name no place (docs/adr/0038 section 12); hits are collected here and judged after the loop.
+const placeHits = [];
 for (const locale of OPEN) {
   for (const slug of SLUGS) {
     const res = await get(breakdownPath(locale, slug));
@@ -805,6 +812,7 @@ for (const locale of OPEN) {
     const ld = Boolean(page) && page.url.endsWith(breakdownPath(locale, slug)) && crumbs?.itemListElement?.length === 2 && crumbs.itemListElement[1].item === page.url;
     const ok = res.status === 200 && /<h1\b/.test(body) && ids.every(Boolean) && canonical && ld && hreflangs >= OPEN.length + 1 && /noindex/.test(body) === false && !FORBIDDEN_IN_BREAKDOWN.test(text) && text.includes(`${perfDesktop} · ${perfMobile}`) && new RegExp(`${lcpSeconds.replace('.', '[.,]')}\\s?s\\b`).test(text) && /0[.,]00/.test(text);
     if (!ok) breakdownFailures.push(`${locale}/${slug}: status ${res.status}, parts ${ids.join('')}, canonical ${canonical}, structured data ${ld}, hreflang ${hreflangs}`);
+    if (slug === 'estate' && PLACE_WORDS.test(text)) placeHits.push(`${locale}/estate: ${text.match(PLACE_WORDS)[0]}`);
   }
 }
 check(`all ${OPEN.length * SLUGS.length} breakdown pages (${SLUGS.length} specimens x ${OPEN.length} languages): 200, one h1, the four parts, canonical, structured data, hreflang, indexable, the published numbers and none of the forbidden claims`, breakdownFailures.length === 0, breakdownFailures.slice(0, 3).join(' | '));
@@ -932,6 +940,7 @@ if (CONTACT && !BRIEFING_ON) {
   check('no home page carries a SOC 2, ISO 27001, GDPR-compliant, 99.9 % or SLA claim, a mutual NDA or a 24-hour answer (a studio cannot back them from code)', claims.length === 0, claims.join(', '));
   if (ENTERPRISE_ON) check(`Drawing 01 (the briefing path) is on the home page in all ${OPEN.length} languages: translated heading, legend and description on both layouts, English sheet annotations`, drawing.length === 0, drawing.slice(0, 3).join(' | '));
 }
+check(`the estate breakdown names no location in any of the ${OPEN.length} public languages (docs/adr/0038 section 12: the film shows neither Istanbul nor the Bosphorus)`, placeHits.length === 0, placeHits.slice(0, 3).join(', '));
 check('every breakdown says it is a specimen, not client work', (await Promise.all(SLUGS.map(async (slug) => (await (await get(breakdownPath('en', slug))).text()).includes('not client work')))).every(Boolean));
 const clinicEn = normalise(stripTags(await (await get('/showcase/clinic')).text()));
 check('the clinic breakdown keeps to the health-advertising rules (no price, no testimonial, no results gallery offered; it says so)', /no prices, discounts, galleries of results or patient testimonials/.test(clinicEn) && !/(?:from|only|starting at) [$€£]\s?\d/.test(clinicEn));
