@@ -121,7 +121,8 @@ for (const code of OPEN) {
   await expect(`${code} (lang ${lang}, dir ${dir}, ${OPEN.length} language links, no gate)`, path, 200, async (r) => {
     const html = await r.text();
     const cards = (html.match(/data-market="/g) ?? []).length;
-    const links = OPEN.filter((other) => new RegExp(`href="${other === 'en' ? '/' : `/${other}`}"[^>]*hreflang=`).test(html)).length;
+    // React keeps the attribute as JSX writes it (hrefLang); HTML attribute names are case-insensitive, so the match is too.
+    const links = OPEN.filter((other) => new RegExp(`href="${other === 'en' ? '/' : `/${other}`}"[^>]*hreflang=`, 'i').test(html)).length;
     const right = new RegExp(`<html[^>]*\\blang="${lang}"`).test(html) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(html);
     return { ok: right && links === OPEN.length && cards === 0 && !/class="gate"/.test(html), detail: `${links} language links, ${cards} gate cards` };
   });
@@ -130,7 +131,11 @@ for (const code of OPEN) {
 {
   const tr = await rawGet('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9,en;q=0.8', 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36' } });
   const vary = tr.headers.get('vary') ?? '';
-  say(tr.status === 307 && (tr.headers.get('location') ?? '').endsWith('/tr') && /accept-language/i.test(vary) ? 'PASS' : 'FAIL', 'a Turkish browser asking for "/" is sent to /tr, and the answer varies by language', `-> ${tr.status} ${tr.headers.get('location') ?? ''} vary "${vary}"`);
+  say(tr.status === 307 && (tr.headers.get('location') ?? '').endsWith('/tr') && /accept-language/i.test(vary) ? 'PASS' : 'FAIL', 'a Turkish browser asking for "/" is sent to /tr, and that redirect varies by language', `-> ${tr.status} ${tr.headers.get('location') ?? ''} vary "${vary}"`);
+  // The page itself cannot carry that header (Next overwrites Vary on an app-router response), so it must be unstorable instead.
+  const en = await rawGet('/', { headers: { 'accept-language': 'en-US,en;q=0.9' } });
+  const cache = en.headers.get('cache-control') ?? '';
+  say(en.status === 200 && /no-store/i.test(cache) ? 'PASS' : 'FAIL', 'no shared cache may keep "/" and hand one browser’s language to another (no-store)', `-> ${en.status} cache-control "${cache}"`);
   const bot = await rawGet('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9', 'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' } });
   const botHtml = bot.status === 200 ? await bot.text() : '';
   say(bot.status === 200 && /<html[^>]*\blang="en"/.test(botHtml) ? 'PASS' : 'FAIL', 'Googlebot is never redirected by its language: "/" stays the English page (canonical, x-default)', `-> ${bot.status}`);

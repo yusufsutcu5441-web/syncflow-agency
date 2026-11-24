@@ -1,51 +1,34 @@
 import { ArrowRight, Play } from 'lucide-react';
 import Link from 'next/link';
-import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Logo } from '@/components/ui/Logo';
 import { MaskLines } from '@/components/ui/MaskText';
 import type { AppLocale } from '@/i18n/routing';
 import { writeHref } from '@/lib/contact';
 import { BRIEFING_ENABLED, SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
-import { formatMeasuredAt, METRICS } from '@/lib/metrics';
 import { isPilotLocale, PILOT_PATH } from '@/lib/pilot';
 import { CONTACT_EMAIL, SECTION_IDS } from '@/lib/site';
 
 /**
  * Hero (Blueprint section 1, cinematic since docs/adr/0015-entry-gate-and-hero.md): full viewport, obsidian, the B1 emblem at
- * monumental size behind a two-line headline that rises line by line through its masks (CSS only, from the first paint, or from
- * the moment the entry gate lifts), one primary action and a quiet second one, and a strip of three metrics. Everything above
- * the fold is plain server-rendered text, so the largest contentful paint is the headline or the lead as early as the browser
- * can draw it. The numbers come from lib/metrics.ts (measured, dated).
+ * monumental size behind a two-line headline that rises line by line through its masks (CSS only, from the first paint), one
+ * primary action and a quiet second one. Everything above the fold is plain server-rendered text, so the largest contentful
+ * paint is the headline or the lead as early as the browser can draw it.
+ * Since the owner's design review of 24.11.2026 (docs/adr/0038 §17) the first screen carries no measurements: the metric strip,
+ * the proof sentence and their dated note moved to the Studio section, which now labels the mobile and the desktop score
+ * separately, and nothing stands in front of the hero any more (§16).
  *
  * On a desktop (fine pointer, tall enough, no reduced motion) the section is taller than the screen and its stage is sticky:
  * lib/enhance/hero.ts writes the scroll progress into --hp and CSS alone moves the emblem, fades the copy and the cinema layer
  * brightens, so scrolling feels like moving through the space. On phones and without JavaScript it is the plain one-screen hero.
  */
 export async function Hero() {
-  const [t, locale, format, closing] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Closing')]);
+  const [t, locale, closing] = await Promise.all([getTranslations('Hero'), getLocale() as Promise<AppLocale>, getTranslations('Closing')]);
   // The actions (owner's brief, 22.11.2026, docs/adr/0038 §10): the work first. While the form is off, the primary action scrolls to the showcase and the
   // quiet second one is the plain contact mail (lib/contact.ts, no subject); the free site audit request stays in the footer and the phone bar. While the
   // form is on, the briefing is the primary action and the showcase the second, as before.
   const write = writeHref();
-
-  const performance = METRICS.lighthousePerformance;
-  const cls = METRICS.cls;
-  const lcp = METRICS.lcpDesktop;
-  // The proof line names one Lighthouse score for all four categories, so it is drawn only while the four sealed desktop scores are the same number.
-  const fourScores: Array<number | null> = [performance, METRICS.lighthouseAccessibility, METRICS.lighthouseBestPractices, METRICS.lighthouseSeo].map((m) => m.value);
-  const firstScore = fourScores[0] ?? null;
-  const fourAlike = firstScore !== null && fourScores.every((v) => v === firstScore) ? firstScore : null;
-  // The note under the strip carries the date and profile of the numbers it shows. The score is "to be measured" (lib/metrics.ts),
-  // so the note comes from a metric that is shown with a value.
-  const measuredAt = lcp.measuredAt;
-  const value = (n: number | null, digits = 0) => (n === null ? t('pending') : format.number(n, { minimumFractionDigits: digits, maximumFractionDigits: digits }));
-
-  const strip = [
-    [value(performance.value), t('metricPerformance')],
-    [value(cls.value, 2), t('metricCls')],
-    [lcp.value === null ? t('pending') : `${value(lcp.value / 1000, 1)} s`, t('metricLcp')],
-  ] as const;
 
   return (
     <section id="top" className="hero" data-hero="" aria-labelledby="hero-title">
@@ -120,27 +103,9 @@ export async function Hero() {
             </div>
           ) : null}
 
-          <dl className="hero-strip">
-            {strip.map(([metric, label]) => (
-              <div key={label}>
-                <dt className="metric-label">{label}</dt>
-                <dd className="metric-value mt-1">{metric}</dd>
-              </div>
-            ))}
-          </dl>
-          {/* The proof line (owner's brief, 22.11.2026, docs/adr/0038 §10): one small sentence directly under the numbers it sums up and above the
-              dated note that qualifies them. Its figure is not typed into the copy: {score} is the sealed desktop Lighthouse score, and the line is
-              drawn only while all four sealed categories (performance, accessibility, best practices, SEO) carry that same number. */}
-          {fourAlike !== null ? (
-            <p className="mt-4 text-sm text-faint" data-hero-proof="">
-              {t('proof', { score: value(fourAlike) })}
-            </p>
-          ) : null}
-          {measuredAt ? (
-            <p className="mt-4 text-xs text-faint">
-              {t('measured', { date: formatMeasuredAt(measuredAt, locale), tool: 'Lighthouse', profile: lcp.profile })}
-            </p>
-          ) : null}
+          {/* No metric strip here any more (owner's design review, 24.11.2026, docs/adr/0038 §17): the first screen is the work and one way
+              into it. The measured scores live as a small proof line in the Studio section, where both of them are labelled, and the four
+              Lighthouse rings with their numbers are card III of the Architecture section. */}
         </div>
 
         <div className="scroll-cue" aria-hidden="true" data-pause-offscreen="">

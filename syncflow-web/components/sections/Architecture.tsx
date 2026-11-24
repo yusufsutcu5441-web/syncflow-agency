@@ -129,18 +129,23 @@ export async function Architecture() {
         </div>
 
         <div className="grid gap-6">
-          {/* I: native video */}
+          {/* I: what a visitor sees in the first second. Owner's design review, 24.11.2026 (docs/adr/0038 §17): the card speaks the
+              client's language first (what it does for them), and the engineering that makes it true — codecs, resolution, frame rate,
+              lazy loading, reserved space — is a small footnote under the film, where it can be checked but reads no one away. */}
           <article className="beam-card" data-maskframe="">
             <span className="beam" aria-hidden="true" data-pause-offscreen="" />
             <div className="beam-body p-6 md:p-8">
               <p className="label">{t('c1Index')}</p>
               <h3 className="text-title mt-4">{t('c1Title')}</h3>
               <p className="body-muted mt-4">{t('c1Text')}</p>
-              <p className="label mt-5">{t('c1Tags')}</p>
               <div className="frame mt-7" data-video-host="" data-maskframe="">
                 <SceneVideo name="monolith" mode="visible" label={t('c1VideoLabel')} />
                 <span className="badge">{t('c1Badge')}</span>
               </div>
+              <p className="mt-5 text-sm text-muted" data-card-note="">
+                {t('c1Note')}
+              </p>
+              <p className="label mt-4">{t('c1Tags')}</p>
             </div>
           </article>
 

@@ -120,6 +120,50 @@ else {
   for (const [re, msg, lvl] of bad) { const m = c.match(re); if (m) { clean = false; add(G2, lvl, `${msg}: ${[...new Set(m)].slice(0, 4).join(", ")}`); } }
   if (clean) add(G2, "PASS", "yasaklı değer bulunmadı");
 
+  /* Okunabilirlik (sahibin 24.11.2026 tasarım incelemesi, madde D): metin taşıyan her token, sayfadaki gerçek yüzeylerin üstünde
+     WCAG AA'yı (≥ 4,5:1) geçmeli ve hiçbir yazı 11 px'in (mobilde 12 px'in) altına inmemeli. Depoda axe yok ve yeni bağımlılık
+     eklenmedi: oranlar burada WCAG 2.x formülüyle hesaplanıyor (platin'in alfası zeminle alpha-compositing ile birleştirilir). */
+  {
+    const srgb = (v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+    const lum = ([r, g, b]) => 0.2126 * srgb(r / 255) + 0.7152 * srgb(g / 255) + 0.0722 * srgb(b / 255);
+    const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
+    const over = (fg, alpha, bg) => fg.map((v, i) => alpha * v + (1 - alpha) * bg[i]);
+    const PLATIN = [226, 226, 230];
+    // Gerçek yüzeyler: zemin, iki katman ve en kötüsü olan katman 2 üstündeki cam film (rgb(226 226 230 / 0.03), globals.css).
+    const SURFACES = [["zemin", [13, 13, 14]], ["katman 1", [20, 20, 22]], ["katman 2", [26, 26, 30]], ["cam/katman 2", over(PLATIN, 0.03, [26, 26, 30])]];
+    const alphaOf = (token) => {
+      const m = new RegExp(`--color-${token}:\\s*rgb\\(226 226 230 / ([0-9.]+)\\)`).exec(raw);
+      return m ? Number(m[1]) : null;
+    };
+    const TOKENS = [["ink", 1], ["muted", alphaOf("muted")], ["faint", alphaOf("faint")]];
+    const worst = [];
+    for (const [name, alpha] of TOKENS) {
+      if (alpha === null) { worst.push(`${name}: token okunamadı`); continue; }
+      for (const [surface, bg] of SURFACES) {
+        const r = ratio(over(PLATIN, alpha, bg), bg);
+        if (r < 4.5) worst.push(`${name} / ${surface}: ${r.toFixed(2)}:1`);
+      }
+    }
+    const say = TOKENS.map(([name, alpha]) => `${name} ${Math.min(...SURFACES.map(([, bg]) => ratio(over(PLATIN, alpha ?? 1, bg), bg))).toFixed(1)}:1`).join(" · ");
+    worst.length === 0
+      ? add(G2, "PASS", `metin tokenlarının hepsi en kötü yüzeyde (cam/katman 2) WCAG AA üstünde: ${say} (madde D, 24.11.2026)`)
+      : add(G2, "FAIL", `WCAG AA altında kalan token/yüzey: ${worst.slice(0, 4).join(", ")}`);
+
+    // Yazı boyutu: HTML metni için 11 px taban, mobilde 12 px. SVG içindeki `.dwg` yazıları user unit'tir (viewBox ile ölçeklenir), px değil: hariç.
+    const small = [];
+    for (const m of c.matchAll(/([.#][a-z0-9_-]+(?:\s*[,>+~]\s*[.#:a-z0-9_[\]='"-]+)*)[^{}]*\{[^{}]*font-size:\s*([0-9.]+)(rem|px)/gi)) {
+      const [, selector, value, unit] = m;
+      if (/\.dwg\b/.test(selector)) continue;
+      const px = unit === "rem" ? Number(value) * 16 : Number(value);
+      if (px < 11) small.push(`${selector.trim()}: ${px.toFixed(1)}px`);
+    }
+    const labelRecipe = /\.label,[\s\S]{0,200}\.lang-item \.code \{[^}]*font-size:\s*0\.6875rem/.test(c);
+    const mobileBump = /@media \(max-width: 47\.99rem\) \{\s*\.label,[\s\S]{0,220}font-size:\s*0\.75rem/.test(c);
+    small.length === 0 && labelRecipe && mobileBump
+      ? add(G2, "PASS", "hiçbir HTML metni 11 px'in altında değil ve mono mikro etiket reçetesi mobilde 12 px'e çıkıyor (madde D; SVG çizim yazıları user unit olduğu için hariç)")
+      : add(G2, "FAIL", `11 px altı yazı ya da eksik mobil artış: ${small.slice(0, 4).join(", ") || `reçete ${labelRecipe}, mobil ${mobileBump}`}`);
+  }
+
   // Saf siyah ve saf beyaz hiçbir yerde yok (CSS, bileşenler, OG kartı, Remotion sahneleri): koyular obsidian, açıklar platin.
   const PURE = /#(?:000|000000|fff|ffffff)\b|rgba?\(\s*(?:0\s*[ ,]\s*0\s*[ ,]\s*0|255\s*[ ,]\s*255\s*[ ,]\s*255)\b|(?<![-\w])(?:black|white)(?![-\w])/gi;
   const pureHits = [];

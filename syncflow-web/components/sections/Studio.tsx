@@ -41,6 +41,20 @@ export async function Studio() {
 
   const ms = (value: number | null) => (value === null ? hero('pending') : `${format.number(value, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ms`);
 
+  // The two sealed Lighthouse performance scores, mobile and desktop, as the proof line below shows them: a number only when it was
+  // measured (lib/metrics.ts), the date of the measurement, and both profiles so the figures carry the conditions they were taken under.
+  const mobile = METRICS.lighthousePerformanceMobile;
+  const desktop = METRICS.lighthousePerformance;
+  const proof =
+    mobile.value === null || desktop.value === null
+      ? null
+      : {
+          mobile: format.number(mobile.value),
+          desktop: format.number(desktop.value),
+          date: formatMeasuredAt(desktop.measuredAt, locale),
+          profile: `${desktop.profile}; ${mobile.profile}`,
+        };
+
   const principles = [
     { index: 'I', title: t('p1Title'), text: t('p1Text'), link: t('p1Link'), href: `/#${SECTION_IDS.architecture}` },
     { index: 'II', title: t('p2Title'), text: t('p2Text'), link: t('p2Link'), href: '/privacy' },
@@ -180,6 +194,20 @@ export async function Studio() {
               ))}
             </ul>
           </div>
+
+          {/* The proof line (owner's design review, 24.11.2026, docs/adr/0038 §17): it left the first screen and lives here, among the facts a
+              visitor can check. Both figures are labelled, because the mobile and the desktop score are not the same number and one of them
+              standing alone read as the other's. Neither is typed into the copy: they are the sealed values of lib/metrics.ts, with the date
+              and both profiles underneath, and the line is drawn only while both have been measured. */}
+          {proof ? (
+            <div className="mt-10 border-t border-hairline pt-6">
+              <p className="label">{t('proofLabel')}</p>
+              <p className="mt-3 text-sm text-muted" data-proof-line="">
+                {t('proof', { mobile: proof.mobile, desktop: proof.desktop })}
+              </p>
+              <p className="mt-2 text-xs text-faint">{hero('measured', { date: proof.date, tool: 'Lighthouse', profile: proof.profile })}</p>
+            </div>
+          ) : null}
         </div>
 
         <div id="how-we-built-it" className="mt-24 scroll-mt-28 md:mt-32">

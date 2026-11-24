@@ -38,7 +38,11 @@ const PAGE_LIMIT = { limit: 240, windowMs: 60_000 };
  *     Turkish browser to the English page. Nothing is stored to remember that choice: this site sets no cookie;
  *   - redirect an address that already says what it is: every "/xx" path, and "/" with a market in the query ("/?m=tr"), are the
  *     visitor's own words.
- * Every answer on "/" carries Vary: Accept-Language, so no cache may hand one browser's language to another.
+ *
+ * Caching: the redirect carries Vary: Accept-Language, Sec-Fetch-Site, so no cache may hand one browser's language to another. The page
+ * itself cannot carry that header — Next overwrites Vary on an app-router response with its own router list, from the middleware and from
+ * next.config alike (measured 24.11.2026) — but it does not need it: a dynamic page is served "private, no-cache, no-store", so no shared
+ * cache may keep it. If the home page is ever made cacheable, the Vary must be solved first (see docs/adr/0038 section 16).
  */
 const ROOT_FALLBACK: AppLocale = 'tr';
 

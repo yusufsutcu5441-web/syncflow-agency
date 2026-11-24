@@ -284,9 +284,14 @@ const visibleText = (markup) => markup.replace(/<script[\s\S]*?<\/script>/g, ' '
 
 const rootPage = await pageAs('/');
 check('GET / is the page itself: no language gate in front of it, the headline is the first thing in the main content', rootPage.res.status === 200 && !gateTrace(rootPage.page) && rootPage.page.includes('Luxury websites,'), gateTrace(rootPage.page));
-check('/ sets no cookie and tells caches it varies by language', rootPage.res.headers.get('set-cookie') === null && /accept-language/i.test(rootPage.res.headers.get('vary') ?? ''), `vary ${rootPage.res.headers.get('vary')}`);
+check('/ sets no cookie', rootPage.res.headers.get('set-cookie') === null, String(rootPage.res.headers.get('set-cookie')));
+// No shared cache may keep "/" and hand one browser's language to another. Two separate things must hold, each checked strictly: the page
+// itself must be unstorable (Next overwrites Vary on an app-router response with its own router list, from the middleware and from
+// next.config alike, measured 24.11.2026), and the redirect further down must carry Vary: Accept-Language.
+check('no shared cache may keep "/" (it is served no-store, so one browser’s language cannot be handed to another)', /no-store/i.test(rootPage.res.headers.get('cache-control') ?? ''), `cache-control "${rootPage.res.headers.get('cache-control')}"`);
 // The language is reachable without JavaScript: the footer carries a plain link to every public translation (the header's menu is built on interest).
-const footerLangs = OPEN.filter((code) => new RegExp(`href="${code === 'en' ? '/' : `/${code}`}"[^>]*hreflang="${HTML_LANG[code] ?? code}"`).test(home.page));
+// React keeps the attribute as it is written in JSX (hrefLang), and HTML attribute names are case-insensitive, so the match must be too.
+const footerLangs = OPEN.filter((code) => new RegExp(`href="${code === 'en' ? '/' : `/${code}`}"[^>]*hreflang="${HTML_LANG[code] ?? code}"`, 'i').test(rootPage.page));
 check(`the ${OPEN.length} public languages are plain links on the page (no script needed to change language)`, footerLangs.length === OPEN.length, `found ${footerLangs.join(',') || 'none'}`);
 for (const locale of OPEN) {
   const other = await pageAs(locale === 'en' ? '/' : `/${locale}`);
@@ -341,15 +346,15 @@ check('an unknown market is ignored and never reaches the document markup', unkn
 if (PRICING_ON) {
   check('the home page names the currency of the market in the address (USD on /?m=us)', (await pageAs('/?m=us')).page.includes('USD') || /\$\d/.test(visibleText((await pageAs('/?m=us')).page)));
 } else {
-  const shown = visibleText(home.page);
-  check('no price is shown: no currency sign or code next to a number in the text a visitor reads, and no budget option', !/[$€₺£]\s?\d|\d\s?[$€₺£]|\b\d[\d.,]*\s?(?:USD|EUR|AED|TRY)\b/.test(shown) && !/name="budget"/.test(home.page) && !/₺/.test(home.page), shown.match(/.{20}[$€₺£]\s?\d.{10}/)?.[0] ?? '');
+  const shown = visibleText(rootPage.page);
+  check('no price is shown: no currency sign or code next to a number in the text a visitor reads, and no budget option', !/[$€₺£]\s?\d|\d\s?[$€₺£]|\b\d[\d.,]*\s?(?:USD|EUR|AED|TRY)\b/.test(shown) && !/name="budget"/.test(rootPage.page) && !/₺/.test(rootPage.page), shown.match(/.{20}[$€₺£]\s?\d.{10}/)?.[0] ?? '');
 }
 if (BRIEFING_ON) {
-  check('the first step of the briefing names the minimum in dollars and offers the three bands above it (server-rendered, US default)', home.page.includes('$50,000 – $100,000') && home.page.includes('$100,000 – $250,000') && home.page.includes('$250,000 +'));
-  check('the old $25,000 floor is gone: no $25,000 option and no $25,000 – $50,000 band anywhere in the page', !/\$25,000/.test(home.page));
-  check('the three bands carry the enterprise descriptions (core architecture, enterprise infrastructure, custom ecosystems)', home.page.includes('Core Architecture &amp; Workflow Automation') && home.page.includes('Enterprise Infrastructure &amp; Multi-Region Ecosystem') && home.page.includes('Custom Global Ecosystems'));
-  check('the first step has exactly three options, all at or above the minimum: there is no "below" choice', (home.page.match(/name="budget"/g) ?? []).length === 3 && !/Below \$|below the minimum/i.test(home.page), `${(home.page.match(/name="budget"/g) ?? []).length} budget options`);
-  check('no old budget band (under $20k) is offered any more', !/\$5k|\$10k|\$20k|Let’s talk first|Let&#x27;s talk first/i.test(home.page));
+  check('the first step of the briefing names the minimum in dollars and offers the three bands above it (server-rendered, US default)', rootPage.page.includes('$50,000 – $100,000') && rootPage.page.includes('$100,000 – $250,000') && rootPage.page.includes('$250,000 +'));
+  check('the old $25,000 floor is gone: no $25,000 option and no $25,000 – $50,000 band anywhere in the page', !/\$25,000/.test(rootPage.page));
+  check('the three bands carry the enterprise descriptions (core architecture, enterprise infrastructure, custom ecosystems)', rootPage.page.includes('Core Architecture &amp; Workflow Automation') && rootPage.page.includes('Enterprise Infrastructure &amp; Multi-Region Ecosystem') && rootPage.page.includes('Custom Global Ecosystems'));
+  check('the first step has exactly three options, all at or above the minimum: there is no "below" choice', (rootPage.page.match(/name="budget"/g) ?? []).length === 3 && !/Below \$|below the minimum/i.test(rootPage.page), `${(rootPage.page.match(/name="budget"/g) ?? []).length} budget options`);
+  check('no old budget band (under $20k) is offered any more', !/\$5k|\$10k|\$20k|Let’s talk first|Let&#x27;s talk first/i.test(rootPage.page));
 }
 
 /* ── 1c. Seven capital centres (docs/adr/0018-seven-capital-centres.md) ───────────────────────── */
@@ -416,24 +421,33 @@ for (const code of OPEN.filter((l) => l !== 'en')) {
   const htmlLang = HTML_LANG[code] ?? code;
   check(`/${code} renders in ${code} (lang attr, dir="${dir}", translated hero)`, res.status === 200 && new RegExp(`<html[^>]*\\blang="${htmlLang}"`).test(body) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(body) && (MARKERS[code] ?? []).every((w) => body.includes(w)), `status ${res.status}`);
 }
-// The hero's proof line (owner's brief 22.11.2026, docs/adr/0038 §10): one sentence under the metric strip whose number comes from lib/metrics.ts
-// (the one desktop Lighthouse score all four sealed categories share), so it must be a resolved number, never the "to be measured" fallback.
-const PROOF = { en: /^Lighthouse \d+ across all four categories \(desktop\), measured on this site\.$/, tr: /^Dört kategoride Lighthouse \d+ \(masaüstü\), bu sitede ölçüldü\.$/ };
+// The proof line (owner's brief 22.11.2026, docs/adr/0038 §10; moved out of the hero by the design review of 24.11.2026, §17): one small
+// sentence in the Studio section that names BOTH measured Lighthouse performance scores, each labelled, with the figures resolved from
+// lib/metrics.ts — never the "to be measured" fallback, and never one number standing for both profiles.
+const PROOF = { en: /^Lighthouse performance: mobile \d+ · desktop \d+\.$/, tr: /^Lighthouse performansı: mobil \d+ · masaüstü \d+\.$/ };
 for (const [code, want] of Object.entries(PROOF)) {
   if (!OPEN.includes(code)) continue;
   const body = await (await get(code === 'en' ? '/' : `/${code}`)).text();
-  const line = /<p[^>]*data-hero-proof=""[^>]*>([^<]*)<\/p>/.exec(body)?.[1] ?? '';
-  check(`${code === 'en' ? '/' : `/${code}`}: the hero proof line is under the metric strip with its score resolved from lib/metrics.ts`, want.test(line), line || 'no data-hero-proof paragraph');
+  const line = /<p[^>]*data-proof-line=""[^>]*>([^<]*)<\/p>/.exec(body)?.[1] ?? '';
+  check(`${code === 'en' ? '/' : `/${code}`}: the proof line names the mobile and the desktop score separately, both resolved from lib/metrics.ts`, want.test(line), line || 'no data-proof-line paragraph');
+  // And it is NOT on the first screen any more: the hero carries no metric strip and no proof sentence (docs/adr/0038 §17).
+  check(`${code === 'en' ? '/' : `/${code}`}: the first screen carries no measurements (no metric strip, no hero proof line)`, !/class="hero-strip"/.test(body) && !/data-hero-proof/.test(body));
 }
-// The URL alone decides the language (docs/adr/0002): no redirect from Accept-Language, no cookie.
+// The URL decides the language on every address except "/", where the browser's own Accept-Language does (proxy.ts, docs/adr/0038 §16).
 for (const code of [...CLOSED, 'it', 'pt']) {
   const res = await get(`/${code}`);
   check(`/${code} is not public: 404`, res.status === 404, `status ${res.status}`);
 }
-const trBrowser = await get('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9,en;q=0.5' } });
-check('a Turkish browser is NOT redirected: "/" stays English', trBrowser.status === 200 && /<html[^>]*\blang="en"/.test(await trBrowser.text()), `${trBrowser.status} ${trBrowser.headers.get('location')}`);
-const staleCookie = await get('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9', cookie: 'NEXT_LOCALE=tr' } });
-check('an old NEXT_LOCALE cookie is ignored', staleCookie.status === 200, `status ${staleCookie.status}`);
+// A stale NEXT_LOCALE cookie from an older release must change nothing: the language comes from the path, and on "/" from the browser's
+// header (docs/adr/0038 §16). Both are measured with the cookie present: an English browser still gets the English page, and a Turkish
+// browser is sent to /tr by its own header, exactly as it is without the cookie.
+const cookieEnglish = await get('/', { headers: { 'accept-language': 'en-US,en;q=0.9', cookie: 'NEXT_LOCALE=tr' } });
+const cookieTurkish = await get('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9', cookie: 'NEXT_LOCALE=tr' } });
+check(
+  'an old NEXT_LOCALE cookie is ignored: it cannot force a language, and it cannot stop the header from choosing one',
+  cookieEnglish.status === 200 && /<html[^>]*\blang="en"/.test(await cookieEnglish.text()) && cookieTurkish.status === 307 && (cookieTurkish.headers.get('location') ?? '').endsWith('/tr'),
+  `english ${cookieEnglish.status}, turkish ${cookieTurkish.status} ${cookieTurkish.headers.get('location') ?? ''}`,
+);
 const trVisit = await get('/tr');
 check('visiting /tr (or /) sets no cookie at all', !trVisit.headers.get('set-cookie') && !home.headers.get('set-cookie'), `${trVisit.headers.get('set-cookie')} | ${home.headers.get('set-cookie')}`);
 check('no Link: rel="alternate" header advertises a language that is not public', !CLOSED.some((l) => (home.headers.get('link') ?? '').includes(`hreflang="${l}"`)), home.headers.get('link') ?? '');
