@@ -25,22 +25,6 @@
   "Header": {
     "cta": "Iniciar un briefing"
   },
-  "Gate": {
-    "eyebrow": "Estudio de arquitectura digital",
-    "title": "Elija su idioma.",
-    "lead": "Su elección queda en la dirección de la página.",
-    "marketLabel": "Idioma y región",
-    "languageLabel": "Idioma",
-    "us": "Internacional",
-    "tr": "Turquía",
-    "me": "Oriente Medio, Dubái",
-    "dach": "DACH y Suiza",
-    "fr": "Mónaco y Francia",
-    "wealth": "Patrimonio global",
-    "asia": "Plazas financieras de Asia",
-    "enter": "Entrar",
-    "skip": "Continuar sin elegir"
-  },
   "Hero": {
     "eyebrow": "Estudio de arquitectura digital — desde 2026",
     "title1": "Sitios web de lujo,",

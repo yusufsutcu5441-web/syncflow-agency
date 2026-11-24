@@ -25,22 +25,6 @@
   "Header": {
     "cta": "Lancer un briefing"
   },
-  "Gate": {
-    "eyebrow": "Studio d’architecture numérique",
-    "title": "Choisissez votre langue.",
-    "lead": "Votre choix reste dans l’adresse de la page.",
-    "marketLabel": "Langue et région",
-    "languageLabel": "Langue",
-    "us": "International",
-    "tr": "Turquie",
-    "me": "Moyen-Orient, Dubaï",
-    "dach": "DACH et Suisse",
-    "fr": "Monaco et France",
-    "wealth": "Gestion de fortune mondiale",
-    "asia": "Places financières d’Asie",
-    "enter": "Entrer",
-    "skip": "Continuer sans choisir"
-  },
   "Hero": {
     "eyebrow": "Studio d’architecture numérique — depuis 2026",
     "title1": "Des sites web de luxe,",

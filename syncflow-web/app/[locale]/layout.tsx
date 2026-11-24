@@ -105,7 +105,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <div id="site-root">
           {/* Only the plain strings the interactive widgets read are sent to the browser (no next-intl client runtime). */}
           {/* The briefing's strings (Briefing) travel to the browser only while the form is offered (lib/flags.ts); the widgets that read them are not on the page otherwise. */}
-          <ClientI18nProvider locale={locale} messages={pick(messages, ['Switcher', ...(BRIEFING_ENABLED ? (['Briefing'] as const) : []), 'Showcase', 'Closing', 'ErrorPage', 'Gate'])}>
+          <ClientI18nProvider locale={locale} messages={pick(messages, ['Switcher', ...(BRIEFING_ENABLED ? (['Briefing'] as const) : []), 'Showcase', 'Closing', 'ErrorPage'])}>
             <Header />
             {children}
             <Footer />

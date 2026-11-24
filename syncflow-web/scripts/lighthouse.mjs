@@ -71,9 +71,14 @@ let environment = null;
 for (const [n, run] of plan.entries()) {
   const name = `lh-${run.label}-${run.preset}-${run.path === '/' ? 'root' : run.path.replace(/\W+/g, '')}-${run.i}`;
   const file = join(outDir, `${name}.json`);
+  // The language a page is measured in is the language of its path, never the language the machine's Chrome happens to be installed in:
+  // since 24.11.2026 the root address answers in the browser's own language (proxy.ts, docs/adr/0038 §16), and a redirect would both
+  // cost the run a round trip and measure a different page than the one named in the table below.
+  const language = run.path.startsWith('/tr') ? 'tr-TR,tr;q=0.9' : 'en-US,en;q=0.9';
   const command = [
     'npx', '--yes', LIGHTHOUSE, `${run.base}${run.path}`, '--output=json', `--output-path="${file}"`, '--quiet',
     '--chrome-flags="--headless=new --no-sandbox"', '--only-categories=performance,accessibility,best-practices,seo',
+    `--extra-headers="{\\"Accept-Language\\":\\"${language}\\"}"`,
     ...(run.preset === 'desktop' ? ['--preset=desktop'] : []),
   ].join(' ');
   const result = spawnSync(command, { cwd: root, shell: true, encoding: 'utf8', env: { ...process.env, CHROME_PATH: chrome }, maxBuffer: 1 << 26 });

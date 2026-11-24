@@ -25,22 +25,6 @@
   "Header": {
     "cta": "Briefing starten"
   },
-  "Gate": {
-    "eyebrow": "Studio für digitale Architektur",
-    "title": "Wählen Sie Ihre Sprache.",
-    "lead": "Ihre Wahl bleibt in der Seitenadresse.",
-    "marketLabel": "Sprache und Region",
-    "languageLabel": "Sprache",
-    "us": "International",
-    "tr": "Türkei",
-    "me": "Naher Osten, Dubai",
-    "dach": "DACH und Schweiz",
-    "fr": "Monaco und Frankreich",
-    "wealth": "Private Wealth, global",
-    "asia": "Finanzplätze in Asien",
-    "enter": "Eintreten",
-    "skip": "Ohne Auswahl fortfahren"
-  },
   "Hero": {
     "eyebrow": "Studio für digitale Architektur — seit 2026",
     "title1": "Luxuriöse Websites,",

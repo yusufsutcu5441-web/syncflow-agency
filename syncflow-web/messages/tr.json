@@ -25,22 +25,6 @@
   "Header": {
     "cta": "Briefing Başlat"
   },
-  "Gate": {
-    "eyebrow": "Dijital mimari stüdyosu",
-    "title": "Dilinizi seçin.",
-    "lead": "Seçiminiz yalnızca sayfa adresinde saklanır.",
-    "marketLabel": "Dil ve bölge",
-    "languageLabel": "Dil",
-    "us": "Uluslararası",
-    "tr": "Türkiye",
-    "me": "Orta Doğu, Dubai",
-    "dach": "DACH ve İsviçre",
-    "fr": "Monako ve Fransa",
-    "wealth": "Küresel servet yönetimi",
-    "asia": "Asya finans merkezleri",
-    "enter": "Giriş",
-    "skip": "Seçmeden devam et"
-  },
   "Hero": {
     "eyebrow": "Dijital mimari stüdyosu — 2026’dan beri",
     "title1": "Hızı mühendislikle kurulmuş",

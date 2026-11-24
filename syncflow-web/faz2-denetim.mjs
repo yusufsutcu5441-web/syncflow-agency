@@ -689,39 +689,54 @@ ${core}`;
   }
 }
 
-/* ───────── 9) Giriş kapısı, Hero ve kimlik (docs/adr/0015): çerezsiz kapı, bot baypası, platin amblem ───────── */
-const G9 = "9. Giriş kapısı, Hero ve kimlik";
+/* ───────── 9) Kök adres, Hero ve kimlik (docs/adr/0015, 0038 §16): kapı yok, tarayıcı diline göre kök, platin amblem ───────── */
+const G9 = "9. Kök adres, Hero ve kimlik";
 {
-  const need = ["components/gate/EntryGate.tsx", "lib/market.ts", "lib/crawlers.ts", "lib/enhance/hero.ts", "lib/enhance/mask-frame.ts"];
+  const need = ["proxy.ts", "lib/market.ts", "lib/crawlers.ts", "lib/enhance/hero.ts", "lib/enhance/mask-frame.ts"];
   const lost = need.filter((f) => !exists(f));
-  if (lost.length) add(G9, "FAIL", `giriş kapısı/hero dosyası yok: ${lost.join(", ")}`);
+  if (lost.length) add(G9, "FAIL", `kök adres/hero dosyası yok: ${lost.join(", ")}`);
   else {
     const code = (f) => stripComments(read(f));
-    const gate = code("components/gate/EntryGate.tsx"), page = code("app/[locale]/page.tsx"), crawlers = code("lib/crawlers.ts"), schema = code("lib/schemas/briefing.ts");
+    const proxy = code("proxy.ts"), page = code("app/[locale]/page.tsx"), crawlers = code("lib/crawlers.ts"), schema = code("lib/schemas/briefing.ts");
     const css = stripComments(read("app/globals.css"));
     // 1) Seçim yalnızca adreste: çerez ve tarayıcı depolaması yok (CLAUDE.md "i18n ve pazar").
-    const storage = ["components/gate/EntryGate.tsx", "lib/market.ts", "lib/crawlers.ts"].filter((f) => /document\.cookie|localStorage|sessionStorage|indexedDB/.test(code(f)));
-    storage.length ? add(G9, "FAIL", `çerez/depolama kullanımı: ${storage.join(", ")} (seçim yalnızca adreste, ?m=)`) : add(G9, "PASS", "kapı ve pazar çerez ve tarayıcı depolaması kullanmıyor: seçim adreste (?m=)");
-    // 2) JS'siz çalışır: pazarlar gerçek bağlantı; sunucuda açık gelir.
-    /<a\b[^>]*href=\{marketHref\(/.test(gate) && /entered=\{market !== null \|\| crawler\}/.test(page) ? add(G9, "PASS", "pazar seçenekleri gerçek <a href> bağlantısı ve kapı sunucuda render ediliyor (JS'siz de geçilir)") : add(G9, "FAIL", "pazar seçenekleri gerçek bağlantı değil ya da kapı sunucudan gelmiyor");
-    // 3) Erişilebilirlik: dialog, aria-modal, Escape, arka plan inert.
-    /role="dialog"/.test(gate) && /aria-modal/.test(gate) && /'Escape'/.test(gate) && /setAttribute\('inert'/.test(gate) ? add(G9, "PASS", "kapı role=dialog, aria-modal, Escape ile kapanır, arka plan inert") : add(G9, "FAIL", "kapıda dialog/aria-modal/Escape/inert eksik (kapı tuzak olmamalı)");
-    // 4) Yalnızca yayındaki diller; pazar beyaz listeli.
-    /OPEN_LOCALES\.map/.test(gate) && !/routing\.locales\.map/.test(gate) ? add(G9, "PASS", "kapı yalnızca yayındaki dilleri sunuyor (i18n/launch.ts)") : add(G9, "FAIL", "kapı yayında olmayan dilleri listeleyebilir (OPEN_LOCALES kullanın)");
-    /parseMarket\(/.test(page) && /z\.enum\(MARKETS\)/.test(schema) ? add(G9, "PASS", "pazar beyaz listeli (sayfa parseMarket, başvuru şeması z.enum)") : add(G9, "FAIL", "pazar parametresi beyaz listeyle doğrulanmıyor");
-    // 5) Arama motoru botları kapıyı görmez; Lighthouse/PageSpeed bilerek listede yok.
-    /isCrawler\(/.test(page) && /googlebot/i.test(crawlers) && !/lighthouse|pagespeed/i.test(crawlers) ? add(G9, "PASS", "arama motoru ve önizleme botları kapıyı atlar (lib/crawlers.ts); Lighthouse ölçtüğü şeyi görür") : add(G9, "FAIL", "bot baypası yok ya da Lighthouse/PageSpeed bota sayılıyor");
-    // 6) Lenis kapı açıkken durur.
-    /gate:change/.test(code("lib/enhance/smooth-scroll.ts")) && /gate:change/.test(gate) ? add(G9, "PASS", "kapı açıkken Lenis durur (gate:change)") : add(G9, "FAIL", "kapı açıkken Lenis durmuyor (gate:change)");
+    const storage = ["proxy.ts", "lib/market.ts", "lib/crawlers.ts"].filter((f) => /document\.cookie|localStorage|sessionStorage|indexedDB/.test(code(f)));
+    storage.length ? add(G9, "FAIL", `çerez/depolama kullanımı: ${storage.join(", ")} (seçim yalnızca adreste)`) : add(G9, "PASS", "kök adres ve pazar çerez ve tarayıcı depolaması kullanmıyor: seçim adreste");
+    // 2) Dil kapısı kaldırıldı (ADR 0038 §16): bileşen, CSS, metin ve sayfa işaretlemesinde izi kalmamalı.
+    const gateTraces = [
+      exists("components/gate/EntryGate.tsx") ? "components/gate/EntryGate.tsx" : null,
+      /\.gate\b|gate-market|gate-lang|gate-title/.test(css) ? "app/globals.css" : null,
+      /EntryGate|parseMarket/.test(page) ? "app/[locale]/page.tsx" : null,
+      JSON.parse(read("messages/en.json")).Gate ? "messages/en.json" : null,
+      /'Gate'/.test(code("app/[locale]/layout.tsx")) ? "app/[locale]/layout.tsx" : null,
+    ].filter(Boolean);
+    gateTraces.length ? add(G9, "FAIL", `dil kapısından iz kalmış: ${gateTraces.join(", ")} (ADR 0038 §16)`) : add(G9, "PASS", "dil kapısı yok: bileşen, CSS kuralı, Gate metinleri ve sayfa işaretlemesi temiz (ADR 0038 §16)");
+    // 3) Kök adres tarayıcının dilinde yanıtlar; her yanıt dile göre değiştiğini söyler.
+    /pathname === '\/'/.test(proxy) && /accept-language/.test(proxy) && /OPEN_LOCALES\.find/.test(proxy) && /Vary/.test(proxy)
+      ? add(G9, "PASS", "kök adres Accept-Language'e göre yayındaki bir dile yönleniyor ve yanıt Vary: Accept-Language taşıyor (proxy.ts)")
+      : add(G9, "FAIL", "kök adreste dil müzakeresi ya da Vary başlığı yok (proxy.ts)");
+    // 4) Müzakerenin üç istisnası: bot, site içi gezinme, adreste zaten pazar olması.
+    /isCrawler\(request\.headers\.get\('user-agent'\)\)/.test(proxy) && /sec-fetch-site'\) === 'same-origin'/.test(proxy) && /searchParams\.has\(MARKET_PARAM\)/.test(proxy)
+      ? add(G9, "PASS", "yönlendirme botu, site içi gezinmeyi ve pazar taşıyan adresi atlıyor: kanonik /, x-default ve dil seçici bozulmuyor")
+      : add(G9, "FAIL", "yönlendirmenin bot / site içi / pazar istisnaları eksik (SEO ve dil seçici kırılır)");
+    // 5) Dil JS'siz de değiştirilebilir: footer her yayındaki dile düz bağlantı veriyor.
+    /OPEN_LOCALES\.map/.test(code("components/layout/Footer.tsx")) && /hrefLang=\{LOCALE_LABELS\[code\]\.hreflang\}/.test(code("components/layout/Footer.tsx"))
+      ? add(G9, "PASS", "footer her yayındaki dile hreflang'li düz bağlantı veriyor (kapı gittikten sonra JS'siz dil değişimi)")
+      : add(G9, "FAIL", "footer dil bağlantıları eksik: JS'siz ziyaretçi dilini değiştiremez");
+    // 6) Pazar beyaz listeli, yalnızca yayındaki diller.
+    /parseMarket\(/.test(code("components/layout/LanguageSwitcher.tsx")) && /z\.enum\(MARKETS\)/.test(schema) ? add(G9, "PASS", "pazar beyaz listeli (parseMarket, başvuru şeması z.enum)") : add(G9, "FAIL", "pazar parametresi beyaz listeyle doğrulanmıyor");
+    /googlebot/i.test(crawlers) && !/lighthouse|pagespeed/i.test(crawlers) ? add(G9, "PASS", "bot listesi arama motorlarını tanıyor; Lighthouse bilerek listede değil (ölçtüğü şeyi görür)") : add(G9, "FAIL", "bot listesi eksik ya da Lighthouse/PageSpeed bota sayılıyor");
     // 7) Logo saf platin: şampanya, parlama ya da gölge yok (brand/README.md).
-    const logoRule = /\.(?:gate-emblem|hero-monogram|gate-wordmark|hero-wordmark|logo)\b[^{}]*\{[^{}]*(?:champagne|212\s+197\s+169|#d4c5a9|box-shadow|drop-shadow|gradient)[^{}]*\}/i.test(css);
+    const logoRule = /\.(?:hero-monogram|hero-wordmark|logo)\b[^{}]*\{[^{}]*(?:champagne|212\s+197\s+169|#d4c5a9|box-shadow|drop-shadow|gradient)[^{}]*\}/i.test(css);
     const logoJsx = [...walk(abs("components"), [".tsx"]), ...walk(abs("app"), [".tsx"])].filter((f) => /<Logo\b[^>]*champagne/.test(fs.readFileSync(f, "utf8"))).map(rel);
     logoRule || logoJsx.length ? add(G9, "FAIL", `logoya şampanya/parlama/gölge/gradyan verilmiş: ${logoJsx.join(", ") || "globals.css"}`) : add(G9, "PASS", "amblem ve wordmark yalnızca platin: logoda şampanya, parlama, gölge, gradyan yok");
     // 8) Hero: sabit sahne yalnızca yetenekli masaüstünde; maske çerçevesi JS'siz açık.
     /@media \(min-width: 64rem\)[^{]*\(hover: hover\)[^{]*\(prefers-reduced-motion: no-preference\)\s*\{[^@]*\.hero-stage\s*\{[^}]*sticky/.test(css) ? add(G9, "PASS", "hero sahnesi yalnızca ince işaretçili, yeterince uzun, hareket azaltmasız masaüstünde sabit") : add(G9, "FAIL", "hero sticky kuralı yetenek koşullarına bağlı değil");
     /var\(--mf,\s*1\)/.test(css) && /prefers-reduced-motion/.test(code("lib/enhance/mask-frame.ts")) ? add(G9, "PASS", "maske çerçeveleri JS'siz ve azaltılmış harekette açık (var(--mf, 1))") : add(G9, "FAIL", "maske çerçevesi JS'siz gizli kalabilir ya da azaltılmış hareketi saymıyor");
-    // 9) Kapı açıkken sayfa kilitli, hero girişi bekler.
-    /html:has\(\.gate\[data-state='open'\]\)/.test(css) && /animation-play-state:\s*paused/.test(css) ? add(G9, "PASS", "kapı açıkken sayfa kilitli ve hero girişi bekliyor (CSS :has)") : add(G9, "FAIL", "kapı açıkken kaydırma kilidi ya da hero bekletmesi yok");
+    // 9) Hero amblemi ilk karede başlar: bekletecek bir kapı yok (ekran dışı duran animasyonlar hariç, onlar ui-state.ts'in işi).
+    /@keyframes emblem-in/.test(css) && !/(?:html|:root)[^{]*animation-play-state:\s*paused/.test(css) && !/\.hero-monogram\s*\{[^}]*animation-play-state:\s*paused/.test(css)
+      ? add(G9, "PASS", "hero girişi ilk karede başlıyor: önünde bekletilecek katman yok (ADR 0038 §16)")
+      : add(G9, "FAIL", "hero girişi hâlâ bir katmanı bekliyor (animation-play-state: paused)");
     // 10) Film yedeği: motor çekilirse posterler yüklenir (ADR 0014 boşluğu).
     /CINEMA_OFF_EVENT/.test(code("lib/enhance/film.ts")) && /reportCinemaOff\(\)/.test(code("lib/cinema/engine.ts")) && /reportCinemaOff\(\)/.test(code("components/cinema/CinemaStage.tsx")) ? add(G9, "PASS", "motor başlamaz ya da kendini kapatırsa film posterlerini yükler (cinema:off)") : add(G9, "FAIL", "motor çekilince film posterleri yüklenmiyor (cinema:off bağlantısı eksik)");
   }
@@ -889,7 +904,7 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     const routing = read("i18n/routing.ts"), flagSrc = code("components/ui/Flag.tsx"), flagCss = read("app/flags.css");
     const flags = [...routing.matchAll(/flag:\s*'(\w+)'/g)].map((m) => m[1]);
     flags.length === 8 && ["us", "tr", "ae", "de", "fr", "es", "cn", "jp"].every((f) => flags.includes(f)) && ["us", "tr", "ae", "de", "fr", "es", "cn", "jp"].every((f) => flagCss.includes(`.flag[data-flag='${f}']`)) ? add(G11, "PASS", "her dilin bir bayrağı var (en us, tr tr, ar ae, de de, fr fr, es es, zh cn) ve hepsi app/flags.css'te çizili") : add(G11, "FAIL", "LOCALE_LABELS bayrakları ya da app/flags.css çizimleri eksik");
-    /Flag/.test(code("components/layout/LanguageSwitcher.tsx")) && /Flag/.test(code("components/gate/EntryGate.tsx")) && /Flag/.test(code("components/layout/Footer.tsx")) ? add(G11, "PASS", "dil seçici, giriş kapısı (pazar kartları ve dil çipleri) ve footer bayrakları kullanıyor") : add(G11, "FAIL", "bayraklar seçicide, kapıda ya da footer'da kullanılmıyor");
+    /Flag/.test(code("components/layout/LanguageSwitcher.tsx")) && /Flag/.test(code("components/layout/Footer.tsx")) ? add(G11, "PASS", "dil seçici ve footer dil listesi bayrakları kullanıyor") : add(G11, "FAIL", "bayraklar seçicide ya da footer'da kullanılmıyor");
     /#(?:fff(?:fff)?|000(?:000)?)\b|%23(?:fff(?:fff)?|000(?:000)?)\b|\b(?:white|black)\b/i.test(flagCss + code("scripts/build-flags.mjs")) ? add(G11, "FAIL", "bayraklar saf siyah ya da beyaz taşıyor (beyaz = platin, siyah = grafit)") : add(G11, "PASS", "bayraklar paletin içinde: beyaz yerine platin, siyah yerine grafit");
     // Bayrak bir CSS arka planıdır (ADR 0021 §3): bileşen tek, boş bir öğe çizer (satır içi SVG = bayrak başına 3-7 düğüm ve her yazı tipi değişiminde yeniden stil), üretici ile CSS aynıdır.
     /<svg|<path|<rect|<circle|<polygon/.test(flagSrc) || !/data-flag=\{code\}/.test(flagSrc) ? add(G11, "FAIL", "Flag.tsx tek bir boş öğe çizmeli (data-flag); satır içi SVG DOM'u şişirir") : add(G11, "PASS", "Flag.tsx tek bir boş öğe çizer, resim app/flags.css'te (satır içi SVG yok)");
@@ -947,16 +962,16 @@ const G12 = "12. Üretim performansı ve kurumsal kanıt";
     missing.length === 0 && !/className="[^"]*\bcv\b/.test(read("components/sections/Hero.tsx")) && !/className="[^"]*\bcv\b/.test(read("components/sections/Film.tsx"))
       ? add(G12, "PASS", "altı blok (Architecture, Showcase, Studio, Briefing, Closing, footer) cv sınıfını taşır; hero ve film (betikle ölçülen yapışkan sahneler) taşımaz")
       : add(G12, "FAIL", `cv sınıfı eksik: ${missing.join(", ") || "-"}, ya da hero/film cv taşıyor`);
-    const users = ["lib/enhance/smooth-scroll.ts", "components/sections/BreakdownDialog.tsx", "components/gate/EntryGate.tsx", "lib/enhance/content-visibility.ts", "components/sections/AnchorPrime.tsx"].filter((f) => !/holdLayoutBefore/.test(code(f)));
-    users.length === 0 ? add(G12, "PASS", "her kaydırma yolu (Lenis, yerel çapa, diyalog bağlantısı, kapının hash kaydırması, yumuşak gezinti) hedefin üstündeki bölümleri önce gerçek hale getirir (lib/cv.ts)") : add(G12, "FAIL", `holdLayoutBefore kullanmayan kaydırma yolu: ${users.join(", ")}`);
+    const users = ["lib/enhance/smooth-scroll.ts", "components/sections/BreakdownDialog.tsx", "lib/enhance/content-visibility.ts", "components/sections/AnchorPrime.tsx"].filter((f) => !/holdLayoutBefore/.test(code(f)));
+    users.length === 0 ? add(G12, "PASS", "her kaydırma yolu (Lenis, yerel çapa, diyalog bağlantısı, yumuşak gezinti) hedefin üstündeki bölümleri önce gerçek hale getirir (lib/cv.ts)") : add(G12, "FAIL", `holdLayoutBefore kullanmayan kaydırma yolu: ${users.join(", ")}`);
     // Suspense bölümleri akıtır ve gizli bloğa koyar: JS'siz ve tarayıcı olmayan okuyucu için içerik görünmez olur (ADR 0021 §7)
     !/Suspense/.test(code("app/[locale]/page.tsx")) ? add(G12, "PASS", "ana sayfa bölümleri Suspense ile sarılmaz: sayfa ilk yanıtta eksiksizdir (Suspense bölümleri gizli bloğa akıtıyordu)") : add(G12, "FAIL", "ana sayfada Suspense var: bölümler script ile açılan gizli bloklara akar");
 
-    // 2) ilk ekran: kapı başlığı ve lead kayar (opaklık yok), eklentiler dört görevde başlar, halkalar gözlemciyle kurulur
-    const gate = read("components/gate/EntryGate.tsx");
-    /className="gate-title gate-slide"/.test(gate) && /className="lead gate-slide"/.test(gate) && !/@keyframes gate-slide\s*\{[^}]*opacity/.test(css)
-      ? add(G12, "PASS", "kapı başlığı ve lead ilk karede görünür (gate-slide yalnızca kayar, opaklık ya da gecikme yok): ölçülen LCP ilk karedir")
-      : add(G12, "FAIL", "kapı başlığı/lead hâlâ solma ile geliyor ya da gate-slide opaklık içeriyor");
+    // 2) ilk ekran: hero başlığı maskelerinden ilk karede yükselir (ADR 0038 §16: önünde kapı yok), eklentiler dört görevde başlar, halkalar gözlemciyle kurulur
+    const hero = read("components/sections/Hero.tsx");
+    /data-mask="load"/.test(hero) && /\[data-mask='load'\]/.test(css) && !/\.gate/.test(css)
+      ? add(G12, "PASS", "hero başlığı ilk karede maskelerinden yükselir (CSS, data-mask=\"load\"); önünde bekleyecek bir kapı yok: ölçülen LCP ilk karedir")
+      : add(G12, "FAIL", "hero başlığı ilk karede gelmiyor ya da önünde hâlâ bir kapı katmanı var");
     const idx = code("lib/enhance/index.ts");
     /GROUPS/.test(idx) && /yieldToMain/.test(idx) && /scheduler\??\.yield|scheduler/.test(idx) && /initContentVisibility/.test(idx)
       ? add(G12, "PASS", "eklentiler tek görevde değil dört yield'li görevde başlar (TBT bir görevi 50 ms üstünden sayar)")
@@ -1101,10 +1116,10 @@ const G13 = "13. Satışa hazır sürüm (ADR 0035)";
     /select-all/.test(code("components/sections/Hero.tsx")) && /select-all/.test(code("components/layout/Footer.tsx")) && /data\.cta\.email/.test(code("components/sections/BreakdownView.tsx")) && /email: HAS_CONTACT \? CONTACT_EMAIL : ''/.test(code("lib/server/cta.ts"))
       ? add(G13, "PASS", "adres, e-posta çağrılarının yanında düz metin olarak da görünür (hero, footer, vaka çağrısı; kapanış bölümünde zaten vardı)")
       : add(G13, "FAIL", "iletişim adresi hero, footer ya da vaka çağrısında düz metin olarak görünmüyor");
-    // 6) Fiyat bayrağı kapalıyken kapıdaki para birimi etiketi çizilmez; chip'ler (NDA, yanıt süresi) bölümde yok.
-    /SHOW_PRICING \? \(\s*<span className="gate-market-currency"/.test(code("components/gate/EntryGate.tsx")) && !/chipNda|chipPerson/.test(code("components/sections/BriefingSection.tsx"))
-      ? add(G13, "PASS", "kapıdaki para birimi etiketi fiyat bayrağına bağlı; NDA ve yanıt süresi çipleri sayfada çizilmez")
-      : add(G13, "FAIL", "kapıdaki para birimi etiketi fiyat bayrağına bağlı değil ya da NDA/yanıt süresi çipleri hâlâ çiziliyor");
+    // 6) Fiyatı olan her yer bayrağa bağlı: kapı gittiğinden beri tutarı yalnızca başvuru formu yazar ve form fiyat bayrağı olmadan açılmaz (lib/flags.ts); chip'ler (NDA, yanıt süresi) bölümde yok.
+    /BRIEFING_ENABLED = briefingRequested && SHOW_PRICING/.test(code("lib/flags.ts")) && /BRIEFING_ENABLED \? <BriefingSection \/> : null/.test(code("app/[locale]/page.tsx")) && !/chipNda|chipPerson/.test(code("components/sections/BriefingSection.tsx"))
+      ? add(G13, "PASS", "tutarı yazan tek yer (başvuru formu) fiyat bayrağına bağlı; NDA ve yanıt süresi çipleri sayfada çizilmez")
+      : add(G13, "FAIL", "tutar fiyat bayrağına bağlı değil ya da NDA/yanıt süresi çipleri hâlâ çiziliyor");
   }
 }
 

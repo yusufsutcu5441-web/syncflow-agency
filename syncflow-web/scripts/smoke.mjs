@@ -42,9 +42,8 @@ const BRIEFING_ON = flagOn(process.env.NEXT_PUBLIC_BRIEFING_ENABLED) && PRICING_
 // The enterprise layer (docs/adr/0038): ON (the FEATURE build) every earlier check below runs unchanged; OFF (the shipped site) the same places check the opposite.
 const ENTERPRISE_ON = flagOn(process.env.NEXT_PUBLIC_SHOW_ENTERPRISE);
 const CONTACT = (process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? '').trim();
-// The capital centre (market) each language suggests, and the market's own gate link (components/gate/EntryGate.tsx).
+// The capital centre (market) each language suggests (lib/market.ts).
 const MARKET_OF = { en: 'us', tr: 'tr', ar: 'me', de: 'dach', fr: 'fr', es: 'wealth', zh: 'asia' };
-const MARKET_LINK = { us: '/?m=us', tr: '/tr?m=tr', me: '/ar?m=me', dach: '/de?m=dach', fr: '/fr?m=fr', wealth: '/es?m=wealth', asia: '/zh?m=asia' };
 // <html lang>, hreflang and JSON-LD carry the BCP 47 tag of the language (Simplified Chinese is zh-Hans).
 const HTML_LANG = { zh: 'zh-Hans' };
 const TAGS = OPEN.map((l) => HTML_LANG[l] ?? l);
@@ -263,103 +262,123 @@ check('JSON-LD has no offer, price, ratings, reviews or address', !/makesOffer|"
 const siteLangs = graph.find((n) => n['@type'] === 'WebSite')?.inLanguage ?? [];
 check('JSON-LD lists only the public languages', JSON.stringify([...siteLangs].sort()) === JSON.stringify([...TAGS].sort()), siteLangs.join(','));
 
-/* ── 1b. Entry gate, market and crawlers (docs/adr/0015-entry-gate-and-hero.md) ───────────────── */
-section('Entry gate, market and crawlers (docs/adr/0015)');
+/* ── 1b. No language gate: the root address, the browser's language, the market and crawlers (docs/adr/0038 §16) ───────────────── */
+section('No language gate, the root address and the browser\'s language, the market, crawlers (docs/adr/0038 §16)');
 const UA = {
   googlebot: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
   bingbot: 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
   facebook: 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
-  // What Lighthouse and PageSpeed Insights send: they must get the gate, because they measure what a visitor gets.
+  // What Lighthouse and PageSpeed Insights send: they must get exactly what a visitor gets, because they measure it.
   lighthouse: 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36 Chrome-Lighthouse',
   browser: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36',
 };
-const hasGate = (page) => /class="gate"/.test(page);
-const pageAs = async (path, ua) => {
-  const res = await get(path, ua ? { headers: { 'user-agent': ua } } : {});
+// Nothing of the removed gate may be left in any page: its layer, its market cards, its language chips, its heading.
+const GATE_TRACES = [/class="gate"/, /gate-market/, /gate-lang/, /gate-title/, /gate-skip/, /role="dialog"[^>]*aria-modal/, /Choose your language/i, /Dilinizi se/i];
+const gateTrace = (page) => GATE_TRACES.filter((re) => re.test(page)).map(String).join(' ');
+const pageAs = async (path, ua, headers = {}) => {
+  const res = await get(path, { headers: { ...(ua ? { 'user-agent': ua } : {}), ...headers } });
   return { res, page: await res.text() };
 };
-
-const gateHome = await pageAs('/');
-check('GET / without a market: the gate is in the HTML, open', hasGate(gateHome.page) && /data-state="open"/.test(gateHome.page));
-const openMarkets = Object.entries(MARKET_OF).filter(([locale]) => OPEN.includes(locale)).map(([, market]) => market);
-const closedMarkets = Object.entries(MARKET_OF).filter(([locale]) => !OPEN.includes(locale)).map(([, market]) => market);
-check(`the public capital centres (${openMarkets.join(', ')}) are real links (the gate works without JavaScript), each to its own language, and no closed language has a card`, openMarkets.every((m) => gateHome.page.includes(`href="${MARKET_LINK[m]}"`) && new RegExp(`data-market="${m}"`).test(gateHome.page)) && closedMarkets.every((m) => !new RegExp(`data-market="${m}"`).test(gateHome.page)));
-check('each card is headed by its language in its own script and direction', [['en', 'English', 'ltr'], ['tr', 'Türkçe', 'ltr'], ['ar', 'العربية', 'rtl'], ['de', 'Deutsch', 'ltr'], ['fr', 'Français', 'ltr'], ['es', 'Español', 'ltr'], ['zh-Hans', '中文', 'ltr']].filter(([l]) => OPEN.includes(l === 'zh-Hans' ? 'zh' : l)).every(([l, name, dir]) => gateHome.page.includes(`class="gate-market-name" lang="${l}" dir="${dir}">${name}`)));
 // Text a visitor can read: no scripts (Next.js serialises its own data there), no styles, no tags.
 const visibleText = (markup) => markup.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ');
-if (PRICING_ON) {
-  check('each card names its currency (USD, EUR, AED, TRY)', ['USD', 'EUR', 'AED', 'TRY'].filter((c) => openMarkets.some((m) => ({ us: 'USD', tr: 'TRY', me: 'AED', dach: 'EUR', fr: 'EUR', wealth: 'USD', asia: 'USD' })[m] === c)).every((c) => gateHome.page.includes(c)));
-} else {
-  check('prices are hidden: no card names a currency', !/gate-market-currency/.test(gateHome.page) && !/>\s*(USD|EUR|AED|TRY)\s*</.test(gateHome.page));
+
+const rootPage = await pageAs('/');
+check('GET / is the page itself: no language gate in front of it, the headline is the first thing in the main content', rootPage.res.status === 200 && !gateTrace(rootPage.page) && rootPage.page.includes('Luxury websites,'), gateTrace(rootPage.page));
+check('/ sets no cookie and tells caches it varies by language', rootPage.res.headers.get('set-cookie') === null && /accept-language/i.test(rootPage.res.headers.get('vary') ?? ''), `vary ${rootPage.res.headers.get('vary')}`);
+// The language is reachable without JavaScript: the footer carries a plain link to every public translation (the header's menu is built on interest).
+const footerLangs = OPEN.filter((code) => new RegExp(`href="${code === 'en' ? '/' : `/${code}`}"[^>]*hreflang="${HTML_LANG[code] ?? code}"`).test(home.page));
+check(`the ${OPEN.length} public languages are plain links on the page (no script needed to change language)`, footerLangs.length === OPEN.length, `found ${footerLangs.join(',') || 'none'}`);
+for (const locale of OPEN) {
+  const other = await pageAs(locale === 'en' ? '/' : `/${locale}`);
+  check(`/${locale === 'en' ? '' : locale}: no trace of the gate here either`, !gateTrace(other.page), gateTrace(other.page));
 }
-if (BRIEFING_ON) {
-  check('the first step of the briefing names the minimum in dollars and offers the three bands above it (server-rendered, US default)', gateHome.page.includes('$50,000 – $100,000') && gateHome.page.includes('$100,000 – $250,000') && gateHome.page.includes('$250,000 +'));
-  check('the old $25,000 floor is gone: no $25,000 option and no $25,000 – $50,000 band anywhere in the page', !/\$25,000/.test(gateHome.page));
-  check('the three bands carry the enterprise descriptions (core architecture, enterprise infrastructure, custom ecosystems)', gateHome.page.includes('Core Architecture &amp; Workflow Automation') && gateHome.page.includes('Enterprise Infrastructure &amp; Multi-Region Ecosystem') && gateHome.page.includes('Custom Global Ecosystems'));
-  check('the first step has exactly three options, all at or above the minimum: there is no "below" choice', (gateHome.page.match(/name="budget"/g) ?? []).length === 3 && !/Below \$|below the minimum/i.test(gateHome.page), `${(gateHome.page.match(/name="budget"/g) ?? []).length} budget options`);
-  check('no old budget band (under $20k) is offered any more', !/\$5k|\$10k|\$20k|Let’s talk first|Let&#x27;s talk first/i.test(gateHome.page));
-} else {
-  // The raw HTML always carries "$" (React's flight data: $L1, $undefined); what a visitor reads must carry no amount, and the form's options must be absent.
-  const shown = visibleText(gateHome.page);
-  check('no price is shown: no currency sign or code next to a number in the text a visitor reads, and no budget option', !/[$€₺£]\s?\d|\d\s?[$€₺£]|\b\d[\d.,]*\s?(?:USD|EUR|AED|TRY)\b/.test(shown) && !/name="budget"/.test(gateHome.page) && !/₺/.test(gateHome.page), shown.match(/.{20}[$€₺£]\s?\d.{10}/)?.[0] ?? '');
+
+// The browser's language decides on "/" and nowhere else (proxy.ts). Every answer says it varies by language.
+const AL_TR = 'tr-TR,tr;q=0.9,en;q=0.8';
+const negotiated = await pageAs('/', UA.browser, { 'accept-language': AL_TR });
+check('GET / from a Turkish browser is sent to /tr (307), and the answer says it varies by language', negotiated.res.status === 307 && negotiated.res.headers.get('location')?.endsWith('/tr') && /accept-language/i.test(negotiated.res.headers.get('vary') ?? ''), `${negotiated.res.status} ${negotiated.res.headers.get('location')} vary ${negotiated.res.headers.get('vary')}`);
+const english = await pageAs('/', UA.browser, { 'accept-language': 'en-US,en;q=0.9' });
+check('GET / from an English browser is not redirected: "/" is the English page', english.res.status === 200 && english.page.includes('Luxury websites,'), `status ${english.res.status}`);
+const stranger = await pageAs('/', UA.browser, { 'accept-language': 'is-IS,is;q=0.9' });
+const strangerTarget = OPEN.includes('tr') ? '/tr' : null;
+check('GET / from a browser whose languages this site does not speak falls back to Turkish' + (strangerTarget ? '' : ' (Turkish is closed in this build: it stays)'), strangerTarget ? stranger.res.status === 307 && stranger.res.headers.get('location')?.endsWith(strangerTarget) : stranger.res.status === 200, `${stranger.res.status} ${stranger.res.headers.get('location')}`);
+const anything = await pageAs('/', UA.browser, { 'accept-language': '*' });
+check('GET / from a browser with no preference ("*") is not redirected', anything.res.status === 200, `status ${anything.res.status}`);
+const inside = await pageAs('/', UA.browser, { 'accept-language': AL_TR, 'sec-fetch-site': 'same-origin' });
+check('a click from inside the site is never redirected: the language switcher can send a Turkish browser to the English page', inside.res.status === 200 && inside.page.includes('Luxury websites,'), `status ${inside.res.status}`);
+const withMarket = await pageAs('/?m=us', UA.browser, { 'accept-language': AL_TR });
+check('an address that already carries a market ("/?m=us") is the visitor\'s own word: no redirect', withMarket.res.status === 200, `status ${withMarket.res.status}`);
+const keepsQuery = await pageAs('/?utm_source=smoke', UA.browser, { 'accept-language': AL_TR });
+check('the redirect keeps the rest of the address', keepsQuery.res.status === 307 && keepsQuery.res.headers.get('location')?.endsWith('/tr?utm_source=smoke'), `${keepsQuery.res.status} ${keepsQuery.res.headers.get('location')}`);
+const deeper = await pageAs('/privacy', UA.browser, { 'accept-language': AL_TR });
+check('only "/" negotiates: every deeper address answers in the language of its own path', deeper.res.status === 200, `status ${deeper.res.status}`);
+if (OPEN.includes('tr')) {
+  const trFromEnglish = await pageAs('/tr', UA.browser, { 'accept-language': 'en-US,en;q=0.9' });
+  check('/tr from an English browser stays Turkish (the path wins)', trFromEnglish.res.status === 200 && /<html[^>]*\blang="tr"/.test(trFromEnglish.page), `status ${trFromEnglish.res.status}`);
 }
-check('the gate is a dialog with a heading, and the page behind it is still in the HTML', /role="dialog"/.test(gateHome.page) && /aria-modal="true"/.test(gateHome.page) && /id="gate-title"/.test(gateHome.page) && gateHome.page.includes('Luxury websites,'));
-check('the gate offers only the public languages', (gateHome.page.match(/class="gate-lang"/g) ?? []).length === OPEN.length, `${(gateHome.page.match(/class="gate-lang"/g) ?? []).length} chips, ${OPEN.length} public languages`);
-check('the gate sets no cookie (the choice lives in the address only)', gateHome.res.headers.get('set-cookie') === null);
+for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
+  const bot = await pageAs('/', ua, { 'accept-language': AL_TR });
+  check(`${name} is never redirected by its language: "/" stays the English page for the index and x-default`, bot.res.status === 200 && bot.page.includes('Luxury websites,') && /<html[^>]*\blang="en"/.test(bot.page), `status ${bot.res.status} -> ${bot.res.headers.get('location') ?? ''}`);
+}
+for (const [name, ua] of [['Lighthouse / PageSpeed', UA.lighthouse], ['an ordinary browser', UA.browser]]) {
+  const visitor = await pageAs('/', ua);
+  check(`${name} gets the same page as everyone else (no gate, no cloaking)`, visitor.res.status === 200 && !gateTrace(visitor.page) && visitor.page.includes('Luxury websites,'), gateTrace(visitor.page));
+}
+
+// The market still lives in the address for the parts that price something (lib/market.ts); it no longer opens or closes anything.
 for (const path of ['/?m=us', '/tr?m=tr', '/ar?m=me', '/de?m=dach', '/fr?m=fr', '/es?m=wealth', '/zh?m=asia', '/?m=int', '/?m=eu', '/de?m=fr']) {
   const prefix = path.startsWith('/?') ? 'en' : path.slice(1).split('?')[0];
   const passed = await pageAs(path);
-  if (OPEN.includes(prefix)) check(`${path}: a valid market in the address means the gate is passed (no gate in the HTML)`, passed.res.status === 200 && !hasGate(passed.page));
+  if (OPEN.includes(prefix)) check(`${path}: a market in the address is read and the page is the page`, passed.res.status === 200 && !gateTrace(passed.page), `status ${passed.res.status} ${gateTrace(passed.page)}`);
   else check(`${path}: the language is not public, so the address is a 404 whatever the market says`, passed.res.status === 404, `status ${passed.res.status}`);
 }
 const unknown = await pageAs('/?m=ZZtopmarket');
 // Next.js serialises the request URL (query included) into its own router payload, JSON-escaped, inside <script> elements: that is not
-// markup. What must hold: the gate still shows, the value never reaches the document markup, and an HTML injection attempt is not reflected.
+// markup. What must hold: the page is served, the value never reaches the document markup, and an HTML injection attempt is not reflected.
 const markup = unknown.page.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
 const injected = await pageAs('/?m=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E');
-check('an unknown market is ignored (the gate shows) and never reaches the document markup', hasGate(unknown.page) && !markup.includes('ZZtopmarket') && !injected.page.includes('<img src=x onerror'));
-const trGate = await pageAs('/tr');
-check('/tr: the gate speaks Turkish', hasGate(trGate.page) && trGate.page.includes('Dilinizi seçin.'));
-if (BRIEFING_ON) check('/tr: the briefing names the minimum in lira and offers the lira bands', trGate.page.includes('₺2.475.000') && trGate.page.includes('₺4.950.000') && trGate.page.includes('₺12.375.000 +'));
-else check('/tr: prices are hidden, so there is no lira amount anywhere in the page', !trGate.page.includes('₺') && !/\d\s?TRY\b/.test(visibleText(trGate.page)));
-for (const [name, ua] of [['Googlebot', UA.googlebot], ['Bingbot', UA.bingbot], ['facebookexternalhit', UA.facebook]]) {
-  const bot = await pageAs('/', ua);
-  check(`${name} gets the page without the gate, with the same content (h1${BRIEFING_ON ? ', briefing section' : ''})`, bot.res.status === 200 && !hasGate(bot.page) && bot.page.includes('Luxury websites,') && /<section[^>]*id="briefing"/.test(bot.page) === BRIEFING_ON);
+check('an unknown market is ignored and never reaches the document markup', unknown.res.status === 200 && !markup.includes('ZZtopmarket') && !injected.page.includes('<img src=x onerror'));
+if (PRICING_ON) {
+  check('the home page names the currency of the market in the address (USD on /?m=us)', (await pageAs('/?m=us')).page.includes('USD') || /\$\d/.test(visibleText((await pageAs('/?m=us')).page)));
+} else {
+  const shown = visibleText(home.page);
+  check('no price is shown: no currency sign or code next to a number in the text a visitor reads, and no budget option', !/[$€₺£]\s?\d|\d\s?[$€₺£]|\b\d[\d.,]*\s?(?:USD|EUR|AED|TRY)\b/.test(shown) && !/name="budget"/.test(home.page) && !/₺/.test(home.page), shown.match(/.{20}[$€₺£]\s?\d.{10}/)?.[0] ?? '');
 }
-const botTr = await pageAs('/tr', UA.googlebot);
-check('Googlebot on /tr gets no gate either', botTr.res.status === 200 && !hasGate(botTr.page) && /<html[^>]*lang="tr"/.test(botTr.page));
-for (const [name, ua] of [['Lighthouse / PageSpeed', UA.lighthouse], ['an ordinary browser', UA.browser]]) {
-  const visitor = await pageAs('/', ua);
-  check(`${name} gets the gate (it must see what a visitor sees)`, hasGate(visitor.page));
+if (BRIEFING_ON) {
+  check('the first step of the briefing names the minimum in dollars and offers the three bands above it (server-rendered, US default)', home.page.includes('$50,000 – $100,000') && home.page.includes('$100,000 – $250,000') && home.page.includes('$250,000 +'));
+  check('the old $25,000 floor is gone: no $25,000 option and no $25,000 – $50,000 band anywhere in the page', !/\$25,000/.test(home.page));
+  check('the three bands carry the enterprise descriptions (core architecture, enterprise infrastructure, custom ecosystems)', home.page.includes('Core Architecture &amp; Workflow Automation') && home.page.includes('Enterprise Infrastructure &amp; Multi-Region Ecosystem') && home.page.includes('Custom Global Ecosystems'));
+  check('the first step has exactly three options, all at or above the minimum: there is no "below" choice', (home.page.match(/name="budget"/g) ?? []).length === 3 && !/Below \$|below the minimum/i.test(home.page), `${(home.page.match(/name="budget"/g) ?? []).length} budget options`);
+  check('no old budget band (under $20k) is offered any more', !/\$5k|\$10k|\$20k|Let’s talk first|Let&#x27;s talk first/i.test(home.page));
 }
 
 /* ── 1c. Seven capital centres (docs/adr/0018-seven-capital-centres.md) ───────────────────────── */
 section('Seven capital centres: each page speaks its language, names its currency (docs/adr/0018)');
 const normalise = (text) => text.replace(/[\s\u00a0\u202f]+/g, ' ');
 const CENTRES = [
-  // [language, path, gate title, the briefing's floor as that page formats it, a word of the briefing in that language]
-  // 23.11.2026 (docs/adr/0038 §11): the gate asks for a language, not a capital centre; the titles below are the new ones in all seven files.
-  ['en', '/', 'Choose your language.', '$50,000', 'Investment'],
-  ['tr', '/tr', 'Dilinizi seçin.', '₺2.475.000', 'Yatırım'],
-  ['ar', '/ar', 'اختر لغتك.', '184,000', 'الاستثمار'],
-  ['de', '/de', 'Wählen Sie Ihre Sprache.', '45.000 €', 'Investition'],
-  ['fr', '/fr', 'Choisissez votre langue.', '45 000 €', 'Investissement'],
-  ['es', '/es', 'Elija su idioma.', '$50,000', 'Inversión'],
-  ['zh', '/zh', '选择您的语言。', '$50,000', '投资'],
+  // [language, path, the first line of that language's headline, the briefing's floor as that page formats it, a word of the briefing in that language]
+  // 24.11.2026 (docs/adr/0038 §16): the gate that used to carry the per-language heading is gone, so each page is recognised by its own headline.
+  ['en', '/', 'Luxury websites,', '$50,000', 'Investment'],
+  ['tr', '/tr', 'Hızı mühendislikle kurulmuş', '₺2.475.000', 'Yatırım'],
+  ['ar', '/ar', 'مواقع فاخرة،', '184,000', 'الاستثمار'],
+  ['de', '/de', 'Luxuriöse Websites,', '45.000 €', 'Investition'],
+  ['fr', '/fr', 'Des sites web de luxe,', '45 000 €', 'Investissement'],
+  ['es', '/es', 'Sitios web de lujo,', '$50,000', 'Inversión'],
+  ['zh', '/zh', '奢华网站，', '$50,000', '投资'],
 ];
-for (const [code, path, title, floor, word] of CENTRES) {
+for (const [code, path, headline, floor, word] of CENTRES) {
   if (!OPEN.includes(code)) continue;
   const centre = await pageAs(path);
   const text = normalise(centre.page);
   check(
-    BRIEFING_ON ? `${path}: the gate speaks ${code}, and the briefing opens at ${floor} in the page's own number format` : `${path}: the gate speaks ${code}, and the minimum (${floor}) is not shown anywhere (prices are hidden)`,
-    centre.res.status === 200 && hasGate(centre.page) && centre.page.includes(title) && (BRIEFING_ON ? text.includes(floor) && centre.page.includes(word) : !text.includes(floor)),
+    BRIEFING_ON ? `${path}: the page speaks ${code}, and the briefing opens at ${floor} in the page's own number format` : `${path}: the page speaks ${code}, and the minimum (${floor}) is not shown anywhere (prices are hidden)`,
+    centre.res.status === 200 && centre.page.includes(headline) && (BRIEFING_ON ? text.includes(floor) && centre.page.includes(word) : !text.includes(floor)),
     `status ${centre.res.status}`,
   );
 }
 if (OPEN.includes('ar')) {
   const ar = await pageAs('/ar');
-  check('/ar is right-to-left, with the gate cards in the markup' + (BRIEFING_ON ? ' and the dirham figure (184,000 AED)' : ''), /<html[^>]*\bdir="rtl"/.test(ar.page) && (!BRIEFING_ON || normalise(ar.page).includes('184,000 AED')) && ar.page.includes('data-market="me"'));
+  check('/ar is right-to-left' + (BRIEFING_ON ? ' and names the dirham figure (184,000 AED)' : ''), /<html[^>]*\bdir="rtl"/.test(ar.page) && (!BRIEFING_ON || normalise(ar.page).includes('184,000 AED')));
 }
 if (OPEN.includes('zh')) {
   const zh = await pageAs('/zh');
@@ -367,11 +386,14 @@ if (OPEN.includes('zh')) {
 }
 if (OPEN.includes('de')) {
   const crossed = await pageAs('/de?m=wealth');
-  check('the market and the language are independent: /de?m=wealth is German and the gate is passed', crossed.res.status === 200 && !hasGate(crossed.page) && /<html[^>]*\blang="de"/.test(crossed.page));
+  check('the market and the language are independent: /de?m=wealth is German', crossed.res.status === 200 && /<html[^>]*\blang="de"/.test(crossed.page));
 } else {
   const crossed = await pageAs('/tr?m=us');
-  check('the market and the language are independent: /tr?m=us is Turkish and the gate is passed', crossed.res.status === 200 && !hasGate(crossed.page) && /<html[^>]*\blang="tr"/.test(crossed.page));
+  check('the market and the language are independent: /tr?m=us is Turkish', crossed.res.status === 200 && /<html[^>]*\blang="tr"/.test(crossed.page));
 }
+const trHome = await pageAs('/tr');
+if (BRIEFING_ON) check('/tr: the briefing names the minimum in lira and offers the lira bands', trHome.page.includes('₺2.475.000') && trHome.page.includes('₺4.950.000') && trHome.page.includes('₺12.375.000 +'));
+else check('/tr: prices are hidden, so there is no lira amount anywhere in the page', !trHome.page.includes('₺') && !/\d\s?TRY\b/.test(visibleText(trHome.page)));
 
 
 /* ── 2. Locales ──────────────────────────────────────────────────────────────────────────────── */
@@ -734,7 +756,7 @@ if (BRIEFING_ON && mock && TURNSTILE_MODE !== 'unset') {
   const took = Date.now() - t0;
   check('a receiver that keeps failing: two attempts, the form hears 502, inside the 10 s budget', never.status === 502 && received.length === 2 && took < 10_000, `status ${never.status}, ${received.length} attempts, ${took} ms`);
 
-  // 5) The market chosen on the entry gate (docs/adr/0015) is an optional tag: whitelisted, delivered when present, absent otherwise.
+  // 5) The market the address carries (lib/market.ts, "?m=") is an optional tag: whitelisted, delivered when present, absent otherwise.
   received.length = 0;
   const tagged = await post(valid({ market: 'tr' }));
   const taggedPayload = received[0] ? JSON.parse(received[0].body) : {};
@@ -1022,8 +1044,10 @@ section('Production performance and enterprise proof (docs/adr/0021)');
   check('every language: the header language menu is not in the server page (built on first interest) and its trigger points at nothing yet', bad.menu.length === 0, all(bad.menu));
   check('every language: the simulators reserve the room of their longest line with invisible alternatives hidden from assistive technology', bad.ghosts.length === 0, all(bad.ghosts));
 
-  const gate = (await pageAs('/')).page;
-  check('the entry gate headline and lead only slide (no delay, no fade): they are the largest text of the first screen', /class="gate-title gate-slide"/.test(gate) && /class="lead gate-slide"/.test(gate) && !/class="gate-title gate-rise"/.test(gate));
+  // 24.11.2026 (docs/adr/0038 §16): with the gate gone the hero's own headline is the largest text of the first screen, and it is
+  // in the first response, rising through its masks in CSS alone from the first paint (no script, no fade-in, nothing to wait for).
+  const first = (await pageAs('/')).page;
+  check('the headline is the largest text of the first screen and rises from the first paint (CSS masks, no script)', /id="hero-title"[^>]*data-mask="load"/.test(first) && /class="lead mt-9/.test(first) && !/data-mask="load"[^>]*style="[^"]*animation-delay/.test(first));
 
   const home = (await pageAs('/?m=us')).page;
   const href = (home.match(/<link rel="stylesheet" href="([^"]+\.css)"/) ?? [])[1];

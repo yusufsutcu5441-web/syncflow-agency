@@ -2,8 +2,9 @@
  * Release switches (docs/adr/0035-sales-ready-release.md, docs/adr/0038-studio-only-site.md). All are NEXT_PUBLIC_ variables, so they are inlined at build time:
  * change one on the host and redeploy. All default to OFF; only the exact values "true" and "1" turn a switch on.
  *
- *   NEXT_PUBLIC_SHOW_PRICING        the investment bands and the currency tags of the entry gate (lib/pricing.ts). Off: no amount
- *                                   and no currency anywhere on the site. lib/pricing.ts itself is untouched.
+ *   NEXT_PUBLIC_SHOW_PRICING        the investment bands of the briefing form (lib/pricing.ts). Off: no amount and no currency
+ *                                   anywhere on the site. lib/pricing.ts itself is untouched. (Until 24.11.2026 it also drew the
+ *                                   currency tag of the language gate, which no longer exists: docs/adr/0038 section 16.)
  *   NEXT_PUBLIC_BRIEFING_ENABLED    the Strategic Briefing form: its section on the home page, its links in the header, footer, sticky
  *                                   bar and showcase, and POST /api/briefing. Off: none of them exists and the API answers 404.
  *   NEXT_PUBLIC_SHOW_ENTERPRISE     the enterprise layer (18.11.2026 order: the site is a high-performance web design studio and nothing else): cards IV to VI of

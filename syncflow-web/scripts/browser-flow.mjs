@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: gate, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, studioonly, accname, privacy, framework, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: language, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, studioonly, poster, accname, privacy, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *   npm run qa:browser -- --throttle=4               every page runs its CPU 4x slower (QA_CPU_THROTTLE=4 does the same): a loaded machine, to show which checks depend on timing
@@ -87,6 +87,11 @@ const browser = await puppeteer.launch({ executablePath: chrome, headless: true,
 /** A page for one check; with --throttle=N its CPU runs N times slower, which is how a loaded machine looks to the page. */
 async function newPage() {
   const page = await browser.newPage();
+  // Since 24.11.2026 the root address answers in the browser's own language (proxy.ts, docs/adr/0038 §16). Every group below asks for a
+  // language by its path, so the browser's own preference is pinned to English here: otherwise a Chrome installed in another language
+  // would send "/" to its own translation and every check that reads English text would be measuring the wrong page. The negotiation
+  // itself is proven where it belongs, with explicit headers (scripts/smoke.mjs, scripts/live-check.mjs).
+  await page.setExtraHTTPHeaders({ 'accept-language': 'en-US,en;q=0.9' });
   if (THROTTLE > 1) await (await page.createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: THROTTLE });
   return page;
 }
@@ -146,28 +151,41 @@ const settle = async (page) => {
 const topOf = (page, selector) => page.evaluate((s) => Math.round(document.querySelector(s).getBoundingClientRect().top), selector);
 const SCROLL_PADDING = 88; // html { scroll-padding-top } in app/globals.css
 
-// ── gate, flags, the language menu ──────────────────────────────────────────────────────────────────────────────────────────────
-if (want('gate')) {
-  group('The gate, the flags and the language menu');
+// ── no language gate, the flags and the language menu (docs/adr/0038 §16) ───────────────────────────────────────────────────────
+// 24.11.2026: the full-screen layer that asked for a language and a market is gone. The first screen is the hero, the language lives
+// in the address, and the one control that changes it is the pill in the header (with plain links in the footer for a visitor
+// without JavaScript). These checks hold exactly that in a real browser.
+if (want('language')) {
+  group('No language gate in front of the page; the flags and the header language menu (docs/adr/0038 §16)');
   const { page, errors } = await open('/');
-  await page.waitForSelector('.gate[data-ready]', { timeout: 15000 });
-  const gate = await page.evaluate(() => ({
-    cards: document.querySelectorAll('.gate-market .flag[data-flag]').length,
-    chips: document.querySelectorAll('.gate-lang .flag[data-flag]').length,
-    codes: [...document.querySelectorAll('.gate-market .flag[data-flag]')].map((s) => s.dataset.flag).join(','),
-    flagsAreSvg: document.querySelectorAll('svg[data-flag]').length,
-    emoji: /[\u{1F1E6}-\u{1F1FF}]/u.test(document.body.innerText),
-  }));
-  check('seven market cards and seven language chips carry a flag, in order, none is an inline SVG or an emoji', gate.cards === 7 && gate.chips === 7 && gate.codes === 'us,tr,ae,de,fr,es,cn' && gate.flagsAreSvg === 0 && !gate.emoji, JSON.stringify(gate));
-  const slide = await page.evaluate(() => ({ title: document.querySelector('#gate-title')?.classList.contains('gate-slide'), lead: document.querySelector('.gate-body .lead')?.classList.contains('gate-slide'), leadOpacity: getComputedStyle(document.querySelector('.gate-body .lead')).opacity }));
-  check('the gate headline and lead are visible from the first frame (they slide, they do not fade in)', slide.title && slide.lead && slide.leadOpacity === '1', JSON.stringify(slide));
-  await page.keyboard.press('Escape');
-  await sleep(1500);
+  const first = await page.evaluate(() => {
+    const hero = document.querySelector('#hero-title');
+    const box = hero?.getBoundingClientRect();
+    return {
+      gate: document.querySelectorAll('.gate, [class*="gate-market"], [class*="gate-lang"], #gate-title').length,
+      modal: document.querySelectorAll('[role="dialog"][aria-modal="true"]').length,
+      inert: document.querySelectorAll('#main[inert], #site-root > [inert]').length,
+      heroOnScreen: Boolean(box && box.top < window.innerHeight && box.bottom > 0 && box.width > 0),
+      heroText: (hero?.innerText ?? '').replace(/\s+/g, ' ').trim().slice(0, 40),
+      scrollLocked: getComputedStyle(document.documentElement).overflow === 'hidden',
+      flagsAreSvg: document.querySelectorAll('svg[data-flag]').length,
+      emoji: /[\u{1F1E6}-\u{1F1FF}]/u.test(document.body.innerText),
+    };
+  });
+  check('nothing stands in front of the page: no gate layer, no modal dialog, nothing inert, the page scrolls', first.gate === 0 && first.modal === 0 && first.inert === 0 && !first.scrollLocked, JSON.stringify(first));
+  check('the first screen is the hero itself, with its headline on it', first.heroOnScreen && first.heroText.length > 3, JSON.stringify({ on: first.heroOnScreen, text: first.heroText }));
+  check('no flag is an inline SVG or an emoji anywhere on the page', first.flagsAreSvg === 0 && !first.emoji, JSON.stringify({ svg: first.flagsAreSvg, emoji: first.emoji }));
+  // A visitor without JavaScript must still be able to change language: the footer carries one plain link per public language.
+  const footer = await page.evaluate((langs) => {
+    const hrefs = [...document.querySelectorAll('footer a[hreflang]')].map((a) => `${new URL(a.href).pathname}|${a.getAttribute('hreflang')}`);
+    return { hrefs, missing: langs.filter((code) => !hrefs.some((h) => h.startsWith(`${code === 'en' ? '/' : `/${code}`}|`))) };
+  }, PUBLIC_LANGS);
+  check(`the footer links every public language as a plain link (${PUBLIC_LANGS.length}: no script needed to change language)`, footer.missing.length === 0 && footer.hrefs.length === PUBLIC_LANGS.length, JSON.stringify(footer).slice(0, 220));
   const before = await page.evaluate(() => document.querySelectorAll('.lang-menu').length);
   await page.hover('.lang-trigger');
   await sleep(300);
   const built = await page.evaluate(() => document.querySelectorAll('.lang-menu .lang-item .flag[data-flag]').length);
-  check('the header language menu is not in the page until the visitor shows interest, then it lists seven flags', before === 0 && built === 7, `before ${before}, after ${built}`);
+  check(`the header language menu is not in the page until the visitor shows interest, then it lists ${PUBLIC_LANGS.length} flags`, before === 0 && built === PUBLIC_LANGS.length, `before ${before}, after ${built}`);
   await page.click('.lang-trigger');
   await sleep(500);
   const open_ = await page.evaluate(() => ({ expanded: document.querySelector('.lang-trigger')?.getAttribute('aria-expanded'), controls: document.querySelector('.lang-trigger')?.getAttribute('aria-controls') === document.querySelector('.lang-menu')?.id, current: document.querySelector('.lang-trigger .flag')?.dataset.flag }));
@@ -476,7 +494,7 @@ if (want('type')) {
     const vw = innerWidth;
     const hero = document.querySelector('.text-hero');
     const lh = hero ? parseFloat(getComputedStyle(hero).lineHeight) : 0;
-    const wide = [...document.querySelectorAll('h1,h2,.text-hero,.text-headline,.gate-title,.chapter-line,.how-title,.bd-title')].filter((el) => {
+    const wide = [...document.querySelectorAll('h1,h2,.text-hero,.text-headline,.chapter-line,.how-title,.bd-title')].filter((el) => {
       const b = el.getBoundingClientRect();
       return b.width > 0 && (b.right > vw + 1 || b.left < -1 || el.scrollWidth > el.clientWidth + 1);
     }).map((el) => (el.textContent || '').trim().slice(0, 30));
@@ -979,11 +997,14 @@ if (want('framework')) {
     return { page, errors };
   };
 
-  // 1. The normal path: nothing before the first contentful paint, everything right after, and the gate (a client component) wakes up.
+  // 1. The normal path: nothing before the first contentful paint, everything right after, and the page wakes up. The proof of waking
+  // is the header's language menu: it is NOT in the server HTML (it is built the first time a visitor shows interest), so it can only
+  // appear once the client components are running.
   {
     const { page, errors } = await fresh(false);
     await page.goto(`${BASE}/`, { waitUntil: 'load', timeout: 60000 });
-    const awake = await page.waitForSelector('.gate[data-ready]', { timeout: 15000 }).then(() => true, () => false);
+    await page.hover('.lang-trigger').catch(() => undefined);
+    const awake = await page.waitForSelector('.lang-menu .lang-item', { timeout: 15000 }).then(() => true, () => false);
     const timing = await page.evaluate(() => {
       const fcp = performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? -1;
       const scripts = performance
@@ -993,7 +1014,7 @@ if (want('framework')) {
       return { fcp, count: scripts.length, earliest: scripts.length ? Math.min(...scripts) : -1 };
     });
     check(`no framework script is requested before the first contentful paint (paint at ${timing.fcp.toFixed(0)} ms, first request at ${timing.earliest.toFixed(0)} ms)`, timing.fcp > 0 && timing.count >= 8 && timing.earliest >= timing.fcp - 1, JSON.stringify(timing));
-    check('and the page wakes up: the entry gate (a client component) is hydrated and ready', awake);
+    check('and the page wakes up: the header language menu (a client component) builds itself on the first hover', awake);
     check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
     await page.close();
   }
@@ -1129,8 +1150,7 @@ if (want('accname')) {
   for (const lang of publicLangs(['en', 'tr', 'de', 'fr', 'es', 'ar', 'zh'])) {
     const page = await axBrowser.newPage();
     await page.setViewport(DESKTOP);
-    // The market is in the address, so the entry gate is not open: while it is, the rest of the page is inert and out of the accessibility
-    // tree on purpose (docs/adr/0015), and nothing here could be read.
+    await page.setExtraHTTPHeaders({ 'accept-language': 'en-US,en;q=0.9' });
     await page.goto(url(lang), { waitUntil: 'networkidle2', timeout: 60000 });
     await sleep(900);
     const client = await page.createCDPSession();

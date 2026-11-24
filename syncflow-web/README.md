@@ -64,7 +64,8 @@ Ortam değişkenleri `.env.example` içinde açıklıdır. Yerelde hiçbiri zoru
 
 ```
 app/
-  [locale]/layout.tsx      <html lang dir>, metadata (hreflang yalnızca yayındaki dillere), CSP nonce, dil kapısı (kapalı dil 404)
+  [locale]/layout.tsx      <html lang dir>, metadata (hreflang yalnızca yayındaki dillere), CSP nonce, kapalı dil 404
+proxy.ts                   oran sınırı, CSP nonce, kök adreste Accept-Language müzakeresi (ADR 0038 §16), next-intl yönlendirmesi
   [locale]/page.tsx        ana sayfa: Hero · Film · Architecture · Showcase · Studio · BriefingSection · Closing
   [locale]/showcase/[slug] Mimari İnceleme sayfası (ADR 0020: dört sektör × yedi dil, indekslenir); /showcase bölüme yönlendirir
   [locale]/privacy|imprint yasal sayfa taslakları (noindex; EN/TR dışında İngilizce metin + uyarı)
@@ -77,13 +78,12 @@ app/
 components/
   layout/    Header · Footer · StickyCta · LanguageSwitcher(client; sahneli dil geçişi)
   cinema/    CinemaStage(client): yetenek kapısından sonra WebGL2 motorunu yükler, CSS yedeğini çizer
-  gate/      EntryGate(client): tam ekran pazar ve dil kapısı (sunucuda açık, gerçek bağlantılarla; çerezsiz, ?m=)
   sections/  Hero · Film · Architecture · Showcase + ShowcaseStrip(client) · Studio · BriefingDrawing (Çizim 01, ADR 0028) · specimens/ (Ar-Ge numuneleri, ADR 0032, BreakdownView ile) · BreakdownView (sayfa ve diyalog aynı bileşen) + BreakdownDialog + BreakdownHost(client) · BriefingSection + Briefing(client) · Closing + CopyEmail(client) · LegalPage
   sim/       QueueView · SecurityView · IntegrationView (saf görünüm, sunucuda boşta çizilir) · FailSafeSim · SecurityFlowSim · IntegrationSim (client, tembel parça; kripto ve eşleme `lib/arch/` modüllerini çağırır) · Reserve (boştaki ve canlı sürüm aynı boyda) · LazySims · types
   media/     SceneVideo(client): poster + önceden hazırlanmış video (dosya adı lib/clips.ts'ten), ekran dışında durur
   i18n/      ClientI18n (tarayıcıya giden minik bağlam)    ui/  Logo (B1/v2, çizili SVG), MaskText/MaskLines, SectionHead, Flag (tek boş öğe, resim `app/flags.css`'te)
 lib/
-  market.ts        pazar (us, eu, me, tr): beyaz listeli ?m= parametresi, önerilen dil, tab belleği   crawlers.ts  kapıyı atlayan arama motoru ve önizleme botları (ADR 0015)
+  market.ts        pazar (us, eu, me, tr): beyaz listeli ?m= parametresi, önerilen dil, tab belleği   crawlers.ts  kök adreste dile göre yönlendirilmeyen arama motoru ve önizleme botları (ADR 0015, 0038 §16)
   pricing.ts       asgari tutar ve basamaklar, pazar başına para birimi (USD 50.000 ve kur karşılıkları), Intl biçimi: fiyatın TEK kaynağı (ADR 0016)
   briefing.ts      seçenekler, sınırlar, zod'suz tarayıcı doğrulayıcı, sınıflandırma (tarayıcı + sunucu)
   metrics.ts       sitede yayınlanan TÜM performans sayıları (değer, tarih, profil, kaynak)
@@ -184,10 +184,11 @@ Atmosfer katmanıdır; içerik ve erişilebilirlik onsuz da eksiksizdir.
 - **Kalite bütçesi:** ortam durumunda 30 kare/sn, sekme gizliyken durur, yavaş karede çözünürlük %80'e iner, yetmezse motor kendini kapatır; kapanırsa (ya da hiç başlayamazsa) film posterleri yüklenir.
 - **Metin kontrastı:** son geçiş parlaklığı sol (metin) sütunda 0,17 ile sınırlar. Ölçüm ve sınırları [docs/perf/cinema.md §5](docs/perf/cinema.md).
 
-### Giriş kapısı, pazarlar, Hero ve kimlik ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md), [0016](docs/adr/0016-qualification-and-markets.md))
+### Kök adres, pazarlar, Hero ve kimlik ([ADR 0015](docs/adr/0015-entry-gate-and-hero.md), [0016](docs/adr/0016-qualification-and-markets.md), [0038 §16](docs/adr/0038-studio-only-site.md))
 
-- **Kapı:** adreste geçerli `?m=us|eu|me|tr` yoksa tam ekran bir kapı pazar ve dil sorar; sunucuda açık gelir ve pazar seçenekleri düz `<a href>`'tir, yani JS olmadan da geçilir. Seçim yalnızca adreste durur (`/tr?m=tr`): **çerez, `localStorage` ve `sessionStorage` yok**. Esc ya da "seçmeden devam et" kapatır; arka plan `inert`, kaydırma kilitli, Lenis durur. Arama motoru ve önizleme botları kapıyı görmez ([lib/crawlers.ts](lib/crawlers.ts); Lighthouse bilerek listede yok).
-- **Pazar** dilden ayrıdır (ABD, Avrupa, Orta Doğu, Türkiye; dil yalnızca EN ve TR): önerilen dili, **briefing'in para birimini ve asgari tutarını** ([ADR 0016](docs/adr/0016-qualification-and-markets.md)) belirler ve başvuruya `market` etiketi ekler ([docs/n8n-briefing.md](docs/n8n-briefing.md)). Hukuki metin ve vitrin pazara bağlı değildir (açık karar; hukuki sayfalar yer tutuculu).
+- **Dil kapısı yok** (24.11.2026): ana sayfanın önünde katman yoktur, ilk ekran hero'dur. Dil adreste durur, header'daki pilde değişir ve footer her yayındaki dile `hreflang`'li düz bağlantı verir (JS'siz de değişir). **Çerez, `localStorage` ve `sessionStorage` yok.**
+- **Kök adres** ([proxy.ts](proxy.ts)): yalnızca `/`, tarayıcının `Accept-Language` başlığına göre yayındaki bir dile 307 ile yönlenir ve yanıt `Vary: Accept-Language, Sec-Fetch-Site` taşır. Botlar ([lib/crawlers.ts](lib/crawlers.ts); Lighthouse bilerek listede yok), site içi gezinmeler (`Sec-Fetch-Site: same-origin`) ve pazar taşıyan adresler (`/?m=tr`) yönlenmez; sitenin konuşmadığı bir dil Türkçeye düşer.
+- **Pazar** dilden ayrıdır: **briefing'in para birimini ve asgari tutarını** ([ADR 0016](docs/adr/0016-qualification-and-markets.md)) belirler ve başvuruya `market` etiketi ekler ([docs/n8n-briefing.md](docs/n8n-briefing.md)). Adreste `?m=` ile gelir; onu seçen bir ekran yoktur (kapı kaldırıldı), gelmezse sayfanın dili kendi pazarını belirler. Hukuki metin ve vitrin pazara bağlı değildir (açık karar; hukuki sayfalar yer tutuculu).
 - **Atmosfer** ([ADR 0017](docs/adr/0017-atmosphere.md)): sinema katmanına platin/şampanya ışık kaskadları, iki katmanlı derinlik ve bokeh eklendi, hareket yaklaşık üçte bir hıza indi; kartlar ve briefing paneli ekrana girerken maske ile açılır. Prosedürel bir atmosferdir, fotogerçekçi görüntü değildir.
 - **Hero:** yetenekli masaüstünde 160 svh'lik sabit sahne; kaydırma `--hp` ile amblemi derinleştirir ve metni eritir. Telefonda, JS yokken ve azaltılmış harekette düz tek ekran.
 - **Kimlik:** B1 amblem ve wordmark yalnızca platin (şampanya, parlama, gölge, gradyan yok). Kapıda devasa tam platin amblem, hero'da %11–20 platin amblem, ikisinde %6 wordmark.

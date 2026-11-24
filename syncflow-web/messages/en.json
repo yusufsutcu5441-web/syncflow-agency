@@ -25,22 +25,6 @@
   "Header": {
     "cta": "Start a Briefing"
   },
-  "Gate": {
-    "eyebrow": "Digital architecture studio",
-    "title": "Choose your language.",
-    "lead": "Your choice stays in the page address.",
-    "marketLabel": "Language and region",
-    "languageLabel": "Language",
-    "us": "International",
-    "tr": "Türkiye",
-    "me": "Middle East, Dubai",
-    "dach": "DACH and Switzerland",
-    "fr": "Monaco and France",
-    "wealth": "Global wealth",
-    "asia": "Asia hubs",
-    "enter": "Enter",
-    "skip": "Continue without choosing"
-  },
   "Hero": {
     "eyebrow": "Digital architecture studio — est. 2026",
     "title1": "Luxury websites,",

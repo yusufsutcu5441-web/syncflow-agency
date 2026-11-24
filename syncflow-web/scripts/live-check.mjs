@@ -113,18 +113,30 @@ const expect = async (name, path, status, extra) => {
 const plain = await fetch(`http://${HOST}/`, { redirect: 'manual', signal: AbortSignal.timeout(20000) }).catch((e) => ({ status: 0, error: e.message, headers: new Headers() }));
 say([301, 302, 307, 308].includes(plain.status) && /^https:/.test(plain.headers.get('location') ?? '') ? 'PASS' : 'FAIL', 'http:// redirects to https://', `-> ${plain.status} ${plain.headers.get('location') ?? plain.error ?? ''}`);
 await expect('home', '/', 200, async (r) => { const t = (await r.text()).match(/<title>([^<]*)/)?.[1] ?? ''; return { ok: t.length > 0, detail: `"${t}"` }; });
-// The public languages (docs/adr/0018, 0035): each answers 200 with its own lang and dir and the entry gate's cards, one per public language
-// (this client is no crawler, so it gets the gate). A language that is not public must still answer 404.
+// The public languages (docs/adr/0018, 0035): each answers 200 with its own lang and dir, and carries a plain link to every public
+// translation (the footer list, which needs no script). A language that is not public must still answer 404.
+// 24.11.2026 (docs/adr/0038 §16): the language gate is gone, so no page may carry its market cards any more.
 for (const code of OPEN) {
   const [path, dir, lang] = LANG_META[code];
-  await expect(`${code} (lang ${lang}, dir ${dir}, ${OPEN.length} gate cards)`, path, 200, async (r) => {
+  await expect(`${code} (lang ${lang}, dir ${dir}, ${OPEN.length} language links, no gate)`, path, 200, async (r) => {
     const html = await r.text();
     const cards = (html.match(/data-market="/g) ?? []).length;
-    return { ok: new RegExp(`<html[^>]*\\blang="${lang}"`).test(html) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(html) && cards === OPEN.length, detail: `${cards} cards` };
+    const links = OPEN.filter((other) => new RegExp(`href="${other === 'en' ? '/' : `/${other}`}"[^>]*hreflang=`).test(html)).length;
+    const right = new RegExp(`<html[^>]*\\blang="${lang}"`).test(html) && new RegExp(`<html[^>]*\\bdir="${dir}"`).test(html);
+    return { ok: right && links === OPEN.length && cards === 0 && !/class="gate"/.test(html), detail: `${links} language links, ${cards} gate cards` };
   });
 }
+// The root address answers in the browser's own language (proxy.ts, docs/adr/0038 §16), and says so to every cache in between.
+{
+  const tr = await rawGet('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9,en;q=0.8', 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36' } });
+  const vary = tr.headers.get('vary') ?? '';
+  say(tr.status === 307 && (tr.headers.get('location') ?? '').endsWith('/tr') && /accept-language/i.test(vary) ? 'PASS' : 'FAIL', 'a Turkish browser asking for "/" is sent to /tr, and the answer varies by language', `-> ${tr.status} ${tr.headers.get('location') ?? ''} vary "${vary}"`);
+  const bot = await rawGet('/', { headers: { 'accept-language': 'tr-TR,tr;q=0.9', 'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' } });
+  const botHtml = bot.status === 200 ? await bot.text() : '';
+  say(bot.status === 200 && /<html[^>]*\blang="en"/.test(botHtml) ? 'PASS' : 'FAIL', 'Googlebot is never redirected by its language: "/" stays the English page (canonical, x-default)', `-> ${bot.status}`);
+}
 // 24.11.2026 (docs/adr/0038 §13, the owner's claim audit): the site says it sets no cookies (Studio.p2Text, Privacy.cookies, Specimen.studioSite.c2).
-// Measured here on the live pages that carry the claim, on the gate page too, because a platform can add a cookie the repository never writes.
+// Measured here on every live page that carries the claim, because a platform can add a cookie the repository never writes.
 {
   const cookied = [];
   for (const path of ['/', ...(OPEN.includes('tr') ? ['/tr'] : []), '/privacy', '/specimens/studio-site']) {

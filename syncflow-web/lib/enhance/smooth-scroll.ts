@@ -30,19 +30,12 @@ export function initSmoothScroll(): () => void {
 
   const wanted = () => finePointer.matches && !reducedMotion.matches;
 
-  // While the entry gate is open the page behind it must not scroll: Lenis moves the viewport with scrollTo, which the CSS scroll
-  // lock (overflow: hidden) does not stop. The gate announces itself with gate:change (components/gate/EntryGate.tsx).
-  const gateOpen = () => document.querySelector('.gate[data-state="open"]') !== null;
-  const onGate = (event: Event) => {
-    if ((event as CustomEvent<{ open?: boolean }>).detail?.open) instance?.stop();
-    else instance?.start();
-  };
-
-  // The same for a dialog over the page (components/sections/BreakdownDialog.tsx): it announces itself with scroll:lock, and its panel
-  // scrolls natively (data-lenis-prevent).
+  // A dialog over the page (components/sections/BreakdownDialog.tsx) must not scroll what is behind it: Lenis moves the viewport with
+  // scrollTo, which the CSS scroll lock (overflow: hidden) does not stop. The dialog announces itself with scroll:lock, and its own
+  // panel scrolls natively (data-lenis-prevent).
   const onLock = (event: Event) => {
     if ((event as CustomEvent<{ locked?: boolean }>).detail?.locked) instance?.stop();
-    else if (!gateOpen()) instance?.start();
+    else instance?.start();
   };
 
   const attach = (lenis: Lenis): (() => void) => {
@@ -89,7 +82,6 @@ export function initSmoothScroll(): () => void {
       const { default: LenisClass } = await import('lenis');
       if (disposed || !wanted()) return;
       instance = new LenisClass({ duration: LENIS.duration, easing, autoRaf: true });
-      if (gateOpen()) instance.stop();
       detach = attach(instance);
     } catch {
       /* smooth scroll is optional: native scrolling stays */
@@ -112,7 +104,6 @@ export function initSmoothScroll(): () => void {
 
   finePointer.addEventListener('change', sync);
   reducedMotion.addEventListener('change', sync);
-  window.addEventListener('gate:change', onGate);
   window.addEventListener('scroll:lock', onLock);
   sync();
 
@@ -120,7 +111,6 @@ export function initSmoothScroll(): () => void {
     disposed = true;
     finePointer.removeEventListener('change', sync);
     reducedMotion.removeEventListener('change', sync);
-    window.removeEventListener('gate:change', onGate);
     window.removeEventListener('scroll:lock', onLock);
     stop();
   };

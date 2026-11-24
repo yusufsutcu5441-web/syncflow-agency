@@ -43,6 +43,8 @@ async function visit(label, path, viewport, interact) {
   visits += 1;
   const page = await browser.newPage();
   await page.setViewport(viewport);
+  // "/" answers in the browser's own language since 24.11.2026 (proxy.ts): pinned to English here so the visited address is the one named above.
+  await page.setExtraHTTPHeaders({ 'accept-language': 'en-US,en;q=0.9' });
   await page.evaluateOnNewDocument(() => {
     window.__csp = [];
     document.addEventListener('securitypolicyviolation', (e) => {
@@ -76,11 +78,13 @@ const scrollAll = async (page) => {
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
 };
 
-await visit('gate (desktop)', '/', DESKTOP, async (page) => {
-  await page.hover('.gate-market a, .gate a').catch(() => undefined);
+// The root address, with nothing in front of it since 24.11.2026 (docs/adr/0038 §16): the first screen is the hero itself, and the
+// first control a visitor touches there is the language pill in the header.
+await visit('first screen (desktop)', '/', DESKTOP, async (page) => {
+  await page.hover('.lang-trigger').catch(() => undefined);
   await sleep(300);
 });
-await visit('gate (phone)', '/', PHONE);
+await visit('first screen (phone)', '/', PHONE);
 await visit('home (desktop)', '/?m=us', DESKTOP, async (page) => {
   await scrollAll(page);
   // the language menu is built on first interest
