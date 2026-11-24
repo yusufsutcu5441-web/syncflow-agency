@@ -382,7 +382,7 @@
     "n1Title": "Vídeo decodificado por hardware y una capa de cine en GPU",
     "n1Summary": "El movimiento de este sitio es vídeo que el dispositivo decodifica en hardware, más una capa WebGL que se retira en cuanto cuesta un fotograma.",
     "n1s1t": "Renderizado una vez, por adelantado.",
-    "n1s1": "Cada escena es un bucle continuo de ocho segundos renderizado una sola vez en 1920 × 1080 a 30 fotogramas por segundo y codificado en H.264 (MP4), con VP9 (WebM) como respaldo. No se envía ningún motor de animación al navegador.",
+    "n1s1": "Cada escena es un bucle continuo de ocho segundos renderizado una sola vez a 30 fotogramas por segundo (las escenas de sector en 1920 × 1080, la escena de arquitectura en 1280 × 720) y codificado en H.264 (MP4), con VP9 (WebM) como respaldo. No se envía ningún motor de animación al navegador.",
     "n1s2t": "Decodificado por el dispositivo.",
     "n1s2": "El navegador entrega el flujo al decodificador de vídeo del propio dispositivo, que en la mayoría de teléfonos y portátiles es hardware dedicado, de modo que el procesador queda libre para la página.",
     "n1s3t": "Cargado y reproducido solo cuando se ve.",

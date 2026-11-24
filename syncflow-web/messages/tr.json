@@ -413,7 +413,7 @@
     "n1Title": "Donanımla çözülen video ve GPU sinema katmanı",
     "n1Summary": "Bu sitedeki hareket, cihazın donanımla çözdüğü video ile bir kareye mal olduğu anda geri çekilen tek bir WebGL katmanından oluşur.",
     "n1s1t": "Bir kez, önceden işlenir.",
-    "n1s1": "Her sahne, 1920 × 1080 çözünürlükte ve saniyede 30 karede bir kez işlenen kesintisiz sekiz saniyelik bir döngüdür; ardından H.264 (MP4) olarak, yedek olarak da VP9 (WebM) ile kodlanır. Tarayıcıya hiçbir animasyon motoru gönderilmez.",
+    "n1s1": "Her sahne, saniyede 30 karede bir kez işlenen kesintisiz sekiz saniyelik bir döngüdür (sektör sahneleri 1920 × 1080, mimari sahnesi 1280 × 720 çözünürlükte); ardından H.264 (MP4) olarak, yedek olarak da VP9 (WebM) ile kodlanır. Tarayıcıya hiçbir animasyon motoru gönderilmez.",
     "n1s2t": "Cihaz tarafından çözülür.",
     "n1s2": "Tarayıcı akışı cihazın kendi video çözücüsüne verir; çoğu telefonda ve dizüstünde bu, ayrılmış bir donanımdır ve işlemci sayfaya ayrılmış kalır.",
     "n1s3t": "Yalnızca görüldüğünde yüklenir ve oynar.",

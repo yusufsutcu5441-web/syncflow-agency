@@ -382,7 +382,7 @@
     "n1Title": "Hardware-dekodiertes Video und eine GPU-Kinoebene",
     "n1Summary": "Die Bewegung auf dieser Seite ist Video, das das Gerät in Hardware dekodiert, plus eine WebGL-Ebene, die sich zurückzieht, sobald sie ein Bild kostet.",
     "n1s1t": "Einmal vorab gerendert.",
-    "n1s1": "Jede Szene ist eine nahtlose Schleife von acht Sekunden, einmal in 1920 × 1080 mit 30 Bildern pro Sekunde gerendert und als H.264 (MP4) kodiert, mit VP9 (WebM) als Ersatz. Keine Animations-Engine wird an den Browser ausgeliefert.",
+    "n1s1": "Jede Szene ist eine nahtlose Schleife von acht Sekunden, einmal mit 30 Bildern pro Sekunde gerendert (die Branchenszenen in 1920 × 1080, die Architekturszene in 1280 × 720) und als H.264 (MP4) kodiert, mit VP9 (WebM) als Ersatz. Keine Animations-Engine wird an den Browser ausgeliefert.",
     "n1s2t": "Vom Gerät dekodiert.",
     "n1s2": "Der Browser übergibt den Stream an den eigenen Videodekoder des Geräts, auf den meisten Telefonen und Laptops eigene Hardware, sodass der Prozessor für die Seite frei bleibt.",
     "n1s3t": "Nur geladen und abgespielt, wenn gesehen.",
