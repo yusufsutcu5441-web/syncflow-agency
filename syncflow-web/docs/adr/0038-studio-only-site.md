@@ -286,3 +286,34 @@ Sahibin tasarım incelemesinin F maddesi: gerçek Chromium'da, masaüstü 1440×
 **Ölçüm tuzağı (not).** Puppeteer ekran görüntüsünü **belge** koordinatlarında kırpar, görünüm penceresinde değil. İlk yazımda `getBoundingClientRect` değerleri doğrudan verilmişti ve kırpma sayfanın tepesindeki hero'yu kesiyordu: üç kart da "ortalama 21,7, sapma 21,7" gibi birbirinin aynı, koyu değerler verdi. Yani test, düzeltilmeden önce **yanlış bir siyah kare** rapor ediyordu; kırpmaya sayfa kaydırması eklenince gerçek değerler çıktı. Kontrol ayrıca çerçevenin tamamen ekranda olmasını şart koşuyor, çünkü görünüm dışına taşan bir kırpma boş döner ve bu da siyah kare gibi okunur.
 
 **Nerede koşar.** `poster` grubu hem FEATURE hem RELEASE kümesinde (`scripts/release-verify.mjs`): vitrin kartları yayına çıkan sayfanın parçası.
+## 19. Mimari monolit: pozlama değil kontrast, siyahlar obsidyenin üstünde (25.11.2026)
+
+Sahibin tasarım incelemesinin B maddesi: "Monolith klibini siteyle uyumlu hale getir: **pozlamayı değil kontrastı artır** (siyahlar #0d0d0e'ye otursun, vurgu şampanya/kum tonunda kalsın). Remotion veya ffmpeg curves/eq ile en fazla 3 deneme; sonucu 1920×1080 kontrol karesi olarak diğer üç klibin karesiyle yan yana bak."
+
+**Brief'in dayanağı ve gerçeği.** Madde, A maddesinin (sektör kliplerinin yerine gelecek kaydırma videoları) uygulandığı varsayımıyla yazılmıştı: "diğer üçü artık aynı karanlık, #0d0d0e tabanlı tonda". A atlandı (zip yok, bölüm 20), yani diğer üç klip hâlâ aydınlık fotoğraf klipleridir. B yine de kendi başına doğruydu, çünkü asıl sorun ölçümle görülüyordu: 24.11.2026'da uygulanan `eq=gamma=1.20` bir **pozlama** artışıydı ve sahnenin siyahlarını obsidyenden kaldırmıştı — `monolith-2`'nin en koyu onda biri **25,0**, yani #0d0d0e (13) değil, grileşmiş bir zemin. Sahibin "siyahlar #0d0d0e'ye otursun" cümlesi tam olarak bunu söylüyor.
+
+**Yapılan.** Kaynak, derecelendirilmemiş 1080p render'ı (`_klip-isi/monolith-1080.mp4`; Remotion sahnesi `remotion/scenes/Monolith.tsx` **değişmedi**). Üç deneme, hepsi `ffmpeg curves`:
+
+| deneme | eğri | ortalama | en koyu onda bir | p99 | en parlak | sonuç |
+|---|---|---|---|---|---|---|
+| (önce) `monolith-2` | `eq=gamma=1.20` | 32,0 | **25,0** | 76 | 179 | siyahlar kalkmış |
+| 1 | `0/0 0.047/0.051 0.23/0.45 0.45/0.80 0.65/1` | 24,1 | 13,0 | 115 | 255 | doğru ama ölçülü |
+| 2 | `0/0 0.047/0.051 0.18/0.50 0.38/0.88 0.60/1` | 30,4 | 13,0 | 165 | 255 | en parlak; levha kenarı beyaza patlıyor |
+| **3 (seçildi)** | `0/0 0.047/0.051 0.18/0.47 0.38/0.78 1/0.886` | **29,3** | **13,0** | **153** | **237** | kontrast 2 kadar, tavan platinde |
+
+Üçüncüsünün farkı son kontrol noktası: `1/0.886` tavanı **platin**e (226/255) kilitler, yani hiçbir piksel saf beyaza çıkmaz (marka kuralı: sitede saf siyah ve saf beyaz yoktur) ve levhanın yüzey ayrıntısı korunur. Kontrol kareleri yan yana bakıldı (`_klip-isi/compare-mono.png`, `compare-mono3.png`) ve sekiz karelik kontak sayfası (`monolith-3_contact.jpg`) bütün döngüyü doğruladı: zemin baştan sona obsidyen, levha ve altındaki ışık havuzu okunur. Renk dokunulmadı: vurgu, sahnenin kendi nötr platin tonunda kaldı (şampanya yalnızca birincil CTA'nın rengidir; sahneye sonradan renk katmak tasarımı değiştirmek olurdu).
+
+**Sayısal kapılar.** `verify_clip.py monolith-3`: H.264 ve VP9, 1920×1080, 30 fps, 8,00 sn, 240 kare, ses yok, hepsi 4 MB altında (0,60 / 0,46 / 0,01 MB); döngü dikişi SSIM **0,9856**, ardışık karelerin en kötüsü 0,9831 — dikiş sıradan bir kare adımından pürüzsüz. Tek istisna, bölüm 15'teki ile aynı ve bilinçli: ortalama parlaklık **29,3**, fotoğraf klipleri için konan 60–180 bandının altında. Bandı tutturmak sahneyi (obsidyen zeminde platin levha) değiştirmek olurdu; brief'in bu madde için istediği zaten bandı değil **siyah noktasını** tutturmaktı.
+
+**Boyut.** Daha fazla kontrast = daha fazla kodlanacak ayrıntı: mp4 295 KB → **629 KB**, webm 215 KB → **485 KB**, poster 7,5 KB → **12 KB**. Klip yalnızca oynatılacağı anda indirilir (`preload="none"`), poster kart yaklaşınca; Lighthouse sayfayı kaydırmadığı için mühürlü skorlara dokunmaz.
+
+**Ad ve ikizler.** `/media` bir hafta önbelleklendiği için dosya yeni adla girdi (`monolith-3.*`), `monolith-2.*` depodan kalktı. `lib/clips.ts` eşlemesi, `smoke.mjs` dosya listesi ve "eski ad 404" kontrolü (artık `monolith-2` de listede), `live-check.mjs` aynı şekilde, `faz2-denetim` çözünürlük döngüsü ve eşleme kontrolü (her aşılmış adın depoda olmadığını da sınıyor) güncellendi. README'deki toplam medya boyutu ≈ 15,9 MB → ≈ 16,5 MB.
+## 20. Atlanan madde: sektör klipleri yerine konsept site kaydırma videoları (A) — dosya yok (25.11.2026)
+
+Sahibin tasarım incelemesinin A maddesi, üç sektör klibinin (estate-2, clinic-2, law-2) yerine **kurgusal firmaların konsept web sitelerinin masaüstü + telefon kaydırma videolarının** geçmesini istiyordu ve dosyayı adıyla tarif ediyordu: "`sektor-klipleri.zip` dosyasını bul: önce Downloads, sonra Desktop/Documents/OneDrive; son 6 saat içinde değişmiş olanı al. **Yoksa A'yı ATLA** (raporda belirt) ve B–F'ye geç."
+
+**Arama ve sonuç.** Downloads, Desktop, Documents ve OneDrive ağaçlarının tamamı tarandı (`*.zip`, `*.rar`, `*.7z`, son 24 saat) ve ayrıca bütün kullanıcı profilinde `sektor*` adlı her dosya arandı. Bulunan tek arşiv **`C:\Users\YAKUP\Downloads\estate-klip.zip`**, 6.931.036 B, **24.11.2026 13:48** — başka bir ad, başka bir iş (o günün estate klibi, bölüm 12) ve altı saatlik pencerenin dışında (arama 23:06'da yapıldı, yaklaşık dokuz saat sonra). `sektor-klipleri.zip` profilin hiçbir yerinde yok.
+
+**Karar.** Madde, brief'in kendi kuralıyla **atlandı**. Dosya geldiğinde yapılacak iş aynen duruyor: dokuz dosyayı (klinik/hukuk/emlak × mp4/webm/webp) ffprobe ile doğrulamak, `clinic-3`, `law-3`, `estate-3` adlarıyla koymak (bir haftalık `/media` önbelleği eski adları tutar), `lib/clips.ts` eşlemesini ve ikizleri güncellemek, üç kartın metnini yedi dil + ja'da "kurgusal bir firmanın konsept web sitesi; masaüstü ve mobil kaydırma kaydı" diye düzeltmek, `docs/media-sources.md`'yi (HTML sayfalarının Playwright ile kare yakalanması + ffmpeg; emlak sitesindeki fotoğraflar kullanıcının kendi çektikleri) ve kredi satırlarını güncellemek.
+
+**Bağlı etki.** B maddesi "diğer üçü artık aynı karanlık, #0d0d0e tabanlı tonda" varsayımıyla yazılmıştı; A gelmediği için o varsayım bugün doğru değil (üç klip hâlâ aydınlık fotoğraf klipleri: ortalama parlaklık 125,3 · 112,0 · 79,1). B yine de uygulandı, çünkü istediği şey ölçümle doğrulanabilir ve A'dan bağımsızdı: monolitin siyahlarını sitenin kendi obsidyenine geri oturtmak (bölüm 19). Monolit bu yüzden hâlâ diğer üçünden koyudur; renk uyumu A geldiğinde yeniden bakılacak bir konudur.
