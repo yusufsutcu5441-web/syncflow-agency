@@ -962,7 +962,8 @@ for (const locale of OPEN) {
     page.includes('id="studio"') && page.includes('id="how-we-built-it"') && (page.match(/<details class="note"/g) ?? []).length === 3 &&
     (ENTERPRISE_ON ? page.includes('data-sim="queue"') && page.includes('data-sim="security"') : !page.includes('data-sim=')) && (page.match(/data-breakdown-link/g) ?? []).length === SLUGS.length && (page.match(/data-card-hit/g) ?? []).length === SLUGS.length &&
     nav.includes('#studio') && (page.match(/data-flag=/g) ?? []).length >= OPEN.length + 1 && !/[\u{1F1E6}-\u{1F1FF}]/u.test(page) &&
-    !/\sposter="/.test(page) && (page.match(/<img[^>]+media\/clips[^>]+loading="lazy"/g) ?? []).length >= 5 &&
+    // Lazy stills: one per sector card of this build plus the architecture monolith (docs/adr/0038 section 12: four cards with the switch on, three on the shipped site).
+    !/\sposter="/.test(page) && (page.match(/<img[^>]+media\/clips[^>]+loading="lazy"/g) ?? []).length >= SLUGS.length + 1 &&
     !FORBIDDEN_IN_BREAKDOWN.test(normalise(stripTags(page)));
   if (!ok) homeFailures.push(locale);
 }
