@@ -1025,34 +1025,44 @@ if (want('poster')) {
         state.complete && state.naturalWidth > 0 && state.opacity > 0 && state.display !== 'none' && state.visibility !== 'hidden' && !state.playing,
         JSON.stringify(state),
       );
-      // The frame as the screen really shows it: a crop of a screenshot, measured for brightness and spread. The browser decodes the
-      // crop itself (the policy allows data: images), so this needs no image library. The card is scrolled into view above, so the
-      // frame is inside the viewport; the clip is given in document coordinates, which is what Puppeteer expects.
-      const clip = { x: state.box.x, y: state.box.y, width: state.box.width, height: state.box.height };
-      if (clip.width < 40 || clip.height < 40 || !state.onScreen) {
-        check(`${label} ${id}: its frame is fully on the screen to be measured`, false, JSON.stringify({ clip, onScreen: state.onScreen }));
+      // The frame as the screen really shows it. The whole VIEWPORT is captured and the frame is cut out of that bitmap inside the page,
+      // where the element's own rectangle and the image share one coordinate space. A clip passed to the screenshot call cannot be used:
+      // Puppeteer reads it in document coordinates, and on a long page whose sections are laid out as they are reached, the page offset
+      // read a moment earlier no longer matches, which returns an empty region — four identical "black cards" that were never there
+      // (24.11.2026, the first version of this check). The tab is also brought to the front first: a background target in headless Chrome
+      // paints nothing, and the whole group failed that way inside the full browser run while passing on its own.
+      if (!state.onScreen || state.box.width < 40 || state.box.height < 40) {
+        check(`${label} ${id}: its frame is fully on the screen to be measured`, false, JSON.stringify({ box: state.box, onScreen: state.onScreen }));
         continue;
       }
-      const shot = await page.screenshot({ clip, encoding: 'base64' });
-      const luma = await page.evaluate(async (base64) => {
+      await page.bringToFront();
+      const shot = await page.screenshot({ encoding: 'base64' });
+      const luma = await page.evaluate(async ({ base64, cardId }) => {
         const image = new Image();
         image.src = `data:image/png;base64,${base64}`;
         await image.decode();
+        const box = document.querySelector(`#${cardId} .frame`).getBoundingClientRect();
+        // The screenshot is the viewport at the device pixel ratio; the rectangle is in CSS pixels.
+        const scale = image.width / window.innerWidth;
+        const [sx, sy, sw, sh] = [box.x * scale, box.y * scale, box.width * scale, box.height * scale];
+        if (sw < 40 || sh < 40 || sx < 0 || sy < 0 || sx + sw > image.width + 1 || sy + sh > image.height + 1) {
+          return { error: 'the frame is not inside the captured viewport', box: { x: box.x, y: box.y, w: box.width, h: box.height }, image: { w: image.width, h: image.height } };
+        }
         const canvas = document.createElement('canvas');
         canvas.width = 64;
         canvas.height = 36;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
         const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const values = [];
         for (let i = 0; i < data.length; i += 4) values.push(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]);
         const mean = values.reduce((t, v) => t + v, 0) / values.length;
         const sd = Math.sqrt(values.reduce((t, v) => t + (v - mean) ** 2, 0) / values.length);
         return { mean: Number(mean.toFixed(1)), sd: Number(sd.toFixed(1)), min: Math.round(Math.min(...values)), max: Math.round(Math.max(...values)) };
-      }, shot);
+      }, { base64: shot, cardId: id });
       check(
-        `${label} ${id}: the frame on screen is a picture, not a flat square (mean ${luma.mean} >= ${MEAN_FLOOR}, spread ${luma.sd} >= ${SD_FLOOR})`,
-        luma.mean >= MEAN_FLOOR && luma.sd >= SD_FLOOR,
+        `${label} ${id}: the frame on screen is a picture, not a flat square (mean ${luma.mean ?? '-'} >= ${MEAN_FLOOR}, spread ${luma.sd ?? '-'} >= ${SD_FLOOR})`,
+        !luma.error && luma.mean >= MEAN_FLOOR && luma.sd >= SD_FLOOR,
         JSON.stringify(luma),
       );
     }
