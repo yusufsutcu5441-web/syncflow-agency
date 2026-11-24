@@ -39,11 +39,12 @@ const SEVEN = 'en,tr,ar,de,fr,es,zh';
 const FEATURE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX, NEXT_PUBLIC_SHOW_PRICING: 'true', NEXT_PUBLIC_BRIEFING_ENABLED: 'true', NEXT_PUBLIC_SHOW_ENTERPRISE: 'true', NEXT_PUBLIC_LAUNCHED_LOCALES: SEVEN };
 const RELEASE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX };
 // What a browser can prove about the shipped page (no form, no simulator, no enterprise cards, English and Turkish only): the groups of scripts/browser-flow.mjs that do not drive the briefing form, the
-// simulators, Drawing 01, the Studio specimen cards or the seven-language gate (gate, anchors and deeplink assume the FEATURE build and its #briefing link), plus 'studioonly' (the two-fact row, the Lighthouse
+// simulators, Drawing 01 or the Studio specimen cards (anchors and deeplink assume the FEATURE build and its #briefing link), plus 'studioonly' (the two-fact row, the Lighthouse
 // evidence link and its way back). The CLS walk, typography, the showcase dialog and pages, the framework start and the cinema layer run here on the page that ships.
 // 24.11.2026 (docs/adr/0038 §13): 'accname' (what a screen reader reads where two blocks meet) and 'privacy' (no cookie, nothing stored, nothing from a third party) are claims about the page that
-// ships, so they run against the RELEASE build as well, not only the FEATURE one.
-const RELEASE_BROWSER_GROUPS = 'cls,type,casestudy,studioonly,accname,privacy,framework,cinema';
+// ships, so they run against the RELEASE build as well, not only the FEATURE one. The same day (§16, §17): 'language' (nothing stands in front of the page, the footer links every language without a
+// script, the header menu builds itself) and 'poster' (every showcase card shows its still, never a black frame) are claims about the shipped page too.
+const RELEASE_BROWSER_GROUPS = 'cls,type,casestudy,studioonly,language,poster,accname,privacy,framework,cinema';
 
 function step(label, command, args, { env = CLEAN, shell = false } = {}) {
   const started = Date.now();

@@ -36,6 +36,15 @@ export function ShowcaseStrip({ children }: { children: ReactNode }) {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         near.disconnect();
         update();
+        // The stills of the cards further along the strip (owner's design review, 24.11.2026, item F). Each card's still is a lazy
+        // <img> so that four 1920 x 1080 pictures do not weigh on the first load (docs/adr/0020), but a lazy image inside a
+        // horizontal scroller is not fetched until it is scrolled in: a card reached with the arrows or a swipe showed the frame's
+        // dark background until its fetch finished. Setting loading to "eager" on an image that has not started loading starts it,
+        // so the whole row is woken here, the moment the strip comes near the screen. Nothing is fetched earlier than before (the
+        // row is about six screens down), and nothing is fetched late.
+        for (const image of element.querySelectorAll<HTMLImageElement>('.show-card .frame img')) {
+          if (!image.complete) image.loading = 'eager';
+        }
       },
       { rootMargin: '300px 0px' },
     );

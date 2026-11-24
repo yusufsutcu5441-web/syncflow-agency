@@ -968,6 +968,99 @@ if (want('studioonly') && !ENTERPRISE_ON) {
   }
 }
 
+// ── every showcase card shows its still, never a black frame (owner's design review, 24.11.2026, item F) ──────────────────────────
+// The still under each card's film is a lazy <img> (docs/adr/0020: four 1920 x 1080 pictures must not weigh on the first load). The strip
+// scrolls sideways, and a lazy image inside a horizontal scroller is not fetched until it is scrolled in, so the cards further along used
+// to show the frame's dark background until their fetch finished; components/sections/ShowcaseStrip.tsx now wakes the whole row when the
+// strip comes near. This group holds that, at both widths, with the browser's own reduced-motion and instant scrolling: for every card the
+// still must be loaded and visible, the film must not be playing, and the card's frame, cropped out of a real screenshot, must carry a
+// picture rather than one flat colour.
+// The thresholds come from measuring the shipped cards through this very crop (24.11.2026): at 1440x900 mean luma 162.2, 128.6 and 73.4
+// with a standard deviation of 48.2, 42.7 and 46.1; at 375x812 mean 151.0, 119.9 and 71.0 with 47.9, 42.4 and 44.0. They are set far
+// below the darkest of those, at mean 20 and deviation 10, so a legitimately dark frame still passes and only a flat or nearly flat
+// square fails. The page's own background measures mean 13.1 with a deviation of 0.0, which is what a black card would look like.
+if (want('poster')) {
+  group('Every showcase card shows its still (loaded, visible, film not playing) and its frame is a picture, not a black square');
+  const MEAN_FLOOR = 20;
+  const SD_FLOOR = 10;
+  for (const [label, viewport] of QUICK ? [['desktop', DESKTOP]] : [['desktop', DESKTOP], ['phone', { width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true }]]) {
+    // Reduced motion: no smooth scrolling anywhere (Lenis never starts, the strip's buttons jump), so nothing is measured mid-animation.
+    const { page, errors } = await open('/', { viewport, reduced: true });
+    await page.evaluate(() => document.querySelector('#showcase')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await settle(page);
+    await sleep(1800);
+    const cards = await page.evaluate(() => [...document.querySelectorAll('.show-card')].map((card) => card.id));
+    check(`${label}: the showcase has its cards`, cards.length >= 3, cards.join(','));
+    for (const id of cards) {
+      // Each card is brought into the strip's view first: that is what a visitor does with the arrows, a swipe or the keyboard. Then its
+      // frame is centred on the screen, so the crop below is of a frame that is fully visible (a clip that reaches past the viewport
+      // comes back blank, which would read as a black card).
+      await page.evaluate((cardId) => {
+        document.getElementById(cardId)?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'instant' });
+        document.querySelector(`#${cardId} .frame`)?.scrollIntoView({ block: 'center', behavior: 'instant' });
+      }, id);
+      await sleep(900);
+      const state = await page.evaluate((cardId) => {
+        const card = document.getElementById(cardId);
+        const img = card.querySelector('.frame img');
+        const video = card.querySelector('.frame video');
+        const box = card.querySelector('.frame').getBoundingClientRect();
+        const style = getComputedStyle(img);
+        return {
+          complete: img.complete,
+          naturalWidth: img.naturalWidth,
+          opacity: Number(style.opacity),
+          display: style.display,
+          visibility: style.visibility,
+          playing: Boolean(video) && !video.paused && !video.ended && video.readyState > 2,
+          file: (img.currentSrc || img.src).split('/').pop(),
+          // Puppeteer clips a screenshot in DOCUMENT coordinates, so the page offset belongs in the box; getBoundingClientRect alone
+          // would crop a region near the top of the page and call the hero's dark background a black card.
+          box: { x: Math.round(box.x + window.scrollX), y: Math.round(box.y + window.scrollY), width: Math.round(box.width), height: Math.round(box.height) },
+          onScreen: box.top >= 0 && box.bottom <= window.innerHeight && box.left >= 0 && box.right <= window.innerWidth,
+        };
+      }, id);
+      check(
+        `${label} ${id}: its still (${state.file}) is loaded and visible, and the film is not playing`,
+        state.complete && state.naturalWidth > 0 && state.opacity > 0 && state.display !== 'none' && state.visibility !== 'hidden' && !state.playing,
+        JSON.stringify(state),
+      );
+      // The frame as the screen really shows it: a crop of a screenshot, measured for brightness and spread. The browser decodes the
+      // crop itself (the policy allows data: images), so this needs no image library. The card is scrolled into view above, so the
+      // frame is inside the viewport; the clip is given in document coordinates, which is what Puppeteer expects.
+      const clip = { x: state.box.x, y: state.box.y, width: state.box.width, height: state.box.height };
+      if (clip.width < 40 || clip.height < 40 || !state.onScreen) {
+        check(`${label} ${id}: its frame is fully on the screen to be measured`, false, JSON.stringify({ clip, onScreen: state.onScreen }));
+        continue;
+      }
+      const shot = await page.screenshot({ clip, encoding: 'base64' });
+      const luma = await page.evaluate(async (base64) => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${base64}`;
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 36;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const values = [];
+        for (let i = 0; i < data.length; i += 4) values.push(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]);
+        const mean = values.reduce((t, v) => t + v, 0) / values.length;
+        const sd = Math.sqrt(values.reduce((t, v) => t + (v - mean) ** 2, 0) / values.length);
+        return { mean: Number(mean.toFixed(1)), sd: Number(sd.toFixed(1)), min: Math.round(Math.min(...values)), max: Math.round(Math.max(...values)) };
+      }, shot);
+      check(
+        `${label} ${id}: the frame on screen is a picture, not a flat square (mean ${luma.mean} >= ${MEAN_FLOOR}, spread ${luma.sd} >= ${SD_FLOOR})`,
+        luma.mean >= MEAN_FLOOR && luma.sd >= SD_FLOOR,
+        JSON.stringify(luma),
+      );
+    }
+    check(`${label}: no page or console errors while the strip was walked`, errors.length === 0, errors.slice(0, 3).join(' | '));
+    await page.close();
+  }
+}
+
 // ── the framework starts after the first paint (docs/adr/0023) ────────────────────────────────────────────────────────────────────
 if (want('framework')) {
   group('React and Next start after the first contentful paint, at the first touch or key, or after 3.5 s, and the page still comes alive');
