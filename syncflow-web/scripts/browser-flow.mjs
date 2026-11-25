@@ -975,14 +975,72 @@ if (want('studioonly') && !ENTERPRISE_ON) {
 // strip comes near. This group holds that, at both widths, with the browser's own reduced-motion and instant scrolling: for every card the
 // still must be loaded and visible, the film must not be playing, and the card's frame, cropped out of a real screenshot, must carry a
 // picture rather than one flat colour.
-// The thresholds come from measuring the shipped cards through this very crop (24.11.2026): at 1440x900 mean luma 162.2, 128.6 and 73.4
-// with a standard deviation of 48.2, 42.7 and 46.1; at 375x812 mean 151.0, 119.9 and 71.0 with 47.9, 42.4 and 44.0. They are set far
-// below the darkest of those, at mean 20 and deviation 10, so a legitimately dark frame still passes and only a flat or nearly flat
-// square fails. The page's own background measures mean 13.1 with a deviation of 0.0, which is what a black card would look like.
+// How the frame is judged, and why it is judged this way (docs/adr/0038 section 21). Until 25.11.2026 the shipped stills were photographs and a
+// floor on the crop's MEAN luma (20, against measured 162.2 / 128.6 / 73.4) separated a real still from a black square. The sector films are now
+// recordings of near-black concept websites, and that floor stopped describing them: measured through this same crop the three stills give mean
+// 28.3 / 21.2 / 16.7 at 1440x900 and 29.6 / 23.7 / 18.3 at 375x812 — while the SAME frame with its still hidden, which is exactly what an unloaded
+// poster leaves on screen, measures mean 13.5-16.3 with a spread of 4.4-12.4 and a range of 82-150, because the card's own caption stays inside the
+// frame. So the mean floor would now fail a good card (16.7) at a margin of 0.4 from a bad one (16.3), and at phone width the spread floor alone
+// would have PASSED a missing poster. The mean floor is therefore not re-tuned but replaced by a measurement that does not depend on how dark the
+// art is: the still is hidden, the same crop is measured again, and the two are compared pixel by pixel. A still that is really painting the frame
+// moves it (measured mean |difference| 5.7-17.7 over 12.4-45.7 per cent of the crop); a still that never loaded moves nothing at all, so the floors
+// sit at roughly half of the weakest measurement. The spread floor is unchanged and a range floor is added on top.
 if (want('poster')) {
   group('Every showcase card shows its still (loaded, visible, film not playing) and its frame is a picture, not a black square');
-  const MEAN_FLOOR = 20;
   const SD_FLOOR = 10;
+  const RANGE_FLOOR = 100;
+  const MAD_FLOOR = 3;
+  const MOVED_FLOOR = 6;
+  // One crop of a card's frame, out of a fresh capture of the whole VIEWPORT, cut out inside the page, where the element's own rectangle and the
+  // image share one coordinate space. A clip passed to the screenshot call cannot be used: Puppeteer reads it in document coordinates, and on a
+  // long page whose sections are laid out as they are reached, the page offset read a moment earlier no longer matches, which returns an empty
+  // region — four identical "black cards" that were never there (24.11.2026, the first version of this check). The tab is also brought to the
+  // front first: a background target in headless Chrome paints nothing, and the whole group failed that way inside the full browser run while
+  // passing on its own. It returns the 64x36 luma field as well, so two captures of the same frame can be compared pixel by pixel.
+  const cropFrame = async (page, cardId) => {
+    await page.bringToFront();
+    const shot = await page.screenshot({ encoding: 'base64' });
+    return page.evaluate(async ({ base64, id }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${base64}`;
+      await image.decode();
+      const box = document.querySelector(`#${id} .frame`).getBoundingClientRect();
+      // The screenshot is the viewport at the device pixel ratio; the rectangle is in CSS pixels.
+      const scale = image.width / window.innerWidth;
+      const [sx, sy, sw, sh] = [box.x * scale, box.y * scale, box.width * scale, box.height * scale];
+      if (sw < 40 || sh < 40 || sx < 0 || sy < 0 || sx + sw > image.width + 1 || sy + sh > image.height + 1) {
+        return { error: 'the frame is not inside the captured viewport', box: { x: box.x, y: box.y, w: box.width, h: box.height }, image: { w: image.width, h: image.height } };
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 36;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const values = [];
+      for (let i = 0; i < data.length; i += 4) values.push(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]);
+      const mean = values.reduce((t, v) => t + v, 0) / values.length;
+      const sd = Math.sqrt(values.reduce((t, v) => t + (v - mean) ** 2, 0) / values.length);
+      const sorted = [...values].sort((a, b) => a - b);
+      return {
+        values,
+        mean: Number(mean.toFixed(1)),
+        sd: Number(sd.toFixed(1)),
+        min: Math.round(sorted[0]),
+        max: Math.round(sorted[sorted.length - 1]),
+        range: Math.round(sorted[sorted.length - 1] - sorted[0]),
+      };
+    }, { base64: shot, id: cardId });
+  };
+  /** Hides one card's still, re-measures the same crop and puts it back: what the still itself contributes to the screen. */
+  const withoutStill = async (page, cardId) => {
+    await page.evaluate((id) => { document.querySelector(`#${id} .frame img`).style.visibility = 'hidden'; }, cardId);
+    await sleep(300);
+    const blank = await cropFrame(page, cardId);
+    await page.evaluate((id) => { document.querySelector(`#${id} .frame img`).style.visibility = ''; }, cardId);
+    await sleep(200);
+    return blank;
+  };
   for (const [label, viewport] of QUICK ? [['desktop', DESKTOP]] : [['desktop', DESKTOP], ['phone', { width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true }]]) {
     // Reduced motion: no smooth scrolling anywhere (Lenis never starts, the strip's buttons jump), so nothing is measured mid-animation.
     const { page, errors } = await open('/', { viewport, reduced: true });
@@ -1025,45 +1083,27 @@ if (want('poster')) {
         state.complete && state.naturalWidth > 0 && state.opacity > 0 && state.display !== 'none' && state.visibility !== 'hidden' && !state.playing,
         JSON.stringify(state),
       );
-      // The frame as the screen really shows it. The whole VIEWPORT is captured and the frame is cut out of that bitmap inside the page,
-      // where the element's own rectangle and the image share one coordinate space. A clip passed to the screenshot call cannot be used:
-      // Puppeteer reads it in document coordinates, and on a long page whose sections are laid out as they are reached, the page offset
-      // read a moment earlier no longer matches, which returns an empty region — four identical "black cards" that were never there
-      // (24.11.2026, the first version of this check). The tab is also brought to the front first: a background target in headless Chrome
-      // paints nothing, and the whole group failed that way inside the full browser run while passing on its own.
       if (!state.onScreen || state.box.width < 40 || state.box.height < 40) {
         check(`${label} ${id}: its frame is fully on the screen to be measured`, false, JSON.stringify({ box: state.box, onScreen: state.onScreen }));
         continue;
       }
-      await page.bringToFront();
-      const shot = await page.screenshot({ encoding: 'base64' });
-      const luma = await page.evaluate(async ({ base64, cardId }) => {
-        const image = new Image();
-        image.src = `data:image/png;base64,${base64}`;
-        await image.decode();
-        const box = document.querySelector(`#${cardId} .frame`).getBoundingClientRect();
-        // The screenshot is the viewport at the device pixel ratio; the rectangle is in CSS pixels.
-        const scale = image.width / window.innerWidth;
-        const [sx, sy, sw, sh] = [box.x * scale, box.y * scale, box.width * scale, box.height * scale];
-        if (sw < 40 || sh < 40 || sx < 0 || sy < 0 || sx + sw > image.width + 1 || sy + sh > image.height + 1) {
-          return { error: 'the frame is not inside the captured viewport', box: { x: box.x, y: box.y, w: box.width, h: box.height }, image: { w: image.width, h: image.height } };
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 36;
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        ctx.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-        const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const values = [];
-        for (let i = 0; i < data.length; i += 4) values.push(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]);
-        const mean = values.reduce((t, v) => t + v, 0) / values.length;
-        const sd = Math.sqrt(values.reduce((t, v) => t + (v - mean) ** 2, 0) / values.length);
-        return { mean: Number(mean.toFixed(1)), sd: Number(sd.toFixed(1)), min: Math.round(Math.min(...values)), max: Math.round(Math.max(...values)) };
-      }, { base64: shot, cardId: id });
+      const luma = await cropFrame(page, id);
+      const shown = ({ values, ...rest }) => rest; // the luma field itself is never printed
       check(
-        `${label} ${id}: the frame on screen is a picture, not a flat square (mean ${luma.mean ?? '-'} >= ${MEAN_FLOOR}, spread ${luma.sd ?? '-'} >= ${SD_FLOOR})`,
-        !luma.error && luma.mean >= MEAN_FLOOR && luma.sd >= SD_FLOOR,
-        JSON.stringify(luma),
+        `${label} ${id}: the frame on screen is a picture, not one flat colour (spread ${luma.sd ?? '-'} >= ${SD_FLOOR}, range ${luma.range ?? '-'} >= ${RANGE_FLOOR})`,
+        !luma.error && luma.sd >= SD_FLOOR && luma.range >= RANGE_FLOOR,
+        JSON.stringify(shown(luma)),
+      );
+      if (luma.error) continue;
+      // And the picture is the still itself: hidden, the same crop has to change. Without this, a frame could pass on the card's own caption
+      // alone — with the still hidden the phone-width crop still measures a spread of 10.4 to 12.4 and a range of 113 to 150.
+      const blank = await withoutStill(page, id);
+      const mad = blank.error ? 0 : Number((luma.values.reduce((total, v, i) => total + Math.abs(v - blank.values[i]), 0) / luma.values.length).toFixed(1));
+      const moved = blank.error ? 0 : Number(((luma.values.filter((v, i) => Math.abs(v - blank.values[i]) >= 8).length / luma.values.length) * 100).toFixed(1));
+      check(
+        `${label} ${id}: the still is what paints that frame (hiding it moves ${moved}% of the crop >= ${MOVED_FLOOR}%, mean change ${mad} >= ${MAD_FLOOR})`,
+        !blank.error && mad >= MAD_FLOOR && moved >= MOVED_FLOOR,
+        JSON.stringify({ mad, moved, with: shown(luma), without: shown(blank) }),
       );
     }
     check(`${label}: no page or console errors while the strip was walked`, errors.length === 0, errors.slice(0, 3).join(' | '));
