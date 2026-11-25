@@ -18,9 +18,9 @@ export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /** A small deterministic pseudo-random number in [0, 1) for element `i` and stream `k`: the same picture on every render. */
 export const rand = (i: number, k = 0) => fract(Math.sin(i * 127.1 + k * 311.7) * 43758.5453);
 
-export const platin = (a: number) => `rgba(226,226,230,${a.toFixed(3)})`;
+export const platin = (a: number) => `rgba(244,238,227,${a.toFixed(3)})`;
 export const champagne = (a: number) => `rgba(212,197,169,${a.toFixed(3)})`;
-export const obsidian = (a: number) => `rgba(13,13,14,${a.toFixed(3)})`;
+export const obsidian = (a: number) => `rgba(28,25,21,${a.toFixed(3)})`;
 
 /** Fractal noise, grey and opaque, as a still tile. The browser rasterises it once and reuses it on every frame. */
 const GRAIN_TILE = `url("data:image/svg+xml;utf8,${encodeURIComponent(
@@ -40,7 +40,7 @@ export function Vignette({ strength = 0.7, inner = 0.55 }: { strength?: number; 
   const style: CSSProperties = {
     position: 'absolute',
     inset: 0,
-    background: `radial-gradient(ellipse 78% 82% at 50% 48%, rgba(13,13,14,0) ${Math.round(inner * 100)}%, rgba(13,13,14,${strength}) 100%)`,
+    background: `radial-gradient(ellipse 78% 82% at 50% 48%, rgba(28,25,21,0) ${Math.round(inner * 100)}%, rgba(28,25,21,${strength}) 100%)`,
     pointerEvents: 'none',
   };
   return <div style={style} />;

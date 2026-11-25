@@ -49,13 +49,13 @@ export const BRAND = {
 ${body}} as const;
 
 export type BrandPart = keyof typeof BRAND;
-export const BRAND_COLORS = { platin: '#E2E2E6', obsidian: '#0D0D0E' } as const;
+export const BRAND_COLORS = { platin: '#F4EEE3', obsidian: '#1C1915' } as const;
 `;
 
 // A full-bleed square for platforms that round the corners themselves: the favicon's monogram path on an obsidian square.
 const favicon = read('brand/favicon.svg');
 const mark = attr(favicon, ' d', 'brand/favicon.svg');
-const square = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="${'#0D0D0E'}"/><path fill-rule="evenodd" fill="${'#E2E2E6'}" d="${mark}"/></svg>`;
+const square = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="${'#1C1915'}"/><path fill-rule="evenodd" fill="${'#F4EEE3'}" d="${mark}"/></svg>`;
 
 const outputs = [
   ['lib/brand-paths.ts', Buffer.from(paths)],

@@ -8,10 +8,12 @@
  *             Only scenes with a weight above zero are evaluated, so the page at rest costs one cheap scene.
  *   2. POST   draws that texture to the canvas at full resolution and adds the optics: chromatic aberration, a cheap bloom, an
  *             anamorphic lens flare with ghosts, a vignette, 24 fps 35 mm film grain, gate flicker, a glitch-slice burst (the language
- *             switch) and dither. Its last line clamps every pixel to the brand palette: the darkest value is obsidian #0D0D0E and
- *             the lightest is platin #E2E2E6, so the layer can never emit pure black or pure white (CLAUDE.md, the audit checks it).
+ *             switch) and dither. Its last line clamps every pixel to the brand palette: the darkest value is warm anthracite #1C1915
+ *             and the lightest is warm platin #F4EEE3, so the layer can never emit pure black or pure white (CLAUDE.md, the audit
+ *             checks it). Warm family since 25.11.2026 (docs/adr/0038 section 22); champagne is untouched.
  *
- * Colours are written as linear numbers in 0..1 of the sRGB values: OB 13/255, L2 26/255, PL 226/255, CH #D4C5A9.
+ * Colours are written as 0..1 fractions of the sRGB values: OB (28,25,21)/255, L2 (43,38,32)/255, PL (244,238,227)/255, CH #D4C5A9.
+ * Every scene colour is mixed from these four anchors, so moving the anchors moved the whole film in one place.
  */
 
 export const VERT = /* glsl */ `#version 300 es
@@ -22,9 +24,9 @@ void main() {
 }`;
 
 const COMMON = /* glsl */ `
-const vec3 OB = vec3(0.0510, 0.0510, 0.0549);
-const vec3 L2 = vec3(0.1020, 0.1020, 0.1176);
-const vec3 PL = vec3(0.8863, 0.8863, 0.9020);
+const vec3 OB = vec3(0.1098, 0.0980, 0.0824);
+const vec3 L2 = vec3(0.1686, 0.1490, 0.1255);
+const vec3 PL = vec3(0.9569, 0.9333, 0.8902);
 const vec3 CH = vec3(0.8314, 0.7725, 0.6627);
 float h11(float x) { return fract(sin(x * 127.1) * 43758.5453); }
 float h21(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -303,6 +305,6 @@ void main() {
   col *= 1.0 + 0.012 * (h11(fr) - 0.5);
   col += (h21(gl_FragCoord.xy + 0.5) - 0.5) / 255.0;
 
-  // The brand palette is the limit: no pure black, no pure white, whatever the scene did.
-  o = vec4(clamp(col, vec3(0.0510, 0.0510, 0.0549), vec3(0.8863, 0.8863, 0.9020)), 1.0);
+  // The brand palette is the limit: no pure black, no pure white, whatever the scene did (warm family, docs/adr/0038 section 22).
+  o = vec4(clamp(col, vec3(0.1098, 0.0980, 0.0824), vec3(0.9569, 0.9333, 0.8902)), 1.0);
 }`;

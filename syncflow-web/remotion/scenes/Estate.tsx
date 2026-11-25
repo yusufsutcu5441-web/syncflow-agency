@@ -50,13 +50,13 @@ export function Estate() {
       {BAYS.map(([x, y, w, h, k], i) => (
         <rect key={i} x={x} y={y} width={w - 4} height={h - 4} fill={css([255, 190, 120], glow * k)} />
       ))}
-      <rect x="226" y="424" width="840" height="8" fill="rgba(226,226,230,0.55)" />
+      <rect x="226" y="424" width="840" height="8" fill="rgba(244,238,227,0.55)" />
       <rect x="250" y="430" width="790" height="108" fill="rgba(11,12,16,0.5)" />
     </g>
   );
 
   return (
-    <AbsoluteFill style={{ background: '#0D0D0E', overflow: 'hidden' }}>
+    <AbsoluteFill style={{ background: '#1C1915', overflow: 'hidden' }}>
       <svg width="1280" height="720" viewBox="0 0 1280 720">
         <defs>
           <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
@@ -87,9 +87,9 @@ export function Estate() {
             <stop offset="1" stopColor="rgb(255,170,90)" stopOpacity="0" />
           </radialGradient>
           <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0.2">
-            <stop offset={`${streak - 14}%`} stopColor="#E2E2E6" stopOpacity="0" />
-            <stop offset={`${streak}%`} stopColor="#E2E2E6" stopOpacity="0.2" />
-            <stop offset={`${streak + 14}%`} stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset={`${streak - 14}%`} stopColor="#F4EEE3" stopOpacity="0" />
+            <stop offset={`${streak}%`} stopColor="#F4EEE3" stopOpacity="0.2" />
+            <stop offset={`${streak + 14}%`} stopColor="#F4EEE3" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor={css(glassSky, 0.38)} />
@@ -105,7 +105,7 @@ export function Estate() {
             <stop offset="1" stopColor="#050608" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="slab" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.95" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="0.95" />
             <stop offset="1" stopColor="#9a9ba3" stopOpacity="0.95" />
           </linearGradient>
           <linearGradient id="plinth" x1="0" y1="0" x2="0" y2="1">
@@ -122,8 +122,8 @@ export function Estate() {
             <stop offset="1" stopColor="rgb(255,190,120)" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="poolfade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="1" />
-            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="1" />
+            <stop offset="1" stopColor="#F4EEE3" stopOpacity="0" />
           </linearGradient>
           <mask id="poolmask">
             <rect x={POOL.x} y={POOL.y} width={POOL.w} height={POOL.h} fill="url(#poolfade)" />
@@ -146,9 +146,9 @@ export function Estate() {
             <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 2.6 -0.92" />
           </filter>
           <linearGradient id="cloud-fade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.1" />
-            <stop offset="0.35" stopColor="#E2E2E6" stopOpacity="1" />
-            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="0.1" />
+            <stop offset="0.35" stopColor="#F4EEE3" stopOpacity="1" />
+            <stop offset="1" stopColor="#F4EEE3" stopOpacity="0" />
           </linearGradient>
           <mask id="cloud-mask">
             <rect x="0" y="0" width="1280" height="330" fill="url(#cloud-fade)" />
@@ -160,7 +160,7 @@ export function Estate() {
         <rect width="1280" height="720" fill="url(#sky)" />
         {Array.from({ length: 52 }, (_, i) => {
           const tw = 0.5 + 0.5 * Math.sin(loop * TAU * (1 + Math.floor(rand(i, 4) * 3)) + rand(i, 5) * TAU);
-          return <circle key={i} cx={rand(i, 1) * 1280} cy={rand(i, 2) * 290} r={0.6 + rand(i, 3) * 1.1} fill="#E2E2E6" opacity={smooth((p - 0.5) / 0.4) * (0.25 + 0.55 * tw)} />;
+          return <circle key={i} cx={rand(i, 1) * 1280} cy={rand(i, 2) * 290} r={0.6 + rand(i, 3) * 1.1} fill="#F4EEE3" opacity={smooth((p - 0.5) / 0.4) * (0.25 + 0.55 * tw)} />;
         })}
         <ellipse cx="640" cy="528" rx="720" ry="180" fill="url(#sun)" />
         <g mask="url(#cloud-mask)" opacity={0.55 + 0.25 * p}>
@@ -217,7 +217,7 @@ export function Estate() {
               <use href="#refl" transform="translate(0 1096) scale(1 -1)" />
             </g>
           </g>
-          <rect x={POOL.x - 4} y={POOL.y - 2} width={POOL.w + 8} height="3" fill="rgba(226,226,230,0.5)" />
+          <rect x={POOL.x - 4} y={POOL.y - 2} width={POOL.w + 8} height="3" fill="rgba(244,238,227,0.5)" />
 
           {/* lower and upper volumes */}
           <rect x="250" y="430" width="790" height="112" fill="#0b0c10" />
@@ -225,7 +225,7 @@ export function Estate() {
           {/* a stone cheek at the end of the upper volume, and timber slats at the end of the lower one */}
           <rect x="1102" y="330" width="22" height="100" fill="#2b2b31" />
           {Array.from({ length: 8 }, (_, i) => (
-            <rect key={i} x="1102" y={336 + i * 12} width="22" height="1" fill="rgba(226,226,230,0.1)" />
+            <rect key={i} x="1102" y={336 + i * 12} width="22" height="1" fill="rgba(244,238,227,0.1)" />
           ))}
           <rect x="1024" y="438" width="16" height="98" fill="#2a1d16" />
           {Array.from({ length: 4 }, (_, i) => (
@@ -256,9 +256,9 @@ export function Estate() {
           <rect x="250" y="432" width="790" height="16" fill="url(#under)" />
           <rect x="380" y="330" width="740" height="16" fill="url(#under)" />
           <rect x="336" y="320" width="820" height="10" fill="url(#slab)" />
-          <rect x="336" y="319" width="820" height="1.5" fill="rgba(226,226,230,0.95)" />
+          <rect x="336" y="319" width="820" height="1.5" fill="rgba(244,238,227,0.95)" />
           <rect x="226" y="424" width="840" height="8" fill="url(#slab)" opacity="0.85" />
-          <rect x="250" y="540" width="790" height="6" fill="rgba(226,226,230,0.4)" />
+          <rect x="250" y="540" width="790" height="6" fill="rgba(244,238,227,0.4)" />
         </g>
 
         <rect y={clamp(0, 0, 1)} width="1280" height="720" fill="none" />

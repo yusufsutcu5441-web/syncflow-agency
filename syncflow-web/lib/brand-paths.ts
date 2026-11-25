@@ -8,4 +8,4 @@ export const BRAND = {
 } as const;
 
 export type BrandPart = keyof typeof BRAND;
-export const BRAND_COLORS = { platin: '#E2E2E6', obsidian: '#0D0D0E' } as const;
+export const BRAND_COLORS = { platin: '#F4EEE3', obsidian: '#1C1915' } as const;

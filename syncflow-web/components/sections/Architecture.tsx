@@ -322,9 +322,9 @@ function FrameGraph({ alt, median }: { alt: string; median: number | null }) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="mt-4 h-28 w-full" role="img" aria-label={alt} preserveAspectRatio="none">
-      <line x1="0" x2={W} y1={y(33.3)} y2={y(33.3)} stroke="rgb(226 226 230 / 0.10)" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
-      <line x1="0" x2={W} y1={y(16.7)} y2={y(16.7)} stroke="rgb(226 226 230 / 0.18)" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
-      {points ? <polyline points={points} fill="none" stroke="#E2E2E6" strokeWidth="1.25" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /> : null}
+      <line x1="0" x2={W} y1={y(33.3)} y2={y(33.3)} stroke="rgb(244 238 227 / 0.10)" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
+      <line x1="0" x2={W} y1={y(16.7)} y2={y(16.7)} stroke="rgb(244 238 227 / 0.18)" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />
+      {points ? <polyline points={points} fill="none" stroke="#F4EEE3" strokeWidth="1.25" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /> : null}
     </svg>
   );
 }

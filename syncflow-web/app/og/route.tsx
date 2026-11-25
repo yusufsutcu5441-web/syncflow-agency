@@ -78,10 +78,10 @@ export async function GET(request: Request) {
           justifyContent: 'space-between',
           padding: '72px 84px',
           background: BRAND_COLORS.obsidian,
-          backgroundImage: 'radial-gradient(60% 55% at 78% 8%, rgba(226,226,230,0.08), rgba(13,13,14,0) 70%)',
+          backgroundImage: 'radial-gradient(60% 55% at 78% 8%, rgba(244,238,227,0.08), rgba(28,25,21,0) 70%)',
           color: PLATIN,
           fontFamily: zh ? 'Noto Sans SC, Inter Display' : 'Inter Display',
-          border: '1px solid rgba(226,226,230,0.10)',
+          border: '1px solid rgba(244,238,227,0.10)',
         }}
       >
         <svg width={Math.round((LOGO_HEIGHT * lockup.w) / lockup.h)} height={LOGO_HEIGHT} viewBox={lockup.viewBox}>
@@ -90,11 +90,11 @@ export async function GET(request: Request) {
 
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', fontSize: zh ? 108 : 104, lineHeight: leading, letterSpacing: tracking, fontWeight: 600 }}>{line1}</div>
-          <div style={{ display: 'flex', fontSize: zh ? 108 : 104, lineHeight: leading, letterSpacing: tracking, fontWeight: 600, color: 'rgba(226,226,230,0.6)' }}>{line2}</div>
-          <div style={{ display: 'flex', marginTop: 34, fontSize: 32, lineHeight: zh ? 1.5 : 1.3, letterSpacing: zh ? '0' : '-0.01em', color: 'rgba(226,226,230,0.7)' }}>{meta('ogSubtitle')}</div>
+          <div style={{ display: 'flex', fontSize: zh ? 108 : 104, lineHeight: leading, letterSpacing: tracking, fontWeight: 600, color: 'rgba(244,238,227,0.6)' }}>{line2}</div>
+          <div style={{ display: 'flex', marginTop: 34, fontSize: 32, lineHeight: zh ? 1.5 : 1.3, letterSpacing: zh ? '0' : '-0.01em', color: 'rgba(244,238,227,0.7)' }}>{meta('ogSubtitle')}</div>
         </div>
 
-        <div style={{ display: 'flex', fontSize: 26, color: 'rgba(226,226,230,0.55)', fontFamily: 'Inter Display' }}>{SITE_URL.replace(/^https?:\/\//, '')}</div>
+        <div style={{ display: 'flex', fontSize: 26, color: 'rgba(244,238,227,0.55)', fontFamily: 'Inter Display' }}>{SITE_URL.replace(/^https?:\/\//, '')}</div>
       </div>
     ),
     {

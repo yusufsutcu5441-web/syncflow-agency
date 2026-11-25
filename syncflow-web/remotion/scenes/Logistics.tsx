@@ -11,7 +11,7 @@ const CAMERA_HEIGHT = 1.0;
 const proj = (x: number, y: number, z: number): [number, number] => [CX + (FOCAL * x) / z, HORIZON + (FOCAL * (CAMERA_HEIGHT - y)) / z];
 
 /** Palette only: obsidian, the two layers, platin, and champagne as the one warm light (the standby lane). */
-const platin = (a: number) => `rgba(226,226,230,${a.toFixed(3)})`;
+const platin = (a: number) => `rgba(244,238,227,${a.toFixed(3)})`;
 const champagne = (a: number) => `rgba(212,197,169,${a.toFixed(3)})`;
 
 const Z_FAR = 9;
@@ -158,12 +158,12 @@ export function Logistics() {
           <g key={`p-${lane}-${k}`} opacity={fade} style={soft > 0.3 ? { filter: `blur(${soft.toFixed(2)}px)` } : undefined}>
             {/* a short soft trail behind the parcel (towards the horizon) */}
             <polygon points={`${s0x},${s0y} ${s1x},${s1y} ${s2x},${s2y} ${s3x},${s3y}`} fill="url(#trail)" opacity={0.7} />
-            <ellipse cx={sx} cy={sy + 1.5 / z} rx={((a1x - a0x) / 2) * 1.25} ry={1.6 + 3 / z} fill="rgba(13,13,14,0.55)" />
+            <ellipse cx={sx} cy={sy + 1.5 / z} rx={((a1x - a0x) / 2) * 1.25} ry={1.6 + 3 / z} fill="rgba(28,25,21,0.55)" />
             <polygon points={`${b0x},${b0y} ${b1x},${b1y} ${c1x},${c1y} ${c0x},${c0y}`} fill={platin(0.9)} />
             <polygon points={`${a0x},${a0y} ${a1x},${a1y} ${b1x},${b1y} ${b0x},${b0y}`} fill={platin(0.46)} />
             <polygon points={`${a0x},${a0y} ${a1x},${a1y} ${r2x},${r2y} ${r3x},${r3y}`} fill="url(#reflect)" />
-            <polygon points={`${t0x},${t0y} ${t1x},${t1y} ${t2x},${t2y} ${t3x},${t3y}`} fill="rgba(13,13,14,0.22)" />
-            <polygon points={`${f0x},${f0y} ${f1x},${f1y} ${f2x},${f2y} ${f3x},${f3y}`} fill="rgba(13,13,14,0.28)" />
+            <polygon points={`${t0x},${t0y} ${t1x},${t1y} ${t2x},${t2y} ${t3x},${t3y}`} fill="rgba(28,25,21,0.22)" />
+            <polygon points={`${f0x},${f0y} ${f1x},${f1y} ${f2x},${f2y} ${f3x},${f3y}`} fill="rgba(28,25,21,0.28)" />
             <line x1={b0x} y1={b0y} x2={b1x} y2={b1y} stroke={platin(0.95)} strokeWidth={Math.max(0.8, 1.4 / z)} />
           </g>
         ),
@@ -196,18 +196,18 @@ export function Logistics() {
   const standbyGlow = proj(LANES[STANDBY], 0, 2.7);
 
   return (
-    <AbsoluteFill style={{ background: '#0D0D0E', overflow: 'hidden' }}>
+    <AbsoluteFill style={{ background: '#1C1915', overflow: 'hidden' }}>
       <svg width="1280" height="720" viewBox="0 0 1280 720">
         <defs>
           <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#0D0D0E" />
-            <stop offset="0.5" stopColor="#141416" />
-            <stop offset="1" stopColor="#1A1A1E" />
+            <stop offset="0" stopColor="#1C1915" />
+            <stop offset="0.5" stopColor="#23201c" />
+            <stop offset="1" stopColor="#2b2620" />
           </linearGradient>
           <radialGradient id="horizon" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.2" />
-            <stop offset="0.45" stopColor="#E2E2E6" stopOpacity="0.06" />
-            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="0.2" />
+            <stop offset="0.45" stopColor="#F4EEE3" stopOpacity="0.06" />
+            <stop offset="1" stopColor="#F4EEE3" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
             <stop offset="0" stopColor="#D4C5A9" stopOpacity="0.55" />
@@ -215,28 +215,28 @@ export function Logistics() {
             <stop offset="1" stopColor="#D4C5A9" stopOpacity="0" />
           </radialGradient>
           <linearGradient id="gate-light" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.26" />
-            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="0.26" />
+            <stop offset="1" stopColor="#F4EEE3" stopOpacity="0" />
           </linearGradient>
           <radialGradient id="pool" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.2" />
-            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="0.2" />
+            <stop offset="1" stopColor="#F4EEE3" stopOpacity="0" />
           </radialGradient>
           <linearGradient id="reflect" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.24" />
-            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="0.24" />
+            <stop offset="1" stopColor="#F4EEE3" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="trail" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.32" />
-            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="0.32" />
+            <stop offset="1" stopColor="#F4EEE3" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#0D0D0E" stopOpacity="0.9" />
-            <stop offset="1" stopColor="#0D0D0E" stopOpacity="0" />
+            <stop offset="0" stopColor="#1C1915" stopOpacity="0.9" />
+            <stop offset="1" stopColor="#1C1915" stopOpacity="0" />
           </linearGradient>
           <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.75">
-            <stop offset="0.55" stopColor="#0D0D0E" stopOpacity="0" />
-            <stop offset="1" stopColor="#0D0D0E" stopOpacity="0.82" />
+            <stop offset="0.55" stopColor="#1C1915" stopOpacity="0" />
+            <stop offset="1" stopColor="#1C1915" stopOpacity="0.82" />
           </radialGradient>
         </defs>
 

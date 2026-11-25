@@ -17,8 +17,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const target = join(root, 'app', 'flags.css');
 
 const RED = '#b0353f';
-const PLATIN = '#dcdce0';
-const GRAPHITE = '#202024';
+const PLATIN = '#e3ddd1';
+const GRAPHITE = '#23201c';
 const GOLD = '#d6aa3c';
 
 const n = (value) => String(Math.round(value * 100) / 100);

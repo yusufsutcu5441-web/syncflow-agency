@@ -101,11 +101,13 @@ else {
   /@import\s+["']tailwindcss["']/.test(c) ? add(G2, "PASS", '@import "tailwindcss" var') : add(G2, "FAIL", '@import "tailwindcss" yok');
   /@theme\b/.test(c) ? add(G2, "PASS", "@theme bloğu var") : add(G2, "WARN", "@theme bloğu yok; tokenlar Tailwind yardımcı sınıflarına dönüşmez");
 
-  // Palet (docs/adr/0007): obsidian zemin, iki katman, platin metin, şampanya vurgu. Cam çizgiler sahibin onayladığı #ffffff1a ve #ffffff40.
-  const req = { "#0d0d0e": "zemin (obsidian)", "#141416": "katman 1", "#1a1a1e": "katman 2", "#e2e2e6": "metin (platin)", "#d4c5a9": "vurgu (şampanya)" };
+  // Palet (docs/adr/0007; 25.11.2026'dan beri sıcak antrasit ailesi, docs/adr/0038 bölüm 22): sıcak zemin, iki sıcak katman, sıcak platin
+  // metin, şampanya vurgu. Cam çizgiler aynı ağırlıkta (%10 / %25) ve artık sıcak platinle boyalı. Beklenen değerler eski renge bağlıydı,
+  // sahibin palet emriyle yeni token'a taşındı; bu bir gevşetme değildir (aynı kontroller, yeni aile).
+  const req = { "#1c1915": "zemin (sıcak antrasit)", "#23201c": "katman 1", "#2b2620": "katman 2", "#f4eee3": "metin (sıcak platin)", "#d4c5a9": "vurgu (şampanya)" };
   for (const [hex, name] of Object.entries(req)) low.includes(hex) ? add(G2, "PASS", `${hex} ${name}`) : add(G2, "FAIL", `${hex} ${name} tanımlı değil`);
-  /#ffffff1a/i.test(c) ? add(G2, "PASS", "cam kenarlık #ffffff1a (%10)") : add(G2, "FAIL", "cam kenarlık #ffffff1a tanımlı değil");
-  /#ffffff40/i.test(c) ? add(G2, "PASS", "hover kenarlığı #ffffff40 (%25)") : add(G2, "FAIL", "hover kenarlığı #ffffff40 tanımlı değil");
+  /#f4eee31a/i.test(c) ? add(G2, "PASS", "cam kenarlık #f4eee31a (sıcak platin %10)") : add(G2, "FAIL", "cam kenarlık #f4eee31a tanımlı değil");
+  /#f4eee340/i.test(c) ? add(G2, "PASS", "hover kenarlığı #f4eee340 (sıcak platin %25)") : add(G2, "FAIL", "hover kenarlığı #f4eee340 tanımlı değil");
   /--tracking-display:\s*-0\.035em/.test(c) ? add(G2, "PASS", "display tracking -0.035em (Inter Display 300, docs/adr/0022)") : add(G2, "FAIL", "--tracking-display -0.035em değil");
   /\[lang=['"]?ar['"]?\][^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c) || /:lang\(ar\)[^{]*\{[^}]*(?:--tracking|letter-spacing)/.test(c)
     ? add(G2, "PASS", "Arapçada harf aralığı sıfırlanıyor (bitişik yazı bozulmaz)") : add(G2, "FAIL", "Arapça için harf aralığı sıfırlaması yok (letter-spacing bitişik harfleri koparır)");
@@ -128,11 +130,12 @@ else {
     const lum = ([r, g, b]) => 0.2126 * srgb(r / 255) + 0.7152 * srgb(g / 255) + 0.0722 * srgb(b / 255);
     const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + 0.05) / (lo + 0.05); };
     const over = (fg, alpha, bg) => fg.map((v, i) => alpha * v + (1 - alpha) * bg[i]);
-    const PLATIN = [226, 226, 230];
-    // Gerçek yüzeyler: zemin, iki katman ve en kötüsü olan katman 2 üstündeki cam film (rgb(226 226 230 / 0.03), globals.css).
-    const SURFACES = [["zemin", [13, 13, 14]], ["katman 1", [20, 20, 22]], ["katman 2", [26, 26, 30]], ["cam/katman 2", over(PLATIN, 0.03, [26, 26, 30])]];
+    const PLATIN = [244, 238, 227];
+    // Gerçek yüzeyler: zemin, iki katman ve en kötüsü olan katman 2 üstündeki cam film (rgb(244 238 227 / 0.03), globals.css).
+    // 25.11.2026: yüzeyler sıcak antrasit ailesine taşındı (bölüm 22); eşik 4,5:1 aynen durur.
+    const SURFACES = [["zemin", [28, 25, 21]], ["katman 1", [35, 32, 28]], ["katman 2", [43, 38, 32]], ["cam/katman 2", over(PLATIN, 0.03, [43, 38, 32])]];
     const alphaOf = (token) => {
-      const m = new RegExp(`--color-${token}:\\s*rgb\\(226 226 230 / ([0-9.]+)\\)`).exec(raw);
+      const m = new RegExp(`--color-${token}:\\s*rgb\\(244 238 227 / ([0-9.]+)\\)`).exec(raw);
       return m ? Number(m[1]) : null;
     };
     const TOKENS = [["ink", 1], ["muted", alphaOf("muted")], ["faint", alphaOf("faint")]];
@@ -171,7 +174,7 @@ else {
     if (rel(f).endsWith("brand-paths.ts")) continue;
     for (const m of stripComments(fs.readFileSync(f, "utf8")).match(PURE) ?? []) pureHits.push(`${rel(f)}: ${m}`);
   }
-  pureHits.length ? add(G2, "FAIL", `saf siyah/beyaz kaldı (${pureHits.length}); obsidian #0D0D0E ve platin #E2E2E6 kullanın: ${[...new Set(pureHits)].slice(0, 5).join(" | ")}`)
+  pureHits.length ? add(G2, "FAIL", `saf siyah/beyaz kaldı (${pureHits.length}); sıcak antrasit #1C1915 ve sıcak platin #F4EEE3 kullanın: ${[...new Set(pureHits)].slice(0, 5).join(" | ")}`)
     : add(G2, "PASS", "saf siyah ve saf beyaz yok (CSS, bileşenler, OG kartı, Remotion sahneleri)");
 
   // Yazı tipi (docs/adr/0022): tek metin yüzü Inter Display (OFL, 300-500), kendi sunucumuzdan; Instrument Sans/Serif ve Cabinet Grotesk kalmadı.
@@ -262,7 +265,7 @@ else {
   const lostBrand = brandFiles.filter((f) => !exists(f));
   lostBrand.length ? add(G2, "FAIL", `marka dosyası yok: ${lostBrand.join(", ")}`) : add(G2, "PASS", "brand/ paketi (B1 monogram, yatay ve yığılmış kilit, wordmark, favicon) depoda");
   const brandSvgs = fs.existsSync(abs("brand")) ? fs.readdirSync(abs("brand")).filter((n) => n.endsWith(".svg") && n !== "construction-b1.svg") : [];
-  const offBrand = brandSvgs.filter((n) => { const t = read(`brand/${n}`); return /gradient|filter|shadow|<text|font-family/i.test(t) || [...t.matchAll(/fill="(#[0-9a-fA-F]{6})"/g)].some((m) => !["#E2E2E6", "#0D0D0E"].includes(m[1].toUpperCase())); });
+  const offBrand = brandSvgs.filter((n) => { const t = read(`brand/${n}`); return /gradient|filter|shadow|<text|font-family/i.test(t) || [...t.matchAll(/fill="(#[0-9a-fA-F]{6})"/g)].some((m) => !["#F4EEE3", "#1C1915"].includes(m[1].toUpperCase())); });
   offBrand.length ? add(G2, "FAIL", `logo dosyası tek renk/eğri kuralını bozuyor: ${offBrand.join(", ")}`) : add(G2, "PASS", `${brandSvgs.length} logo dosyası tek renk (platin ya da obsidian), eğri, gradyansız, canlı yazı tipsiz`);
   const bb = spawnSync(process.execPath, ["scripts/build-brand.mjs", "--check"], { cwd: ROOT, encoding: "utf8" });
   bb.status === 0 ? add(G2, "PASS", "lib/brand-paths.ts, app/icon.svg, apple-icon.png ve logo-512.png marka paketiyle aynı") : add(G2, "FAIL", `marka çıktıları eski: ${(bb.stdout + bb.stderr).trim().split("\n")[0]} (npm run brand:build)`);
@@ -561,9 +564,10 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
 
 /* ───────── 5) Sahne videoları (önceden render edilmiş, docs/adr/0003 ve 0006) ───────── */
 const G5 = "5. Sahne videoları (önceden render edilmiş)";
-// Dosya adları (sahne adı değil): üç sektör filmi 25.11.2026'dan beri konsept site kaydırma kaydıdır (bölüm 21: estate-3, clinic-3, law-3) ve
-// bölüm 12/14'ün fotoğraf tabanlı -2 dosyalarının yerine geçmiştir; /media bir hafta önbelleklendiği için her değişen film yeni ad taşır (lib/clips.ts).
-const CLIPS = ["monolith-3", "estate-3", "clinic-3", "law-3", "logistics"];
+// Dosya adları (sahne adı değil): üç sektör filmi 25.11.2026'dan beri konsept site kaydırma kaydıdır (bölüm 21) ve aynı gün sahibin palet emriyle
+// beş film sıcak antrasit zemine yeniden derecelendirildi (bölüm 22: estate-4, clinic-4, law-4, monolith-4, logistics-2); /media bir hafta
+// önbelleklendiği için her değişen film yeni ad taşır (lib/clips.ts).
+const CLIPS = ["monolith-4", "estate-4", "clinic-4", "law-4", "logistics-2"];
 const clipMissing = [];
 for (const name of CLIPS) for (const ext of ["mp4", "webm", "webp"]) {
   const p = `public/media/clips/${name}.${ext}`;
@@ -716,8 +720,8 @@ ${core}`;
     /new Worker\(new URL\('\.\/worker\.ts', import\.meta\.url\)/.test(pageSide) && /transferControlToOffscreen/.test(pageSide) && /startOnMainThread/.test(pageSide) && /import\('\.\/core'\)/.test(pageSide)
       && /runEngine/.test(workerCode) && /type: 'failed'/.test(workerCode) && /'worker-src': \["'self'", 'blob:'\]/.test(cspCode) && !/\b(?:window|document)\b/.test(core.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, ""))
       ? add(G8, "PASS", "motor worker + OffscreenCanvas'ta çalışır (context ve shader derlemesi ana iş parçacığında değil), başlamazsa ana iş parçacığı yedeği var, çekirdek window/document kullanmaz, CSP worker-src izinli") : add(G8, "FAIL", "worker yolu eksik (new Worker, transferControlToOffscreen, ana iş parçacığı yedeği, CSP worker-src ya da çekirdek window/document kullanıyor)");
-    /clamp\(col,\s*vec3\(0\.05\d*,\s*0\.05\d*,\s*0\.054\d*\),\s*vec3\(0\.886\d*,\s*0\.886\d*,\s*0\.90\d*\)\)/.test(shaders)
-      ? add(G8, "PASS", "POST shader çıktısı paletin (#0D0D0E ... #E2E2E6) içine kıstırılıyor: saf siyah/beyaz üretemez") : add(G8, "FAIL", "POST shader paletin içine kıstırmıyor (saf siyah/beyaz çıkabilir)");
+    /clamp\(col,\s*vec3\(0\.109\d*,\s*0\.098\d*,\s*0\.082\d*\),\s*vec3\(0\.956\d*,\s*0\.933\d*,\s*0\.890\d*\)\)/.test(shaders)
+      ? add(G8, "PASS", "POST shader çıktısı paletin (#1C1915 ... #F4EEE3, bölüm 22) içine kıstırılıyor: saf siyah/beyaz üretemez") : add(G8, "FAIL", "POST shader paletin içine kıstırmıyor (saf siyah/beyaz çıkabilir)");
     /document\.hidden/.test(engine) && /destroy\(\)/.test(engine) && /MIN_SCENE_SCALE/.test(engine) ? add(G8, "PASS", "motor sekme gizliyken durur, yavaş karede çözünürlüğü düşürür, çok yavaşsa kendini kapatır") : add(G8, "FAIL", "motorda sekme duraklatma ya da uyarlamalı kalite yok");
     const deps = { ...readJSON("package.json").dependencies, ...readJSON("package.json").devDependencies };
     const heavy = ["three", "@react-three/fiber", "@react-three/drei", "@react-three/postprocessing"].filter((d) => deps[d]);
@@ -955,11 +959,11 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     const flagsCheck = spawnSync(process.execPath, ["scripts/build-flags.mjs", "--check"], { cwd: ROOT, encoding: "utf8" });
     flagsCheck.status === 0 ? add(G11, "PASS", "app/flags.css üreticisiyle (scripts/build-flags.mjs) aynı") : add(G11, "FAIL", "app/flags.css üreticisinden sapmış: npm run flags:build", (flagsCheck.stderr || flagsCheck.stdout || "").trim());
 
-    // 10) Sahne videoları: dört sektör klibi 1920 × 1080 (lojistik Remotion --scale=1.5; estate-3, clinic-3 ve law-3 konsept site kaydı), posterler tembel <img>; şampanya dışında yeni renk yok.
+    // 10) Sahne videoları: dört sektör klibi 1920 × 1080 (lojistik Remotion --scale=1.5; estate-4, clinic-4 ve law-4 konsept site kaydı, bölüm 22 sıcak derecelendirme), posterler tembel <img>; şampanya dışında yeni renk yok.
     const webp = (f) => { const b = fs.readFileSync(abs(f)); const t = b.toString("ascii", 12, 16); return t === "VP8 " ? [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff] : t === "VP8L" ? [1 + (((b[22] & 0x3f) << 8) | b[21]), 1 + (((b[24] & 0x0f) << 10) | (b[23] << 2) | ((b[22] & 0xc0) >> 6))] : t === "VP8X" ? [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)] : [0, 0]; };
     const mp4 = (f) => { const b = fs.readFileSync(abs(f)); const at = b.indexOf("tkhd"); if (at < 0) return [0, 0]; const v = b[at + 4]; const o = at + (v === 1 ? 92 : 80); return [b.readUInt32BE(o) / 65536, b.readUInt32BE(o + 4) / 65536]; };
     const wrong = [];
-    for (const name of ["estate-3", "clinic-3", "law-3", "logistics", "monolith-3"]) {
+    for (const name of ["estate-4", "clinic-4", "law-4", "logistics-2", "monolith-4"]) {
       const want = [1920, 1080];
       for (const [f, size] of [[`public/media/clips/${name}.webp`, webp(`public/media/clips/${name}.webp`)], [`public/media/clips/${name}.mp4`, mp4(`public/media/clips/${name}.mp4`)]]) if (size[0] !== want[0] || size[1] !== want[1]) wrong.push(`${f} ${size.join("x")} (beklenen ${want.join("x")})`);
     }
@@ -967,21 +971,19 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     /SCALE\s*=\s*\{[^}]*estate:\s*1\.5[^}]*clinic:\s*1\.5[^}]*law:\s*1\.5[^}]*logistics:\s*1\.5/.test(read("scripts/render-film.mjs")) ? add(G11, "PASS", "render betiği dört sektör sahnesini --scale=1.5 ile işliyor (sahne koordinatları değişmeden)") : add(G11, "FAIL", "scripts/render-film.mjs sektör sahneleri için ölçek 1,5 taşımıyor");
     const sv = code("components/media/SceneVideo.tsx");
     /loading="lazy"/.test(sv) && !/\bposter=/.test(sv) ? add(G11, "PASS", "klip görüntüsü tembel <img> (video poster'ı sayfa yüklenirken indirilirdi); video preload=none") : add(G11, "FAIL", "SceneVideo hâlâ poster= kullanıyor ya da tembel <img> yok");
-    // 25.11.2026 (docs/adr/0038 bölüm 21): estate, clinic ve law filmleri Remotion render'ı da fotoğraf klibi de değil, kurgusal firmaların konsept
-    //     web sitelerinin masaüstü + mobil kaydırma kaydıdır; dosya adları estate-3, clinic-3, law-3 (lib/clips.ts eşler) ve aşılmış her ad depoda yoktur
-    //     (bir haftalık /media önbelleği eski filmi gösterirdi).
+    // 25.11.2026 (docs/adr/0038 bölüm 21 ve 22): estate, clinic ve law filmleri kurgusal firmaların konsept web sitelerinin masaüstü + mobil
+    //     kaydırma kaydıdır ve beş film sıcak antrasit zemine derecelendirilmiş -4 (logistics -2) adlarını taşır (lib/clips.ts eşler);
+    //     aşılmış her ad depoda yoktur (bir haftalık /media önbelleği eski filmi gösterirdi).
     const clipsSrc = code("lib/clips.ts");
-    // monolith is still a Remotion render; it carries a new name each time it changes, because /media is cached for a week: monolith-2 at
-    // 1920 x 1080 (bölüm 15) and monolith-3 after the contrast grade of bölüm 19. Every superseded name must be gone from the repository.
-    const deliveredClips = [["estate", "estate-3"], ["clinic", "clinic-3"], ["law", "law-3"], ["monolith", "monolith-3"]];
-    const superseded = ["estate", "clinic", "law", "monolith", "monolith-2", "estate-2", "clinic-2", "law-2"];
+    const deliveredClips = [["estate", "estate-4"], ["clinic", "clinic-4"], ["law", "law-4"], ["monolith", "monolith-4"], ["logistics", "logistics-2"]];
+    const superseded = ["estate", "clinic", "law", "monolith", "logistics", "monolith-2", "estate-2", "clinic-2", "law-2", "monolith-3", "estate-3", "clinic-3", "law-3"];
     const mapped =
       deliveredClips.every(([scene, file]) => new RegExp(`${scene}:\\s*'${file}'`).test(clipsSrc) && ["mp4", "webm", "webp"].every((e) => exists(`public/media/clips/${file}.${e}`))) &&
       superseded.every((name) => ["mp4", "webm", "webp"].every((e) => !exists(`public/media/clips/${name}.${e}`)));
-    mapped && /clipSrc\(name, 'webp'\)/.test(sv) && /clipSrc\(name, 'mp4'\)/.test(sv) && /clipSrc\(name, 'webm'\)/.test(sv) && !/media\/clips\/\$\{name\}/.test(sv) ? add(G11, "PASS", "estate, clinic, law ve monolit filmleri -3 dosyalarından oynar (lib/clips.ts eşlemesi, SceneVideo clipSrc); aşılmış sekiz ad depoda yok (ADR 0038 bölüm 12, 14, 15, 19, 21)") : add(G11, "FAIL", "klip eşlemesi eksik: lib/clips.ts estate -> estate-3, clinic -> clinic-3, law -> law-3, monolith -> monolith-3, SceneVideo clipSrc, yeni dosyalar var ve aşılmış adlar yok olmalı");
+    mapped && /clipSrc\(name, 'webp'\)/.test(sv) && /clipSrc\(name, 'mp4'\)/.test(sv) && /clipSrc\(name, 'webm'\)/.test(sv) && !/media\/clips\/\$\{name\}/.test(sv) ? add(G11, "PASS", "beş film sıcak zeminli -4/-2 dosyalarından oynar (lib/clips.ts eşlemesi, SceneVideo clipSrc); aşılmış on üç ad depoda yok (ADR 0038 bölüm 12, 14, 15, 19, 21, 22)") : add(G11, "FAIL", "klip eşlemesi eksik: lib/clips.ts estate -> estate-4, clinic -> clinic-4, law -> law-4, monolith -> monolith-4, logistics -> logistics-2, SceneVideo clipSrc, yeni dosyalar var ve aşılmış adlar yok olmalı");
     // Kaynak kaydı: yayındaki üç sektör filminin ne olduğu ve kullanımdan kalkan fotoğrafların adresi/fotoğrafçısı depoda durur (brief 24-25.11.2026).
     const mediaSources = exists("docs/media-sources.md") ? read("docs/media-sources.md") : "";
-    ["estate-3", "clinic-3", "law-3"].every((f) => mediaSources.includes(f)) && /unsplash\.com\/photos\//.test(mediaSources) ? add(G11, "PASS", "docs/media-sources.md yayındaki üç filmi ve kullanımdan kalkan fotoğraf kaynaklarını (adres ve fotoğrafçı) kayıt altında tutuyor") : add(G11, "FAIL", "docs/media-sources.md yok, yayındaki üç klibi (estate-3, clinic-3, law-3) saymıyor ya da fotoğraf adresi taşımıyor");
+    ["estate-4", "clinic-4", "law-4"].every((f) => mediaSources.includes(f)) && /unsplash\.com\/photos\//.test(mediaSources) ? add(G11, "PASS", "docs/media-sources.md yayındaki üç filmi ve kullanımdan kalkan fotoğraf kaynaklarını (adres ve fotoğrafçı) kayıt altında tutuyor") : add(G11, "FAIL", "docs/media-sources.md yok, yayındaki üç klibi (estate-4, clinic-4, law-4) saymıyor ya da fotoğraf adresi taşımıyor");
   }
 }
 

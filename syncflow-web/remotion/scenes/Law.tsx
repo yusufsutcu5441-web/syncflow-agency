@@ -37,7 +37,7 @@ export function Law() {
   const courses = Array.from({ length: 9 }, (_, i) => (i + 1) / 10);
 
   return (
-    <AbsoluteFill style={{ background: '#0D0D0E', overflow: 'hidden' }}>
+    <AbsoluteFill style={{ background: '#1C1915', overflow: 'hidden' }}>
       <svg width="1280" height="720" viewBox="0 0 1280 720">
         <defs>
           <linearGradient id="floor" x1="0" y1="1" x2="0" y2="0">
@@ -46,15 +46,15 @@ export function Law() {
             <stop offset="1" stopColor="#1f1f24" />
           </linearGradient>
           <linearGradient id="ceiling" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#0D0D0E" />
+            <stop offset="0" stopColor="#1C1915" />
             <stop offset="1" stopColor="#151518" />
           </linearGradient>
           <linearGradient id="wall-l" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#0D0D0E" />
+            <stop offset="0" stopColor="#1C1915" />
             <stop offset="1" stopColor="#18181c" />
           </linearGradient>
           <linearGradient id="wall-r" x1="1" y1="0" x2="0" y2="0">
-            <stop offset="0" stopColor="#0D0D0E" />
+            <stop offset="0" stopColor="#1C1915" />
             <stop offset="1" stopColor="#18181c" />
           </linearGradient>
           <radialGradient id="door" cx="0.5" cy="0.5" r="0.5">
@@ -73,18 +73,18 @@ export function Law() {
             <stop offset="1" stopColor="#D4C5A9" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="shaft" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#141416" />
+            <stop offset="0" stopColor="#23201c" />
             <stop offset="0.55" stopColor="#202025" />
             <stop offset="1" stopColor="#2a2a30" />
           </linearGradient>
           <linearGradient id="shaft-r" x1="1" y1="0" x2="0" y2="0">
-            <stop offset="0" stopColor="#141416" />
+            <stop offset="0" stopColor="#23201c" />
             <stop offset="0.55" stopColor="#202025" />
             <stop offset="1" stopColor="#2a2a30" />
           </linearGradient>
           <linearGradient id="mirror" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#E2E2E6" stopOpacity="0.11" />
-            <stop offset="1" stopColor="#E2E2E6" stopOpacity="0" />
+            <stop offset="0" stopColor="#F4EEE3" stopOpacity="0.11" />
+            <stop offset="1" stopColor="#F4EEE3" stopOpacity="0" />
           </linearGradient>
           <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="30" />

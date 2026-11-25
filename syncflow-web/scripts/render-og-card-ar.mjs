@@ -45,13 +45,13 @@ const html = `<!doctype html>
   html, body { width: 1200px; height: 630px; background: ${BRAND_COLORS.obsidian}; }
   .card {
     width: 1200px; height: 630px; padding: 72px 84px; display: flex; flex-direction: column; justify-content: space-between;
-    background: ${BRAND_COLORS.obsidian}; background-image: radial-gradient(60% 55% at 78% 8%, rgba(226,226,230,0.08), rgba(13,13,14,0) 70%);
-    color: ${BRAND_COLORS.platin}; font-family: 'Noto Sans Arabic Card', sans-serif; font-weight: 600; border: 1px solid rgba(226,226,230,0.10);
+    background: ${BRAND_COLORS.obsidian}; background-image: radial-gradient(60% 55% at 78% 8%, rgba(244,238,227,0.08), rgba(28,25,21,0) 70%);
+    color: ${BRAND_COLORS.platin}; font-family: 'Noto Sans Arabic Card', sans-serif; font-weight: 600; border: 1px solid rgba(244,238,227,0.10);
   }
   .headline { font-size: 100px; line-height: 1.32; letter-spacing: 0; }
-  .headline .second { color: rgba(226,226,230,0.6); }
-  .subtitle { margin-top: 30px; font-size: 32px; line-height: 1.5; font-weight: 600; letter-spacing: 0; color: rgba(226,226,230,0.7); }
-  .domain { font-family: system-ui, 'Segoe UI', Arial, sans-serif; font-weight: 500; font-size: 26px; direction: ltr; text-align: end; color: rgba(226,226,230,0.55); }
+  .headline .second { color: rgba(244,238,227,0.6); }
+  .subtitle { margin-top: 30px; font-size: 32px; line-height: 1.5; font-weight: 600; letter-spacing: 0; color: rgba(244,238,227,0.7); }
+  .domain { font-family: system-ui, 'Segoe UI', Arial, sans-serif; font-weight: 500; font-size: 26px; direction: ltr; text-align: end; color: rgba(244,238,227,0.55); }
 </style>
 </head>
 <body>

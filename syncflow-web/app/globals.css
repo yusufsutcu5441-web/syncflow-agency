@@ -71,31 +71,35 @@
 }
 /* ───────────────────────────────────────────────────────────────────────────────────────────────
    SyncFlow design tokens (docs/adr/0007). Blueprint structure ("Dark Monolith & Fluid Precision", docs/adr/0006) on the
-   B1/v2 brand colour system (brand/README.md): obsidian canvas, platin type, champagne only for the primary call to action.
-   There is no pure black and no pure white anywhere: every dark is obsidian #0D0D0E, every light is platin #E2E2E6.
-   Glass edges stay the owner-approved #ffffff1a (10 %) and #ffffff40 (25 % on hover): translucent lines, not blocks.
+   B1/v2 brand colour system (brand/README.md), moved to the WARM ANTHRACITE family on the owner's order (25.11.2026,
+   docs/adr/0038 section 22): the cool near-black read as cold, so every dark is now warm charcoal-brown (R > G > B) and
+   every light is warm platin. The ladder keeps the exact brightness steps of the old one (bg +7 luma to layer 1, +6 to
+   layer 2; text 213 luma above the bg), so nothing gains or loses emphasis. Champagne is untouched.
+   There is still no pure black and no pure white anywhere: every dark bottoms at anthracite #1C1915, every light tops
+   at warm platin #F4EEE3. Glass edges keep their 10 % / 25 % weights, tinted with the warm platin instead of pure white
+   so the lines sit in the same family (the 24.11 white lines were approved on the cool canvas; same owner, new order).
    Contrast on the worst surface (the glass film over layer 2), WCAG 2.x, computed by faz2-denetim section 2 on every run:
-   platin 12.6:1 · muted (platin 78 %) 8.1:1 · faint (platin 68 %) 6.5:1 · obsidian on champagne 11.4:1. Nothing below 4.5:1
-   carries text, and the audit fails if a token drops under it (owner's design review, 24.11.2026, item D).
+   platin 11.7:1 · muted (platin 78 %) 7.7:1 · faint (platin 68 %) 6.3:1 · anthracite on champagne 10.3:1. Nothing below
+   4.5:1 carries text, and the audit fails if a token drops under it (owner's design review, 24.11.2026, item D).
    ─────────────────────────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-obsidian: #0d0d0e;
-  --color-layer-1: #141416;
-  --color-layer-2: #1a1a1e;
+  --color-obsidian: #1c1915;
+  --color-layer-1: #23201c;
+  --color-layer-2: #2b2620;
 
-  /* Platin, and the two weaker steps of it that carry secondary text and the mono micro-labels. Raised on 24.11.2026 (owner's design
+  /* Warm platin, and the two weaker steps of it that carry secondary text and the mono micro-labels. Raised on 24.11.2026 (owner's design
      review, item D: "contrast of the mono micro-labels and the secondary text to WCAG AA; raise the colour token, do not override one
      by one") from 70 % and 60 %. Both are tokens on purpose: every label, caption, chip and note reads them, so no element needed a
      rule of its own. faz2-denetim section 2 composites them over the real surfaces and fails under 4.5:1. */
-  --color-ink: #e2e2e6;
-  --color-muted: rgb(226 226 230 / 0.78);
-  --color-faint: rgb(226 226 230 / 0.68);
+  --color-ink: #f4eee3;
+  --color-muted: rgb(244 238 227 / 0.78);
+  --color-faint: rgb(244 238 227 / 0.68);
 
   /* The accent: the primary call to action and one-off highlights, never the logo (brand/README.md). */
   --color-champagne: #d4c5a9;
 
-  --color-hairline: #ffffff1a;
-  --color-hairline-strong: #ffffff40;
+  --color-hairline: #f4eee31a;
+  --color-hairline-strong: #f4eee340;
 
   --font-sans: 'Inter Display', 'Inter Display Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
@@ -540,7 +544,7 @@ html[lang='ar'] ::after {
     color: var(--color-obsidian);
     background: var(--color-champagne);
   }
-  /* Glass: transparent, 1px #ffffff1a; on hover the border grows to #ffffff40 and a dim glow rises inside. */
+  /* Glass: transparent, 1px hairline (warm platin at 10 %); on hover the border grows to 25 % and a dim glow rises inside. */
   .btn-ghost {
     color: var(--color-ink);
     background: transparent;
@@ -551,7 +555,7 @@ html[lang='ar'] ::after {
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: radial-gradient(120% 160% at 50% 0%, rgb(226 226 230 / 0.12), transparent 62%);
+    background: radial-gradient(120% 160% at 50% 0%, rgb(244 238 227 /0.12), transparent 62%);
     opacity: 0;
     transition: opacity 0.4s ease;
   }
@@ -593,7 +597,7 @@ html[lang='ar'] ::after {
   /* ── Glass surfaces ────────────────────────────────────────────────────────── */
   .glass {
     position: relative;
-    background: rgb(226 226 230 / 0.03);
+    background: rgb(244 238 227 /0.03);
     border: 1px solid var(--color-hairline);
     border-radius: var(--radius-card);
   }
@@ -605,7 +609,7 @@ html[lang='ar'] ::after {
   }
   .panel {
     position: relative;
-    background: rgb(226 226 230 / 0.03);
+    background: rgb(244 238 227 /0.03);
     border: 1px solid var(--color-hairline);
     border-radius: var(--radius-panel);
   }
@@ -635,11 +639,11 @@ html[lang='ar'] ::after {
     z-index: 50;
     height: var(--header-h);
     border-bottom: 1px solid var(--color-hairline);
-    background: rgb(13 13 14 / 0);
+    background: rgb(28 25 21 /0);
     transition: background-color 0.4s ease;
   }
   .site-header[data-scrolled='true'] {
-    background: rgb(13 13 14 / 0.8);
+    background: rgb(28 25 21 /0.8);
   }
   /* The blur is for desktops only: a fixed backdrop-filter repaints on every scroll frame on phones. */
   @media (min-width: 48rem) and (hover: hover) {
@@ -773,7 +777,7 @@ html[lang='ar'] ::after {
     height: 0.875rem;
     border-radius: 3px;
     background: center / 100% 100% no-repeat;
-    outline: 1px solid rgb(226 226 230 / 0.26);
+    outline: 1px solid rgb(244 238 227 /0.26);
     outline-offset: -1px;
   }
   @media (hover: hover) {
@@ -794,7 +798,7 @@ html[lang='ar'] ::after {
     bottom: 0;
     z-index: 45;
     padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
-    background: rgb(13 13 14 / 0.9);
+    background: rgb(28 25 21 /0.9);
     border-top: 1px solid var(--color-hairline);
     translate: 0 110%;
     visibility: hidden;
@@ -830,7 +834,7 @@ html[lang='ar'] ::after {
     height: var(--spot-size, 600px);
     margin: calc(var(--spot-size, 600px) / -2) 0 0 calc(var(--spot-size, 600px) / -2);
     border-radius: 50%;
-    background: radial-gradient(closest-side, rgb(226 226 230 / var(--spot-alpha, 0.06)), transparent);
+    background: radial-gradient(closest-side, rgb(244 238 227 /var(--spot-alpha, 0.06)), transparent);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.5s ease;
@@ -927,7 +931,7 @@ html[lang='ar'] ::after {
     width: 240%;
     aspect-ratio: 1;
     translate: -50% -50%;
-    background: conic-gradient(from 0deg, transparent 0deg 292deg, rgb(226 226 230 / 0.1) 292deg, rgb(226 226 230 / 0.95) 352deg, transparent 360deg);
+    background: conic-gradient(from 0deg, transparent 0deg 292deg, rgb(244 238 227 /0.1) 292deg, rgb(244 238 227 /0.95) 352deg, transparent 360deg);
     animation: beam-spin 8s linear infinite;
   }
   .beam-card .beam-body {
@@ -980,7 +984,7 @@ html[lang='ar'] ::after {
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(105deg, transparent 38%, rgb(226 226 230 / 0.075) 50%, transparent 62%);
+    background: linear-gradient(105deg, transparent 38%, rgb(244 238 227 /0.075) 50%, transparent 62%);
     opacity: 0;
     translate: -70% 0;
   }
@@ -1023,7 +1027,7 @@ html[lang='ar'] ::after {
     width: 2.25rem;
     height: 2.25rem;
     border-color: var(--color-hairline-strong);
-    background: rgb(13 13 14 / 0.55);
+    background: rgb(28 25 21 /0.55);
   }
   .badge {
     position: absolute;
@@ -1033,7 +1037,7 @@ html[lang='ar'] ::after {
     padding: 0.25rem 0.6rem;
     border-radius: var(--radius-pill);
     border: 1px solid var(--color-hairline);
-    background: rgb(13 13 14 / 0.55);
+    background: rgb(28 25 21 /0.55);
     color: var(--color-muted);
   }
 
@@ -1123,7 +1127,7 @@ html[lang='ar'] ::after {
     position: absolute;
     z-index: 2;
     border-color: var(--color-hairline-strong);
-    background: rgb(13 13 14 / 0.5);
+    background: rgb(28 25 21 /0.5);
     color: var(--color-ink);
   }
 
@@ -1184,7 +1188,7 @@ html[lang='ar'] ::after {
     padding: 1.1rem 1.25rem;
     border-radius: 16px;
     border: 1px solid var(--color-hairline);
-    background: rgb(226 226 230 / 0.02);
+    background: rgb(244 238 227 /0.02);
     transition:
       border-color 0.3s ease,
       box-shadow 0.4s ease,
@@ -1207,8 +1211,8 @@ html[lang='ar'] ::after {
   /* Selected: platin border and a dim glow from inside. */
   .opt input:checked + .opt-body {
     border-color: var(--color-ink);
-    background: rgb(226 226 230 / 0.04);
-    box-shadow: inset 0 0 48px rgb(226 226 230 / 0.08);
+    background: rgb(244 238 227 /0.04);
+    box-shadow: inset 0 0 48px rgb(244 238 227 /0.08);
   }
   .opt input:focus-visible + .opt-body {
     outline: 2px solid var(--color-ink);
@@ -1239,7 +1243,7 @@ html[lang='ar'] ::after {
     color: var(--color-faint);
   }
   .field-line:hover {
-    border-bottom-color: rgb(226 226 230 / 0.6);
+    border-bottom-color: rgb(244 238 227 /0.6);
   }
   .field-line:focus-visible {
     outline: none;
@@ -1262,7 +1266,7 @@ html[lang='ar'] ::after {
     height: 1.35rem;
     margin-top: 0.15rem;
     border-radius: 6px;
-    border: 1px solid rgb(226 226 230 / 0.55);
+    border: 1px solid rgb(244 238 227 /0.55);
     background: transparent;
     cursor: pointer;
     transition:
@@ -1272,7 +1276,7 @@ html[lang='ar'] ::after {
   .field-check:checked {
     background-color: var(--color-ink);
     border-color: var(--color-ink);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%230d0d0e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 8.5l3 3 6-6.5'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231c1915' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 8.5l3 3 6-6.5'/></svg>");
     background-size: 100% 100%;
   }
   .field-check:focus-visible {
@@ -1311,7 +1315,7 @@ html[lang='ar'] ::after {
   .role-chip input:checked + span {
     border-color: var(--color-ink);
     color: var(--color-ink);
-    background: rgb(226 226 230 / 0.05);
+    background: rgb(244 238 227 /0.05);
   }
   .role-chip input:focus-visible + span {
     outline: 2px solid var(--color-ink);
@@ -1333,7 +1337,7 @@ html[lang='ar'] ::after {
   .giant-wordmark {
     width: 100%;
     height: auto;
-    color: rgb(226 226 230 / 0.06);
+    color: rgb(244 238 227 /0.06);
     user-select: none;
     pointer-events: none;
   }
@@ -1484,7 +1488,7 @@ html[lang='ar'] ::after {
     border: 1px solid var(--color-hairline);
     border-radius: var(--radius-card);
     background-color: var(--color-layer-1);
-    background-image: linear-gradient(rgb(226 226 230 / 0.035) 1px, transparent 1px), linear-gradient(90deg, rgb(226 226 230 / 0.035) 1px, transparent 1px);
+    background-image: linear-gradient(rgb(244 238 227 /0.035) 1px, transparent 1px), linear-gradient(90deg, rgb(244 238 227 /0.035) 1px, transparent 1px);
     background-size: 24px 24px;
     background-position: -1px -1px;
   }
@@ -1529,7 +1533,7 @@ html[lang='ar'] ::after {
     stroke: var(--color-hairline);
   }
   .dwg .dwg-box {
-    fill: rgb(13 13 14 / 0.8);
+    fill: rgb(28 25 21 /0.8);
     stroke: var(--color-ink);
     stroke-opacity: 0.55;
     stroke-width: 1;
@@ -1644,8 +1648,8 @@ html.lenis body {
     inset: 0;
     overflow: clip;
     background:
-      radial-gradient(110% 70% at 78% 0%, rgb(26 26 30 / 0.85), transparent 62%),
-      radial-gradient(80% 60% at 8% 100%, rgb(20 20 22 / 0.9), transparent 58%);
+      radial-gradient(110% 70% at 78% 0%, rgb(43 38 32 /0.85), transparent 62%),
+      radial-gradient(80% 60% at 8% 100%, rgb(35 32 28 /0.9), transparent 58%);
     transition: opacity 1.4s ease;
   }
   .cinema-fallback::after {
@@ -1706,13 +1710,13 @@ html.lenis body {
     inset: 0;
     pointer-events: none;
     background:
-      linear-gradient(90deg, rgb(13 13 14 / 0.88) 0%, rgb(13 13 14 / 0.6) 36%, transparent 70%),
-      linear-gradient(0deg, rgb(13 13 14 / 0.82) 0%, transparent 44%);
+      linear-gradient(90deg, rgb(28 25 21 /0.88) 0%, rgb(28 25 21 /0.6) 36%, transparent 70%),
+      linear-gradient(0deg, rgb(28 25 21 /0.82) 0%, transparent 44%);
   }
   [dir='rtl'] .film-scrim {
     background:
-      linear-gradient(270deg, rgb(13 13 14 / 0.88) 0%, rgb(13 13 14 / 0.6) 36%, transparent 70%),
-      linear-gradient(0deg, rgb(13 13 14 / 0.82) 0%, transparent 44%);
+      linear-gradient(270deg, rgb(28 25 21 /0.88) 0%, rgb(28 25 21 /0.6) 36%, transparent 70%),
+      linear-gradient(0deg, rgb(28 25 21 /0.82) 0%, transparent 44%);
   }
   /* A size container: the chapter word is sized from the container's width (cqw) and its letter count, so it fits whatever the
      language and is never broken across lines. */
@@ -1884,7 +1888,7 @@ html.lenis body {
     width: min(100% - 2 * var(--space-gutter), var(--max-container));
     height: auto;
     margin-inline: auto;
-    color: rgb(226 226 230 / 0.06);
+    color: rgb(244 238 227 /0.06);
   }
   /* The emblem: platin at 11 %, deepening (growing, rising, fading) with --hp. */
   .hero-monogram {
@@ -2013,19 +2017,19 @@ html.lenis body {
     translate: -7px 0;
     text-shadow:
       -3px 0 rgb(212 197 169 / 0.7),
-      3px 0 rgb(226 226 230 / 0.45);
+      3px 0 rgb(244 238 227 /0.45);
   }
   34% {
     translate: 9px 0;
     text-shadow:
       3px 0 rgb(212 197 169 / 0.7),
-      -3px 0 rgb(226 226 230 / 0.45);
+      -3px 0 rgb(244 238 227 /0.45);
   }
   51% {
     translate: -4px 0;
     text-shadow:
       -2px 0 rgb(212 197 169 / 0.6),
-      2px 0 rgb(226 226 230 / 0.4);
+      2px 0 rgb(244 238 227 /0.4);
   }
   68% {
     translate: 5px 0;
@@ -2035,7 +2039,7 @@ html.lenis body {
     translate: -2px 0;
     text-shadow:
       -1px 0 rgb(212 197 169 / 0.5),
-      1px 0 rgb(226 226 230 / 0.3);
+      1px 0 rgb(244 238 227 /0.3);
   }
   100% {
     translate: 0 0;
@@ -2080,10 +2084,10 @@ html.lenis body {
 }
 @keyframes panel-dim {
   from {
-    background-color: rgb(226 226 230 / 0.03);
+    background-color: rgb(244 238 227 /0.03);
   }
   to {
-    background-color: rgb(13 13 14 / 0.6);
+    background-color: rgb(28 25 21 /0.6);
   }
 }
 /* The word starts below its mask and ends where the text sets (no `to`: the natural transform). */
@@ -2320,7 +2324,7 @@ html.lenis body {
   }
   .sim-switch input:checked + .sim-switch-track {
     border-color: var(--color-ink);
-    background: rgb(226 226 230 / 0.08);
+    background: rgb(244 238 227 /0.08);
   }
   .sim-switch input:checked + .sim-switch-track::after {
     translate: calc(var(--dir-sign) * 0.95rem) 0;
@@ -2347,7 +2351,7 @@ html.lenis body {
     position: absolute;
     inset-inline: 7%;
     height: 0;
-    border-top: 1px solid rgb(226 226 230 / 0.3);
+    border-top: 1px solid rgb(244 238 227 /0.3);
     transition: border-color 0.4s ease;
   }
   .q-lane-primary {
@@ -2356,11 +2360,11 @@ html.lenis body {
   .q-lane-standby {
     top: var(--lane-2);
     border-top-style: dashed;
-    border-top-color: rgb(226 226 230 / 0.16);
+    border-top-color: rgb(244 238 227 /0.16);
   }
   .q-stage[data-blocked] .q-lane-standby {
     border-top-style: solid;
-    border-top-color: rgb(226 226 230 / 0.5);
+    border-top-color: rgb(244 238 227 /0.5);
   }
   .q-node {
     position: absolute;
@@ -2410,16 +2414,16 @@ html.lenis body {
     height: 1.7rem;
     border-radius: var(--radius-pill);
     border-style: dashed;
-    border-color: rgb(226 226 230 / 0.3);
+    border-color: rgb(244 238 227 /0.3);
   }
   .q-stage[data-blocked] .q-queue i {
     border-style: solid;
     border-color: var(--color-ink);
-    background: rgb(226 226 230 / 0.05);
+    background: rgb(244 238 227 /0.05);
   }
   .q-stage[data-blocked] .q-channel i {
     border-style: dashed;
-    border-color: rgb(226 226 230 / 0.35);
+    border-color: rgb(244 238 227 /0.35);
   }
   .q-parcel {
     position: absolute;
@@ -2436,7 +2440,7 @@ html.lenis body {
       opacity 0.5s ease 0.1s;
   }
   .q-parcel[data-phase='standby'] {
-    background: rgb(226 226 230 / 0.7);
+    background: rgb(244 238 227 /0.7);
   }
   .q-parcel[data-phase='arrived'] {
     opacity: 0;
@@ -2525,7 +2529,7 @@ html.lenis body {
   .s-node[data-state='active'] .s-dot {
     border-color: var(--color-ink);
     color: var(--color-ink);
-    box-shadow: inset 0 0 18px rgb(226 226 230 / 0.2);
+    box-shadow: inset 0 0 18px rgb(244 238 227 /0.2);
   }
   .s-node[data-state='done'] .s-dot {
     border-color: var(--color-ink);
@@ -2631,7 +2635,7 @@ html.lenis body {
   }
   .map-tabs .btn[aria-pressed='true'] {
     border-color: var(--color-ink);
-    background: rgb(226 226 230 / 0.05);
+    background: rgb(244 238 227 /0.05);
   }
   .map-tabs .btn[aria-pressed='false'] {
     color: var(--color-muted);
@@ -2714,7 +2718,7 @@ html.lenis body {
     transform: scaleX(-1);
   }
   .map-line {
-    stroke: rgb(226 226 230 / 0.3);
+    stroke: rgb(244 238 227 /0.3);
     stroke-width: 1.25;
     vector-effect: non-scaling-stroke;
     transition:
@@ -2724,7 +2728,7 @@ html.lenis body {
   /* The line a visitor points at, and the two fields it joins (the chips share the line's index). Pointer devices only; nothing here is needed to read the model. */
   @media (hover: hover) {
     .map-stage:has(.map-chip:hover) .map-line {
-      stroke: rgb(226 226 230 / 0.12);
+      stroke: rgb(244 238 227 /0.12);
     }
     .map-stage:has(.map-chip[data-i~='0']:hover) .map-line[data-i='0'],
     .map-stage:has(.map-chip[data-i~='1']:hover) .map-line[data-i='1'],
@@ -2772,7 +2776,7 @@ html.lenis body {
     padding: 0.9rem 1rem;
     border: 1px solid var(--color-hairline);
     border-radius: 10px;
-    background: rgb(226 226 230 / 0.03);
+    background: rgb(244 238 227 /0.03);
     font-size: 0.6875rem;
     line-height: 1.6;
     letter-spacing: 0;
@@ -2921,7 +2925,7 @@ html.lenis body {
     padding: 1rem 1.1rem 1.1rem;
     border: 1px solid var(--color-hairline);
     border-radius: 16px;
-    background: rgb(226 226 230 / 0.02);
+    background: rgb(244 238 227 /0.02);
   }
   .bd-tile dd {
     margin: 0;
@@ -2993,7 +2997,7 @@ html.lenis body {
     place-items: center;
   }
   .bd-dialog::backdrop {
-    background: rgb(13 13 14 / 0.84);
+    background: rgb(28 25 21 /0.84);
   }
   @media (min-width: 48rem) and (hover: hover) {
     .bd-dialog::backdrop {
@@ -3035,7 +3039,7 @@ html.lenis body {
     height: 2.5rem;
     border-radius: 50%;
     border: 1px solid var(--color-hairline-strong);
-    background: rgb(13 13 14 / 0.72);
+    background: rgb(28 25 21 /0.72);
     color: var(--color-ink);
     cursor: pointer;
     pointer-events: auto;
