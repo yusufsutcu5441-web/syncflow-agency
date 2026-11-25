@@ -8,8 +8,9 @@
  * The scenes contain no readable marketing text (captions on the site are HTML over the video), so one render serves every
  * language. The site serves these as static files and ships no Remotion code (docs/adr/0003, 0006).
  * Re-run it whenever a scene in remotion/scenes changes, then commit the files.
- * Since 24.11.2026 (docs/adr/0038 section 12) the estate film on the site is NOT this render: it is a camera move over licensed photographs,
- * shipped as estate-2.* (lib/clips.ts). Rendering the estate scene writes estate.* files that nothing serves; leave them out of a commit.
+ * Since 25.11.2026 (docs/adr/0038 section 21) the three sector films on the site are NOT these renders: they are recordings of the concept
+ * websites of fictional firms, shipped as estate-3.*, clinic-3.* and law-3.* (lib/clips.ts). Rendering those scenes writes estate.*, clinic.*
+ * and law.* files that nothing serves; leave them out of a commit.
  *
  *   npm run film:render                    everything
  *   npm run film:render -- --posters       posters only (fast)
@@ -64,11 +65,11 @@ const cli = (parts, { quiet = true } = {}) => {
 if (args.includes('--studio')) process.exit(cli(['studio', 'remotion/index.ts'], { quiet: false }));
 
 mkdirSync(outDir, { recursive: true });
-// A plain run leaves the estate, clinic and law scenes out (docs/adr/0038 sections 12 and 14): the site plays the photo-based estate-2, clinic-2 and
-// law-2 files, and the checks require the old estate.*, clinic.* and law.* names to be absent, so rendering them by default would write files that
-// nothing serves. Each can still be rendered on purpose with --only=<name>; the scenes themselves are untouched in remotion/scenes.
-const PHOTO_BASED = ['estate', 'clinic', 'law'];
-const targets = CLIPS.filter((name) => (only ? name === only : !PHOTO_BASED.includes(name)));
+// A plain run leaves the estate, clinic and law scenes out (docs/adr/0038 sections 12, 14 and 21): the site plays the delivered estate-3, clinic-3
+// and law-3 files, and the checks require the old estate.*, clinic.* and law.* names to be absent, so rendering them by default would write files
+// that nothing serves. Each can still be rendered on purpose with --only=<name>; the scenes themselves are untouched in remotion/scenes.
+const NOT_SHIPPED = ['estate', 'clinic', 'law'];
+const targets = CLIPS.filter((name) => (only ? name === only : !NOT_SHIPPED.includes(name)));
 if (targets.length === 0) {
   console.error(`No scene matches --only=${only}. Choose one of: ${CLIPS.join(', ')}`);
   process.exit(1);

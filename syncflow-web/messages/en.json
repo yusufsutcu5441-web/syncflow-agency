@@ -121,21 +121,21 @@
       "title": "Not a property. A stage for living.",
       "text": "A residence above the water is not bought from a screen; it is felt. A slow cinematic arrival, daylight studied across the plan, and an enquiry that reaches your principals directly.",
       "overlay": "Price on request",
-      "videoLabel": "A bright living room, the camera moving slowly through it, then a harbour at golden hour"
+      "videoLabel": "The concept website of a fictional estate agency, scrolling on a desktop screen and on a phone"
     },
     "clinic": {
       "tag": "Private clinics",
       "title": "Trust is built in the first second.",
       "text": "For aesthetic, dental and longevity clinics: a composed digital reception, never a sales floor. Physician profiles and a patient-initiated appointment that guides without alarming.",
       "overlay": "Book a private consultation",
-      "videoLabel": "A warm clinic corridor hung with framed prints, then a quiet seating nook in cane and leather"
+      "videoLabel": "The concept website of a fictional clinic, scrolling on a desktop screen and on a phone"
     },
     "law": {
       "tag": "Corporate law & advisory",
       "title": "Discretion is the first thing a client reads.",
       "text": "For law firms, advisory practices and private equity houses: a restrained, exact presence. Practice and partner pages, a confidential enquiry, and a structure in which every word is yours to approve, because applying the advertising and communications rules of your profession is your responsibility.",
       "overlay": "Confidential enquiry",
-      "videoLabel": "The bays of an old wooden library, then a board table in walnut and tan leather"
+      "videoLabel": "The concept website of a fictional law practice, scrolling on a desktop screen and on a phone"
     },
     "logistics": {
       "tag": "Global logistics & B2B supply chain architecture",
@@ -597,7 +597,7 @@
       "m1": "Time from enquiry to the first personal reply",
       "m2": "Share of enquiries that arrive complete and qualified",
       "m3": "Enquiry-to-viewing rate",
-      "note": "A concept study of a fictional residence; its film is a camera move over licensed photographs. No property is offered, and no price, availability or result is claimed."
+      "note": "A concept study of a fictional residence; its film is a recording of that concept website, scrolling on a desktop screen and on a phone. No property is offered, and no price, availability or result is claimed."
     },
     "clinic": {
       "scenario": "A private clinic wants a composed digital reception: physician profiles, a calm explanation of what it offers and a way for a patient to ask for an appointment, without a sales floor.",
@@ -613,7 +613,7 @@
       "m1": "Time from request to the first personal reply",
       "m2": "Share of requests that arrive complete",
       "m3": "Request-to-appointment rate",
-      "note": "A concept study of a fictional clinic; its film is a camera move over licensed photographs. Health communication rules apply (no prices, discounts, galleries of results or patient testimonials); applying them is the clinic’s responsibility, and every word is the clinic’s to approve."
+      "note": "A concept study of a fictional clinic; its film is a recording of that concept website, scrolling on a desktop screen and on a phone. Health communication rules apply (no prices, discounts, galleries of results or patient testimonials); applying them is the clinic’s responsibility, and every word is the clinic’s to approve."
     },
     "law": {
       "scenario": "A corporate law and advisory practice needs a presence that is restrained and exact: practice and partner pages, and a confidential way for a prospective client to make first contact.",
@@ -629,7 +629,7 @@
       "m1": "Time from enquiry to the first partner-level reply",
       "m2": "Share of enquiries routed to the right practice group first time",
       "m3": "Conflict-check turnaround",
-      "note": "A concept study of a fictional practice; its film is a camera move over licensed photographs. Applying the advertising and communication rules of the profession is the practice’s responsibility; no client is solicited and every word is the practice’s to approve."
+      "note": "A concept study of a fictional practice; its film is a recording of that concept website, scrolling on a desktop screen and on a phone. Applying the advertising and communication rules of the profession is the practice’s responsibility; no client is solicited and every word is the practice’s to approve."
     },
     "logistics": {
       "scenario": "A logistics operator with sites in several countries runs orders, dock events and invoices across many systems. When one lane goes quiet, the others have to keep moving, and nobody should learn of it from a customer.",

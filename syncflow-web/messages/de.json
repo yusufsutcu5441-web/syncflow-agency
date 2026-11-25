@@ -116,21 +116,21 @@
       "title": "Keine Immobilie. Eine Bühne zum Leben.",
       "text": "Eine Residenz über dem Wasser kauft man nicht am Bildschirm, man spürt sie. Eine langsame, filmische Ankunft, über den Grundriss hinweg studiertes Tageslicht und eine Anfrage, die direkt Ihre Verantwortlichen erreicht.",
       "overlay": "Preis auf Anfrage",
-      "videoLabel": "Ein helles Wohnzimmer, die Kamera fährt langsam hindurch, dann ein Hafen zur goldenen Stunde"
+      "videoLabel": "Die Konzept-Website eines fiktiven Immobilienbüros, gescrollt auf einem Desktop-Bildschirm und auf einem Telefon"
     },
     "clinic": {
       "tag": "Private Kliniken",
       "title": "Vertrauen entsteht in der ersten Sekunde.",
       "text": "Für ästhetische, dentale und Longevity-Kliniken: ein gefasster digitaler Empfang, nie ein Verkaufsraum. Arztprofile und eine vom Patienten ausgelöste Terminanfrage, die führt, ohne zu beunruhigen.",
       "overlay": "Private Beratung vereinbaren",
-      "videoLabel": "Ein warmer Klinikflur mit gerahmten Drucken, dann eine ruhige Sitzecke aus Rohrgeflecht und Leder"
+      "videoLabel": "Die Konzept-Website einer fiktiven Klinik, gescrollt auf einem Desktop-Bildschirm und auf einem Telefon"
     },
     "law": {
       "tag": "Wirtschaftsrecht & Beratung",
       "title": "Diskretion ist das Erste, was ein Mandant liest.",
       "text": "Für Kanzleien, Beratungspraxen und Private-Equity-Häuser: ein zurückhaltender, präziser Auftritt. Tätigkeits- und Partnerseiten, eine vertrauliche Anfrage und eine Struktur, in der jedes Wort von Ihnen freigegeben wird – denn die Anwendung der Werbe- und Kommunikationsregeln Ihres Berufsstands liegt in Ihrer Verantwortung.",
       "overlay": "Vertrauliche Anfrage",
-      "videoLabel": "Die Regalnischen einer alten Holzbibliothek, dann ein Konferenztisch aus Nussbaum und hellbraunem Leder"
+      "videoLabel": "Die Konzept-Website einer fiktiven Kanzlei, gescrollt auf einem Desktop-Bildschirm und auf einem Telefon"
     },
     "logistics": {
       "tag": "Globale Logistik und B2B-Lieferkettenarchitektur",
@@ -561,7 +561,7 @@
       "m1": "Zeit von der Anfrage bis zur ersten persönlichen Antwort",
       "m2": "Anteil der Anfragen, die vollständig und qualifiziert eingehen",
       "m3": "Quote von Anfrage zu Besichtigung",
-      "note": "Eine Konzeptstudie einer fiktiven Residenz; ihr Film ist eine Kamerafahrt über lizenzierte Fotografien. Es wird keine Immobilie angeboten, und kein Preis, keine Verfügbarkeit und kein Ergebnis wird behauptet."
+      "note": "Eine Konzeptstudie einer fiktiven Residenz; ihr Film ist eine Aufzeichnung dieser Konzept-Website, gescrollt auf einem Desktop-Bildschirm und auf einem Telefon. Es wird keine Immobilie angeboten, und kein Preis, keine Verfügbarkeit und kein Ergebnis wird behauptet."
     },
     "clinic": {
       "scenario": "Eine Privatklinik wünscht einen ruhigen digitalen Empfang: Arztprofile, eine gelassene Erklärung ihres Angebots und eine Möglichkeit für Patienten, einen Termin anzufragen, ohne Verkaufsfläche.",
@@ -577,7 +577,7 @@
       "m1": "Zeit von der Anfrage bis zur ersten persönlichen Antwort",
       "m2": "Anteil der Anfragen, die vollständig eingehen",
       "m3": "Quote von Anfrage zu Termin",
-      "note": "Eine Konzeptstudie einer fiktiven Klinik; ihr Film ist eine Kamerafahrt über lizenzierte Fotografien. Die Regeln der Gesundheitskommunikation gelten (keine Preise, Rabatte, Ergebnisgalerien oder Patientenbewertungen); ihre Anwendung liegt in der Verantwortung der Klinik, und jedes Wort bedarf ihrer Freigabe."
+      "note": "Eine Konzeptstudie einer fiktiven Klinik; ihr Film ist eine Aufzeichnung dieser Konzept-Website, gescrollt auf einem Desktop-Bildschirm und auf einem Telefon. Die Regeln der Gesundheitskommunikation gelten (keine Preise, Rabatte, Ergebnisgalerien oder Patientenbewertungen); ihre Anwendung liegt in der Verantwortung der Klinik, und jedes Wort bedarf ihrer Freigabe."
     },
     "law": {
       "scenario": "Eine Kanzlei für Wirtschaftsrecht und Beratung braucht einen Auftritt, der zurückhaltend und exakt ist: Seiten zu Tätigkeitsfeldern und Partnern und einen vertraulichen Weg für die erste Kontaktaufnahme eines potenziellen Mandanten.",
@@ -593,7 +593,7 @@
       "m1": "Zeit von der Anfrage bis zur ersten Antwort auf Partnerebene",
       "m2": "Anteil der Anfragen, die gleich beim ersten Mal an die richtige Praxisgruppe gehen",
       "m3": "Durchlaufzeit der Kollisionsprüfung",
-      "note": "Eine Konzeptstudie einer fiktiven Kanzlei; ihr Film ist eine Kamerafahrt über lizenzierte Fotografien. Die Anwendung der Werbe- und Kommunikationsregeln des Berufsstands liegt in der Verantwortung der Kanzlei; es werden keine Mandanten umworben, und jedes Wort bedarf der Freigabe der Kanzlei."
+      "note": "Eine Konzeptstudie einer fiktiven Kanzlei; ihr Film ist eine Aufzeichnung dieser Konzept-Website, gescrollt auf einem Desktop-Bildschirm und auf einem Telefon. Die Anwendung der Werbe- und Kommunikationsregeln des Berufsstands liegt in der Verantwortung der Kanzlei; es werden keine Mandanten umworben, und jedes Wort bedarf der Freigabe der Kanzlei."
     },
     "logistics": {
       "scenario": "Ein Logistikbetreiber mit Standorten in mehreren Ländern führt Aufträge, Rampenereignisse und Rechnungen über viele Systeme. Wenn ein Strang verstummt, müssen die anderen weiterlaufen, und niemand soll davon von einem Kunden erfahren.",

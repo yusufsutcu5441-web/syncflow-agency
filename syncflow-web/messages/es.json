@@ -116,21 +116,21 @@
       "title": "No es una propiedad. Es un escenario para vivir.",
       "text": "Una residencia frente al mar no se compra desde una pantalla: se siente. Una llegada lenta y cinematográfica, la luz del día estudiada a lo largo de la planta y una consulta que llega directamente a sus directivos.",
       "overlay": "Precio bajo consulta",
-      "videoLabel": "Un salón luminoso recorrido por un lento movimiento de cámara, después un puerto a la hora dorada"
+      "videoLabel": "El sitio web conceptual de una inmobiliaria ficticia, desplazándose en una pantalla de escritorio y en un teléfono"
     },
     "clinic": {
       "tag": "Clínicas privadas",
       "title": "La confianza se construye en el primer segundo.",
       "text": "Para clínicas estéticas, dentales y de longevidad: una recepción digital serena, nunca un mostrador de ventas. Perfiles de los médicos y una cita iniciada por el paciente que orienta sin alarmar.",
       "overlay": "Reservar una consulta privada",
-      "videoLabel": "Un pasillo de clínica cálido con láminas enmarcadas y, después, un rincón de espera sereno en ratán y cuero"
+      "videoLabel": "El sitio web conceptual de una clínica ficticia, desplazándose en una pantalla de escritorio y en un teléfono"
     },
     "law": {
       "tag": "Derecho corporativo y asesoría",
       "title": "La discreción es lo primero que lee un cliente.",
       "text": "Para despachos de abogados, firmas de asesoría y casas de capital privado: una presencia contenida y exacta. Páginas de áreas de práctica y de socios, una consulta confidencial y una estructura en la que usted aprueba cada palabra, porque aplicar las normas de publicidad y comunicación de su profesión es responsabilidad suya.",
       "overlay": "Consulta confidencial",
-      "videoLabel": "Las calles de una antigua biblioteca de madera y, después, una mesa de juntas en nogal y cuero claro"
+      "videoLabel": "El sitio web conceptual de un despacho ficticio, desplazándose en una pantalla de escritorio y en un teléfono"
     },
     "logistics": {
       "tag": "Logística global y arquitectura de cadena de suministro B2B",
@@ -561,7 +561,7 @@
       "m1": "Tiempo desde la consulta hasta la primera respuesta personal",
       "m2": "Proporción de consultas que llegan completas y calificadas",
       "m3": "Tasa de consulta a visita",
-      "note": "Un estudio conceptual de una residencia ficticia; su película es un movimiento de cámara sobre fotografías con licencia. No se ofrece ningún inmueble, y no se afirma ningún precio, disponibilidad ni resultado."
+      "note": "Un estudio conceptual de una residencia ficticia; su película es una grabación de ese sitio web conceptual, desplazándose en una pantalla de escritorio y en un teléfono. No se ofrece ningún inmueble, y no se afirma ningún precio, disponibilidad ni resultado."
     },
     "clinic": {
       "scenario": "Una clínica privada quiere una recepción digital serena: perfiles de médicos, una explicación tranquila de lo que ofrece y una forma de que el paciente pida una cita, sin zona de ventas.",
@@ -577,7 +577,7 @@
       "m1": "Tiempo desde la solicitud hasta la primera respuesta personal",
       "m2": "Proporción de solicitudes que llegan completas",
       "m3": "Tasa de solicitud a cita",
-      "note": "Un estudio conceptual de una clínica ficticia; su película es un movimiento de cámara sobre fotografías con licencia. Se aplican las normas de comunicación sanitaria (sin precios, descuentos, galerías de resultados ni testimonios de pacientes); aplicarlas es responsabilidad de la clínica, y cada palabra debe ser aprobada por ella."
+      "note": "Un estudio conceptual de una clínica ficticia; su película es una grabación de ese sitio web conceptual, desplazándose en una pantalla de escritorio y en un teléfono. Se aplican las normas de comunicación sanitaria (sin precios, descuentos, galerías de resultados ni testimonios de pacientes); aplicarlas es responsabilidad de la clínica, y cada palabra debe ser aprobada por ella."
     },
     "law": {
       "scenario": "Un despacho de derecho corporativo y asesoría necesita una presencia sobria y exacta: páginas de áreas y de socios, y una vía confidencial para que un cliente potencial haga el primer contacto.",
@@ -593,7 +593,7 @@
       "m1": "Tiempo desde la consulta hasta la primera respuesta a nivel de socio",
       "m2": "Proporción de consultas dirigidas al grupo de práctica correcto a la primera",
       "m3": "Plazo del control de conflictos",
-      "note": "Un estudio conceptual de un despacho ficticio; su película es un movimiento de cámara sobre fotografías con licencia. Aplicar las normas de publicidad y comunicación de la profesión es responsabilidad del despacho; no se capta a ningún cliente y cada palabra debe ser aprobada por el despacho."
+      "note": "Un estudio conceptual de un despacho ficticio; su película es una grabación de ese sitio web conceptual, desplazándose en una pantalla de escritorio y en un teléfono. Aplicar las normas de publicidad y comunicación de la profesión es responsabilidad del despacho; no se capta a ningún cliente y cada palabra debe ser aprobada por el despacho."
     },
     "logistics": {
       "scenario": "Un operador logístico con sedes en varios países gestiona pedidos, eventos de muelle y facturas en muchos sistemas. Cuando un carril se queda en silencio, los demás deben seguir moviéndose, y nadie debería enterarse por un cliente.",
