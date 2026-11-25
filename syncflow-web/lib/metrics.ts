@@ -51,6 +51,9 @@ const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 bu
 // 99, 99, 99, 99, 99, 100, 100, 100, 100 -> the median is 99, not the 100 that was sealed on 22.11; no run fell below 99 and TBT stayed between 38
 // and 79 ms. The sealed mobile number is therefore 99 and the profile says the spread in words: the old profile's "(93-100)" sat next to a sealed
 // "100" on the page and could be read as a contradiction, which is what the owner's audit asked about. Raw runs: docs/perf/live-2026-11-24.md.
+// 25.11.2026 (docs/adr/0038 §19 and §21): the architecture monolith was graded for contrast and the three sector films became concept-site
+// recordings, which together took public/media/clips from 16.5 to 8.8 MB. The seal was NOT re-taken, and does not need to be: every clip sits
+// below the fold with preload="none" and a lazy still, and Lighthouse does not scroll, so none of them is part of what "/" downloads.
 const LIVE_NOV = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency, docs/perf/live-2026-11-24.md';
 const LIVE_DESKTOP_NOV = 'desktop preset, live production (syncflow.agency), median of 5 runs, all five 100';
 const LIVE_MOBILE_NOV = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 9 runs on two pages in one session on a quiet machine, every run 99 or 100';
