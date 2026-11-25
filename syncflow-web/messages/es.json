@@ -62,7 +62,7 @@
     "c1Note": "Cómo está hecho: cada escena es un bucle de ocho segundos a 1920 × 1080 y 30 fotogramas por segundo, codificado en H.264 (MP4) con VP9 (WebM) como alternativa, de modo que lo decodifica el propio hardware de vídeo del dispositivo. Se descarga solo cuando va a reproducirse y su espacio está reservado: nada se mueve en la página.",
     "c1Tags": "H.264 · VP9 · Carga bajo demanda · Espacio reservado, sin desplazamiento de diseño",
     "c1Badge": "Vídeo nativo",
-    "c1VideoLabel": "Un monolito de cristal que gira lentamente sobre un fondo negro",
+    "c1VideoLabel": "Un monolito de cristal que gira lentamente sobre un fondo oscuro",
     "c2Index": "II",
     "c2Title": "Fluido donde importa.",
     "c2Text": "El desplazamiento y las transiciones siguen el ritmo de fotogramas de la propia pantalla. En escritorios con ratón o trackpad, Lenis suaviza el desplazamiento; los dispositivos táctiles conservan su desplazamiento nativo e inmediato. La página se mueve como una extensión de su mano, no por debajo de ella.",

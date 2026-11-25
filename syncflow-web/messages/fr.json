@@ -62,7 +62,7 @@
     "c1Note": "Comment c’est fait : chaque scène est une boucle de huit secondes en 1920 × 1080 à 30 images par seconde, encodée en H.264 (MP4) avec VP9 (WebM) en secours, afin que le matériel vidéo de l’appareil la décode. Elle n’est chargée qu’au moment de la lecture et sa place est réservée : rien ne bouge sur la page.",
     "c1Tags": "H.264 · VP9 · Chargement à la demande · Espace réservé, aucun décalage de mise en page",
     "c1Badge": "Vidéo native",
-    "c1VideoLabel": "Un monolithe de verre qui tourne lentement sur fond noir",
+    "c1VideoLabel": "Un monolithe de verre qui tourne lentement sur fond sombre",
     "c2Index": "II",
     "c2Title": "Fluide là où cela compte.",
     "c2Text": "Le défilement et les transitions suivent le rythme d’image de l’écran. Sur les ordinateurs avec souris ou pavé tactile, Lenis adoucit le défilement ; les appareils tactiles gardent leur défilement natif et immédiat. La page se déplace comme le prolongement de votre main, non sous elle.",

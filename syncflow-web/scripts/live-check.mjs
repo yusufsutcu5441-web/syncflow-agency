@@ -183,9 +183,9 @@ const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
 // /showcase/logistics answers a 301 to the showcase of its language.
 const SPEC_LIVE = ENTERPRISE_ON ? ['studio-site', 'fail-safe-queue'] : ['studio-site'];
 const SLUGS_LIVE = ENTERPRISE_ON ? ['estate', 'clinic', 'law', 'logistics'] : ['estate', 'clinic', 'law'];
-// The clip file of a sector (lib/clips.ts): since docs/adr/0038 section 21 all three are concept-site recordings (estate-3, clinic-3, law-3), which
-// replaced the photo-based -2 files of sections 12 and 14 under new names because /media is cached for a week.
-const CLIP_FILE = { estate: 'estate-3', clinic: 'clinic-3', law: 'law-3' };
+// The clip file of a sector (lib/clips.ts): since docs/adr/0038 section 21 all three are concept-site recordings, and since section 22 the shipped
+// files are the warm-anthracite regrades estate-4, clinic-4, law-4 (new names because /media is cached for a week).
+const CLIP_FILE = { estate: 'estate-4', clinic: 'clinic-4', law: 'law-4' };
 // 24.11.2026 (docs/adr/0038 section 12): the estate film shows neither Istanbul nor the Bosphorus, so the card says "above the water" and no city, strait or district
 // name may appear on the home pages or the estate breakdown pages (the Arabic, Chinese and Japanese spellings are in the list for the seven-language build).
 const PLACE_WORDS = /Bosph|Bospor|Boğaz|Bogaz|Bósforo|Bosforo|البوسفور|博斯普鲁斯|ボスポラス|Istanbul|İstanbul|Estambul|إسطنبول|伊斯坦布尔|イスタンブール/i;
@@ -258,8 +258,8 @@ else {
   say(enterpriseColumns === ENTERPRISE_ON && (ENTERPRISE_ON || !/Salesforce|HubSpot|Oracle|\bSAP\b|Zero-Trust Security Flow/.test(text)) ? 'PASS' : 'FAIL', ENTERPRISE_ON ? 'the architecture section carries the two enterprise columns' : 'the architecture section is the front end only: no enterprise column, no vendor names, no zero-trust card (docs/adr/0038)');
   if (!ENTERPRISE_ON) say(!/data-pilot-note/.test(html) && !/href="\/(pilot|outbound)\b/.test(html) && !/Outbound pilot/i.test(text) ? 'PASS' : 'FAIL', 'the home page has no "Outbound pilot" band and no link to /pilot or /outbound');
   for (const [ext, type] of [['mp4', 'video/mp4'], ['webm', 'video/webm'], ['webp', 'image/webp']]) {
-    const clip = await get(`/media/clips/logistics.${ext}`, { headers: { range: 'bytes=0-0' } });
-    say([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/logistics.${ext} is served as ${type}`, `-> ${clip.status || clip.error} ${clip.headers.get('content-type') ?? ''}`);
+    const clip = await get(`/media/clips/logistics-2.${ext}`, { headers: { range: 'bytes=0-0' } });
+    say([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/logistics-2.${ext} is served as ${type} (the warm regrade, docs/adr/0038 section 22)`, `-> ${clip.status || clip.error} ${clip.headers.get('content-type') ?? ''}`);
   }
 }
 // The case-study layer (docs/adr/0020): the Studio section, both simulators drawn idle, the four breakdown links, SVG flags (no emoji), the 28
@@ -308,7 +308,7 @@ else {
     if (!([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) && total >= min)) sizes.push(`${file}.${ext} ${clip.status} ${total}`);
   }
   say(sizes.length === 0 ? 'PASS' : 'FAIL', `the ${SLUGS.length} 1080p sector clips (mp4, webm, webp) are served with the right type and a 1080p-sized body`, sizes.slice(0, 3).join(', '));
-  for (const name of ['estate', 'clinic', 'law', 'monolith', 'monolith-2', 'estate-2', 'clinic-2', 'law-2']) for (const ext of ['mp4', 'webm', 'webp']) await expect(`the old ${name} clip name is gone (docs/adr/0038 sections 12, 14, 15, 19 and 21: every replaced film carries a new name)`, `/media/clips/${name}.${ext}`, 404);
+  for (const name of ['estate', 'clinic', 'law', 'monolith', 'logistics', 'monolith-2', 'estate-2', 'clinic-2', 'law-2', 'monolith-3', 'estate-3', 'clinic-3', 'law-3']) for (const ext of ['mp4', 'webm', 'webp']) await expect(`the old ${name} clip name is gone (docs/adr/0038 sections 12, 14, 15, 19, 21 and 22: every replaced film carries a new name)`, `/media/clips/${name}.${ext}`, 404);
   // The architecture monolith is not a sector card, so the loop above does not reach it: its new files are checked here.
   for (const [ext, type] of [['mp4', 'video/mp4'], ['webm', 'video/webm'], ['webp', 'image/webp']]) {
     const res = await get(`/media/clips/monolith-3.${ext}`, { headers: { range: 'bytes=0-0' } });

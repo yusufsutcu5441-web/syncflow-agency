@@ -65,14 +65,19 @@ const cli = (parts, { quiet = true } = {}) => {
 if (args.includes('--studio')) process.exit(cli(['studio', 'remotion/index.ts'], { quiet: false }));
 
 mkdirSync(outDir, { recursive: true });
-// A plain run leaves the estate, clinic and law scenes out (docs/adr/0038 sections 12, 14 and 21): the site plays the delivered estate-3, clinic-3
-// and law-3 files, and the checks require the old estate.*, clinic.* and law.* names to be absent, so rendering them by default would write files
-// that nothing serves. Each can still be rendered on purpose with --only=<name>; the scenes themselves are untouched in remotion/scenes.
-const NOT_SHIPPED = ['estate', 'clinic', 'law'];
+// A plain run renders NOTHING since the warm-anthracite regrade (docs/adr/0038 section 22): every shipped film is a graded derivative under a
+// versioned name (estate-4, clinic-4, law-4, monolith-4, logistics-2), and the checks require every bare scene name to be absent from the
+// repository, so a default render would only write files that nothing serves. Render a scene on purpose with --only=<name> (the scenes are
+// untouched in remotion/scenes; a fresh render then goes through the section-22 grade and a NEW versioned name before it can ship).
+const NOT_SHIPPED = ['estate', 'clinic', 'law', 'monolith', 'logistics'];
 const targets = CLIPS.filter((name) => (only ? name === only : !NOT_SHIPPED.includes(name)));
-if (targets.length === 0) {
+if (targets.length === 0 && only) {
   console.error(`No scene matches --only=${only}. Choose one of: ${CLIPS.join(', ')}`);
   process.exit(1);
+}
+if (targets.length === 0) {
+  console.log('Nothing to render by default: every shipped film is a graded, versioned derivative (docs/adr/0038 section 22). Use --only=<scene>.');
+  process.exit(0);
 }
 
 const sizes = [];

@@ -62,7 +62,7 @@
     "c1Note": "Wie es gemacht ist: Jede Szene ist eine achtsekündige Schleife in 1920 × 1080 mit 30 Bildern pro Sekunde, kodiert als H.264 (MP4) mit VP9 (WebM) als Rückfallebene, sodass die Videohardware des Geräts sie dekodiert. Sie wird erst geladen, wenn sie abgespielt wird, und ihr Platz ist reserviert: Auf der Seite verrutscht nichts.",
     "c1Tags": "H.264 · VP9 · Laden bei Bedarf · Platz reserviert, keine Layoutverschiebung",
     "c1Badge": "Natives Video",
-    "c1VideoLabel": "Ein Glasmonolith, der sich langsam vor schwarzem Hintergrund dreht",
+    "c1VideoLabel": "Ein Glasmonolith, der sich langsam vor dunklem Hintergrund dreht",
     "c2Index": "II",
     "c2Title": "Flüssig, wo es zählt.",
     "c2Text": "Scrollen und Übergänge folgen dem Bildrhythmus des Displays. Auf Desktops mit Maus oder Trackpad glättet Lenis das Scrollen; Touch-Geräte behalten ihr natives, unmittelbares Scrollen. Die Seite bewegt sich wie eine Verlängerung Ihrer Hand, nicht unter ihr.",
