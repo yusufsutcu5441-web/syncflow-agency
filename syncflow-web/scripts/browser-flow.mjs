@@ -985,6 +985,9 @@ if (want('studioonly') && !ENTERPRISE_ON) {
 // art is: the still is hidden, the same crop is measured again, and the two are compared pixel by pixel. A still that is really painting the frame
 // moves it (measured mean |difference| 5.7-17.7 over 12.4-45.7 per cent of the crop); a still that never loaded moves nothing at all, so the floors
 // sit at roughly half of the weakest measurement. The spread floor is unchanged and a range floor is added on top.
+// 25.11.2026, warm-anthracite regrade (docs/adr/0038 section 22): remeasured through the same crop against the -4 stills on the #1c1915 page —
+// spread 15.5-23.2, range 145-190, hiding the still moves 15.5-53.4 per cent with mean change 6.9-17.7. Every margin grew or held, so no floor
+// moved; an unloaded still is still caught by construction (it moves 0 per cent of the crop).
 if (want('poster')) {
   group('Every showcase card shows its still (loaded, visible, film not playing) and its frame is a picture, not a black square');
   const SD_FLOOR = 10;

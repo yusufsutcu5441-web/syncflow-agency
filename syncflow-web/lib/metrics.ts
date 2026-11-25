@@ -54,6 +54,10 @@ const FRAME_SOURCE = 'requestAnimationFrame sampler, docs/perf/faz4.md (Faz 4 bu
 // 25.11.2026 (docs/adr/0038 §19 and §21): the architecture monolith was graded for contrast and the three sector films became concept-site
 // recordings, which together took public/media/clips from 16.5 to 8.8 MB. The seal was NOT re-taken, and does not need to be: every clip sits
 // below the fold with preload="none" and a lazy still, and Lighthouse does not scroll, so none of them is part of what "/" downloads.
+// 25.11.2026 evening (§22): the whole palette moved to the warm-anthracite family. That changes CSS values, not weight (same bytes within
+// noise) and no contrast ratio below AA (the audit computes every token over every surface on each run), so the numbers these seals measure
+// are not touched by it; per the rule above the live deployment is re-measured right after this ships, and this file is only ever updated
+// from a real measurement.
 const LIVE_NOV = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency, docs/perf/live-2026-11-24.md';
 const LIVE_DESKTOP_NOV = 'desktop preset, live production (syncflow.agency), median of 5 runs, all five 100';
 const LIVE_MOBILE_NOV = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 9 runs on two pages in one session on a quiet machine, every run 99 or 100';
