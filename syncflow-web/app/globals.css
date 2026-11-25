@@ -79,7 +79,7 @@
    at warm platin #F4EEE3. Glass edges keep their 10 % / 25 % weights, tinted with the warm platin instead of pure white
    so the lines sit in the same family (the 24.11 white lines were approved on the cool canvas; same owner, new order).
    Contrast on the worst surface (the glass film over layer 2), WCAG 2.x, computed by faz2-denetim section 2 on every run:
-   platin 11.7:1 · muted (platin 78 %) 7.7:1 · faint (platin 68 %) 6.3:1 · anthracite on champagne 10.3:1. Nothing below
+   platin 12.0:1 · muted (platin 78 %) 7.9:1 · faint (platin 68 %) 6.4:1 · anthracite on champagne 10.3:1. Nothing below
    4.5:1 carries text, and the audit fails if a token drops under it (owner's design review, 24.11.2026, item D).
    ─────────────────────────────────────────────────────────────────────────────────────────────── */
 @theme {
@@ -539,7 +539,7 @@ html[lang='ar'] ::after {
   .btn svg {
     flex: none;
   }
-  /* Champagne, obsidian text (11.4:1): the one accent of the page. */
+  /* Champagne, anthracite text (10.3:1): the one accent of the page. */
   .btn-primary {
     color: var(--color-obsidian);
     background: var(--color-champagne);

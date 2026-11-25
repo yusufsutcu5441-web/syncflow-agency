@@ -3,7 +3,7 @@
 > **English overview, how to verify the repository yourself, and the license: [../README.md](../README.md).** Bu belge uygulamanın Türkçe ayrıntı belgesidir.
 
 Yüksek bütçeli markalar için dijital mimari stüdyosu sitesi: "Dark Monolith & Fluid Precision" ([Ana Sayfa Blueprint](docs/adr/0006-blueprint-adopted.md)) üzerinde B1/v2 marka sistemi ([ADR 0007](docs/adr/0007-tokens-and-brand.md); 25.11.2026'dan beri sıcak antrasit ailesi, [ADR 0038 §22](docs/adr/0038-studio-only-site.md)): sıcak antrasit zemin (#1C1915), sıcak platin metin, Inter Display, çizili logo. Üstüne **sinematik katman** ([ADR 0014](docs/adr/0014-cinematic-layer.md)): tek WebGL2 tuvali, kaydırmayla oynayan dört bölümlük film ve sahneli dil geçişi.
-**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (yedi dil yayında: EN, TR, AR, DE, FR, ES, ZH; JA uykuda) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · önceden hazırlanmış sahne videoları (dört Remotion render'ı, estate fotoğraf tabanlı) · ham WebGL2 sinema katmanı (yalnızca yetenekli masaüstünde, lazy) · nonce tabanlı CSP (enforce, 17.10.2026'dan beri)**
+**Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind v4 · next-intl (yedi dil yayında: EN, TR, AR, DE, FR, ES, ZH; JA uykuda) · Strategic Briefing (Turnstile + imzalı webhook → n8n → Gmail) · önceden hazırlanmış sahne videoları (üç konsept site kaydı + iki Remotion türevi, beşi de sıcak zemine derecelendirilmiş sürümlü dosya, ADR 0038 §21-22) · ham WebGL2 sinema katmanı (yalnızca yetenekli masaüstünde, lazy) · nonce tabanlı CSP (enforce, 17.10.2026'dan beri)**
 
 | | |
 |---|---|
@@ -111,7 +111,7 @@ Belirteçlerin **tek yeri**: [`app/globals.css`](app/globals.css) içindeki `@th
 
 | Katman | Belirteçler |
 |---|---|
-| Renk | **Sıcak antrasit ailesi (25.11.2026, [ADR 0038 §22](docs/adr/0038-studio-only-site.md); token adları tarihsel kaldı):** `obsidian` #1C1915 (zemin) · `layer-1` #23201C (kart) · `layer-2` #2B2620 (menü) · `ink` sıcak platin #F4EEE3 (zeminde 15,2:1) · `muted` %78 (zeminde 9,6:1) · `faint` %68 (zeminde 7,6:1; en kötü yüzeyde 11,7 · 7,7 · 6,3:1, denetim §2 her koşuda hesaplar) · `champagne` #D4C5A9 (yalnızca birincil düğme ve tekil vurgu; antrasit metinle 10,3:1). **Saf siyah ve saf beyaz yok** (denetim FAIL sayar) |
+| Renk | **Sıcak antrasit ailesi (25.11.2026, [ADR 0038 §22](docs/adr/0038-studio-only-site.md); token adları tarihsel kaldı):** `obsidian` #1C1915 (zemin) · `layer-1` #23201C (kart) · `layer-2` #2B2620 (menü) · `ink` sıcak platin #F4EEE3 (zeminde 15,2:1) · `muted` %78 (zeminde 9,6:1) · `faint` %68 (zeminde 7,6:1; en kötü yüzeyde 12,0 · 7,9 · 6,4:1, denetim §2 her koşuda hesaplar) · `champagne` #D4C5A9 (yalnızca birincil düğme ve tekil vurgu; antrasit metinle 10,3:1). **Saf siyah ve saf beyaz yok** (denetim FAIL sayar) |
 | Çizgi | `hairline` #f4eee31a (cam kenarlık, sıcak platin %10) · `hairline-strong` #f4eee340 (hover, %25) |
 | Tipografi | **Tek metin yüzü Inter Display** (OFL, opsz 32, ağırlık 300–500; Latin 26 KB + Türkçe 3 KB): başlıklar 300 ve iz −0,035 em, metin 400, düğme ve gezinti 500 · film bölüm sözcükleri: Syne 700–800, büyük harf (OFL, film yaklaşınca iner) · etiketler tek tarifle sistem mono yığını, 11 px, geniş harf aralığı, büyük harf · `text-hero` `text-headline` `text-title` `text-lead` · hero her dilde 820 px'ten itibaren iki satır · AR, ZH ve JA sistem yazı tipi yığınları, Arapçada harf aralığı sıfır |
 | Şekil | kartlar 20 px, panel 28 px, **tüm düğmeler hap (999 px)**: `.btn` 52 px, `.btn-sm` 40 px, birincil şampanya, ikincil cam · gölge yok (ışık içeridedir) |
@@ -267,7 +267,7 @@ Kare ritmi (sayfa tamamen kaydırılırken, masaüstü, başsız Chrome, 60 Hz):
 - [ ] **"24 saat içinde kişisel dönüş" sözünün gerçek olduğunu** teyit edin (kapasite cümlesi kuralı).
 - [ ] **Beş yeni dilin (`ar de fr es zh`) yerel konuşur çeviri incelemesi ve hukuk incelemesi** (sağlık reklamı kuralları, KVKK/GDPR/PDPL/PIPL muadilleri); `ja` açılacaksa aynısı. Arapça için özel OFL yazı tipi yığınını seçin ve `check:fonts` kapsamını genişletin. İsviçre'nin EUR ile gösterilmesi (CHF?) ve anakara Çin'den erişim ([ADR 0018](docs/adr/0018-seven-capital-centres.md) "Riskler") sahibince karara bağlanmalı.
 - [ ] **LinkedIn / Instagram / WhatsApp adresleri** verilirse ilgili `NEXT_PUBLIC_*` değişkenlerini tanımlayın (verilmedi, footer'da yok). Logo çizili B1/v2 paketidir ama **ad/marka sorgusu (Türkpatent ve uluslararası) bitmeden nihai değildir** (`brand/README.md`).
-- [ ] **Sahne videolarının konsept çalışması olduğu** kartlarda yazıyor ("Concept study"; dördü Remotion render'ı, estate fotoğraf tabanlı); gerçek vaka çalışmaları gelirse kartlar ve etiket güncellenir.
+- [ ] **Sahne videolarının konsept çalışması olduğu** kartlarda yazıyor ("Concept study"; üçü kurgusal firmaların konsept site kayıtları, ikisi Remotion türevi, beşi de sıcak zemine derecelendirilmiş, ADR 0038 §21-22); gerçek vaka çalışmaları gelirse kartlar ve etiket güncellenir.
 - [ ] `NEXT_PUBLIC_SITE_URL` üretim alan adı. Search Console'a `sitemap.xml`. PageSpeed Insights ile canlı doğrulama, `lib/metrics.ts` güncelleme.
 - [ ] `public/.well-known/security.txt` `Expires` tarihini (2027-04-08) dolmadan yenileyin.
 - [ ] Remotion lisansı (4+ kişiyseniz).

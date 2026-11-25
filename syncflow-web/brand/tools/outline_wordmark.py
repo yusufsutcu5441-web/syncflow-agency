@@ -26,7 +26,7 @@ from fontTools.pens.boundsPen import BoundsPen
 
 B1_D = "M1.896 0.75 L0.646 2.0 L1.896 3.25 L3.896 3.25 L4.646 4.0 L3.896 4.75 L1.0 4.75 L1.0 5.25 L4.104 5.25 L5.354 4.0 L4.104 2.75 L2.104 2.75 L1.354 2.0 L2.104 1.25 L5.0 1.25 L5.0 0.75Z"
 B1_VB = (0.6464, 0.75, 4.7071, 4.5)   # (x, y, w, h) monogram birimi
-PLATIN, OBSIDIAN = "#E2E2E6", "#0D0D0E"
+PLATIN, OBSIDIAN = "#F4EEE3", "#1C1915"  # sicak aile, 25.11.2026 (docs/adr/0038 bolum 22); once #E2E2E6 / #0D0D0E
 
 def fmt(v): return f"{v:.3f}".rstrip("0").rstrip(".")
 

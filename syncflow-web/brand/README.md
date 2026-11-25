@@ -2,7 +2,7 @@
 Monogram: B1 (ızgaradan türetilmiş chevron-S), KESİNLEŞTİ. Wordmark: SYNCFLOW; iki aday:
 (1) özel çizim, monoline, ızgaradan (dosyalar: wordmark-*, lockup-*)
 (2) Satoshi Medium büyük harf: tools/outline_wordmark.py ile kendi bilgisayarınızda eğriye çevrilir.
-Renkler: platin #E2E2E6, obsidian #0D0D0E.
+Renkler (25.11.2026, docs/adr/0038 bolum 22 ile sicak aile): platin #F4EEE3, obsidian(antrasit) #1C1915. Once #E2E2E6 / #0D0D0E idi; tools/outline_wordmark.py ayni gun tasindi.
 
 ## Kurallar
 - Tek renk. Koyu zeminde platin, açık zeminde obsidian dosyası. Şampanya logoda kullanılmaz.

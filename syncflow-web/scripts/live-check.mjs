@@ -185,7 +185,7 @@ const SPEC_LIVE = ENTERPRISE_ON ? ['studio-site', 'fail-safe-queue'] : ['studio-
 const SLUGS_LIVE = ENTERPRISE_ON ? ['estate', 'clinic', 'law', 'logistics'] : ['estate', 'clinic', 'law'];
 // The clip file of a sector (lib/clips.ts): since docs/adr/0038 section 21 all three are concept-site recordings, and since section 22 the shipped
 // files are the warm-anthracite regrades estate-4, clinic-4, law-4 (new names because /media is cached for a week).
-const CLIP_FILE = { estate: 'estate-4', clinic: 'clinic-4', law: 'law-4' };
+const CLIP_FILE = { estate: 'estate-4', clinic: 'clinic-4', law: 'law-4', logistics: 'logistics-2' };
 // 24.11.2026 (docs/adr/0038 section 12): the estate film shows neither Istanbul nor the Bosphorus, so the card says "above the water" and no city, strait or district
 // name may appear on the home pages or the estate breakdown pages (the Arabic, Chinese and Japanese spellings are in the list for the seven-language build).
 const PLACE_WORDS = /Bosph|Bospor|Boğaz|Bogaz|Bósforo|Bosforo|البوسفور|博斯普鲁斯|ボスポラス|Istanbul|İstanbul|Estambul|إسطنبول|伊斯坦布尔|イスタンブール/i;
@@ -311,8 +311,8 @@ else {
   for (const name of ['estate', 'clinic', 'law', 'monolith', 'logistics', 'monolith-2', 'estate-2', 'clinic-2', 'law-2', 'monolith-3', 'estate-3', 'clinic-3', 'law-3']) for (const ext of ['mp4', 'webm', 'webp']) await expect(`the old ${name} clip name is gone (docs/adr/0038 sections 12, 14, 15, 19, 21 and 22: every replaced film carries a new name)`, `/media/clips/${name}.${ext}`, 404);
   // The architecture monolith is not a sector card, so the loop above does not reach it: its new files are checked here.
   for (const [ext, type] of [['mp4', 'video/mp4'], ['webm', 'video/webm'], ['webp', 'image/webp']]) {
-    const res = await get(`/media/clips/monolith-3.${ext}`, { headers: { range: 'bytes=0-0' } });
-    say([200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/monolith-3.${ext} is served as ${type}`, `-> ${res.status || res.error} ${res.headers.get('content-type') ?? ''}`);
+    const res = await get(`/media/clips/monolith-4.${ext}`, { headers: { range: 'bytes=0-0' } });
+    say([200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/monolith-4.${ext} is served as ${type} (the warm regrade, docs/adr/0038 section 22)`, `-> ${res.status || res.error} ${res.headers.get('content-type') ?? ''}`);
   }
 }
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });

@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * Renders the scene videos from the Remotion compositions (remotion/) into public/media/clips/: four by default, the estate scene only on request (see below).
- * For every scene it writes three files:
+ * Renders a scene video from the Remotion compositions (remotion/) into public/media/clips/ — on request only: a plain run renders nothing (see below).
+ * For a scene it writes three files:
  *   <name>.mp4   H.264, played wherever the browser can decode it (smaller here, hardware-decoded on phones)
  *   <name>.webm  VP9, the fallback for browsers without H.264
  *   <name>.webp  poster: the scene fully composed (frame POSTER_FRAME in remotion/config.ts)
  * The scenes contain no readable marketing text (captions on the site are HTML over the video), so one render serves every
  * language. The site serves these as static files and ships no Remotion code (docs/adr/0003, 0006).
- * Re-run it whenever a scene in remotion/scenes changes, then commit the files.
- * Since 25.11.2026 (docs/adr/0038 section 21) the three sector films on the site are NOT these renders: they are recordings of the concept
- * websites of fictional firms, shipped as estate-3.*, clinic-3.* and law-3.* (lib/clips.ts). Rendering those scenes writes estate.*, clinic.*
- * and law.* files that nothing serves; leave them out of a commit.
+ * Since 25.11.2026 NONE of the shipped films is a bare render (docs/adr/0038 sections 21 and 22): the three sector films are concept-site
+ * recordings and all five shipped files are warm-anthracite regrades under versioned names (estate-4.*, clinic-4.*, law-4.*, monolith-4.*,
+ * logistics-2.*; lib/clips.ts). Rendering a scene writes bare-name files that nothing serves and the checks require to be absent; a render
+ * that is meant to ship goes through the section-22 grade and a NEW versioned name first.
  *
  *   npm run film:render                    everything
  *   npm run film:render -- --posters       posters only (fast)
