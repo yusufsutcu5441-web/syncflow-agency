@@ -25,9 +25,9 @@ type Mode = 'visible' | 'hover';
 export function SceneVideo({ name, label, mode }: { name: SceneName; label: string; mode: Mode }) {
   const { messages } = useClientI18n();
   const t = messages.Showcase;
-  // Every film is 1920 x 1080 since 24.11.2026 (docs/adr/0038 sections 14 and 15): the logistics scene is a Remotion render at --scale=1.5
-  // (scripts/render-film.mjs), the architecture monolith is the same render at the same scale, and estate, clinic and law are camera moves over
-  // licensed photographs. The size is reserved here so nothing shifts while a film loads.
+  // Every film this component references is 1920 x 1080 (docs/adr/0038 sections 15, 21 and 23; the repo ALSO ships three portrait
+  // 1080 x 1350 recordings under the -m-5 names that nothing renders yet — staged for the phone showcase, section 23). The size is
+  // reserved here so nothing shifts while a film loads.
   const [width, height] = [1920, 1080];
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);

@@ -793,9 +793,11 @@ section('Scene videos (docs/adr/0003, 0006)');
 const mediaTypes = { mp4: 'video/mp4', webm: 'video/webm', webp: 'image/webp' };
 let mediaOk = true;
 let mediaDetail = '';
-// File names, not scene names: since docs/adr/0038 section 21 the three sector films are concept-site recordings, and since section 22 every
-// shipped film is the warm-anthracite regrade estate-4, clinic-4, law-4, monolith-4, logistics-2 (new names because /media is cached for a week).
-const CLIP_FILES = ['monolith-4', 'estate-4', 'clinic-4', 'law-4', 'logistics-2'];
+// File names, not scene names: since docs/adr/0038 section 23 the five referenced films are the owner-delivered -5 versions (three
+// concept-site recordings, a three.js monolith, both produced on the page's #1c1915 ground) plus the section-22 logistics regrade, and
+// the repo also ships three PORTRAIT 1080x1350 recordings (-m-5) that are staged for the phone showcase — served, but referenced by
+// nothing yet. New names on every replacement because /media is cached for a week.
+const CLIP_FILES = ['monolith-5', 'estate-5', 'clinic-5', 'law-5', 'logistics-2', 'estate-m-5', 'clinic-m-5', 'law-m-5'];
 for (const name of CLIP_FILES) {
   for (const [ext, type] of Object.entries(mediaTypes)) {
     const res = await get(`/media/clips/${name}.${ext}`, { headers: { range: 'bytes=0-0' } });
@@ -807,15 +809,15 @@ for (const name of CLIP_FILES) {
     await res.arrayBuffer();
   }
 }
-check('all 15 scene files are served with the right content type (5 scenes x mp4/webm/webp)', mediaOk, mediaDetail);
-// Every film that was replaced must be gone under its old name, or a browser with a week-old cache would keep the old one. Thirteen superseded
-// names by now: the five scene names, the -2 and -3 generations of the sector films and the monolith (docs/adr/0038 sections 12, 14, 15, 19, 21, 22).
-const oldNames = await Promise.all(['estate', 'clinic', 'law', 'monolith', 'logistics', 'monolith-2', 'estate-2', 'clinic-2', 'law-2', 'monolith-3', 'estate-3', 'clinic-3', 'law-3'].flatMap((name) => ['mp4', 'webm', 'webp'].map(async (ext) => `${name}.${ext}:${(await get(`/media/clips/${name}.${ext}`)).status}`)));
-check('docs/adr/0038 sections 12, 14, 15, 19, 21 and 22: every replaced clip is gone under its old name (404), all thirteen superseded names', oldNames.every((r) => r.endsWith(':404')), oldNames.filter((r) => !r.endsWith(':404')).join(' '));
-const ranged = await get('/media/clips/estate-4.mp4', { headers: { range: 'bytes=0-99' } });
+check('all 24 clip files are served with the right content type (5 scenes + 3 portrait versions, x mp4/webm/webp)', mediaOk, mediaDetail);
+// Every film that was replaced must be gone under its old name, or a browser with a week-old cache would keep the old one. Seventeen superseded
+// names by now: the five scene names and the -2, -3 and -4 generations of the sector films and the monolith (docs/adr/0038 sections 12, 14, 15, 19, 21, 22, 23).
+const oldNames = await Promise.all(['estate', 'clinic', 'law', 'monolith', 'logistics', 'monolith-2', 'estate-2', 'clinic-2', 'law-2', 'monolith-3', 'estate-3', 'clinic-3', 'law-3', 'monolith-4', 'estate-4', 'clinic-4', 'law-4'].flatMap((name) => ['mp4', 'webm', 'webp'].map(async (ext) => `${name}.${ext}:${(await get(`/media/clips/${name}.${ext}`)).status}`)));
+check('docs/adr/0038 sections 12, 14, 15, 19, 21, 22 and 23: every replaced clip is gone under its old name (404), all seventeen superseded names', oldNames.every((r) => r.endsWith(':404')), oldNames.filter((r) => !r.endsWith(':404')).join(' '));
+const ranged = await get('/media/clips/estate-5.mp4', { headers: { range: 'bytes=0-99' } });
 check('the mp4 answers byte-range requests (preload="none" needs it)', ranged.status === 206 && /^bytes 0-99\//.test(ranged.headers.get('content-range') ?? '') && ranged.headers.get('accept-ranges') === 'bytes', `${ranged.status} ${ranged.headers.get('content-range')} ${ranged.headers.get('accept-ranges')}`);
 await ranged.arrayBuffer();
-const cached = (await get('/media/clips/estate-4.webp')).headers.get('cache-control') ?? '';
+const cached = (await get('/media/clips/estate-5.webp')).headers.get('cache-control') ?? '';
 check('scene files are cacheable for a week with background revalidation', /max-age=604800/.test(cached) && /stale-while-revalidate/.test(cached), cached);
 check('the old architecture film is gone (404)', (await get('/media/showcase/architecture-en-wide.mp4')).status === 404);
 

@@ -183,9 +183,9 @@ const PILOT_OPEN = OPEN.filter((l) => l === 'en' || l === 'tr');
 // /showcase/logistics answers a 301 to the showcase of its language.
 const SPEC_LIVE = ENTERPRISE_ON ? ['studio-site', 'fail-safe-queue'] : ['studio-site'];
 const SLUGS_LIVE = ENTERPRISE_ON ? ['estate', 'clinic', 'law', 'logistics'] : ['estate', 'clinic', 'law'];
-// The clip file of a sector (lib/clips.ts): since docs/adr/0038 section 21 all three are concept-site recordings, and since section 22 the shipped
-// files are the warm-anthracite regrades estate-4, clinic-4, law-4 (new names because /media is cached for a week).
-const CLIP_FILE = { estate: 'estate-4', clinic: 'clinic-4', law: 'law-4', logistics: 'logistics-2' };
+// The clip file of a sector (lib/clips.ts): since docs/adr/0038 section 23 the shipped files are the owner-delivered -5 versions, produced
+// directly on the page's #1c1915 ground (new names because /media is cached for a week).
+const CLIP_FILE = { estate: 'estate-5', clinic: 'clinic-5', law: 'law-5', logistics: 'logistics-2' };
 // 24.11.2026 (docs/adr/0038 section 12): the estate film shows neither Istanbul nor the Bosphorus, so the card says "above the water" and no city, strait or district
 // name may appear on the home pages or the estate breakdown pages (the Arabic, Chinese and Japanese spellings are in the list for the seven-language build).
 const PLACE_WORDS = /Bosph|Bospor|Boğaz|Bogaz|Bósforo|Bosforo|البوسفور|博斯普鲁斯|ボスポラス|Istanbul|İstanbul|Estambul|إسطنبول|伊斯坦布尔|イスタンブール/i;
@@ -308,11 +308,16 @@ else {
     if (!([200, 206].includes(clip.status) && (clip.headers.get('content-type') ?? '').startsWith(type) && total >= min)) sizes.push(`${file}.${ext} ${clip.status} ${total}`);
   }
   say(sizes.length === 0 ? 'PASS' : 'FAIL', `the ${SLUGS.length} 1080p sector clips (mp4, webm, webp) are served with the right type and a 1080p-sized body`, sizes.slice(0, 3).join(', '));
-  for (const name of ['estate', 'clinic', 'law', 'monolith', 'logistics', 'monolith-2', 'estate-2', 'clinic-2', 'law-2', 'monolith-3', 'estate-3', 'clinic-3', 'law-3']) for (const ext of ['mp4', 'webm', 'webp']) await expect(`the old ${name} clip name is gone (docs/adr/0038 sections 12, 14, 15, 19, 21 and 22: every replaced film carries a new name)`, `/media/clips/${name}.${ext}`, 404);
+  for (const name of ['estate', 'clinic', 'law', 'monolith', 'logistics', 'monolith-2', 'estate-2', 'clinic-2', 'law-2', 'monolith-3', 'estate-3', 'clinic-3', 'law-3', 'monolith-4', 'estate-4', 'clinic-4', 'law-4']) for (const ext of ['mp4', 'webm', 'webp']) await expect(`the old ${name} clip name is gone (docs/adr/0038 sections 12, 14, 15, 19, 21, 22 and 23: every replaced film carries a new name)`, `/media/clips/${name}.${ext}`, 404);
   // The architecture monolith is not a sector card, so the loop above does not reach it: its new files are checked here.
   for (const [ext, type] of [['mp4', 'video/mp4'], ['webm', 'video/webm'], ['webp', 'image/webp']]) {
-    const res = await get(`/media/clips/monolith-4.${ext}`, { headers: { range: 'bytes=0-0' } });
-    say([200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/monolith-4.${ext} is served as ${type} (the warm regrade, docs/adr/0038 section 22)`, `-> ${res.status || res.error} ${res.headers.get('content-type') ?? ''}`);
+    const res = await get(`/media/clips/monolith-5.${ext}`, { headers: { range: 'bytes=0-0' } });
+    say([200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/monolith-5.${ext} is served as ${type} (the owner-delivered three.js render on the page ground, docs/adr/0038 section 23)`, `-> ${res.status || res.error} ${res.headers.get('content-type') ?? ''}`);
+  }
+  // The portrait recordings ship now and are staged for the phone showcase (section 23): served correctly, referenced by nothing yet.
+  for (const name of ['estate-m-5', 'clinic-m-5', 'law-m-5']) for (const [ext, type] of [['mp4', 'video/mp4'], ['webm', 'video/webm'], ['webp', 'image/webp']]) {
+    const res = await get(`/media/clips/${name}.${ext}`, { headers: { range: 'bytes=0-0' } });
+    say([200, 206].includes(res.status) && (res.headers.get('content-type') ?? '').startsWith(type) ? 'PASS' : 'FAIL', `/media/clips/${name}.${ext} is served as ${type} (portrait 1080x1350, staged for stage 3, docs/adr/0038 section 23)`, `-> ${res.status || res.error} ${res.headers.get('content-type') ?? ''}`);
   }
 }
 await expect('og', '/og?locale=en', 200, async (r) => { const b = Buffer.from(await r.arrayBuffer()); const png = b.subarray(1, 4).toString() === 'PNG'; return { ok: png && b.readUInt32BE(16) === 1200 && b.readUInt32BE(20) === 630, detail: png ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG' }; });

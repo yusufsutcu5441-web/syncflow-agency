@@ -7,10 +7,11 @@
  *   <name>.webp  poster: the scene fully composed (frame POSTER_FRAME in remotion/config.ts)
  * The scenes contain no readable marketing text (captions on the site are HTML over the video), so one render serves every
  * language. The site serves these as static files and ships no Remotion code (docs/adr/0003, 0006).
- * Since 25.11.2026 NONE of the shipped films is a bare render (docs/adr/0038 sections 21 and 22): the three sector films are concept-site
- * recordings and all five shipped files are warm-anthracite regrades under versioned names (estate-4.*, clinic-4.*, law-4.*, monolith-4.*,
- * logistics-2.*; lib/clips.ts). Rendering a scene writes bare-name files that nothing serves and the checks require to be absent; a render
- * that is meant to ship goes through the section-22 grade and a NEW versioned name first.
+ * Since 25.11.2026 NONE of the shipped films is a bare render of these compositions (docs/adr/0038 sections 21-23). As of section 23 the
+ * shipped files are the owner-delivered -5 versions (estate-5.*, clinic-5.*, law-5.*: concept-site recordings; monolith-5.*: a three.js
+ * render made outside the repo) plus the section-22 logistics regrade (logistics-2.*) and three portrait -m-5 recordings (lib/clips.ts).
+ * Rendering a scene here writes bare-name files that nothing serves and the checks require to be absent; a render that is meant to ship
+ * must land on the page ground #1c1915 and take a NEW versioned name first (grade it if it was not produced on that ground).
  *
  *   npm run film:render                    everything
  *   npm run film:render -- --posters       posters only (fast)
@@ -65,10 +66,11 @@ const cli = (parts, { quiet = true } = {}) => {
 if (args.includes('--studio')) process.exit(cli(['studio', 'remotion/index.ts'], { quiet: false }));
 
 mkdirSync(outDir, { recursive: true });
-// A plain run renders NOTHING since the warm-anthracite regrade (docs/adr/0038 section 22): every shipped film is a graded derivative under a
-// versioned name (estate-4, clinic-4, law-4, monolith-4, logistics-2), and the checks require every bare scene name to be absent from the
-// repository, so a default render would only write files that nothing serves. Render a scene on purpose with --only=<name> (the scenes are
-// untouched in remotion/scenes; a fresh render then goes through the section-22 grade and a NEW versioned name before it can ship).
+// A plain run renders NOTHING since the warm-anthracite move (docs/adr/0038 sections 22-23): every shipped film is a versioned file produced
+// on (or graded to) the page ground (estate-5, clinic-5, law-5, monolith-5, logistics-2, plus the portrait -m-5 trio), and the checks require
+// every bare scene name to be absent from the repository, so a default render would only write files that nothing serves. Render a scene on
+// purpose with --only=<name> (the scenes are untouched in remotion/scenes; a fresh render must land on #1c1915 and take a NEW versioned name
+// before it can ship).
 const NOT_SHIPPED = ['estate', 'clinic', 'law', 'monolith', 'logistics'];
 const targets = CLIPS.filter((name) => (only ? name === only : !NOT_SHIPPED.includes(name)));
 if (targets.length === 0 && only) {
@@ -76,7 +78,7 @@ if (targets.length === 0 && only) {
   process.exit(1);
 }
 if (targets.length === 0) {
-  console.log('Nothing to render by default: every shipped film is a graded, versioned derivative (docs/adr/0038 section 22). Use --only=<scene>.');
+  console.log('Nothing to render by default: every shipped film is a versioned file on the page ground, not a bare render (docs/adr/0038 sections 22-23). Use --only=<scene>.');
   process.exit(0);
 }
 

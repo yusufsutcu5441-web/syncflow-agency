@@ -564,18 +564,20 @@ exists(".env.example") && /TURNSTILE_SECRET_KEY/.test(read(".env.example")) && /
 
 /* ───────── 5) Sahne videoları (önceden render edilmiş, docs/adr/0003 ve 0006) ───────── */
 const G5 = "5. Sahne videoları (önceden render edilmiş)";
-// Dosya adları (sahne adı değil): üç sektör filmi 25.11.2026'dan beri konsept site kaydırma kaydıdır (bölüm 21) ve aynı gün sahibin palet emriyle
-// beş film sıcak antrasit zemine yeniden derecelendirildi (bölüm 22: estate-4, clinic-4, law-4, monolith-4, logistics-2); /media bir hafta
-// önbelleklendiği için her değişen film yeni ad taşır (lib/clips.ts).
-const CLIPS = ["monolith-4", "estate-4", "clinic-4", "law-4", "logistics-2"];
+// Dosya adları (sahne adı değil): 27.11.2026'dan beri (bölüm 23) beş yayın filmi sahibin teslim ettiği, zemini doğrudan #1c1915 üretilmiş -5
+// sürümleridir (üç konsept site kaydı + three.js monolit; logistics bölüm 22 derecelendirmesiyle kaldı) ve depo ayrıca Aşama 3 için bekleyen üç
+// DİKEY 1080×1350 kaydı taşır (estate-m-5, clinic-m-5, law-m-5 — henüz hiçbir bileşen kullanmaz); /media bir hafta önbelleklendiği için her
+// değişen film yeni ad taşır (lib/clips.ts).
+const CLIPS = ["monolith-5", "estate-5", "clinic-5", "law-5", "logistics-2"];
+const PORTRAIT_CLIPS = ["estate-m-5", "clinic-m-5", "law-m-5"];
 const clipMissing = [];
-for (const name of CLIPS) for (const ext of ["mp4", "webm", "webp"]) {
+for (const name of [...CLIPS, ...PORTRAIT_CLIPS]) for (const ext of ["mp4", "webm", "webp"]) {
   const p = `public/media/clips/${name}.${ext}`;
   if (!exists(p) || fs.statSync(abs(p)).size === 0) clipMissing.push(p);
 }
 clipMissing.length
-  ? add(G5, "FAIL", `video dosyası eksik ya da boş (${clipMissing.length}): ${clipMissing.slice(0, 3).join(", ")}${clipMissing.length > 3 ? " ..." : ""}`, "npm run film:render")
-  : add(G5, "PASS", `${CLIPS.length} sahne × (mp4, webm, webp) = ${CLIPS.length * 3} dosya var`);
+  ? add(G5, "FAIL", `video dosyası eksik ya da boş (${clipMissing.length}): ${clipMissing.slice(0, 3).join(", ")}${clipMissing.length > 3 ? " ..." : ""}`, "teslim dosyalarını geri koy (yalın render yayına girmez, ADR 0038 bölüm 23)")
+  : add(G5, "PASS", `${CLIPS.length} sahne + ${PORTRAIT_CLIPS.length} dikey sürüm × (mp4, webm, webp) = ${(CLIPS.length + PORTRAIT_CLIPS.length) * 3} dosya var`);
 exists("components/media/SceneVideo.tsx") && !exists("components/remotion") ? add(G5, "PASS", "oynatıcı <video> tabanlı (SceneVideo); tarayıcıda Remotion yok") : add(G5, "FAIL", "components/media/SceneVideo.tsx yok ya da components/remotion hâlâ var");
 if (exists("components/media/SceneVideo.tsx")) {
   const t = read("components/media/SceneVideo.tsx");
@@ -959,31 +961,32 @@ ${read("lib/cinema/core.ts")}`, tokens = read("lib/motion/tokens.ts"), css = rea
     const flagsCheck = spawnSync(process.execPath, ["scripts/build-flags.mjs", "--check"], { cwd: ROOT, encoding: "utf8" });
     flagsCheck.status === 0 ? add(G11, "PASS", "app/flags.css üreticisiyle (scripts/build-flags.mjs) aynı") : add(G11, "FAIL", "app/flags.css üreticisinden sapmış: npm run flags:build", (flagsCheck.stderr || flagsCheck.stdout || "").trim());
 
-    // 10) Sahne videoları: dört sektör klibi 1920 × 1080 (lojistik Remotion --scale=1.5; estate-4, clinic-4 ve law-4 konsept site kaydı, bölüm 22 sıcak derecelendirme), posterler tembel <img>; şampanya dışında yeni renk yok.
+    // 10) Sahne videoları: beş yatay film 1920 × 1080, üç dikey sürüm 1080 × 1350 (bölüm 23; lojistik Remotion --scale=1.5), posterler tembel <img>; şampanya dışında yeni renk yok.
     const webp = (f) => { const b = fs.readFileSync(abs(f)); const t = b.toString("ascii", 12, 16); return t === "VP8 " ? [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff] : t === "VP8L" ? [1 + (((b[22] & 0x3f) << 8) | b[21]), 1 + (((b[24] & 0x0f) << 10) | (b[23] << 2) | ((b[22] & 0xc0) >> 6))] : t === "VP8X" ? [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)] : [0, 0]; };
     const mp4 = (f) => { const b = fs.readFileSync(abs(f)); const at = b.indexOf("tkhd"); if (at < 0) return [0, 0]; const v = b[at + 4]; const o = at + (v === 1 ? 92 : 80); return [b.readUInt32BE(o) / 65536, b.readUInt32BE(o + 4) / 65536]; };
     const wrong = [];
-    for (const name of ["estate-4", "clinic-4", "law-4", "logistics-2", "monolith-4"]) {
-      const want = [1920, 1080];
+    // Dikey -m-5 dosyaları 1080×1350'dir (telefon vitrini için teslim, bölüm 23): beklenen boyut artık ada bağlıdır; bu, eski 1920×1080
+    // sabitinin gevşetilmesi değil, yeni teslimin kendi sayısal kapısıdır (yanlış boyutlu bir dikey dosya da burada yakalanır).
+    const CLIP_DIMS = { "estate-5": [1920, 1080], "clinic-5": [1920, 1080], "law-5": [1920, 1080], "logistics-2": [1920, 1080], "monolith-5": [1920, 1080], "estate-m-5": [1080, 1350], "clinic-m-5": [1080, 1350], "law-m-5": [1080, 1350] };
+    for (const [name, want] of Object.entries(CLIP_DIMS)) {
       for (const [f, size] of [[`public/media/clips/${name}.webp`, webp(`public/media/clips/${name}.webp`)], [`public/media/clips/${name}.mp4`, mp4(`public/media/clips/${name}.mp4`)]]) if (size[0] !== want[0] || size[1] !== want[1]) wrong.push(`${f} ${size.join("x")} (beklenen ${want.join("x")})`);
     }
-    wrong.length ? add(G11, "FAIL", `klip ya da poster çözünürlüğü tutmuyor: ${wrong.slice(0, 4).join("; ")}`) : add(G11, "PASS", "beş sahnenin klibi ve posteri 1920×1080 (MP4 ve WebP başlıklarından okundu; mimari monolit 24.11.2026'dan beri dahil, ADR 0038 bölüm 15)");
+    wrong.length ? add(G11, "FAIL", `klip ya da poster çözünürlüğü tutmuyor: ${wrong.slice(0, 4).join("; ")}`) : add(G11, "PASS", "beş yatay film 1920×1080, üç dikey sürüm 1080×1350 (MP4 ve WebP başlıklarından okundu; ADR 0038 bölüm 23)");
     /SCALE\s*=\s*\{[^}]*estate:\s*1\.5[^}]*clinic:\s*1\.5[^}]*law:\s*1\.5[^}]*logistics:\s*1\.5/.test(read("scripts/render-film.mjs")) ? add(G11, "PASS", "render betiği dört sektör sahnesini --scale=1.5 ile işliyor (sahne koordinatları değişmeden)") : add(G11, "FAIL", "scripts/render-film.mjs sektör sahneleri için ölçek 1,5 taşımıyor");
     const sv = code("components/media/SceneVideo.tsx");
     /loading="lazy"/.test(sv) && !/\bposter=/.test(sv) ? add(G11, "PASS", "klip görüntüsü tembel <img> (video poster'ı sayfa yüklenirken indirilirdi); video preload=none") : add(G11, "FAIL", "SceneVideo hâlâ poster= kullanıyor ya da tembel <img> yok");
-    // 25.11.2026 (docs/adr/0038 bölüm 21 ve 22): estate, clinic ve law filmleri kurgusal firmaların konsept web sitelerinin masaüstü + mobil
-    //     kaydırma kaydıdır ve beş film sıcak antrasit zemine derecelendirilmiş -4 (logistics -2) adlarını taşır (lib/clips.ts eşler);
+    // 27.11.2026 (docs/adr/0038 bölüm 23): beş yayın filmi sahibin teslim ettiği -5 (logistics -2) adlarını taşır (lib/clips.ts eşler);
     //     aşılmış her ad depoda yoktur (bir haftalık /media önbelleği eski filmi gösterirdi).
     const clipsSrc = code("lib/clips.ts");
-    const deliveredClips = [["estate", "estate-4"], ["clinic", "clinic-4"], ["law", "law-4"], ["monolith", "monolith-4"], ["logistics", "logistics-2"]];
-    const superseded = ["estate", "clinic", "law", "monolith", "logistics", "monolith-2", "estate-2", "clinic-2", "law-2", "monolith-3", "estate-3", "clinic-3", "law-3"];
+    const deliveredClips = [["estate", "estate-5"], ["clinic", "clinic-5"], ["law", "law-5"], ["monolith", "monolith-5"], ["logistics", "logistics-2"]];
+    const superseded = ["estate", "clinic", "law", "monolith", "logistics", "monolith-2", "estate-2", "clinic-2", "law-2", "monolith-3", "estate-3", "clinic-3", "law-3", "monolith-4", "estate-4", "clinic-4", "law-4"];
     const mapped =
       deliveredClips.every(([scene, file]) => new RegExp(`${scene}:\\s*'${file}'`).test(clipsSrc) && ["mp4", "webm", "webp"].every((e) => exists(`public/media/clips/${file}.${e}`))) &&
       superseded.every((name) => ["mp4", "webm", "webp"].every((e) => !exists(`public/media/clips/${name}.${e}`)));
-    mapped && /clipSrc\(name, 'webp'\)/.test(sv) && /clipSrc\(name, 'mp4'\)/.test(sv) && /clipSrc\(name, 'webm'\)/.test(sv) && !/media\/clips\/\$\{name\}/.test(sv) ? add(G11, "PASS", "beş film sıcak zeminli -4/-2 dosyalarından oynar (lib/clips.ts eşlemesi, SceneVideo clipSrc); aşılmış on üç ad depoda yok (ADR 0038 bölüm 12, 14, 15, 19, 21, 22)") : add(G11, "FAIL", "klip eşlemesi eksik: lib/clips.ts estate -> estate-4, clinic -> clinic-4, law -> law-4, monolith -> monolith-4, logistics -> logistics-2, SceneVideo clipSrc, yeni dosyalar var ve aşılmış adlar yok olmalı");
-    // Kaynak kaydı: yayındaki üç sektör filminin ne olduğu ve kullanımdan kalkan fotoğrafların adresi/fotoğrafçısı depoda durur (brief 24-25.11.2026).
+    mapped && /clipSrc\(name, 'webp'\)/.test(sv) && /clipSrc\(name, 'mp4'\)/.test(sv) && /clipSrc\(name, 'webm'\)/.test(sv) && !/media\/clips\/\$\{name\}/.test(sv) ? add(G11, "PASS", "beş film sahibin teslim ettiği -5/-2 dosyalarından oynar (lib/clips.ts eşlemesi, SceneVideo clipSrc); aşılmış on yedi ad depoda yok (ADR 0038 bölüm 12, 14, 15, 19, 21, 22, 23)") : add(G11, "FAIL", "klip eşlemesi eksik: lib/clips.ts estate -> estate-5, clinic -> clinic-5, law -> law-5, monolith -> monolith-5, logistics -> logistics-2, SceneVideo clipSrc, yeni dosyalar var ve aşılmış adlar yok olmalı");
+    // Kaynak kaydı: yayındaki filmlerin ne olduğu, dikey sürümler ve kullanımdan kalkan fotoğrafların adresi/fotoğrafçısı depoda durur (brief 24-27.11.2026).
     const mediaSources = exists("docs/media-sources.md") ? read("docs/media-sources.md") : "";
-    ["estate-4", "clinic-4", "law-4"].every((f) => mediaSources.includes(f)) && /unsplash\.com\/photos\//.test(mediaSources) ? add(G11, "PASS", "docs/media-sources.md yayındaki üç filmi ve kullanımdan kalkan fotoğraf kaynaklarını (adres ve fotoğrafçı) kayıt altında tutuyor") : add(G11, "FAIL", "docs/media-sources.md yok, yayındaki üç klibi (estate-4, clinic-4, law-4) saymıyor ya da fotoğraf adresi taşımıyor");
+    ["estate-5", "clinic-5", "law-5", "monolith-5", "estate-m-5", "clinic-m-5", "law-m-5"].every((f) => mediaSources.includes(f)) && /unsplash\.com\/photos\//.test(mediaSources) ? add(G11, "PASS", "docs/media-sources.md yayındaki filmleri, dikey sürümleri ve kullanımdan kalkan fotoğraf kaynaklarını (adres ve fotoğrafçı) kayıt altında tutuyor") : add(G11, "FAIL", "docs/media-sources.md yok, yayındaki klipleri (-5 adları ve dikey -m-5 sürümleri) saymıyor ya da fotoğraf adresi taşımıyor");
   }
 }
 
