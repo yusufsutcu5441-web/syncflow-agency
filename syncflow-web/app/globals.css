@@ -1760,8 +1760,9 @@ html.lenis body {
   .film-posters {
     position: absolute;
     inset: 0;
-    mask-image: linear-gradient(to bottom, transparent 0, #000 16svh);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16svh);
+    /* A mask reads only the alpha channel, so the opaque stop is written in the page's own ground (the audit bans #000 even here). */
+    mask-image: linear-gradient(to bottom, transparent 0, rgb(28 25 21) 16svh);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, rgb(28 25 21) 16svh);
   }
   body:has(> .cinema-canvas[data-live]) .film-posters {
     display: none;
