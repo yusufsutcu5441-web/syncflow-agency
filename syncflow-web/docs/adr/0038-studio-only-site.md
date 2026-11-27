@@ -369,3 +369,13 @@ Sahibin üç aşamalı brief'inin 1. aşaması. Ön koşullar tutturuldu: ağaç
 **1.6 — Mobil hero ve footer.** 375×812 ölçümleri: amblem kutusu ile etiket/başlık/e-posta kesişimleri **4 × 0 px²** (amblem %12'ye ve 80vw'ye alındı, --emblem-rest 0,05/--emblem-lift 0,04); hero-stage'e 4,5rem alt pay — e-posta satırı ile hayalet wordmark arası **37 px** temiz zemin. Footer tek sütun 1510 px'ti; en küçük genişlikten itibaren **iki sütun** (Studio|Showcase, Languages|Legal) → ölçülen **879 px** (hedef ≤ 1000), `.cv-footer` yer tutucusu 1510 → **880 px** (CLS eşliği), e-posta <640'ta text-xs (155 px'lik kolona tek satır sığar; 12 px, faint 6,4:1 ≥ AA).
 
 **Kapı genişledi, hiçbir eşik inmedi.** İki yeni tarayıcı grubu (`chapters`, `coverage`) FEATURE koşusuna kendiliğinden, RELEASE koşusuna `RELEASE_BROWSER_GROUPS` ile girdi: beklenen toplamlar 390 → **402** ve 89 → **97**. Lighthouse/CLS bütçelerine dokunulmadı: değişen her şey CSS + mesaj + test; klipler ilk yüke zaten girmez (`preload="none"`), mühür canlıda yeniden ölçülecek (§22 kuralı).
+
+### Kapı (`npm run release:verify`, 27.11.2026, üç koşu)
+
+| Koşu | Sonuç | Düşen | Ne yapıldı |
+|---|---|---|---|
+| 1 | 11/12 | 2. adım (tasarım denetimi): "saf siyah/beyaz kaldı (2): app/globals.css: `#000`" | **Gerçek yakalama, flake değil:** 1.3'te yazdığım `mask-image` opak durağını `#000` ile yazmıştım. Maskeler yalnız alfa kanalını okur, yani opak durak palet rengiyle yazıldığında sonuç piksel birebir aynıdır: durak `rgb(28 25 21)` oldu (`0e3dfa8`), denetimin saf-siyah yasağı korunmuş kaldı — yasak gevşetilmedi |
+| 2 | 11/12 | RELEASE tarayıcı 96/97: `framework` grubunun "sayfa canlanır: header dil menüsü ilk hover'da kendini kurar" kontrolü | §10'un bilinen yük-duyarlı sınıfı: kontrol `load`'dan hemen sonra tek hover gönderip menüyü bekler, hover hidrasyondan önce düşerse menü hiç kurulmaz. Aynı işlev **aynı koşuda** `language` grubunda iki kontrolle ve FEATURE akışında (402/402) geçti; bu aşamanın hiçbir değişikliği header'a, dil menüsüne ya da hidrasyona dokunmuyor. Brief'in izin verdiği tek yeniden koşu yapıldı; kodda ve testte düzeltme yok |
+| 3 (sakin makine: CPU %28, prizde, 3190/3191 boş) | **12/12** | — | push edildi |
+
+Koşu 3'ün sayıları: check 28 sn (0 hata, 1 uyarı — öncekilerin aynısı); denetim **257 geçti / 1 uyarı / 0 hata / 4 bilgi**; teslim 41; mimari 65; smoke FEATURE **229/229**; qa-csp 12 ziyaret 0 konsol/sayfa hatası; FEATURE tarayıcı **402/402** (864 sn); RELEASE derleme; smoke RELEASE **196/196**; RELEASE tarayıcı **97/97** (206 sn). Beklenen yeni toplamların ikisi de tam tutuyor. §13'e not düşülmedi, çünkü flake'li push gerekmedi: aynı kontrol sakin makinede geçti.
