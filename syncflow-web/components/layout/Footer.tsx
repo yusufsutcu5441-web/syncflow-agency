@@ -33,7 +33,9 @@ export async function Footer() {
   return (
     <footer className="cv cv-footer relative overflow-hidden pt-20 max-md:pb-20 md:pt-28">
       <div className="container-x">
-        <nav aria-label={a11y('footerNav')} className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Two columns from the smallest width (27.11.2026, docs/adr/0038 §23): one stacked column of 44 px touch rows made the
+            phone footer ~1.5 screens tall; paired up it reads in one. */}
+        <nav aria-label={a11y('footerNav')} className="grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-12 lg:grid-cols-4">
           <div>
             <p className="label">{t('studio')}</p>
             <ul className="mt-5 grid gap-3 pointer-coarse:gap-0">
@@ -76,7 +78,7 @@ export async function Footer() {
                   </li>
                   {/* The address as plain text under the mail link: a visitor whose browser opens no mail program can still copy it. */}
                   <li>
-                    <bdi dir="ltr" className="select-all text-sm text-faint">
+                    <bdi dir="ltr" className="select-all text-sm max-sm:text-xs text-faint">
                       {CONTACT_EMAIL}
                     </bdi>
                   </li>

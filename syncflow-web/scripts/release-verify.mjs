@@ -43,8 +43,9 @@ const RELEASE_BUILD = { ...CLEAN, NEXT_PUBLIC_CONTACT_EMAIL: MAILBOX };
 // evidence link and its way back). The CLS walk, typography, the showcase dialog and pages, the framework start and the cinema layer run here on the page that ships.
 // 24.11.2026 (docs/adr/0038 §13): 'accname' (what a screen reader reads where two blocks meet) and 'privacy' (no cookie, nothing stored, nothing from a third party) are claims about the page that
 // ships, so they run against the RELEASE build as well, not only the FEATURE one. The same day (§16, §17): 'language' (nothing stands in front of the page, the footer links every language without a
-// script, the header menu builds itself) and 'poster' (every showcase card shows its still, never a black frame) are claims about the shipped page too.
-const RELEASE_BROWSER_GROUPS = 'cls,type,casestudy,studioonly,language,poster,accname,privacy,framework,cinema';
+// script, the header menu builds itself) and 'poster' (every showcase card shows its still, never a black frame) are claims about the shipped page too. 27.11.2026 (§23): so are 'chapters' (one
+// readable film chapter at a time through the whole --p timeline) and 'coverage' (readable text at every 100 px of scroll, gaps only at the film's chapter boundaries).
+const RELEASE_BROWSER_GROUPS = 'cls,type,casestudy,studioonly,language,poster,chapters,coverage,accname,privacy,framework,cinema';
 
 function step(label, command, args, { env = CLEAN, shell = false } = {}) {
   const started = Date.now();

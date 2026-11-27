@@ -368,7 +368,8 @@ html[lang='ar'] ::after {
     --cv: 730px;
   }
   .cv-footer {
-    --cv: 1510px;
+    /* 27.11.2026 (§23): the phone footer went from one stacked link column (1510 px) to two columns; re-measured at 375×812. */
+    --cv: 880px;
   }
   @media (min-width: 48rem) {
     .cv-closing {
@@ -645,7 +646,14 @@ html[lang='ar'] ::after {
   .site-header[data-scrolled='true'] {
     background: rgb(28 25 21 /0.8);
   }
-  /* The blur is for desktops only: a fixed backdrop-filter repaints on every scroll frame on phones. */
+  /* The blur is for desktops only: a fixed backdrop-filter repaints on every scroll frame on phones. Without it 80 % cover let
+     the page's text ghost through the logo, so on phones the scrolled bar is near-opaque instead (27.11.2026, docs/adr/0038 §23);
+     ink over this ground keeps its AA pair. */
+  @media (max-width: 47.99rem) {
+    .site-header[data-scrolled='true'] {
+      background: rgb(28 25 21 /0.95);
+    }
+  }
   @media (min-width: 48rem) and (hover: hover) {
     .site-header[data-scrolled='true'] {
       -webkit-backdrop-filter: blur(20px);
@@ -959,14 +967,38 @@ html[lang='ar'] ::after {
     border-radius: 14px;
     background: var(--color-obsidian);
     border: 1px solid var(--color-hairline);
+    /* 27.11.2026 (docs/adr/0038 §23): the films are produced on the PAGE ground #1c1915, but the frame sits on a card whose
+       surface is layer 1 — seven steps lighter — so a film flush with the frame's edge read as a slightly darker rectangle
+       against the card (worst edge 13/channel after encoder loss). The film now sits on a thin mat of its own ground: the
+       frame's obsidian shows as a ring, the film meets ITS ground within encoder noise (<= 4/channel), and the mat's bordered
+       step up to the card is a drawn inset, not a video edge. The reserved box is unchanged (CLS 0). */
+    --mat: 8px;
   }
   .frame video,
   .frame img {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    inset: var(--mat, 0px);
+    width: calc(100% - 2 * var(--mat, 0px));
+    height: calc(100% - 2 * var(--mat, 0px));
     object-fit: cover;
+    border-radius: inherit;
+  }
+  /* §23, second half of the same rule: a film's own art may darken toward an edge (the monolith's floor reflection reads
+     (13,12,8) at the bottom edge — its own falloff, not a wrong ground). An 18 px veil in the ground colour melts every
+     film edge into the mat, so no scene can end on a band darker or lighter than the ground it sits on. On the sector
+     films, whose edges already match the ground, it changes nothing a pixel check can see (<= 3/channel). */
+  .frame::before {
+    content: '';
+    position: absolute;
+    inset: var(--mat, 0px);
+    z-index: 2;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      linear-gradient(to top, rgb(28 25 21) 0, transparent 18px),
+      linear-gradient(to bottom, rgb(28 25 21) 0, transparent 18px),
+      linear-gradient(to right, rgb(28 25 21) 0, transparent 18px),
+      linear-gradient(to left, rgb(28 25 21) 0, transparent 18px);
   }
   /* The film fades in over its still once its first frame is decoded (components/media/SceneVideo.tsx sets data-on), and a pass of soft light
      crosses the frame when a fine pointer enters its card. Both move only opacity and translate, so they stay on the compositor; will-change
@@ -1688,11 +1720,31 @@ html.lenis body {
     overflow: clip;
   }
   /* Chapter i is "centred" at p = (i + 0.5) / 4. d is the distance from that centre in chapter units; the weight is 1 on a plateau
-     around the centre and falls to 0 one chapter away, so neighbours cross-fade (weights sum to 1 at every boundary). */
+     around the centre and falls to 0 one chapter away, so neighbouring POSTERS cross-fade (weights sum to 1 at every boundary). */
   .film-poster,
   .chapter {
     --d: max(calc(var(--p) * 4 - var(--i) - 0.5), calc(var(--i) + 0.5 - var(--p) * 4));
     opacity: clamp(0, calc(1.6 - var(--d) * 2.2), 1);
+  }
+  /* 27.11.2026 (owner's review, docs/adr/0038 §23): the shared curve above left BOTH chapter titles at 0.5 opacity at every
+     boundary (d = 0.5 each), so two giant words overlapped around scroll 1829 / 2218 / 2608 px at 1440×900. The posters keep
+     the wide cross-fade; the TEXT is steeper and fully out at d >= 0.47. At most one chapter can pass opacity 0.10 at any --p
+     (that needs d < 0.454, and the two distances to adjacent centres sum to 1) — the browser gate's `chapters` sweep proves it
+     at every hundredth of --p. The boundary breath this leaves (no readable chapter for ~60 px of scroll) is deliberate and is
+     the tolerance window of the `coverage` walk. */
+  .chapter {
+    opacity: clamp(0, calc((0.47 - var(--d)) * 6.25), 1);
+  }
+  /* The first chapter drops the "before my centre" branch: the film must not open on an empty stage, so chapter 01 is already
+     present at --p = 0 and only fades forward (its distance never reaches the steep curve's cut while the film is entering).
+     The last chapter mirrors it, dropping the "after my centre" branch: it holds from its centre to the end of the track and
+     rides off with the stage, so the film does not hand over to the showcase through an empty screen (the `coverage` walk
+     found exactly one 100 px step of nothing at the release seam without this). The interior boundaries keep their breath. */
+  .film-chapters .chapter:first-child {
+    --d: max(calc(var(--p) * 4 - var(--i) - 0.5), 0);
+  }
+  .film-chapters .chapter:nth-child(4) {
+    --d: max(calc(var(--i) + 0.5 - var(--p) * 4), 0);
   }
   .film-poster {
     position: absolute;
@@ -1700,6 +1752,16 @@ html.lenis body {
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  /* 27.11.2026 (§23): the stills used to start exactly at the stage's top border — while the film scrolled in, that border sat
+     mid-screen and the lit render cut a hard horizontal edge against the hero's bare ground (phones, no-WebGL and engine-off
+     paths; the WebGL canvas is viewport-fixed and has no edge). The wrapper now spans the stage and opens its top from
+     transparent, so the film fades out of the page instead of arriving as a rectangle. */
+  .film-posters {
+    position: absolute;
+    inset: 0;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 16svh);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16svh);
   }
   body:has(> .cinema-canvas[data-live]) .film-posters {
     display: none;
@@ -1909,15 +1971,20 @@ html.lenis body {
   }
   /* On a phone the watermark used to sit at 38 % of a bottom-aligned hero at 112vw wide, which put its stroke straight through the
      second action: at 375 × 812 the quiet "write to us" button and the address under it stood inside the letter (owner's design
-     review, 24.11.2026, item E). It is lifted into the empty top half, cut to 88vw and set fainter, so the copy block below it is
-     clear of the mark. The emblem stays behind the copy (z-index 0 against .hero-copy's 1) as it always did. */
+     review, 24.11.2026, item E). Re-tuned 27.11.2026 (§23): at 22 % / 88vw the letter's lower body still reached the label and the
+     first title line of the bottom-aligned copy, so it rises to 12 %, narrows to 80vw and dims another step — the label, the title
+     and the e-mail line stand on clear ground. The emblem stays behind the copy (z-index 0 against .hero-copy's 1) as it always
+     did. The stage also gains bottom padding here so the address clears the ghost wordmark anchored at the stage's foot. */
   @media (max-width: 47.99rem) {
     .hero-monogram {
       inset-inline-end: -14vw;
-      inset-block-start: 22%;
-      width: 88vw;
-      --emblem-rest: 0.07;
-      --emblem-lift: 0.05;
+      inset-block-start: 12%;
+      width: 80vw;
+      --emblem-rest: 0.05;
+      --emblem-lift: 0.04;
+    }
+    .hero-stage {
+      padding-bottom: 4.5rem;
     }
   }
   @media (min-width: 64rem) and (min-height: 40rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
@@ -1932,7 +1999,11 @@ html.lenis body {
     }
     .hero-copy {
       transform: translate3d(0, calc(var(--hp, 0) * -7vh), 0);
-      opacity: clamp(0, calc(1.04 - var(--hp, 0) * 1.7), 1);
+      /* 27.11.2026 (owner's review, docs/adr/0038 §23): the old curve hit 0 at --hp 0.61, which left scroll ~400–1150 px showing
+         only the emblem over bare ground. The copy now recedes to a readable floor (0.42) instead of leaving, and rides off with
+         the stage when the pin releases — the title and the call stay in reach until the film takes over; the `coverage` walk
+         asserts a readable element at every 100 px. */
+      opacity: clamp(0.42, calc(1.04 - var(--hp, 0) * 0.72), 1);
     }
     .hero-stage .scroll-cue {
       opacity: clamp(0, calc(1 - var(--hp, 0) * 9), 1);

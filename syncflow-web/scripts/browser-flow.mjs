@@ -9,7 +9,7 @@
  *   npm run qa:browser                               the default set, about four minutes
  *   npm run qa:browser -- http://localhost:3100      another server
  *   npm run qa:browser -- --quick                    the fast set (anchors, shift, one simulator pass), about ninety seconds
- *   npm run qa:browser -- --only=anchors,cls         named groups: language, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, studioonly, poster, accname, privacy, framework, cinema, parity
+ *   npm run qa:browser -- --only=anchors,cls         named groups: language, anchors, deeplink, cls, sims, integration, type, casestudy, briefing, drawing, cta, scope, specimens, studioonly, poster, chapters, coverage, accname, privacy, framework, cinema, parity
  *   npm run qa:browser -- --full                     every language and width for the simulators (about 20 minutes)
  *   npm run qa:browser -- --parity                   also compare every page with and without content-visibility, pixel by pixel
  *   npm run qa:browser -- --throttle=4               every page runs its CPU 4x slower (QA_CPU_THROTTLE=4 does the same): a loaded machine, to show which checks depend on timing
@@ -1110,6 +1110,131 @@ if (want('poster')) {
       );
     }
     check(`${label}: no page or console errors while the strip was walked`, errors.length === 0, errors.slice(0, 3).join(' | '));
+    await page.close();
+  }
+}
+
+// ── film chapters: one voice at a time through the whole timeline (docs/adr/0038 §23) ─────────────────────────────────────────────
+// The old shared cross-fade left BOTH chapter titles at 0.5 opacity at every boundary, so two giant words overlapped mid-screen.
+// The sweep drives --p exactly as lib/enhance/film.ts writes it (CSSOM on the section; no <style> tag, the enforced CSP would block
+// one) and reads the computed opacity of every .chapter at each hundredth: never more than one readable chapter, and at each
+// chapter's own centre that chapter is fully present (so an all-dark film cannot pass). Reduced motion: the opacity curve is the
+// same, only the little translate is off — nothing is measured mid-animation.
+if (want('chapters')) {
+  group('Film chapters: a --p sweep 0 to 1 never shows more than one readable chapter, and every centre shows its own');
+  const profiles = QUICK ? [['en', 'desktop', DESKTOP]] : [['en', 'desktop', DESKTOP], ['en', 'phone', { width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true }], ['ar', 'desktop', DESKTOP]];
+  for (const [lang, label, viewport] of profiles.filter(([l]) => PUBLIC_LANGS.includes(l))) {
+    const { page, errors } = await open(url(lang), { viewport, reduced: true });
+    await page.evaluate(() => document.querySelector('[data-film]')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    await settle(page);
+    await page.bringToFront(); // rAF below only ticks in the foreground target
+    const sweep = await page.evaluate(async () => {
+      const film = document.querySelector('[data-film]');
+      if (!film) return null;
+      const chapters = [...film.querySelectorAll('.chapter')];
+      // A frame boundary between the write and the read: a synchronous getComputedStyle after an ancestor custom-property
+      // write returned STALE opacities under emulated reduced motion (measured 27.11.2026, §23 — the CDP reader and the real
+      // scroll path saw the fresh values all along). Pacing each step with requestAnimationFrame reads what a visitor sees.
+      const frame = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      const offenders = [];
+      const centres = [];
+      for (let i = 0; i <= 100; i++) {
+        film.style.setProperty('--p', (i / 100).toFixed(4)); // the same property film.ts itself writes on scroll
+        await frame();
+        await frame();
+        const readable = chapters.map((el, n) => [n, Number(getComputedStyle(el).opacity)]).filter(([, o]) => o > 0.1);
+        if (readable.length > 1) offenders.push(`p=${(i / 100).toFixed(2)} ${readable.map(([n, o]) => `c${n}@${o.toFixed(2)}`).join('+')}`);
+      }
+      for (let n = 0; n < chapters.length; n++) {
+        film.style.setProperty('--p', ((n + 0.5) / chapters.length).toFixed(4));
+        await frame();
+        await frame();
+        centres.push(Number(getComputedStyle(chapters[n]).opacity));
+      }
+      film.style.removeProperty('--p'); // hand the variable back to the scroll driver
+      return { count: chapters.length, offenders, centres };
+    });
+    check(
+      `${lang} ${label}: at every --p (0.01 steps) at most one chapter is readable (opacity > 0.10), and each of the ${sweep?.count ?? 0} centres draws its own chapter fully`,
+      sweep !== null && sweep.count === 4 && sweep.offenders.length === 0 && sweep.centres.every((o) => o >= 0.9),
+      sweep === null ? 'no [data-film] on this page' : `${sweep.offenders.length} overlapping steps: ${sweep.offenders.slice(0, 4).join(' | ')}; centres ${sweep.centres.join(', ')}`,
+    );
+    check(`${lang} ${label}: no page or console errors during the sweep`, errors.length === 0, errors.slice(0, 2).join(' | '));
+    await page.close();
+  }
+}
+
+// ── scroll coverage: no empty screens on the way down (docs/adr/0038 §23) ─────────────────────────────────────────────────────────
+// The owner's review found scroll ~400-1150 px showing only the emblem over bare ground. The walk steps the page 100 px at a time
+// and asks for at least one readable piece of text or control inside the viewport: visible, meaningfully inside the edges, and with
+// an EFFECTIVE opacity above 0.3 (the product up the ancestor chain — the fade sits on .hero-copy and .chapter, not on their
+// children). Fixed chrome does not count: the header and the phone call bar float over every step and would make the walk
+// vacuous. The film's chapter boundaries may breathe (both neighbours out) for at most 150 px each — that window is the deliberate
+// breath of the steep chapter curve. Motion is left ON: the dead zone lives in the pinned-hero world (the reduced-motion hero is a
+// plain block with no fade), Lenis never intercepts programmatic scrolls, and a failing step is re-read after a longer wait so an
+// entrance animation that is still running cannot report a gap that is not there.
+if (want('coverage')) {
+  group('Scroll coverage: every 100 px of the page shows readable text, gaps only at film chapter boundaries');
+  const profiles = QUICK ? [['en', 'desktop', DESKTOP]] : [['en', 'desktop', DESKTOP], ['en', 'phone', { width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true }], ['ar', 'desktop', DESKTOP]];
+  const readableNow = () => {
+    const effective = (el) => {
+      let o = 1;
+      for (let n = el; n instanceof Element; n = n.parentElement) {
+        const s = getComputedStyle(n);
+        if (s.position === 'fixed') return 0; // floating chrome (header, call bar, cinema canvas) must not carry the step
+        o *= Number(s.opacity);
+      }
+      return o;
+    };
+    return [...document.querySelectorAll('h1,h2,h3,p,a,button')].some((el) => {
+      if (!el.textContent?.trim()) return false;
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1 || r.bottom < 24 || r.top > innerHeight - 24) return false;
+      const s = getComputedStyle(el);
+      return s.visibility !== 'hidden' && s.display !== 'none' && effective(el) > 0.3;
+    });
+  };
+  for (const [lang, label, viewport] of profiles.filter(([l]) => PUBLIC_LANGS.includes(l))) {
+    const { page, errors } = await open(url(lang), { viewport });
+    // Lay the lazy sections out once, top to bottom, so heights and the film's track are final before positions are judged.
+    const total = await page.evaluate(() => document.documentElement.scrollHeight);
+    for (let y = 0; y < total; y += Math.round(viewport.height * 0.8)) {
+      await page.evaluate((v) => window.scrollTo({ top: v, behavior: 'instant' }), y);
+      await sleep(120);
+    }
+    const boundaries = await page.evaluate(() => {
+      const film = document.querySelector('[data-film]');
+      if (!film) return [];
+      const rect = film.getBoundingClientRect();
+      const top = rect.top + scrollY;
+      const track = Math.max(1, rect.height - innerHeight);
+      return [1, 2, 3].map((k) => Math.round(top + (k / 4) * track)); // the scroll positions where --p = 1/4, 2/4, 3/4
+    });
+    const gaps = [];
+    const max = await page.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+    for (let y = 0; y <= max; y += 100) {
+      await page.evaluate((v) => window.scrollTo({ top: v, behavior: 'instant' }), y);
+      await sleep(90);
+      let visible = await page.evaluate(readableNow);
+      if (!visible) {
+        await sleep(600); // let any entrance animation finish before calling it a gap
+        visible = await page.evaluate(readableNow);
+      }
+      if (!visible) gaps.push(y);
+    }
+    const runs = [];
+    for (const y of gaps) {
+      const last = runs.at(-1);
+      if (last && y - last.end === 100) last.end = y;
+      else runs.push({ start: y, end: y });
+    }
+    const offending = runs.filter((r) => r.end - r.start > 150 || !boundaries.some((b) => r.start >= b - 150 && r.end <= b + 150));
+    check(
+      `${lang} ${label}: readable text at every 100 px step (${Math.floor(max / 100) + 1} steps), gaps only within 150 px of a film chapter boundary`,
+      offending.length === 0,
+      JSON.stringify({ boundaries, offending: offending.slice(0, 4) }),
+    );
+    check(`${lang} ${label}: no page or console errors during the walk`, errors.length === 0, errors.slice(0, 2).join(' | '));
     await page.close();
   }
 }
