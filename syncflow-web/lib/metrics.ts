@@ -62,6 +62,14 @@ const LIVE_NOV = 'Lighthouse 13.5 (npm run perf) against https://syncflow.agency
 const LIVE_DESKTOP_NOV = 'desktop preset, live production (syncflow.agency), median of 5 runs, all five 100';
 const LIVE_MOBILE_NOV = 'mobile preset (412×823), simulated slow 4G, 4x CPU slowdown, live production (syncflow.agency), median of 9 runs on two pages in one session on a quiet machine, every run 99 or 100';
 
+/**
+ * The run counts behind the two live seals, as structured facts (same measurement as the profile sentences above).
+ * The pages interpolate these into the per-language Metrics.* templates (messages/*.json, ADR 0038 section 23) so a
+ * Turkish page no longer prints the English profile prose; the English `profile`/`source` fields above stay the
+ * canonical measurement record (the audit requires every metric to keep them).
+ */
+export const LIVE_RUNS = { desktop: 5, mobile: 9 } as const;
+
 export const METRICS = {
   lighthousePerformance: { value: 100, unit: 'score', measuredAt: '2026-11-24', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },
   lighthouseAccessibility: { value: 100, unit: 'score', measuredAt: '2026-11-24', profile: LIVE_DESKTOP_NOV, source: LIVE_NOV },

@@ -66,7 +66,7 @@
     "c1Note": "How it is made: every scene is an eight-second loop at 1920 × 1080 and 30 frames per second, encoded as H.264 (MP4) with VP9 (WebM) as the fallback, so the device’s own video hardware decodes it. It is fetched only when it is about to play, and its space is reserved, so nothing on the page moves.",
     "c1Tags": "H.264 · VP9 · Loads on demand · Space reserved, no layout shift",
     "c1Badge": "Native video",
-    "c1VideoLabel": "A glass monolith turning slowly on a dark background",
+    "c1VideoLabel": "A polished obsidian slab turning slowly on a dark ground, with champagne light reflections",
     "c2Index": "II",
     "c2Title": "Smooth where it counts.",
     "c2Text": "Scrolling and transitions follow the display’s own frame rhythm. On desktops with a mouse or trackpad, Lenis eases the scroll; touch devices keep their native, immediate scroll. The page moves like an extension of your hand, not under it.",
@@ -739,5 +739,10 @@
       "m2": "Virtual clock · seeded generator",
       "m3": "Node · browser"
     }
+  },
+  "Metrics": {
+    "profileDesktop": "desktop preset, live production (syncflow.agency), median of {runs} runs, every run 100",
+    "profileMobile": "mobile preset (412×823), simulated slow 4G, 4× CPU slowdown, live production (syncflow.agency), median of {runs} runs on a quiet machine, every run 99 or 100",
+    "profileFrame": "1280×800, headless Chrome, 60 Hz, no CPU throttling"
   }
 }

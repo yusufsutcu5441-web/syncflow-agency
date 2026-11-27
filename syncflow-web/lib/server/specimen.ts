@@ -6,7 +6,7 @@ import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import type { BreakdownData } from '@/lib/breakdown';
 import { BRIEFING_ENABLED, SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
-import { formatMeasuredAt, METRICS } from '@/lib/metrics';
+import { formatMeasuredAt, LIVE_RUNS, METRICS } from '@/lib/metrics';
 import { SPECIMEN_KEY, SPECIMEN_NUMBER, type SpecimenSlug } from '@/lib/specimens';
 import { closingCta } from './cta';
 
@@ -41,9 +41,10 @@ const figures = () => (cached ??= queueFigures());
  */
 export async function loadSpecimen(slug: SpecimenSlug, locale: AppLocale): Promise<BreakdownData> {
   const key = SPECIMEN_KEY[slug];
-  const [t, b, format] = await Promise.all([
+  const [t, b, tm, format] = await Promise.all([
     getTranslations({ locale, namespace: 'Specimen' }),
     getTranslations({ locale, namespace: 'Breakdown' }),
+    getTranslations({ locale, namespace: 'Metrics' }),
     getFormatter({ locale }),
   ]);
   const number = (n: number, digits = 0) => format.number(n, { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -77,7 +78,8 @@ export async function loadSpecimen(slug: SpecimenSlug, locale: AppLocale): Promi
     slug === 'studio-site'
       ? t(`${key}.caption`, {
           tool: 'Lighthouse',
-          profile: METRICS.lighthousePerformance.profile,
+          // The page language's own template of the desktop profile (ADR 0038 section 23); lib/metrics.ts keeps the canonical English record.
+          profile: tm('profileDesktop', { runs: LIVE_RUNS.desktop }),
           date: formatMeasuredAt(METRICS.lighthousePerformance.measuredAt, locale),
           frameDate: formatMeasuredAt(METRICS.frameMedian.measuredAt, locale),
         })

@@ -62,7 +62,7 @@
     "c1Note": "Cómo está hecho: cada escena es un bucle de ocho segundos a 1920 × 1080 y 30 fotogramas por segundo, codificado en H.264 (MP4) con VP9 (WebM) como alternativa, de modo que lo decodifica el propio hardware de vídeo del dispositivo. Se descarga solo cuando va a reproducirse y su espacio está reservado: nada se mueve en la página.",
     "c1Tags": "H.264 · VP9 · Carga bajo demanda · Espacio reservado, sin desplazamiento de diseño",
     "c1Badge": "Vídeo nativo",
-    "c1VideoLabel": "Un monolito de cristal que gira lentamente sobre un fondo oscuro",
+    "c1VideoLabel": "Una losa de obsidiana pulida que gira lentamente sobre un fondo oscuro, con reflejos de luz champán",
     "c2Index": "II",
     "c2Title": "Fluido donde importa.",
     "c2Text": "El desplazamiento y las transiciones siguen el ritmo de fotogramas de la propia pantalla. En escritorios con ratón o trackpad, Lenis suaviza el desplazamiento; los dispositivos táctiles conservan su desplazamiento nativo e inmediato. La página se mueve como una extensión de su mano, no por debajo de ella.",
@@ -656,9 +656,9 @@
       "r2": "Las cifras de fotogramas son intervalos entre fotogramas a 60 Hz, donde 16,7 ms es un fotograma. Muestran que no se perdió ningún fotograma en el desplazamiento grabado; no dicen cuánto tarda el trabajo propio de cada fotograma.",
       "r3Title": "El rigor tiene un precio",
       "r3": "Una política aplicada y una ruta que rechaza ante un fallo significan que un ajuste ausente produce un error en lugar de un éxito silencioso. El formulario lo dice antes de usarse y ofrece un borrador de correo.",
-      "m1": "Lighthouse 13.5 · live production",
-      "m2": "412×823 · slow 4G · 4× CPU",
-      "m3": "1280×800 · 60 Hz · frame sampler"
+      "m1": "Lighthouse 13.5 · producción en vivo",
+      "m2": "412×823 · 4G lenta · CPU 4×",
+      "m3": "1280×800 · 60 Hz · muestreador de fotogramas"
     },
     "failSafeQueue": {
       "tag": "Referencia: capa de integración empresarial",
@@ -698,9 +698,14 @@
       "r2": "Con orden estricto, un evento que falla retrasa a los que le siguen hasta que tiene éxito o pasa a las cartas muertas. Desactívelo para eventos independientes.",
       "r3Title": "El almacén es una dependencia",
       "r3": "La durabilidad es tan fuerte como el almacén que se da a la cola. Su elección (una base de datos, una cola gestionada) y sus propias garantías corresponden al proyecto.",
-      "m1": "TypeScript · no dependencies",
-      "m2": "Virtual clock · seeded generator",
-      "m3": "Node · browser"
+      "m1": "TypeScript · sin dependencias",
+      "m2": "Reloj virtual · generador con semilla fija",
+      "m3": "Node · navegador"
     }
+  },
+  "Metrics": {
+    "profileDesktop": "preajuste de escritorio, producción en vivo (syncflow.agency), mediana de {runs} ejecuciones, todas en 100",
+    "profileMobile": "preajuste móvil (412×823), 4G lenta simulada, ralentización de CPU 4×, producción en vivo (syncflow.agency), mediana de {runs} ejecuciones en una máquina en reposo, todas en 99 o 100",
+    "profileFrame": "1280×800, Chrome sin interfaz, 60 Hz, sin ralentización de CPU"
   }
 }

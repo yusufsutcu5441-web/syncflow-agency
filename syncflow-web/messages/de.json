@@ -62,7 +62,7 @@
     "c1Note": "Wie es gemacht ist: Jede Szene ist eine achtsekündige Schleife in 1920 × 1080 mit 30 Bildern pro Sekunde, kodiert als H.264 (MP4) mit VP9 (WebM) als Rückfallebene, sodass die Videohardware des Geräts sie dekodiert. Sie wird erst geladen, wenn sie abgespielt wird, und ihr Platz ist reserviert: Auf der Seite verrutscht nichts.",
     "c1Tags": "H.264 · VP9 · Laden bei Bedarf · Platz reserviert, keine Layoutverschiebung",
     "c1Badge": "Natives Video",
-    "c1VideoLabel": "Ein Glasmonolith, der sich langsam vor dunklem Hintergrund dreht",
+    "c1VideoLabel": "Eine polierte Obsidianplatte, die sich langsam vor dunklem Grund dreht, mit champagnerfarbenen Lichtreflexen",
     "c2Index": "II",
     "c2Title": "Flüssig, wo es zählt.",
     "c2Text": "Scrollen und Übergänge folgen dem Bildrhythmus des Displays. Auf Desktops mit Maus oder Trackpad glättet Lenis das Scrollen; Touch-Geräte behalten ihr natives, unmittelbares Scrollen. Die Seite bewegt sich wie eine Verlängerung Ihrer Hand, nicht unter ihr.",
@@ -656,9 +656,9 @@
       "r2": "Die Bildwerte sind Intervalle zwischen Bildern bei 60 Hz, wobei 16,7 ms ein Bild sind. Sie zeigen, dass im aufgezeichneten Scroll kein Bild ausgelassen wurde; sie sagen nicht, wie lange die eigene Arbeit eines Bildes dauert.",
       "r3Title": "Strenge hat ihren Preis",
       "r3": "Eine durchgesetzte Richtlinie und eine Route, die im Fehlerfall ablehnt, bedeuten: Eine fehlende Einstellung erzeugt einen Fehler statt eines stillen Erfolgs. Das Formular sagt das vor der Nutzung und bietet einen E-Mail-Entwurf an.",
-      "m1": "Lighthouse 13.5 · live production",
-      "m2": "412×823 · slow 4G · 4× CPU",
-      "m3": "1280×800 · 60 Hz · frame sampler"
+      "m1": "Lighthouse 13.5 · Live-Produktion",
+      "m2": "412×823 · langsames 4G · 4× CPU",
+      "m3": "1280×800 · 60 Hz · Frame-Sampler"
     },
     "failSafeQueue": {
       "tag": "Referenz: Unternehmens-Integrationsschicht",
@@ -698,9 +698,14 @@
       "r2": "Bei strenger Reihenfolge hält ein fehlschlagendes Ereignis die dahinter auf, bis es gelingt oder in die Dead Letters geht. Für unabhängige Ereignisse abschalten.",
       "r3Title": "Der Speicher ist eine Abhängigkeit",
       "r3": "Die Dauerhaftigkeit ist nur so stark wie der Speicher, den die Warteschlange erhält. Seine Wahl (eine Datenbank, eine verwaltete Warteschlange) und seine eigenen Garantien gehören zum Projekt.",
-      "m1": "TypeScript · no dependencies",
-      "m2": "Virtual clock · seeded generator",
-      "m3": "Node · browser"
+      "m1": "TypeScript · keine Abhängigkeiten",
+      "m2": "Virtuelle Uhr · Generator mit festem Seed",
+      "m3": "Node · Browser"
     }
+  },
+  "Metrics": {
+    "profileDesktop": "Desktop-Voreinstellung, Live-Produktion (syncflow.agency), Median aus {runs} Läufen, jeder Lauf 100",
+    "profileMobile": "Mobil-Voreinstellung (412×823), simuliertes langsames 4G, 4-fache CPU-Drosselung, Live-Produktion (syncflow.agency), Median aus {runs} Läufen auf ruhiger Maschine, jeder Lauf 99 oder 100",
+    "profileFrame": "1280×800, Headless-Chrome, 60 Hz, ohne CPU-Drosselung"
   }
 }

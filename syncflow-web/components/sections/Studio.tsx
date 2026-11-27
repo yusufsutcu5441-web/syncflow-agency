@@ -6,7 +6,7 @@ import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
 import { BRIEFING_ENABLED, SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
-import { formatMeasuredAt, METRICS } from '@/lib/metrics';
+import { formatMeasuredAt, LIVE_RUNS, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
 import { SPECIMEN_KEY, SPECIMEN_NUMBER, SPECIMEN_SLUGS, specimenPath } from '@/lib/specimens';
 
@@ -21,7 +21,7 @@ import { SPECIMEN_KEY, SPECIMEN_NUMBER, SPECIMEN_SLUGS, specimenPath } from '@/l
  * Plain server markup: native <details> panels, so everything is readable and crawlable without JavaScript.
  */
 export async function Studio() {
-  const [t, locale, format, hero, sp] = await Promise.all([getTranslations('Studio'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Hero'), getTranslations('Specimen')]);
+  const [t, locale, format, hero, sp, tm] = await Promise.all([getTranslations('Studio'), getLocale() as Promise<AppLocale>, getFormatter(), getTranslations('Hero'), getTranslations('Specimen'), getTranslations('Metrics')]);
 
   // The architectural R&D specimens (docs/adr/0032): the studio's own engineering, each a page of its own. Cards only; the figures live on the pages.
   // While the briefing form is switched off (lib/flags.ts) Specimen 01, the pipeline of that form, is labelled for what it is: a reference architecture,
@@ -52,7 +52,8 @@ export async function Studio() {
           mobile: format.number(mobile.value),
           desktop: format.number(desktop.value),
           date: formatMeasuredAt(desktop.measuredAt, locale),
-          profile: `${desktop.profile}; ${mobile.profile}`,
+          // The page language's own template of the same two profiles (ADR 0038 section 23); the canonical English record stays in lib/metrics.ts.
+          profile: `${tm('profileDesktop', { runs: LIVE_RUNS.desktop })}; ${tm('profileMobile', { runs: LIVE_RUNS.mobile })}`,
         };
 
   const principles = [
@@ -96,7 +97,7 @@ export async function Studio() {
           text: t('n2s4', {
             median: ms(METRICS.frameMedian.value),
             p99: ms(METRICS.frameP99.value),
-            profile: METRICS.frameMedian.profile,
+            profile: tm('profileFrame'),
             date: formatMeasuredAt(METRICS.frameMedian.measuredAt, locale),
           }),
         },

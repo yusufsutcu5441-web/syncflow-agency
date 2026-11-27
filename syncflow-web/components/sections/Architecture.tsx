@@ -12,7 +12,7 @@ import { SectionHead } from '@/components/ui/SectionHead';
 import type { AppLocale } from '@/i18n/routing';
 import { SHOW_ENTERPRISE } from '@/lib/flags';
 import { withLocale } from '@/lib/i18n-paths';
-import { formatMeasuredAt, FRAME_SERIES, METRICS } from '@/lib/metrics';
+import { formatMeasuredAt, FRAME_SERIES, LIVE_RUNS, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
 import { specimenPath } from '@/lib/specimens';
 
@@ -33,7 +33,7 @@ const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
  */
 export async function Architecture() {
   const [t, locale, format] = await Promise.all([getTranslations('Architecture'), getLocale() as Promise<AppLocale>, getFormatter()]);
-  const [h, sim] = await Promise.all([getTranslations('Hero'), getTranslations('Sim')]);
+  const [h, sim, tm] = await Promise.all([getTranslations('Hero'), getTranslations('Sim'), getTranslations('Metrics')]);
 
   const queueLabels: QueueLabels = {
     interactive: sim('interactive'),
@@ -174,7 +174,7 @@ export async function Architecture() {
                 </div>
                 <FrameGraph alt={t('c2GraphAlt')} median={METRICS.frameMedian.value} />
                 {METRICS.frameMedian.measuredAt ? (
-                  <p className="mt-3 text-xs text-faint">{t('c2Caption', { profile: METRICS.frameMedian.profile, date: date(METRICS.frameMedian.measuredAt) })}</p>
+                  <p className="mt-3 text-xs text-faint">{t('c2Caption', { profile: tm('profileFrame'), date: date(METRICS.frameMedian.measuredAt) })}</p>
                 ) : null}
               </div>
             </div>
@@ -205,8 +205,9 @@ export async function Architecture() {
                 </p>
                 {METRICS.lighthouseAccessibility.measuredAt ? (
                   <p className="mt-2 text-xs text-faint">
-                    {/* Both profiles are named: the desktop one and the mobile one (whose median is of quiet-machine runs; the load sensitivity is in docs/perf/live-2026-10-17.md). */}
-                    {t('c3Caption', { tool: 'Lighthouse', profile: `${METRICS.lighthouseAccessibility.profile}; ${METRICS.lighthousePerformanceMobile.profile}`, date: date(METRICS.lighthouseAccessibility.measuredAt) })}
+                    {/* Both profiles are named: the desktop one and the mobile one (whose median is of quiet-machine runs; the load sensitivity is in docs/perf/live-2026-10-17.md).
+                        The sentence is the page language's own template (Metrics.*); the canonical English record stays in lib/metrics.ts. */}
+                    {t('c3Caption', { tool: 'Lighthouse', profile: `${tm('profileDesktop', { runs: LIVE_RUNS.desktop })}; ${tm('profileMobile', { runs: LIVE_RUNS.mobile })}`, date: date(METRICS.lighthouseAccessibility.measuredAt) })}
                   </p>
                 ) : null}
                 {/* Studio-only site (docs/adr/0038): the Studio's specimen cards are gone, so the Lighthouse evidence page is linked from the Lighthouse numbers themselves. With the enterprise layer on, the Studio cards lead there. */}

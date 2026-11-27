@@ -66,7 +66,7 @@
     "c1Note": "Nasıl yapıldı: her sahne 1920 × 1080 çözünürlükte, saniyede 30 karelik sekiz saniyelik bir döngüdür; H.264 (MP4) ve yedeği VP9 (WebM) olarak kodlanır, yani cihazın kendi video donanımı çözer. Yalnızca oynatılacağı anda indirilir ve yeri önceden ayrıldığı için sayfada hiçbir şey kaymaz.",
     "c1Tags": "H.264 · VP9 · İstenince yüklenir · Yeri ayrılmış, yerleşim kayması yok",
     "c1Badge": "Yerel video",
-    "c1VideoLabel": "Koyu zeminde yavaşça dönen cam yüzeyli bir monolit",
+    "c1VideoLabel": "Koyu zeminde yavaşça dönen, parlak yüzeyli obsidyen bir levha; üzerinde şampanya rengi ışık yansımaları",
     "c2Index": "II",
     "c2Title": "Önemli olan yerde akıcı.",
     "c2Text": "Kaydırma ve geçişler ekranın kendi kare ritmini izler. Fare ya da izleme dörtgenli masaüstlerinde Lenis kaydırmayı yumuşatır; dokunmatik cihazlar yerel, anında kaydırmasını korur. Sayfa elinizin altında değil, elinizin bir uzantısı gibi akar.",
@@ -693,9 +693,9 @@
       "r2": "Kare rakamları 60 Hz’de kareler arası aralıklardır; 16,7 ms bir karedir. Kaydedilen kaydırmada hiçbir karenin düşmediğini gösterirler; her karenin kendi işinin ne kadar sürdüğünü söylemezler.",
       "r3Title": "Sıkılığın bedeli var",
       "r3": "Uygulanan bir politika ve arızada reddeden bir rota, eksik bir ayarın sessiz bir başarı yerine hata üretmesi demektir. Form bunu kullanılmadan önce söyler ve bir e-posta taslağı önerir.",
-      "m1": "Lighthouse 13.5 · live production",
-      "m2": "412×823 · slow 4G · 4× CPU",
-      "m3": "1280×800 · 60 Hz · frame sampler"
+      "m1": "Lighthouse 13.5 · canlı üretim",
+      "m2": "412×823 · yavaş 4G · 4× CPU",
+      "m3": "1280×800 · 60 Hz · kare örnekleyici"
     },
     "failSafeQueue": {
       "tag": "Referans: kurumsal entegrasyon katmanı",
@@ -735,9 +735,14 @@
       "r2": "Katı sırada tek bir başarısız olay, başarılı olana ya da ölü mektup kuyruğuna alınana dek arkasındakileri geciktirir. Birbirinden bağımsız olaylar için kapatın.",
       "r3Title": "Depo bir bağımlılıktır",
       "r3": "Kalıcılık, kuyruğa verilen depo kadar güçlüdür. Seçimi (bir veritabanı, yönetilen bir kuyruk) ve kendi garantileri projeye aittir.",
-      "m1": "TypeScript · no dependencies",
-      "m2": "Virtual clock · seeded generator",
-      "m3": "Node · browser"
+      "m1": "TypeScript · bağımlılık yok",
+      "m2": "Sanal saat · tohumlu üreteç",
+      "m3": "Node · tarayıcı"
     }
+  },
+  "Metrics": {
+    "profileDesktop": "masaüstü ön ayarı, canlı üretim (syncflow.agency), {runs} koşunun medyanı, her koşu 100",
+    "profileMobile": "mobil ön ayarı (412×823), simüle yavaş 4G, 4× CPU yavaşlatma, canlı üretim (syncflow.agency), sakin makinede {runs} koşunun medyanı, her koşu 99 ya da 100",
+    "profileFrame": "1280×800, başsız Chrome, 60 Hz, CPU yavaşlatma yok"
   }
 }

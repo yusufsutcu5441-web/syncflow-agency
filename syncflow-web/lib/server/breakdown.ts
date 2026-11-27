@@ -3,7 +3,7 @@ import { getFormatter, getTranslations } from 'next-intl/server';
 import { LOCALE_LABELS, type AppLocale } from '@/i18n/routing';
 import { BREAKDOWN_PARTS, type BreakdownData, type BreakdownSlug } from '@/lib/breakdown';
 import { withLocale } from '@/lib/i18n-paths';
-import { formatMeasuredAt, METRICS } from '@/lib/metrics';
+import { formatMeasuredAt, LIVE_RUNS, METRICS } from '@/lib/metrics';
 import { SECTION_IDS } from '@/lib/site';
 import { closingCta } from './cta';
 
@@ -16,10 +16,11 @@ const ROMAN = ['I', 'II', 'III', 'IV'] as const;
  * Used by the page (app/[locale]/showcase/[slug]/page.tsx) and by the API the dialog reads (app/api/breakdown/route.ts).
  */
 export async function loadBreakdown(slug: BreakdownSlug, locale: AppLocale): Promise<BreakdownData> {
-  const [t, show, hero, format] = await Promise.all([
+  const [t, show, hero, tm, format] = await Promise.all([
     getTranslations({ locale, namespace: 'Breakdown' }),
     getTranslations({ locale, namespace: 'Showcase' }),
     getTranslations({ locale, namespace: 'Hero' }),
+    getTranslations({ locale, namespace: 'Metrics' }),
     getFormatter({ locale }),
   ]);
 
@@ -74,7 +75,8 @@ export async function loadBreakdown(slug: BreakdownSlug, locale: AppLocale): Pro
           detail: t('desktop'),
         },
       ],
-      caption: t('metricCaption', { tool: 'Lighthouse', profile: performance.profile, date: formatMeasuredAt(performance.measuredAt, locale) }),
+      // The page language's own template of the desktop profile (ADR 0038 section 23); lib/metrics.ts keeps the canonical English record.
+      caption: t('metricCaption', { tool: 'Lighthouse', profile: tm('profileDesktop', { runs: LIVE_RUNS.desktop }), date: formatMeasuredAt(performance.measuredAt, locale) }),
       roiTitle: t('roiTitle'),
       roiText: t('roiText'),
       roiSteps: [
